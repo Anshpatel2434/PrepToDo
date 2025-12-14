@@ -105,22 +105,18 @@ export const FloatingNavigation: React.FC<FloatingNavigationProps> = ({
           hover:scale-110
           backdrop-blur-3xl 
           hover:cursor-pointer
-          ${
-                        isDark
-                            ? "bg-indigo-500/20 hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] focus:ring-indigo-400"
-                            : "bg-orange-500/20 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] focus:ring-orange-400"
-                    }
+          bg-slate-500/20 hover:shadow-[0_0_20px_rgba(100,116,139,0.4)] focus:ring-slate-400
         `}
                 aria-label="Toggle sidebar"
             >
                 {/* Menu Icon - shown when closed */}
                 {!isOpen && (
-                    <MdMenu className="text-orange-500 text-2xl transition-all duration-300 hover:rotate-90" />
+                    <MdMenu className="text-slate-600 dark:text-slate-300 text-2xl transition-all duration-300 hover:rotate-90" />
                 )}
 
                 {/* Close Icon - shown when open */}
                 {isOpen && (
-                    <MdClose className="text-indigo-400 text-2xl transition-all duration-300 hover:-rotate-12" />
+                    <MdClose className="text-slate-600 dark:text-slate-300 text-2xl transition-all duration-300 hover:-rotate-12" />
                 )}
             </button>
 
@@ -279,71 +275,70 @@ export const FloatingNavigation: React.FC<FloatingNavigationProps> = ({
                 }
       `}
             >
-                {navigationItems.map((item) => (
-                    <div
-                        key={item.id}
-                        className="relative group"
-                        onMouseEnter={() => setHoveredItem(item.id)}
-                        onMouseLeave={() => setHoveredItem(null)}
-                    >
-                        <button
-                            onClick={() => handleNavigate(item)}
-                            className={`
-                w-12 h-12 rounded-2xl
-                flex items-center justify-center
-                transition-all duration-300 ease-out
-                hover:scale-110
-                backdrop-blur-3xl 
-                hover:cursor-pointer
-                ${
-                                    isDark
-                                        ? "bg-indigo-500/20 hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] focus:ring-indigo-400"
-                                        : "bg-orange-500/20 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] focus:ring-orange-400"
-                                }
-              `}
-                            aria-label={item.label}
-                        >
-                            <div className={`
-                transition-all duration-300
-                ${
-                                    isDark
-                                        ? "text-indigo-400 group-hover:text-white"
-                                        : "text-orange-500 group-hover:text-white"
-                                }
-              `}>
-                                {item.icon}
-                            </div>
-                        </button>
+                {navigationItems.map((item) => {
+                    // Define contextual colors for each navigation item
+                    const getIconColor = (id: string) => {
+                        switch (id) {
+                            case "home": return "text-blue-600 dark:text-blue-400";
+                            case "features": return "text-purple-600 dark:text-purple-400";
+                            case "practice": return "text-green-600 dark:text-green-400";
+                            case "analytics": return "text-orange-600 dark:text-orange-400";
+                            case "about": return "text-teal-600 dark:text-teal-400";
+                            case "contact": return "text-indigo-600 dark:text-indigo-400";
+                            default: return "text-gray-600 dark:text-gray-400";
+                        }
+                    };
 
-                        {/* Floating tooltip */}
-                        {hoveredItem === item.id && (
-                            <div
+                    return (
+                        <div
+                            key={item.id}
+                            className="relative group"
+                            onMouseEnter={() => setHoveredItem(item.id)}
+                            onMouseLeave={() => setHoveredItem(null)}
+                        >
+                            <button
+                                onClick={() => handleNavigate(item)}
                                 className={`
-                absolute left-full top-1/2 -translate-y-1/2 ml-4 px-3 py-2 rounded-lg
-                text-sm font-medium shadow-lg z-50 whitespace-nowrap
-                transition-all duration-300 ease-out
-                ${
-                                    isDark
-                                        ? "bg-slate-800 text-white border border-slate-600"
-                                        : "bg-white text-gray-900 border border-gray-200"
-                                }
-              `}
+                  w-12 h-12 rounded-2xl
+                  flex items-center justify-center
+                  transition-all duration-300 ease-out
+                  hover:scale-110
+                  backdrop-blur-3xl 
+                  hover:cursor-pointer
+                  bg-slate-500/20 hover:shadow-[0_0_20px_rgba(100,116,139,0.4)] focus:ring-slate-400
+                `}
+                                aria-label={item.label}
                             >
-                                {item.label}
+                                <div className={`
+                  transition-all duration-300
+                  ${getIconColor(item.id)} group-hover:scale-110
+                `}>
+                                    {item.icon}
+                                </div>
+                            </button>
+
+                            {/* Floating tooltip */}
+                            {hoveredItem === item.id && (
                                 <div
                                     className={`
-                  absolute right-full top-1/2 -translate-y-1/2 w-2 h-2 rotate-45
-                  ${
-                                        isDark
-                                            ? "bg-slate-800 border-l border-b border-slate-600"
-                                            : "bg-white border-l border-b border-gray-200"
-                                    }
-                `}
-                                />
-                            </div>
-                        )}
-                    </div>
-                ))}
+                    absolute left-full top-1/2 -translate-y-1/2 ml-4 px-3 py-2 rounded-lg
+                    text-sm font-medium shadow-lg z-50 whitespace-nowrap
+                    transition-all duration-300 ease-out
+                    bg-slate-800 text-white border border-slate-600 dark:bg-slate-700 dark:border-slate-500
+                  `}
+                                >
+                                    {item.label}
+                                    <div
+                                        className={`
+                      absolute right-full top-1/2 -translate-y-1/2 w-2 h-2 rotate-45
+                      bg-slate-800 border-l border-b border-slate-600 dark:bg-slate-700 dark:border-slate-500
+                    `}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
 
             {/* Overlay when sidebar is open */}
