@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { Feature } from '../../../ui_components/FeatureTypes';
 
-const features: Feature[] = [
+const features = [
   {
     id: 'reading-practice',
     title: 'Daily Reading Comprehension',
@@ -106,11 +105,7 @@ const features: Feature[] = [
   }
 ];
 
-interface FeatureShowcaseProps {
-  onFeatureClick?: (feature: Feature) => void;
-}
-
-export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ onFeatureClick }) => {
+export const FeatureShowcase: React.FC = () => {
   const [visibleFeatures, setVisibleFeatures] = useState<Set<string>>(new Set());
   const [hoveredFeature, setHoveredFeature] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -135,18 +130,6 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ onFeatureClick
 
     return () => observer.disconnect();
   }, []);
-
-  const handleFeatureClick = (feature: Feature) => {
-    // Add micro-interaction animation
-    const element = containerRef.current?.querySelector(`[data-feature-id="${feature.id}"]`);
-    if (element) {
-      element.classList.add('animate-scale-in-bounce');
-      setTimeout(() => {
-        element.classList.remove('animate-scale-in-bounce');
-      }, 500);
-    }
-    onFeatureClick?.(feature);
-  };
 
   return (
     <section className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-slate-900 dark:to-slate-800">
@@ -186,18 +169,18 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ onFeatureClick
             <div
               key={feature.id}
               data-feature-id={feature.id}
+              data-index={index}
               className={`
                 group relative p-8 lg:p-10 rounded-3xl border border-gray-200/50 dark:border-gray-700/50 
                 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-lg hover:shadow-xl
                 transition-all duration-500 ease-out cursor-pointer
                 ${visibleFeatures.has(feature.id) 
                   ? 'animate-slide-up opacity-100 translate-y-0' 
-                  : 'opacity-0 translate-y-8'
+                  : `opacity-0 ${index % 2 === 0 ? '-translate-x-16' : 'translate-x-16'} translate-y-8`
                 }
                 ${hoveredFeature === feature.id ? 'transform -translate-y-2' : ''}
               `}
               style={{ animationDelay: `${index * 100}ms` }}
-              onClick={() => handleFeatureClick(feature)}
               onMouseEnter={() => setHoveredFeature(feature.id)}
               onMouseLeave={() => setHoveredFeature(null)}
             >
