@@ -77,7 +77,7 @@ export const HomePage: React.FC = () => {
 
                 {/* Feature Showcase */}
                 <section data-section="features">
-                    <FeatureShowcase />
+                    <FeatureShowcase isDark={isDark} />
                 </section>
 
                 {/* Footer */}
