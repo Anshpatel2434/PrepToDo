@@ -26,34 +26,21 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ isDark }) => {
 		>
 			{/* Animated background elements */}
 			<div className="absolute inset-0 overflow-hidden">
-				{/* Floating geometric shapes - theme adaptive */}
-				<div
-					className="absolute top-20 left-10 w-72 h-72  rounded-full blur-3xl animate-float"
-					style={{ animationDelay: "0s", animationDuration: "6s" }}
-				/>
-				<div
-					className="absolute top-40 right-20 w-96 h-96  rounded-full blur-3xl animate-float"
-					style={{ animationDelay: "2s", animationDuration: "8s" }}
-				/>
-				<div
-					className="absolute bottom-20 left-1/3 w-80 h-80  rounded-full blur-3xl animate-float"
-					style={{ animationDelay: "4s", animationDuration: "7s" }}
-				/>
 				{/* Floating orbs - theme adaptive */}
 				<div
-					className={`absolute top-32 right-1/4 w-4 h-4 rounded-full animate-bounce-subtle opacity-60 ${
+					className={`absolute top-32 right-1/4 w-4 h-4 rounded-full animate-bounce-subtle opacity-60 touch-none ${
 						isDark ? "bg-blue-500" : "bg-blue-400"
 					}`}
 					style={{ animationDelay: "1s" }}
 				/>
 				<div
-					className={`absolute bottom-32 left-1/4 w-3 h-3 rounded-full animate-bounce-subtle opacity-50 ${
+					className={`absolute bottom-32 left-1/4 w-3 h-3 rounded-full animate-bounce-subtle opacity-50 touch-none ${
 						isDark ? "bg-teal-500" : "bg-teal-400"
 					}`}
 					style={{ animationDelay: "3s" }}
 				/>
 				<div
-					className={`absolute top-1/2 right-16 w-2 h-2 rounded-full animate-bounce-subtle opacity-70  ${
+					className={`absolute top-1/2 right-16 w-2 h-2 rounded-full animate-bounce-subtle opacity-70 touch-none  ${
 						isDark ? "bg-amber-500" : "bg-amber-400"
 					}`}
 					style={{ animationDelay: "5s" }}
@@ -158,13 +145,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ isDark }) => {
                             `}
 						>
 							<span className="relative z-10">Get Started</span>
-							<div
-								className={`absolute inset-0 opacity-0 transition-opacity duration-300 ${
-									isDark
-										? "bg-linear-to-r from-brand-primary-hover-dark to-brand-accent-dark"
-										: "bg-linear-to-r from-brand-primary-hover-light to-brand-accent-light"
-								}`}
-							/>
 						</button>
 
 						<button
