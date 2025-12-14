@@ -39,12 +39,12 @@ export const FloatingThemeToggle: React.FC<{ className?: string }> = ({
       flex items-center justify-center
       transition-all duration-300 ease-out
       hover:scale-110
-      backdrop-blur-md bg-white/10
+      backdrop-blur-3xl 
       hover:cursor-pointer
       ${
 				isDark
-					? "bg-indigo-500/20 shadow-[0_0_20px_rgba(99,102,241,0.4)] focus:ring-indigo-400"
-					: "bg-orange-500/20 shadow-[0_0_20px_rgba(249,115,22,0.4)] focus:ring-orange-400"
+					? "bg-indigo-500/20 hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] focus:ring-indigo-400"
+					: "bg-orange-500/20 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] focus:ring-orange-400"
 			}
       ${className}
     `}
