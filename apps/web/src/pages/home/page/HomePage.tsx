@@ -81,7 +81,7 @@ export const HomePage: React.FC = () => {
                 </section>
 
                 {/* Footer */}
-                <Footer />
+                <Footer isDark={isDark} />
             </div>
         </div>
     );
