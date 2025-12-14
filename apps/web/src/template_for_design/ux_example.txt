@@ -1,0 +1,7 @@
+ UX & Performance practices for “users love the UI”
+•	Minimal screens: single column reading area, ephemeral toolbars, and micro-interactions. Hide non-essential controls behind ellipses or slideovers.
+•	Perceived performance: streaming content, skeleton loaders, progressive hydration (render static content first), and prefetch next tasks.
+•	Soothing palette: use your site's minimal theme (off-white backgrounds, soft teal accents, muted gold highlights, rounded cards). Animations: slow ease-outs for entry, quick snap for confirmations.
+•	Accessibility first: large readable fonts, adequate contrast, keyboard navigation.
+•	Micro-interaction strategy: every positive action triggers a small, fast micro-affirmation (soundless confetti, subtle haptic on supported devices).
+•	Loading UX: show the next action the user can prepare for, e.g., “Preparing your 20-minute RC — warm up: 10-second breathing” — keeps perceived wait constructive.
