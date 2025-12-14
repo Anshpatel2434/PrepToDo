@@ -1,71 +1,64 @@
-import React from 'react';
+import React, { useEffect, useState } from "react";
+import { AiFillSun } from "react-icons/ai";
+import { AiFillMoon } from "react-icons/ai";
 
-interface ThemeToggleProps {
-  className?: string;
-}
+// ============================================================================
+// THEME TOGGLE COMPONENT
+// ============================================================================
+export const FloatingThemeToggle: React.FC<{ className?: string }> = ({
+	className = "",
+}) => {
+	const [isDark, setIsDark] = useState(() => {
+		if (typeof window !== "undefined") {
+			const saved = localStorage.getItem("theme");
+			if (saved) return saved === "dark";
+			return window.matchMedia("(prefers-color-scheme: dark)").matches;
+		}
+		return false;
+	});
 
-export const ThemeToggle: React.FC<ThemeToggleProps> = ({ className = '' }) => {
-  const [isDark, setIsDark] = React.useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('theme') === 'dark' || 
-             (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    }
-    return false;
-  });
+	useEffect(() => {
+		if (isDark) {
+			document.documentElement.classList.add("dark");
+			localStorage.setItem("theme", "dark");
+		} else {
+			document.documentElement.classList.remove("dark");
+			localStorage.setItem("theme", "light");
+		}
+		// Dispatch custom event after updating localStorage
+		window.dispatchEvent(
+			new CustomEvent("themeChange", { detail: isDark ? "dark" : "light" })
+		);
+	}, [isDark]);
 
-  React.useEffect(() => {
-    const root = window.document.documentElement;
-    if (isDark) {
-      root.setAttribute('data-theme', 'dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      root.setAttribute('data-theme', 'light');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDark]);
+	return (
+		<button
+			onClick={() => setIsDark(!isDark)}
+			className={`
+      fixed top-6 right-6 z-50 w-12 h-12 rounded-2xl
+      flex items-center justify-center
+      transition-all duration-300 ease-out
+      hover:scale-110
+      backdrop-blur-md bg-white/10
+      hover:cursor-pointer
+      ${
+				isDark
+					? "bg-indigo-500/20 shadow-[0_0_20px_rgba(99,102,241,0.4)] focus:ring-indigo-400"
+					: "bg-orange-500/20 shadow-[0_0_20px_rgba(249,115,22,0.4)] focus:ring-orange-400"
+			}
+      ${className}
+    `}
+			aria-label="Toggle theme"
+		>
+			{/* Sun Icon - shown in light mode */}
+			{!isDark && (
+				<AiFillSun className="text-orange-500 text-2xl transition-all duration-300 hover:rotate-90" />
+			)}
 
-  const toggleTheme = () => {
-    setIsDark(!isDark);
-  };
-
-  return (
-    <button
-      onClick={toggleTheme}
-      className={`
-        relative inline-flex h-10 w-10 items-center justify-center 
-        rounded-lg border border-border-primary bg-bg-secondary 
-        hover:bg-bg-tertiary transition-all duration-300 ease-in-out
-        focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2
-        ${className}
-      `}
-      aria-label={`Switch to ${isDark ? 'light' : 'dark'} theme`}
-    >
-      <div className="relative h-5 w-5">
-        {/* Sun icon (for light theme) */}
-        <svg
-          className={`absolute h-5 w-5 text-accent-warning transition-all duration-300 ${
-            isDark ? 'opacity-0 rotate-90 scale-0' : 'opacity-100 rotate-0 scale-100'
-          }`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-        </svg>
-
-        {/* Moon icon (for dark theme) */}
-        <svg
-          className={`absolute h-5 w-5 text-accent-primary transition-all duration-300 ${
-            isDark ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-0'
-          }`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-        </svg>
-      </div>
-    </button>
-  );
+			{/* Moon Icon - shown in dark mode */}
+			{isDark && (
+				<AiFillMoon className="text-indigo-400 text-2xl transition-all duration-300 hover:-rotate-12" />
+			)}
+		</button>
+	);
 };
