@@ -1,5 +1,5 @@
 import React from 'react';
-import { ThemeToggle } from './ThemeToggle';
+import { FloatingThemeToggle } from './ThemeToggle';
 
 interface NavItem {
   id: string;
@@ -131,7 +131,7 @@ export const CollapsibleSidebar: React.FC<CollapsibleSidebarProps> = ({
           {!isCollapsed && (
             <span className="text-sm text-text-muted">Theme</span>
           )}
-          <ThemeToggle />
+          <FloatingThemeToggle />
         </div>
       </div>
     </div>
