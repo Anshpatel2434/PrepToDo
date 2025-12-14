@@ -49,6 +49,19 @@
   --color-brand-accent-dark: #fbbf24;
 
   /* ─────────────────────────────────────────────────────────────────────────
+     ACADEMIC COLORS - Enhanced for educational content
+     ───────────────────────────────────────────────────────────────────────── */
+  --color-academic-primary-light: #1e40af;
+  --color-academic-secondary-light: #059669;
+  --color-academic-accent-light: #dc2626;
+  --color-academic-success-light: #16a34a;
+  
+  --color-academic-primary-dark: #3b82f6;
+  --color-academic-secondary-dark: #10b981;
+  --color-academic-accent-dark: #ef4444;
+  --color-academic-success-dark: #22c55e;
+
+  /* ─────────────────────────────────────────────────────────────────────────
      SEMANTIC COLORS - Use as: bg-success, text-error, etc.
      ───────────────────────────────────────────────────────────────────────── */
   --color-success: #10b981;

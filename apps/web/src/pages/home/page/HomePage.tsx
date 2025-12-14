@@ -72,16 +72,16 @@ export const HomePage: React.FC = () => {
 
                 {/* Introduction Section */}
                 <section data-section="about">
-                    <IntroductionSection />
+                    <IntroductionSection isDark={isDark} />
                 </section>
 
                 {/* Feature Showcase */}
                 <section data-section="features">
-                    <FeatureShowcase />
+                    <FeatureShowcase isDark={isDark} />
                 </section>
 
                 {/* Footer */}
-                <Footer />
+                <Footer isDark={isDark} />
             </div>
         </div>
     );
