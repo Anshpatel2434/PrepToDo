@@ -1,0 +1,241 @@
+These are the UI preferences that I have researched for the project purpose : 
+Academic Exam Prep Interface – UI Guidelines
+Light Theme Palette
+
+Use a gentle, off-white base to reduce glare. For example, a background like #F7FAFC (off-white) or very light gray is easy on the eyes
+blog.designcrowd.com
+. Pair it with a dark slate gray text (e.g. #1E293B or #2D3748) rather than pure black – dark gray on off-white “looks better and still passes accessibility rules”
+inclusiveweb.co
+. Accent colors can be soft pastels or muted tones: for instance, a calm blue (#2563EB) for primary buttons/links and a mild green (#68D391) for secondary highlights. These maintain a clear hierarchy without harsh contrast. Pastel backgrounds are known to “notably reduce eye strain, especially when paired with darker text”
+blog.designcrowd.com
+, making them ideal for long reading sessions. Ensure all text-to-background contrasts meet WCAG (4.5:1), e.g. #2563EB on #F7FAFC (≈5:1 contrast) for interactive elements.
+
+Dark Theme Palette
+
+For low-light use, employ a gray-based dark mode. Use a rich dark gray as the base (e.g. #0F172A or #1E293B) instead of pure black
+altersquare.medium.com
+. On this background, use light gray text (e.g. #E2E8F0 for primary text, #94A3B8 for secondary text) to achieve comfortable contrast without glare. This “negative polarity” dark mode should still meet accessibility (e.g. #E2E8F0 on #0F172A ≈ 7:1 contrast). A recommendation is “Use dark grays instead of pure black backgrounds to reduce eye strain and improve readability”
+altersquare.medium.com
+. Accent colors (e.g. medium-blue #60A5FA or teal #2DD4BF) should be desaturated to pass contrast easily and avoid harsh highlights. In sum, dark-mode colors are the inverse of light-mode tokens, but all chosen grays and muted accents reduce fatigue in dim environments.
+
+Typography and Fonts
+
+Choose clean, highly legible fonts. For body text, use a neutral sans-serif (e.g. Inter, Helvetica, Arial) – these “are clean, simple, and work well for most interfaces”
+inclusiveweb.co
+. For headings or emphasis, introduce a complementary serif (e.g. Merriweather, Georgia, or Libre Baskerville). Serif fonts are associated with tradition and trust
+designmodo.com
+ and can “grab readers’ attention” in headings
+pmc.ncbi.nlm.nih.gov
+, while sans-serifs ensure clarity on screens
+designmodo.com
+inclusiveweb.co
+. A typical pairing is one serif (for titles/quotes) and one sans (for paragraphs and UI labels).
+
+Font Sizes: Use at least 16px for body text (1rem), which is the minimum for comfortable reading on screens
+inclusiveweb.co
+. For exam prep (content-heavy), consider 18–20px. Headings scale up (for example, ~2rem for H1, 1.5rem for H2, etc.) to create a clear hierarchy. Buttons and labels should also use ≥16px text for legibility
+inclusiveweb.co
+.
+
+Line Spacing: Apply generous line-height (around 1.5–1.75× the font size)
+inclusiveweb.co
+ so text blocks are airy. For example, 16px text with 24px line-height. Paragraph spacing should exceed line spacing to create readable chunks
+inclusiveweb.co
+. This avoids fatigue and helps users track lines of text.
+
+Together, these choices maximize readability and reduce eye strain during long study sessions
+inclusiveweb.co
+inclusiveweb.co
+.
+
+Design Tokens (Tailwind-friendly)
+
+Backgrounds:
+
+Light mode: --color-background: #F7FAFC (page background), --color-surface: #FFFFFF (cards, panels). These very light neutrals soften the display
+blog.designcrowd.com
+.
+
+Dark mode: --color-background-dark: #0F172A, --color-surface-dark: #1E293B. Using slate grays (not black) for backgrounds reduces glare
+altersquare.medium.com
+.
+
+Text Colors:
+
+Primary: --color-text-primary: #1E293B (light), --color-text-primary-dark: #E2E8F0 (dark). 80–90% contrast is enough – dark gray on off-white is easier on eyes than black/white
+inclusiveweb.co
+.
+
+Secondary: --color-text-secondary: #475569 (medium gray), --color-text-secondary-dark: #94A3B8 (lighter gray). Used for subheadings, captions.
+
+Accent Colors:
+
+--color-primary: #2563EB (soft blue) for primary buttons/links.
+
+--color-secondary: #68D391 (gentle green) for secondary buttons or highlights.
+
+--color-accent: #FBBF24 (warm gold) as a sparing highlight (e.g. icons).
+In dark mode, use muted variants (e.g. --color-primary-dark: #60A5FA, --color-secondary-dark: #34D399). Ensure all accents meet contrast for text or icons on their backgrounds.
+
+Font Families:
+
+font-sans: e.g. ['Inter', 'sans-serif'] for body and UI text
+inclusiveweb.co
+.
+
+font-serif: e.g. ['Merriweather', 'serif'] for headings/emphasis (conveys trust and formality)
+designmodo.com
+.
+
+Buttons: Define three styles:
+
+Primary: Bold color fill. Example Tailwind classes: px-4 py-2 bg-primary text-white rounded-lg font-semibold shadow-sm hover:opacity-90 transition (where bg-primary uses the --color-primary token). This is your main CTA style.
+
+Secondary: Outline style. E.g. px-4 py-2 border border-primary text-primary bg-transparent rounded-lg hover:bg-primary hover:text-white transition. Provides a softer alternative for less-critical actions.
+
+Ghost: Text-only. E.g. px-4 py-2 text-primary bg-transparent hover:text-secondary. No border or background; use only for very low-impact links.
+
+Cards & Containers:
+
+Background: bg-surface (white on light mode, slate-800 on dark).
+
+Border: 1px border-border (light gray #E2E8F0 in light mode, #374151 in dark) for separation.
+
+Elevation: Use subtle shadows to lift cards (e.g. Tailwind’s shadow-sm). A sample token: box-shadow: 0 1px 2px rgba(0,0,0,0.05).
+
+Padding: Consistent whitespace inside cards (e.g. p-6 or 1.5rem). Rounded corners (e.g. rounded-lg).
+This creates a clean, structured look on pages of text.
+
+Shadows & Animations:
+
+Shadows: Use very subtle drop-shadows (e.g. shadow-sm: 0 1px 2px rgba(0,0,0,0.05)) to separate layers without harshness. Heavy shadows or high blur are not needed – keep focus on content.
+
+Transitions: For interactions (hover, focus), use gentle transitions (e.g. transition-colors duration-200 ease-in-out). Animations should be quick but smooth (start within ~0.1s
+nngroup.com
+) so they feel responsive, yet kept minimal so they don’t distract from studying.
+
+
+These are the features of the project: 
+1. 📚 Daily Reading Comprehension (RC) Practice
+•	Timed RC practice sessions simulating real exam conditions.
+•	Difficulty selection:
+o	Easy / Medium / Hard.
+•	Bite-sized “microlearning” daily passages.
+•	Built-in timer with auto submission. (Based on user’s choice, whether with timer or not)
+•	Passages tagged by:
+o	Difficulty
+o	Length
+o	Topic
+•	Tracks:
+o	Time spent per passage.
+o	Accuracy.
+o	Attempts history.
+•	Supports daily streak-based practice.
+________________________________________
+2. 🧩 VARC Question Drills (Core Practice Engine)
+Supported Question Types
+•	Para jumbles (drag-and-drop ordering UI).
+•	Para summaries.
+•	Fill-in-the-blanks.
+•	Critical reasoning.
+•	Vocabulary-in-context.
+Features
+•	Shared quiz infrastructure across all question types.
+•	Interactive UI per question type.
+•	Auto-checked answers.
+•	Detailed explanations for every question.
+•	Tracks:
+o	Accuracy per question type.
+o	Time per question.
+•	AI-assisted question and distractor generation (optional, reviewed before release).
+________________________________________
+3. 📖 Personal Vocabulary Builder & Dictionary
+•	User-specific saved vocabulary list.
+•	Words can be saved directly from RC passages.
+•	Each word includes:
+o	Definition.
+o	Synonyms.
+o	Example usage.
+o	Mnemonics / personal notes.
+•	Dictionary API integration for automatic word data.
+•	Mastery tracking (flashcard-style):
+o	New → Learning → Mastered.
+•	Spaced repetition quizzes.
+•	Search and filter vocabulary by:
+o	Status
+o	Date added
+o	Frequency of mistakes.
+________________________________________
+4. 📊 Performance Dashboard & Analytics
+•	Centralized analytics dashboard per user.
+•	Displays:
+o	Accuracy rates.
+o	Average time per question.
+o	Topic-wise mastery.
+o	Progress over time.
+•	Visualizations:
+o	Line graphs.
+o	Bar charts.
+o	Heatmaps.
+o	Streak indicators.
+•	Percentile comparisons against peers.
+•	Real-time updates after each attempt.
+•	Transparent progress indicators across all modules.
+•	Built using charting libraries (Chart.js / D3.js).
+________________________________________
+5. 🏆 Leaderboard & Social Learning
+Leaderboards
+•	Rankings:
+o	Daily
+o	Weekly
+o	All-time
+•	Points earned from:
+o	Correct answers.
+o	Streaks.
+o	Challenges.
+•	Individual and group rankings.
+•	Filterable leaderboard views.
+Social & Group Learning
+•	Study groups / virtual rooms.
+•	Features:
+o	Live chat (text / voice).
+o	Group RC attempts.
+o	Peer challenges.
+•	Social activity feed.
+•	Visible achievements to boost engagement.
+________________________________________
+6. 🎖️ Achievements & Gamification
+•	Badges, trophies, and progress bars.
+•	Unlockables for:
+o	Daily streaks.
+o	Question milestones (e.g., 100 questions mastered).
+o	Challenge completions.
+•	Level-based progression system.
+•	Celebratory animations and visual feedback.
+•	Gamified reinforcement without harming exam seriousness.
+________________________________________
+7. 🤖 AI-Powered Content & Feedback System
+AI Content Generation
+•	AI microservice connected to LLM APIs (OpenAI / Hugging Face).
+•	Generates:
+o	New RC passages.
+o	Para jumbles.
+o	Fill-in-the-blank questions.
+o	Summary questions.
+o	Distractor options.
+•	Semantic search using vector databases.
+AI Tutor Features
+•	Instant vocabulary explanations.
+•	Context-based hints.
+•	Short-answer grading and feedback.
+•	On-demand explanation assistance.
+Safety & Quality
+•	Human review of all AI-generated content before deployment.
+•	Versioned content rollout.
+________________________________________
+8. 🧱 Core Infrastructure (Shared Across Modules)
+•	Unified quiz engine.
+•	User progress tracking service.
+•	Real-time event handling (for analytics & leaderboard).
+•	Scalable microservice architecture for AI features.
+•	Support for real-time communication (Firebase / Pusher).
