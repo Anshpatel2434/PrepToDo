@@ -1,85 +1,78 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from "react";
 
-interface FloatingThemeToggleProps {
-  className?: string;
-}
+// ============================================================================
+// THEME TOGGLE COMPONENT
+// ============================================================================
+export const FloatingThemeToggle: React.FC<{ className?: string }> = ({
+	className = "",
+}) => {
+	const [isDark, setIsDark] = useState(() => {
+		if (typeof window !== "undefined") {
+			const saved = localStorage.getItem("theme");
+			if (saved) return saved === "dark";
+			return window.matchMedia("(prefers-color-scheme: dark)").matches;
+		}
+		return false;
+	});
 
-export const FloatingThemeToggle: React.FC<FloatingThemeToggleProps> = ({ className = "" }) => {
-  // Initialize state from localStorage or system preference
-  const [isDark, setIsDark] = useState(() => {
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    return savedTheme === 'dark' || (!savedTheme && prefersDark);
-  });
+	useEffect(() => {
+		if (isDark) {
+			document.documentElement.classList.add("dark");
+			localStorage.setItem("theme", "dark");
+		} else {
+			document.documentElement.classList.remove("dark");
+			localStorage.setItem("theme", "light");
+		}
+		// Dispatch custom event after updating localStorage
+		window.dispatchEvent(
+			new CustomEvent("themeChange", { detail: isDark ? "dark" : "light" })
+		);
+	}, [isDark]);
 
-  useEffect(() => {
-    // Apply theme to DOM
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDark]);
-
-  const toggleTheme = () => {
-    const newIsDark = !isDark;
-    setIsDark(newIsDark);
-    localStorage.setItem('theme', newIsDark ? 'dark' : 'light');
-  };
-
-  return (
-    <button
-      onClick={toggleTheme}
-      className={`
+	return (
+		<button
+			onClick={() => setIsDark(!isDark)}
+			className={`
         fixed top-6 right-6 z-50 w-14 h-14 rounded-full
-        flex items-center justify-center shadow-lg
+        flex items-center justify-center
         transition-all duration-300 ease-out
-        focus-ring group overflow-hidden
-        ${isDark
-          ? 'bg-slate-800/90 hover:bg-slate-700/90 text-white border border-slate-600/50 backdrop-blur-sm'
-          : 'bg-white/90 hover:bg-slate-50/90 text-gray-800 border border-gray-200/50 backdrop-blur-sm shadow-xl'
-        }
+        hover:scale-105 active:scale-95
+        focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
+        ${
+					isDark
+						? "bg-bg-primary-dark hover:bg-surface-750 text-text-primary-dark border border-text-primary-dark"
+						: "bg-bg-primary-light hover:bg-surface-100 text-text-primary-light border border-text-primary-light shadow-card"
+				}
         ${className}
       `}
-    >
-      {/* Background glow effect */}
-      <div className={`
-        absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300
-        ${isDark
-          ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20'
-          : 'bg-gradient-to-r from-blue-100 to-purple-100'
-        }
-      `} />
+			aria-label="Toggle theme"
+		>
+			{/* Sun Icon */}
+			<svg
+				className={`absolute w-6 h-6 transition-all duration-300 ${
+					isDark ? "rotate-90 scale-0" : "rotate-0 scale-100"
+				}`}
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke="currentColor"
+				strokeWidth={2}
+			>
+				<circle cx="12" cy="12" r="4" />
+				<path d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42m12.72-12.72l1.42-1.42" />
+			</svg>
 
-      {/* Animated sun icon */}
-      <div className={`
-        relative w-6 h-6 transition-all duration-300 ease-out
-        ${isDark ? 'rotate-180 scale-0' : 'rotate-0 scale-100'}
-      `}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-full h-full">
-          <circle cx="12" cy="12" r="5"/>
-          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-        </svg>
-      </div>
-
-      {/* Animated moon icon */}
-      <div className={`
-        absolute w-6 h-6 transition-all duration-300 ease-out
-        ${isDark ? 'rotate-0 scale-100' : 'rotate-180 scale-0'}
-      `}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-full h-full">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-        </svg>
-      </div>
-
-      {/* Pulse effect on click */}
-      <div className={`
-        absolute inset-0 rounded-full opacity-0 group-active:opacity-100 transition-opacity duration-150
-        ${isDark
-          ? 'bg-gradient-to-r from-blue-400/30 to-purple-400/30'
-          : 'bg-gradient-to-r from-blue-400/30 to-purple-400/30'
-        }
-      `} />
-    </button>
-  );
+			{/* Moon Icon */}
+			<svg
+				className={`absolute w-6 h-6 transition-all duration-300 ${
+					isDark ? "rotate-0 scale-100" : "-rotate-90 scale-0"
+				}`}
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke="currentColor"
+				strokeWidth={2}
+			>
+				<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+			</svg>
+		</button>
+	);
 };
