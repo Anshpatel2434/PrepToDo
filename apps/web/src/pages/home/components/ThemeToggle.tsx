@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 
-interface ThemeToggleProps {
+interface FloatingThemeToggleProps {
   className?: string;
 }
 
-export const ThemeToggle: React.FC<ThemeToggleProps> = ({ className = "" }) => {
+export const FloatingThemeToggle: React.FC<FloatingThemeToggleProps> = ({ className = "" }) => {
   // Initialize state from localStorage or system preference
   const [isDark, setIsDark] = useState(() => {
     const savedTheme = localStorage.getItem('theme');
@@ -31,28 +31,29 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ className = "" }) => {
     <button
       onClick={toggleTheme}
       className={`
-        relative inline-flex items-center gap-3 px-6 py-3 rounded-2xl
-        font-medium text-sm transition-all duration-300 ease-out
+        fixed top-6 right-6 z-50 w-14 h-14 rounded-full
+        flex items-center justify-center shadow-lg
+        transition-all duration-300 ease-out
         focus-ring group overflow-hidden
         ${isDark
-          ? 'bg-surface-800 hover:bg-surface-750 text-text-inverse border border-surface-600 hover:border-surface-500'
-          : 'bg-white hover:bg-surface-50 text-text-primary border border-border hover:border-primary-200'
+          ? 'bg-slate-800/90 hover:bg-slate-700/90 text-white border border-slate-600/50 backdrop-blur-sm'
+          : 'bg-white/90 hover:bg-slate-50/90 text-gray-800 border border-gray-200/50 backdrop-blur-sm shadow-xl'
         }
         ${className}
       `}
     >
       {/* Background glow effect */}
       <div className={`
-        absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300
+        absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300
         ${isDark
-          ? 'bg-gradient-to-r from-primary-600/20 to-violet-600/20'
-          : 'bg-gradient-to-r from-primary-100 to-violet-100'
+          ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20'
+          : 'bg-gradient-to-r from-blue-100 to-purple-100'
         }
       `} />
 
       {/* Animated sun icon */}
       <div className={`
-        relative w-5 h-5 transition-transform duration-300 ease-out
+        relative w-6 h-6 transition-all duration-300 ease-out
         ${isDark ? 'rotate-180 scale-0' : 'rotate-0 scale-100'}
       `}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-full h-full">
@@ -63,7 +64,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ className = "" }) => {
 
       {/* Animated moon icon */}
       <div className={`
-        absolute w-5 h-5 transition-transform duration-300 ease-out
+        absolute w-6 h-6 transition-all duration-300 ease-out
         ${isDark ? 'rotate-0 scale-100' : 'rotate-180 scale-0'}
       `}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-full h-full">
@@ -71,14 +72,13 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ className = "" }) => {
         </svg>
       </div>
 
-      <span className="relative font-medium">
-        {isDark ? 'Dark Mode' : 'Light Mode'}
-      </span>
-
-      {/* Pulse effect */}
+      {/* Pulse effect on click */}
       <div className={`
-        absolute inset-0 rounded-2xl opacity-0 group-active:opacity-100 transition-opacity duration-150
-        bg-gradient-to-r from-primary-400/30 to-violet-400/30
+        absolute inset-0 rounded-full opacity-0 group-active:opacity-100 transition-opacity duration-150
+        ${isDark
+          ? 'bg-gradient-to-r from-blue-400/30 to-purple-400/30'
+          : 'bg-gradient-to-r from-blue-400/30 to-purple-400/30'
+        }
       `} />
     </button>
   );

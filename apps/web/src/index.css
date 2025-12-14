@@ -404,22 +404,22 @@
 @layer base {
   /* CSS Variables for theme colors */
   :root {
-    /* Light theme (default) - Warm, inviting palette */
-    --color-bg-primary: var(--color-surface-100);
-    --color-bg-secondary: var(--color-surface-50);
-    --color-bg-tertiary: var(--color-surface-150);
-    --color-bg-accent: var(--color-surface-100);
-    --color-text-primary: var(--color-text-primary);
-    --color-text-secondary: var(--color-text-secondary);
-    --color-text-muted: var(--color-text-muted);
-    --color-border: var(--color-border);
-    --color-border-light: var(--color-border-light);
+    /* Light theme (default) - Clean and bright */
+    --color-bg-primary: #ffffff;
+    --color-bg-secondary: #f8fafc;
+    --color-bg-tertiary: #f1f5f9;
+    --color-bg-accent: #f1f5f9;
+    --color-text-primary: #1e293b;
+    --color-text-secondary: #475569;
+    --color-text-muted: #64748b;
+    --color-border: #e2e8f0;
+    --color-border-light: #f1f5f9;
 
     /* Primary brand color */
-    --color-primary: var(--color-primary-500);
-    --color-primary-light: var(--color-primary-400);
-    --color-secondary: var(--color-secondary-500);
-    --color-accent: var(--color-accent-500);
+    --color-primary: #6366f1;
+    --color-primary-light: #818cf8;
+    --color-secondary: #14b8a6;
+    --color-accent: #f59e0b;
 
     /* Font families */
     font-family: var(--font-sans);
@@ -435,24 +435,24 @@
     font-feature-settings: 'kern' 1, 'liga' 1;
   }
 
-  /* Dark theme variables - Refined gray palette */
+  /* Dark theme variables */
   .dark {
-    --color-bg-primary: var(--color-surface-900);
-    --color-bg-secondary: var(--color-surface-800);
-    --color-bg-tertiary: var(--color-surface-700);
-    --color-bg-accent: var(--color-surface-700);
-    --color-text-primary: var(--color-text-inverse);
-    --color-text-secondary: var(--color-text-secondary);
-    --color-text-muted: var(--color-text-muted);
-    --color-border: #2E2E35;
-    --color-border-light: #3A3A42;
+    --color-bg-primary: #0f172a;
+    --color-bg-secondary: #1e293b;
+    --color-bg-tertiary: #334155;
+    --color-bg-accent: #334155;
+    --color-text-primary: #f8fafc;
+    --color-text-secondary: #cbd5e1;
+    --color-text-muted: #94a3b8;
+    --color-border: #374151;
+    --color-border-light: #4b5563;
 
-    --color-primary: var(--color-primary-400);
-    --color-primary-light: var(--color-primary-300);
-    --color-secondary: var(--color-secondary-400);
-    --color-accent: var(--color-accent-400);
+    --color-primary: #818cf8;
+    --color-primary-light: #a5b4fc;
+    --color-secondary: #2dd4bf;
+    --color-accent: #fbbf24;
 
-    color: var(--color-text-inverse);
+    color: var(--color-text-primary);
     background-color: var(--color-bg-primary);
   }
 

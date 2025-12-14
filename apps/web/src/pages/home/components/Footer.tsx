@@ -97,12 +97,12 @@ export const Footer: React.FC<FooterProps> = ({ className = "" }) => {
   };
 
   return (
-    <footer className={`relative bg-gradient-to-b from-surface-100 to-surface-200 dark:from-surface-900 dark:to-surface-950 border-t border-border dark:border-surface-700 ${className}`}>
+    <footer className={`relative bg-gradient-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950 border-t border-gray-200 dark:border-gray-700 ${className}`}>
       
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-br from-primary-100/20 to-violet-100/20 dark:from-primary-900/10 dark:to-violet-900/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-gradient-to-br from-secondary-100/20 to-teal-100/20 dark:from-secondary-900/10 dark:to-teal-900/10 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-br from-blue-400/10 to-purple-400/10 dark:from-blue-600/20 dark:to-purple-600/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-gradient-to-br from-teal-400/10 to-cyan-400/10 dark:from-teal-600/20 dark:to-cyan-600/20 rounded-full blur-3xl" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-16">
@@ -113,14 +113,14 @@ export const Footer: React.FC<FooterProps> = ({ className = "" }) => {
           {/* Brand Section */}
           <div className="lg:col-span-2 space-y-6">
             <div className="flex items-center gap-4">
-              <div className="relative w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-btn-primary">
+              <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
                 <img src="/icon.jpeg" alt="PrepToDo" className="w-8 h-8 rounded-lg object-cover" />
               </div>
               <div>
-                <h3 className="text-2xl font-serif font-bold bg-gradient-to-r from-primary-600 to-violet-600 bg-clip-text text-transparent">
+                <h3 className="text-2xl font-serif font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
                   PrepToDo
                 </h3>
-                <p className="text-text-muted text-sm">AI-Powered Study Platform</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">AI-Powered Study Platform</p>
               </div>
             </div>
             

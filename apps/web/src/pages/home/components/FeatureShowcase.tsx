@@ -149,29 +149,29 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ onFeatureClick
   };
 
   return (
-    <section className="py-24 bg-gradient-to-b from-surface-50 to-white dark:from-surface-900 dark:to-surface-800">
+    <section className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-slate-900 dark:to-slate-800">
       <div className="max-w-7xl mx-auto px-6">
         
         {/* Section Header */}
         <div className="text-center mb-20">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary-100/80 dark:bg-secondary-900/30 border border-secondary-200/50 dark:border-secondary-700/50 backdrop-blur-sm mb-6">
-            <div className="w-2 h-2 bg-secondary-500 rounded-full animate-pulse-soft" />
-            <span className="text-sm font-medium text-secondary-700 dark:text-secondary-300">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-teal-100/80 dark:bg-teal-900/30 border border-teal-200/50 dark:border-teal-700/50 backdrop-blur-sm mb-6">
+            <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse-soft" />
+            <span className="text-sm font-medium text-teal-700 dark:text-teal-300">
               Powerful Features
             </span>
           </div>
           
           <h2 className="text-5xl lg:text-6xl font-serif font-bold mb-6">
-            <span className="bg-gradient-to-r from-text-primary via-primary-600 to-violet-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-gray-900 via-blue-600 to-purple-600 dark:from-white dark:via-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
               Transform Your
             </span>
             <br />
-            <span className="bg-gradient-to-r from-secondary-600 to-accent-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-teal-600 to-amber-600 dark:from-teal-400 dark:to-amber-400 bg-clip-text text-transparent">
               Study Experience
             </span>
           </h2>
           
-          <p className="text-xl text-text-muted leading-relaxed max-w-3xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-gray-400 leading-relaxed max-w-3xl mx-auto">
             Discover how PrepToDo's comprehensive suite of AI-powered tools can revolutionize 
             your learning journey and accelerate your academic growth.
           </p>
@@ -187,8 +187,8 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ onFeatureClick
               key={feature.id}
               data-feature-id={feature.id}
               className={`
-                group relative p-8 lg:p-10 rounded-3xl border border-border/50 dark:border-surface-600/50 
-                bg-white/80 dark:bg-surface-800/80 backdrop-blur-sm shadow-card hover:shadow-card-xl
+                group relative p-8 lg:p-10 rounded-3xl border border-gray-200/50 dark:border-gray-700/50 
+                bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-lg hover:shadow-xl
                 transition-all duration-500 ease-out cursor-pointer
                 ${visibleFeatures.has(feature.id) 
                   ? 'animate-slide-up opacity-100 translate-y-0' 
@@ -203,29 +203,29 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ onFeatureClick
             >
               
               {/* Background gradient overlay */}
-              <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-5 transition-opacity duration-500 bg-gradient-to-br from-primary-500 to-violet-500" />
+              <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-5 transition-opacity duration-500 bg-gradient-to-br from-blue-500 to-purple-500" />
 
               {/* Feature Header */}
               <div className="relative z-10 flex items-start gap-6 mb-6">
                 
                 {/* Icon */}
-                <div className="relative w-16 h-16 rounded-2xl flex items-center justify-center text-2xl bg-gradient-to-br from-primary-500 to-violet-500 shadow-lg transform group-hover:scale-110 transition-transform duration-300">
-                  <span className="relative z-10">{feature.icon}</span>
+                <div className="relative w-16 h-16 rounded-2xl flex items-center justify-center text-2xl bg-gradient-to-br from-blue-500 to-purple-500 shadow-lg transform group-hover:scale-110 transition-transform duration-300">
+                  <span className="relative z-10 text-white">{feature.icon}</span>
                   
                   {/* Icon glow effect */}
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary-500 to-violet-500 blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 space-y-2">
-                  <h3 className="text-2xl lg:text-3xl font-bold text-text-primary group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-300">
+                  <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
                     {feature.title}
                   </h3>
                 </div>
               </div>
 
               {/* Description */}
-              <p className="text-lg text-text-secondary leading-relaxed mb-6 relative z-10">
+              <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed mb-6 relative z-10">
                 {feature.description}
               </p>
 
@@ -236,12 +236,12 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ onFeatureClick
                     key={idx}
                     className="flex items-center gap-3 group/item"
                   >
-                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-primary-500 to-violet-500 flex items-center justify-center shadow-sm transform group-hover/item:scale-110 transition-transform duration-200">
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-sm transform group-hover/item:scale-110 transition-transform duration-200">
                       <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     </div>
-                    <span className="text-sm font-medium text-text-muted group-hover/item:text-text-primary transition-colors duration-200">
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400 group-hover/item:text-gray-900 dark:group-hover/item:text-white transition-colors duration-200">
                       {benefit}
                     </span>
                   </div>

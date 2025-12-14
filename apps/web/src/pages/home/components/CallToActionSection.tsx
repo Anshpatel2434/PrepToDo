@@ -81,21 +81,18 @@ export const CallToActionSection: React.FC<CallToActionSectionProps> = ({
   return (
     <section 
       ref={sectionRef}
-      className="relative py-24 lg:py-32 overflow-hidden"
+      className="relative py-24 lg:py-32 overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-teal-600 dark:from-slate-800 dark:via-slate-700 dark:to-slate-900"
     >
       
       {/* Animated Background */}
       <div className="absolute inset-0">
-        {/* Base gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-600 via-violet-600 to-secondary-600" />
-        
         {/* Animated overlays */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent animate-shimmer" />
-        <div className="absolute inset-0 bg-gradient-to-bl from-black/20 via-transparent to-black/10" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent animate-shimmer" />
+        <div className="absolute inset-0 bg-gradient-to-bl from-black/10 via-transparent to-black/5" />
         
         {/* Animated background shapes */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '0s', animationDuration: '8s' }} />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '4s', animationDuration: '10s' }} />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white/10 dark:bg-white/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '0s', animationDuration: '8s' }} />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-white/5 dark:bg-white/3 rounded-full blur-3xl animate-float" style={{ animationDelay: '4s', animationDuration: '10s' }} />
       </div>
 
       {/* Floating particles */}
@@ -103,7 +100,7 @@ export const CallToActionSection: React.FC<CallToActionSectionProps> = ({
         {particles.slice(0, particleCount).map((particle) => (
           <div
             key={particle.id}
-            className="absolute w-1 h-1 bg-white/30 rounded-full animate-float"
+            className="absolute w-1 h-1 bg-white/30 dark:bg-white/20 rounded-full animate-float"
             style={{
               top: particle.top,
               left: particle.left,
@@ -195,24 +192,24 @@ export const CallToActionSection: React.FC<CallToActionSectionProps> = ({
           </div>
 
           {/* Trust Indicators */}
-          <div className="flex flex-col sm:flex-row gap-8 justify-center items-center pt-12 text-white/80">
+          <div className="flex flex-col sm:flex-row gap-8 justify-center items-center pt-12 text-white/90 dark:text-white/80">
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-success" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
-              <span className="font-medium">14-day free trial</span>
+              <span className="font-medium">AI-powered learning</span>
             </div>
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-success" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
-              <span className="font-medium">No credit card required</span>
+              <span className="font-medium">Personalized study plans</span>
             </div>
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-success" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
-              <span className="font-medium">Cancel anytime</span>
+              <span className="font-medium">Real-time analytics</span>
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Navigation } from '../components/Navigation';
+import { FloatingNavigation } from '../components/FloatingNavigation';
+import { FloatingThemeToggle } from '../components/ThemeToggle';
 import { HeroSection } from '../components/HeroSection';
 import { IntroductionSection } from '../components/IntroductionSection';
 import { FeatureShowcase } from '../components/FeatureShowcase';
@@ -38,13 +39,25 @@ export const HomePage: React.FC = () => {
     // TODO: Implement pricing navigation
   };
 
+  const handleNavigate = (path: string, section: string) => {
+    // Handle navigation throughout the app
+    console.log(`Navigate to ${path} (${section})`);
+    // TODO: Implement routing to other pages
+    if (section === 'home') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-surface-100 dark:bg-surface-900">
-      {/* Navigation Sidebar */}
-      <Navigation />
+    <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors duration-300">
+      {/* Floating Theme Toggle */}
+      <FloatingThemeToggle />
+      
+      {/* Floating Navigation */}
+      <FloatingNavigation onNavigate={handleNavigate} />
       
       {/* Main Content */}
-      <div className="lg:ml-72 transition-all duration-500 ease-out">
+      <div className="transition-all duration-500 ease-out">
         
         {/* Hero Section */}
         <section data-section="home">

@@ -54,18 +54,18 @@ export const IntroductionSection: React.FC<IntroductionSectionProps> = ({ classN
   return (
     <section 
       ref={sectionRef}
-      className={`relative py-24 overflow-hidden bg-gradient-to-b from-white to-surface-50/50 dark:from-surface-800 dark:to-surface-900 ${className}`}
+      className={`relative py-24 overflow-hidden bg-gradient-to-b from-white to-gray-50/50 dark:from-slate-800 dark:to-slate-900 ${className}`}
     >
       
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         {/* Animated background shapes */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-primary-100/30 to-violet-100/30 dark:from-primary-900/10 dark:to-violet-900/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '0s', animationDuration: '8s' }} />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-br from-secondary-100/30 to-teal-100/30 dark:from-secondary-900/10 dark:to-teal-900/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '3s', animationDuration: '10s' }} />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-blue-400/10 to-purple-400/10 dark:from-blue-600/20 dark:to-purple-600/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '0s', animationDuration: '8s' }} />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-br from-teal-400/10 to-cyan-400/10 dark:from-teal-600/20 dark:to-cyan-600/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '3s', animationDuration: '10s' }} />
         
         {/* Floating geometric elements */}
-        <div className="absolute top-1/3 right-10 w-2 h-20 bg-gradient-to-b from-primary-400/20 to-transparent rounded-full transform rotate-45 animate-bounce-subtle" style={{ animationDelay: '1s' }} />
-        <div className="absolute bottom-1/3 left-10 w-2 h-16 bg-gradient-to-b from-secondary-400/20 to-transparent rounded-full transform -rotate-45 animate-bounce-subtle" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/3 right-10 w-2 h-20 bg-gradient-to-b from-blue-400/30 to-transparent dark:from-blue-500/40 rounded-full transform rotate-45 animate-bounce-subtle" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-1/3 left-10 w-2 h-16 bg-gradient-to-b from-teal-400/30 to-transparent dark:from-teal-500/40 rounded-full transform -rotate-45 animate-bounce-subtle" style={{ animationDelay: '2s' }} />
       </div>
 
       <div className="relative max-w-6xl mx-auto px-6">
@@ -75,24 +75,24 @@ export const IntroductionSection: React.FC<IntroductionSectionProps> = ({ classN
           text-center mb-16 transition-all duration-1000 ease-out
           ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
         `}>
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-100/80 dark:bg-primary-900/30 border border-primary-200/50 dark:border-primary-700/50 backdrop-blur-sm mb-6">
-            <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse-soft" />
-            <span className="text-sm font-medium text-primary-700 dark:text-primary-300">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100/80 dark:bg-blue-900/30 border border-blue-200/50 dark:border-blue-700/50 backdrop-blur-sm mb-6">
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse-soft" />
+            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
               About PrepToDo
             </span>
           </div>
           
           <h2 className="text-4xl lg:text-5xl font-serif font-bold mb-6">
-            <span className="bg-gradient-to-r from-text-primary via-primary-600 to-violet-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-gray-900 via-blue-600 to-purple-600 dark:from-white dark:via-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
               Why Students Choose
             </span>
             <br />
-            <span className="bg-gradient-to-r from-secondary-600 to-accent-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-teal-600 to-amber-600 dark:from-teal-400 dark:to-amber-400 bg-clip-text text-transparent">
               PrepToDo
             </span>
           </h2>
           
-          <div className="w-24 h-1 bg-gradient-primary mx-auto rounded-full" />
+          <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto rounded-full" />
         </div>
 
         {/* Content */}
