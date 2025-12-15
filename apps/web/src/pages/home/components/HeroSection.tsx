@@ -201,7 +201,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ isDark }) => {
 						variants={itemVariants}
 					>
 						<motion.button
-							className={`w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 ease-out focus-ring overflow-hidden ${
+							className={`w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl focus-ring overflow-hidden ${
 								isDark
 									? "bg-brand-primary-dark hover:bg-brand-primary-hover-dark"
 									: "bg-brand-primary-light hover:bg-brand-primary-hover-light"
@@ -214,7 +214,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ isDark }) => {
 						</motion.button>
 
 						<motion.button
-							className={`w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 backdrop-blur-sm font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 ease-out focus-ring border ${
+							className={`w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 backdrop-blur-sm font-semibold rounded-2xl shadow-lg hover:shadow-xl focus-ring border ${
 								isDark
 									? "bg-bg-secondary-dark/80 text-text-secondary-dark border-border-darker hover:border-brand-primary-dark"
 									: "bg-bg-secondary-light/80 text-text-secondary-light border-border-lighter hover:border-brand-primary-light"
