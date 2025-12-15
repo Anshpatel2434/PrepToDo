@@ -43,12 +43,12 @@
      ───────────────────────────────────────────────────────────────────────── */
   --color-brand-primary-light: #006747;    /* Academic Teal - darker for white text readability */
   --color-brand-primary-hover-light: #004f35;
-  --color-brand-secondary-light: #e0f2f1;  /* Soft Teal - for highlights/selections */
+  --color-brand-secondary-light: #6b8e6b;  /* Sage green - visible on Warm Alabaster, matches teal theme, good for text */
   --color-brand-accent-light: #b8860b;     /* Bronze Gold - for text/icons (never bright yellow) */
   
   --color-brand-primary-dark: #22c55e;     /* Teal for dark theme */
   --color-brand-primary-hover-dark: #16a34a;
-  --color-brand-secondary-dark: #064e3b;   /* Dark teal for dark theme */
+  --color-brand-secondary-dark: #7a9567;   /* Darker sage green for dark theme, complementary to light theme */
   --color-brand-accent-dark: #fbbf24;      /* Warmer gold for dark theme */
 
   /* ─────────────────────────────────────────────────────────────────────────
