@@ -39,16 +39,16 @@
 
   /* ─────────────────────────────────────────────────────────────────────────
      BRAND COLORS - Use as: bg-brand-primary-light, bg-brand-primary-dark
-     Research-Based: Academic Teal + Bronze Gold strategy
+     Ed-Tech Focus: Deep Indigo + Bronze Gold strategy - Professional, academic, trust-building
      ───────────────────────────────────────────────────────────────────────── */
-  --color-brand-primary-light: #006747;    /* Academic Teal - darker for white text readability */
-  --color-brand-primary-hover-light: #004f35;
-  --color-brand-secondary-light: #6b8e6b;  /* Sage green - visible on Warm Alabaster, matches teal theme, good for text */
+  --color-brand-primary-light: #4c51bf;    /* Deep Indigo - classic ed-tech color, professional, non-vibrant */
+  --color-brand-primary-hover-light: #434190;
+  --color-brand-secondary-light: #6366f1;  /* Lighter Indigo - for subtle accents and text */
   --color-brand-accent-light: #b8860b;     /* Bronze Gold - for text/icons (never bright yellow) */
   
-  --color-brand-primary-dark: #22c55e;     /* Teal for dark theme */
-  --color-brand-primary-hover-dark: #16a34a;
-  --color-brand-secondary-dark: #7a9567;   /* Darker sage green for dark theme, complementary to light theme */
+  --color-brand-primary-dark: #818cf8;     /* Lighter Indigo for dark theme */
+  --color-brand-primary-hover-dark: #a5b4fc;
+  --color-brand-secondary-dark: #a0aec0;   /* Muted blue-gray for dark theme */
   --color-brand-accent-dark: #fbbf24;      /* Warmer gold for dark theme */
 
   /* ─────────────────────────────────────────────────────────────────────────
