@@ -1,21 +1,19 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../../store";
 import { FloatingNavigation } from "../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
+import { AuthPopup } from "../../auth/components/AuthPopup";
 import { HeroSection } from "../components/HeroSection";
 import { IntroductionSection } from "../components/IntroductionSection";
 import { FeatureShowcase } from "../components/FeatureShowcase";
 import { Footer } from "../components/Footer";
 
 export const HomePage: React.FC = () => {
-    const handleNavigate = (path: string, section: string) => {
-        // Handle navigation throughout the app
-        console.log(`Navigate to ${path} (${section})`);
-        // TODO: Implement routing to other pages
-        if (section === "home") {
-            window.scrollTo({ top: 0, behavior: "smooth" });
-        }
-    };
-
+    const navigate = useNavigate();
+    const authState = useSelector((state: RootState) => state.auth);
+    
     const [isDark, setIsDark] = useState(() => {
         if (typeof window !== "undefined") {
             const saved = localStorage.getItem("theme");
@@ -24,6 +22,10 @@ export const HomePage: React.FC = () => {
         }
         return false;
     });
+
+    // Auth popup state
+    const [authPopupOpen, setAuthPopupOpen] = useState(false);
+    const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
 
     // Listen for localStorage changes (from other tabs/windows or other components)
     useEffect(() => {
@@ -48,15 +50,46 @@ export const HomePage: React.FC = () => {
         window.addEventListener("themeChange", handleCustomThemeChange);
 
         console.log("The isDark variable in the HomePage component : ", isDark);
+        console.log("Auth state:", authState);
 
         return () => {
             window.removeEventListener("storage", handleStorageChange);
             window.removeEventListener("themeChange", handleCustomThemeChange);
         };
-    }, [isDark]);
+    }, [isDark, authState]);
 
     const handleThemeToggle = () => {
         setIsDark(!isDark);
+    };
+
+    const handleNavigate = (path: string, section: string) => {
+        // Handle navigation throughout the app
+        console.log(`Navigate to ${path} (${section})`);
+        
+        if (section === "home") {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        } else if (section === "auth" && path === "/auth") {
+            // Navigate to dedicated auth page with background
+            navigate("/auth");
+        }
+    };
+
+    const handleAuthAction = (action: 'signin' | 'signup') => {
+        setAuthMode(action);
+        if (action === 'signin') {
+            navigate("/auth?mode=signin");
+        } else {
+            navigate("/auth?mode=signup");
+        }
+    };
+
+    const handleQuickAuth = (action: 'signin' | 'signup') => {
+        setAuthMode(action);
+        setAuthPopupOpen(true);
+    };
+
+    const handleCloseAuthPopup = () => {
+        setAuthPopupOpen(false);
     };
 
     return (
@@ -68,13 +101,23 @@ export const HomePage: React.FC = () => {
             <FloatingThemeToggle isDark={isDark} onThemeToggle={handleThemeToggle} />
 
             {/* Floating Navigation */}
-            <FloatingNavigation isDark={isDark} onNavigate={handleNavigate} />
+            <FloatingNavigation 
+                isDark={isDark} 
+                onNavigate={handleNavigate}
+                isAuthenticated={authState.isAuthenticated}
+                user={authState.user}
+                onAuthAction={handleAuthAction}
+            />
 
             {/* Main Content */}
             <div className="transition-all duration-500 ease-out">
                 {/* Hero Section */}
                 <section data-section="home">
-                    <HeroSection isDark={isDark} />
+                    <HeroSection 
+                        isDark={isDark} 
+                        isAuthenticated={authState.isAuthenticated}
+                        onQuickAuth={handleQuickAuth}
+                    />
                 </section>
 
                 {/* Introduction Section */}
@@ -90,6 +133,14 @@ export const HomePage: React.FC = () => {
                 {/* Footer */}
                 <Footer isDark={isDark} />
             </div>
+
+            {/* Auth Popup */}
+            <AuthPopup
+                isOpen={authPopupOpen}
+                onClose={handleCloseAuthPopup}
+                isDark={isDark}
+                initialMode={authMode}
+            />
         </div>
     );
 };

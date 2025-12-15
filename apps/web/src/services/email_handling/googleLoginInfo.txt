@@ -1,0 +1,52 @@
+# Google OAuth Login Integration
+
+## Setup Instructions
+
+1. **Create a Google OAuth App**:
+   - Go to Google Cloud Console (https://console.cloud.google.com/)
+   - Create a new project or select existing one
+   - Enable Google+ API or Google Sign-In API
+   - Create OAuth 2.0 credentials
+   - Add authorized redirect URIs:
+     - http://localhost:5173/auth/callback (development)
+     - https://yourdomain.com/auth/callback (production)
+
+2. **Configure Supabase**:
+   - Go to Supabase Dashboard > Authentication > Settings
+   - Enable Google provider
+   - Add Client ID and Client Secret from your Google OAuth app
+   - Set redirect URL to your domain
+
+3. **Required Environment Variables**:
+   ```
+   VITE_GOOGLE_CLIENT_ID=your_google_client_id
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+## Implementation Details
+
+### Backend (Supabase Edge Functions)
+
+1. **send-otp-email** - Function to send OTP via email
+2. **verify-otp** - Function to verify OTP and generate token
+3. **finalize-signup** - Function to create user account
+4. **confirm-user** - Function to validate user token
+
+### Frontend Integration
+
+The Google login flow:
+1. User clicks "Continue with Google"
+2. Redirect to Google OAuth consent screen
+3. Google redirects back to /auth/callback
+4. Extract authorization code
+5. Exchange code for access token via Supabase
+6. Set user session and redirect
+
+### Security Considerations
+
+- Use HTTPS in production
+- Validate redirect URIs
+- Implement CSRF protection
+- Store tokens securely
+- Handle token expiration
