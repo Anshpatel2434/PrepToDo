@@ -148,23 +148,15 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ isDark }) => {
           </div>
           
           <h2 className="text-5xl lg:text-6xl font-serif font-bold mb-6">
-            <span
-              className={`bg-clip-text text-transparent bg-linear-to-r transition-colors duration-300 ${
-                isDark
-                  ? 'from-text-primary-dark via-brand-secondary-dark to-brand-primary-dark'
-                  : 'from-text-primary-light via-brand-secondary-light to-brand-primary-light'
-              }`}
-            >
+            <span className={`transition-colors duration-300 ${
+              isDark ? 'text-text-primary-dark' : 'text-text-primary-light'
+            }`}>
               Transform Your
             </span>
             <br />
-            <span
-              className={`bg-clip-text text-transparent bg-linear-to-r transition-colors duration-300 ${
-                isDark
-                  ? 'from-brand-primary-dark to-brand-accent-dark'
-                  : 'from-brand-primary-light to-brand-accent-light'
-              }`}
-            >
+            <span className={`transition-colors duration-300 ${
+              isDark ? 'text-brand-secondary-dark' : 'text-brand-secondary-light'
+            }`}>
               Study Experience
             </span>
           </h2>
@@ -210,12 +202,12 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ isDark }) => {
                 onMouseLeave={() => setHoveredFeature(null)}
               >
                 
-                {/* Background gradient overlay - theme adaptive */}
+                {/* Background overlay - theme adaptive */}
                 <div
-                  className={`absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-5 transition-opacity duration-500 ${
+                  className={`absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-3 transition-opacity duration-500 ${
                     isDark
-                      ? 'bg-linear-to-br from-brand-primary-dark to-brand-secondary-dark'
-                      : 'bg-linear-to-br from-brand-primary-light to-brand-secondary-light'
+                      ? 'bg-brand-primary-dark'
+                      : 'bg-brand-primary-light'
                   }`}
                 />
 
@@ -224,22 +216,24 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ isDark }) => {
                   
                   {/* Icon */}
                   <div
-                    className={`relative w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300 bg-linear-to-br ${
+                    className={`relative w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300 ${
                       isDark
-                        ? 'from-brand-primary-dark to-brand-secondary-dark'
-                        : 'from-brand-primary-light to-brand-secondary-light'
+                        ? 'bg-brand-primary-dark'
+                        : 'bg-brand-primary-light'
                     }`}
                   >
-                    <span className="relative z-10 text-white text-2xl">
+                    <span className={`relative z-10 text-2xl ${
+                      isDark ? 'text-text-primary-dark' : 'text-text-primary-light'
+                    }`}>
                       <IconComponent />
                     </span>
                     
                     {/* Icon glow effect */}
                     <div
-                      className={`absolute inset-0 rounded-2xl blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300 bg-linear-to-br ${
+                      className={`absolute inset-0 rounded-2xl blur-lg opacity-0 group-hover:opacity-20 transition-opacity duration-300 ${
                         isDark
-                          ? 'from-brand-primary-dark to-brand-secondary-dark'
-                          : 'from-brand-primary-light to-brand-secondary-light'
+                          ? 'bg-brand-primary-dark'
+                          : 'bg-brand-primary-light'
                       }`}
                     />
                   </div>
@@ -267,6 +261,48 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ isDark }) => {
                   {feature.description}
                 </p>
 
+                {/* Demo Image */}
+                <div className="mb-6 relative z-10">
+                  <div
+                    className={`w-full h-48 rounded-2xl overflow-hidden shadow-md border transition-colors duration-300 ${
+                      isDark
+                        ? 'border-border-dark bg-bg-tertiary-dark'
+                        : 'border-border-light bg-bg-tertiary-light'
+                    }`}
+                  >
+                    <div className="w-full h-full flex items-center justify-center">
+                      {/* Demo image placeholder */}
+                      <div className="text-center">
+                        <div
+                          className={`w-16 h-16 rounded-xl flex items-center justify-center mb-4 mx-auto ${
+                            isDark ? 'bg-brand-primary-dark/20' : 'bg-brand-primary-light/20'
+                          }`}
+                        >
+                          <span className={`text-3xl ${
+                            isDark ? 'text-brand-primary-dark' : 'text-brand-primary-light'
+                          }`}>
+                            <IconComponent />
+                          </span>
+                        </div>
+                        <p
+                          className={`text-sm font-medium ${
+                            isDark ? 'text-text-muted-dark' : 'text-text-muted-light'
+                          }`}
+                        >
+                          {feature.title} Preview
+                        </p>
+                        <p
+                          className={`text-xs mt-1 ${
+                            isDark ? 'text-text-muted-dark' : 'text-text-muted-light'
+                          }`}
+                        >
+                          Interactive demo coming soon
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Benefits List */}
                 <div className="grid grid-cols-2 gap-3 relative z-10">
                   {feature.benefits.map((benefit, idx) => (
@@ -275,10 +311,10 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ isDark }) => {
                       className="flex items-center gap-3 group/item"
                     >
                       <div
-                        className={`w-5 h-5 rounded-full flex items-center justify-center shadow-sm transform group-hover/item:scale-110 transition-transform duration-200 bg-linear-to-br ${
+                        className={`w-5 h-5 rounded-full flex items-center justify-center shadow-sm transform group-hover/item:scale-110 transition-transform duration-200 ${
                           isDark
-                            ? 'from-brand-primary-dark to-brand-secondary-dark'
-                            : 'from-brand-primary-light to-brand-secondary-light'
+                            ? 'bg-brand-primary-dark'
+                            : 'bg-brand-primary-light'
                         }`}
                       >
                         <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -325,7 +361,7 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ isDark }) => {
                         absolute w-1 h-1 rounded-full opacity-0 group-hover:opacity-100
                         transition-all duration-700 ease-out
                         ${hoveredFeature === feature.id ? 'animate-float' : ''}
-                        ${isDark ? 'bg-brand-secondary-dark' : 'bg-brand-secondary-light'}
+                        ${isDark ? 'bg-brand-primary-dark' : 'bg-brand-primary-light'}
                       `}
                       style={{
                         top: `${20 + Math.random() * 60}%`,
@@ -348,15 +384,15 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ isDark }) => {
               className={`
                 px-8 py-4 text-white font-semibold rounded-2xl
                 shadow-lg hover:shadow-xl transform hover:-translate-y-1
-                transition-all duration-300 ease-out focus-ring overflow-hidden
-                bg-linear-to-r ${
+                transition-all duration-300 ease-out focus-ring
+                ${
                   isDark
-                    ? 'from-brand-primary-dark to-brand-secondary-dark'
-                    : 'from-brand-primary-light to-brand-secondary-light'
+                    ? 'bg-brand-primary-dark hover:bg-brand-primary-hover-dark'
+                    : 'bg-brand-primary-light hover:bg-brand-primary-hover-light'
                 }
               `}
             >
-              <span className="relative z-10">Explore All Features</span>
+              <span>Explore All Features</span>
             </button>
             <button
               className={`
