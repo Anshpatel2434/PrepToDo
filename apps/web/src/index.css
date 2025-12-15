@@ -19,13 +19,13 @@
   /* ─────────────────────────────────────────────────────────────────────────
      TEXT COLORS - Use as: text-text-primary-light, text-text-primary-dark
      ───────────────────────────────────────────────────────────────────────── */
-  --color-text-primary-light: #1a202c;
-  --color-text-secondary-light: #2d3748;
-  --color-text-muted-light: #4a5568;
+  --color-text-primary-light: #2d3748;
+  --color-text-secondary-light: #4a5568;
+  --color-text-muted-light: #718096;
   
-  --color-text-primary-dark: #f7fafc;
-  --color-text-secondary-dark: #edf2f7;
-  --color-text-muted-dark: #e2e8f0;
+  --color-text-primary-dark: #f8fafc;
+  --color-text-secondary-dark: #cbd5e1;
+  --color-text-muted-dark: #94a3b8;
 
   /* ─────────────────────────────────────────────────────────────────────────
      BORDER COLORS - Use as: border-border-light, border-border-dark
@@ -38,15 +38,15 @@
   /* ─────────────────────────────────────────────────────────────────────────
      BRAND COLORS - Use as: bg-brand-primary-light, bg-brand-primary-dark
      ───────────────────────────────────────────────────────────────────────── */
-  --color-brand-primary-light: #5a67d8;
-  --color-brand-primary-hover-light: #4c51bf;
-  --color-brand-secondary-light: #38b2ac;
-  --color-brand-accent-light: #ed8936;
+  --color-brand-primary-light: #4a5568;
+  --color-brand-primary-hover-light: #2d3748;
+  --color-brand-secondary-light: #718096;
+  --color-brand-accent-light: #a0aec0;
   
-  --color-brand-primary-dark: #7f9cf5;
-  --color-brand-primary-hover-dark: #a0aec8;
-  --color-brand-secondary-dark: #4fd1c5;
-  --color-brand-accent-dark: #f6ad55;
+  --color-brand-primary-dark: #cbd5e1;
+  --color-brand-primary-hover-dark: #e2e8f0;
+  --color-brand-secondary-dark: #94a3b8;
+  --color-brand-accent-dark: #a0aec0;
 
   /* ─────────────────────────────────────────────────────────────────────────
      SEMANTIC COLORS - Use as: bg-success, text-error, etc.
