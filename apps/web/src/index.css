@@ -7,25 +7,27 @@
 @theme {
   /* ─────────────────────────────────────────────────────────────────────────
      BACKGROUND COLORS - Use as: bg-bg-primary-light, bg-bg-primary-dark
+     Research-Based: Minimize eye strain (asthenopia) + WCAG AA compliance
      ───────────────────────────────────────────────────────────────────────── */
-  --color-bg-primary-light: #fbfbfb;
-  --color-bg-secondary-light: #f5f5f5;
-  --color-bg-tertiary-light: #ececec;
+  --color-bg-primary-light: #faf9ef;  /* Warm Alabaster - mimics paper, reduces blue-light glare */
+  --color-bg-secondary-light: #f5f4e8;
+  --color-bg-tertiary-light: #ece8d8;
   
-  --color-bg-primary-dark: #1a1a1a;
-  --color-bg-secondary-dark: #2d2d2d;
-  --color-bg-tertiary-dark: #404040;
+  --color-bg-primary-dark: #121212;   /* Dark Gray - prevents "smearing" on OLED screens */
+  --color-bg-secondary-dark: #1a1a1a;
+  --color-bg-tertiary-dark: #2a2a2a;
 
   /* ─────────────────────────────────────────────────────────────────────────
      TEXT COLORS - Use as: text-text-primary-light, text-text-primary-dark
+     Research-Based: Never use pure black (#000000), maximize readability
      ───────────────────────────────────────────────────────────────────────── */
-  --color-text-primary-light: #2d3748;
-  --color-text-secondary-light: #4a5568;
-  --color-text-muted-light: #718096;
+  --color-text-primary-light: #232d4b;  /* Deep Charcoal - never use pure black */
+  --color-text-secondary-light: #58595b; /* Slate Gray */
+  --color-text-muted-light: #6b7280;
   
   --color-text-primary-dark: #f8fafc;
-  --color-text-secondary-dark: #cbd5e1;
-  --color-text-muted-dark: #94a3b8;
+  --color-text-secondary-dark: #e5e7eb;
+  --color-text-muted-dark: #d1d5db;
 
   /* ─────────────────────────────────────────────────────────────────────────
      BORDER COLORS - Use as: border-border-light, border-border-dark
@@ -37,16 +39,17 @@
 
   /* ─────────────────────────────────────────────────────────────────────────
      BRAND COLORS - Use as: bg-brand-primary-light, bg-brand-primary-dark
+     Research-Based: Academic Teal + Bronze Gold strategy
      ───────────────────────────────────────────────────────────────────────── */
-  --color-brand-primary-light: #4a5568;
-  --color-brand-primary-hover-light: #2d3748;
-  --color-brand-secondary-light: #718096;
-  --color-brand-accent-light: #a0aec0;
+  --color-brand-primary-light: #006747;    /* Academic Teal - darker for white text readability */
+  --color-brand-primary-hover-light: #004f35;
+  --color-brand-secondary-light: #e0f2f1;  /* Soft Teal - for highlights/selections */
+  --color-brand-accent-light: #b8860b;     /* Bronze Gold - for text/icons (never bright yellow) */
   
-  --color-brand-primary-dark: #cbd5e1;
-  --color-brand-primary-hover-dark: #e2e8f0;
-  --color-brand-secondary-dark: #94a3b8;
-  --color-brand-accent-dark: #a0aec0;
+  --color-brand-primary-dark: #22c55e;     /* Teal for dark theme */
+  --color-brand-primary-hover-dark: #16a34a;
+  --color-brand-secondary-dark: #064e3b;   /* Dark teal for dark theme */
+  --color-brand-accent-dark: #fbbf24;      /* Warmer gold for dark theme */
 
   /* ─────────────────────────────────────────────────────────────────────────
      SEMANTIC COLORS - Use as: bg-success, text-error, etc.
@@ -55,6 +58,8 @@
   --color-warning: #f59e0b;
   --color-error: #ef4444;
   --color-info: #3b82f6;
+  --color-gold-decoration: #ffd700;    /* Web Gold - DECORATION ONLY (stars, trophies, confetti) */
+  --color-gold-text: #b8860b;          /* Bronze Gold - for text/icons */
 
   /* ─────────────────────────────────────────────────────────────────────────
      ANIMATIONS
@@ -101,6 +106,40 @@
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-8px); }
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TYPOGRAPHY IMPROVEMENTS - Research-Based Humanist Design
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Font Families - Humanist Sans-Serif for better readability */
+.font-humanist {
+  font-family: 'Inter', 'Roboto', system-ui, -apple-system, sans-serif;
+  /* Good distinction between 'I', 'l', and '1' */
+}
+
+/* Optimal Line Length (The Measure) */
+.text-measure {
+  /* Desktop: 60-75 characters per line */
+  max-width: 65ch;
+}
+
+@media (max-width: 768px) {
+  .text-measure {
+    /* Mobile: 35-45 characters per line */
+    max-width: 45ch;
+  }
+}
+
+/* Typography Classes - Research-Based */
+.text-reading {
+  /* Minimum line height 1.6 for passage text to prevent crowding */
+  line-height: 1.6;
+}
+
+.text-heading {
+  /* Slightly tighter for headings */
+  line-height: 1.4;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
