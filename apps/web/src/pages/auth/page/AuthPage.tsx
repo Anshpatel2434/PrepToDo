@@ -6,7 +6,6 @@ import { AuthPopup } from '../components/AuthPopup';
 // This component handles the /auth route with background
 export const AuthPage: React.FC = () => {
   const location = useLocation();
-  const [isDark, setIsDark] = useState(false);
   const [authPopupOpen, setAuthPopupOpen] = useState(true);
 
   // Get initial mode from URL params

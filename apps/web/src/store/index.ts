@@ -1,13 +1,10 @@
 import { configureStore } from "@reduxjs/toolkit";
-import authReducer from "../pages/auth/redux_usecases/authSlice";
 import { setupListeners } from "@reduxjs/toolkit/query/react";
 import { authApi } from "../pages/auth/redux_usecases/authApi";
 
 export const store = configureStore({
     reducer: {
-        // Auth slice for user state management
-        auth: authReducer,
-        // Auth API for backend communication
+        // Auth API for backend communication and state management
         [authApi.reducerPath]: authApi.reducer,
     },
     // Adding the api middleware enables caching, invalidation, polling,

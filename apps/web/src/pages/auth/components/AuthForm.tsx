@@ -1,20 +1,14 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
-import type { RootState, AppDispatch } from '../../../store';
-import { useSendOtpEmailMutation, useVerifyOtpMutation, useFinalizeSignupMutation, useLoginMutation, useLoginWithGoogleMutation } from '../redux_usecases/authApi';
-import {
-  setEmail,
-  nextSignupStep,
-  previousSignupStep,
-  resetSignupFlow,
-  setEmailVerified,
-  setConfirmationToken,
-  setError,
-  clearError,
-  setUser,
-} from '../redux_usecases/authSlice';
+import { 
+  useGetAuthStateQuery,
+  useSendOtpEmailMutation, 
+  useVerifyOtpMutation, 
+  useFinalizeSignupMutation, 
+  useLoginMutation, 
+  useLoginWithGoogleMutation 
+} from '../redux_usecases/authApi';
 import { EmailService } from '../../../services/email_handling/emailService';
 
 // Import steps components
@@ -32,10 +26,11 @@ interface AuthFormProps {
 type AuthMode = 'signin' | 'signup';
 
 export const AuthForm: React.FC<AuthFormProps> = ({ isDark, initialMode, onClose }) => {
-  const dispatch = useDispatch<AppDispatch>();
-  const authState = useSelector((state: RootState) => state.auth);
+  // Get auth state from RTK Query
+  const { data: authState, refetch } = useGetAuthStateQuery();
   
   // Local state
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [email, setLocalEmail] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
@@ -47,19 +42,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({ isDark, initialMode, onClose
   const [login, { isLoading: isLoggingIn }] = useLoginMutation();
   const [loginWithGoogle, { isLoading: isGoogleLoading }] = useLoginWithGoogleMutation();
 
-  // Initialize form mode using useMemo to avoid setState in effect
-  const defaultMode = useMemo(() => {
-    return initialMode === 'signup' ? 'signup' : 'signin';
-  }, [initialMode]);
-  const [mode, setMode] = useState<AuthMode>(defaultMode);
-
-  // Reset signup flow when needed
-  useEffect(() => {
-    if (initialMode === 'signup') {
-      dispatch(resetSignupFlow());
-    }
-  }, [initialMode, dispatch]);
-
   // Handle email step
   const handleEmailSubmit = async (emailValue: string) => {
     if (!EmailService.isValidEmail(emailValue)) {
@@ -68,19 +50,17 @@ export const AuthForm: React.FC<AuthFormProps> = ({ isDark, initialMode, onClose
     }
 
     setLocalEmail(emailValue);
-    dispatch(setEmail(emailValue));
-    dispatch(clearError());
     
     if (mode === 'signup') {
       try {
-      const result = await sendOtpEmail({ email: emailValue }).unwrap();
-      dispatch(nextSignupStep());
-      toast.success(result.message);
-    } catch (error) {
-      const err = error as { data?: string; message?: string };
-      dispatch(setError(err.data || 'Failed to send OTP'));
-      toast.error(err.data || 'Failed to send OTP');
-    }
+        const result = await sendOtpEmail({ email: emailValue }).unwrap();
+        toast.success(result.message);
+        refetch(); // Refresh auth state
+      } catch (error) {
+        const err = error as { data?: string; message?: string };
+        toast.error(err.data || 'Failed to send OTP');
+        refetch(); // Refresh auth state to show error
+      }
     } else {
       // For signin, we just move to the password step
       toast.success('Email verified');
@@ -93,39 +73,37 @@ export const AuthForm: React.FC<AuthFormProps> = ({ isDark, initialMode, onClose
       toast.error('Please enter a valid 6-digit OTP');
       return;
     }
-
-    dispatch(clearError());
+    
+    const currentEmail = authState?.email || email;
     
     try {
-      const result = await verifyOtp({ email: authState.email, otp }).unwrap();
-      dispatch(setEmailVerified(true));
-      dispatch(setConfirmationToken(result.token));
-      dispatch(nextSignupStep());
+      const result = await verifyOtp({ email: currentEmail, otp }).unwrap();
       toast.success(result.message);
+      refetch(); // Refresh auth state
     } catch (error) {
       const err = error as { data?: string; message?: string };
-      dispatch(setError(err.data || 'Invalid OTP'));
       toast.error(err.data || 'Invalid OTP');
+      refetch(); // Refresh auth state to show error
     }
   };
 
   // Handle password/setup step
   const handlePasswordSubmit = async () => {
-    dispatch(clearError());
+    const currentEmail = authState?.email || email;
     
     try {
       const result = await finalizeSignup({ 
-        email: authState.email, 
+        email: currentEmail, 
         password: password || undefined 
       }).unwrap();
       
-      dispatch(setUser(result.user));
       toast.success(result.message);
+      refetch(); // Refresh auth state
       onClose();
     } catch (error) {
       const err = error as { data?: string; message?: string };
-      dispatch(setError(err.data || 'Failed to complete signup'));
       toast.error(err.data || 'Failed to complete signup');
+      refetch(); // Refresh auth state to show error
     }
   };
 
@@ -140,48 +118,45 @@ export const AuthForm: React.FC<AuthFormProps> = ({ isDark, initialMode, onClose
       toast.error('Please enter a valid email address');
       return;
     }
-
-    dispatch(clearError());
     
     try {
       await login({ email, password }).unwrap();
       toast.success('Logged in successfully!');
+      refetch(); // Refresh auth state
       onClose();
     } catch (error) {
       const err = error as { data?: string; message?: string };
-      dispatch(setError(err.data || 'Login failed'));
       toast.error(err.data || 'Login failed');
+      refetch(); // Refresh auth state to show error
     }
   };
 
   // Handle Google login
   const handleGoogleLogin = async () => {
-    dispatch(clearError());
-    
     try {
       await loginWithGoogle().unwrap();
       // Google OAuth will redirect
+      refetch(); // Refresh auth state
     } catch (error) {
       const err = error as { data?: string; message?: string };
-      dispatch(setError(err.data || 'Google login failed'));
       toast.error(err.data || 'Google login failed');
+      refetch(); // Refresh auth state to show error
     }
   };
 
   // Handle mode switch
   const switchMode = () => {
     setMode(mode === 'signin' ? 'signup' : 'signin');
-    dispatch(resetSignupFlow());
     setLocalEmail('');
     setPassword('');
     setOtp('');
-    dispatch(clearError());
+    refetch(); // Refresh auth state
   };
 
   const isLoading = isSendingOtp || isVerifyingOtp || isFinalizing || isLoggingIn || isGoogleLoading;
-  const isSignupStep1 = mode === 'signup' && authState.signupStep === 1;
-  const isSignupStep2 = mode === 'signup' && authState.signupStep === 2;
-  const isSignupStep3 = mode === 'signup' && authState.signupStep === 3;
+  const isSignupStep1 = mode === 'signup' && (authState?.signupStep || 1) === 1;
+  const isSignupStep2 = mode === 'signup' && (authState?.signupStep || 1) === 2;
+  const isSignupStep3 = mode === 'signup' && (authState?.signupStep || 1) === 3;
   const isSignin = mode === 'signin';
 
   return (
@@ -219,7 +194,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ isDark, initialMode, onClose
             onGoogleLogin={handleGoogleLogin}
             onSwitchMode={switchMode}
             isLoading={isLoading}
-            error={authState.error}
+            error={authState?.error || null}
           />
         )}
 
@@ -231,7 +206,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ isDark, initialMode, onClose
             onEmailChange={setLocalEmail}
             onSubmit={handleEmailSubmit}
             isLoading={isLoading}
-            error={authState.error}
+            error={authState?.error || null}
           />
         )}
 
@@ -242,9 +217,12 @@ export const AuthForm: React.FC<AuthFormProps> = ({ isDark, initialMode, onClose
             otp={otp}
             onOtpChange={setOtp}
             onSubmit={handleOtpSubmit}
-            onBack={() => dispatch(previousSignupStep())}
+            onBack={() => {
+              // Use manual state management for step navigation
+              setMode('signup');
+            }}
             isLoading={isLoading}
-            error={authState.error}
+            error={authState?.error || null}
           />
         )}
 
@@ -255,9 +233,12 @@ export const AuthForm: React.FC<AuthFormProps> = ({ isDark, initialMode, onClose
             password={password}
             onPasswordChange={setPassword}
             onSubmit={handlePasswordSubmit}
-            onBack={() => dispatch(previousSignupStep())}
+            onBack={() => {
+              // Use manual state management for step navigation
+              setMode('signup');
+            }}
             isLoading={isLoading}
-            error={authState.error}
+            error={authState?.error || null}
           />
         )}
       </AnimatePresence>

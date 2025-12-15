@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import type { RootState } from "../../../store";
+import { useGetAuthStateQuery } from "../../auth/redux_usecases/authApi";
 import { FloatingNavigation } from "../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
 import { AuthPopup } from "../../auth/components/AuthPopup";
@@ -12,7 +11,7 @@ import { Footer } from "../components/Footer";
 
 export const HomePage: React.FC = () => {
     const navigate = useNavigate();
-    const authState = useSelector((state: RootState) => state.auth);
+    const { data: authState } = useGetAuthStateQuery();
     
     const [isDark, setIsDark] = useState(() => {
         if (typeof window !== "undefined") {
@@ -104,8 +103,8 @@ export const HomePage: React.FC = () => {
             <FloatingNavigation 
                 isDark={isDark} 
                 onNavigate={handleNavigate}
-                isAuthenticated={authState.isAuthenticated}
-                user={authState.user}
+                isAuthenticated={authState?.isAuthenticated || false}
+                user={authState?.user || null}
                 onAuthAction={handleAuthAction}
             />
 
@@ -115,7 +114,7 @@ export const HomePage: React.FC = () => {
                 <section data-section="home">
                     <HeroSection 
                         isDark={isDark} 
-                        isAuthenticated={authState.isAuthenticated}
+                        isAuthenticated={authState?.isAuthenticated || false}
                         onQuickAuth={handleQuickAuth}
                     />
                 </section>
