@@ -1,390 +1,445 @@
 // ============================================================================
 // FLOATING NAVIGATION COMPONENT
 // ============================================================================
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-	MdHome,
-	MdGridView,
-	MdQuiz,
-	MdInsertChart,
-	MdInfo,
-	MdContactSupport,
-	MdMenu,
-	MdClose,
+    MdHome,
+    MdGridView,
+    MdQuiz,
+    MdInsertChart,
+    MdInfo,
+    MdContactSupport,
+    MdMenu,
 } from "react-icons/md";
 
 interface NavigationItem {
-	id: string;
-	label: string;
-	icon: React.ReactNode;
-	path: string;
-	description: string;
+    id: string;
+    label: string;
+    icon: React.ReactNode;
+    path: string;
+    description: string;
 }
 
 interface FloatingNavigationProps {
-	onNavigate?: (path: string, section: string) => void;
+    isDark: boolean;
+    onNavigate?: (path: string, section: string) => void;
 }
 
 const navigationItems: NavigationItem[] = [
-	{
-		id: "home",
-		label: "Home",
-		icon: <MdHome className="text-lg" />,
-		path: "/",
-		description: "Go to homepage",
-	},
-	{
-		id: "features",
-		label: "Features",
-		icon: <MdGridView className="text-lg" />,
-		path: "/features",
-		description: "Explore platform features",
-	},
-	{
-		id: "practice",
-		label: "Practice",
-		icon: <MdQuiz className="text-lg" />,
-		path: "/practice",
-		description: "Start practicing",
-	},
-	{
-		id: "analytics",
-		label: "Analytics",
-		icon: <MdInsertChart className="text-lg" />,
-		path: "/analytics",
-		description: "View your progress",
-	},
-	{
-		id: "about",
-		label: "About",
-		icon: <MdInfo className="text-lg" />,
-		path: "/about",
-		description: "Learn about us",
-	},
-	{
-		id: "contact",
-		label: "Contact",
-		icon: <MdContactSupport className="text-lg" />,
-		path: "/contact",
-		description: "Get in touch",
-	},
+    {
+        id: "home",
+        label: "Home",
+        icon: <MdHome className="text-lg" />,
+        path: "/",
+        description: "Go to homepage",
+    },
+    {
+        id: "features",
+        label: "Features",
+        icon: <MdGridView className="text-lg" />,
+        path: "/features",
+        description: "Explore platform features",
+    },
+    {
+        id: "practice",
+        label: "Practice",
+        icon: <MdQuiz className="text-lg" />,
+        path: "/practice",
+        description: "Start practicing",
+    },
+    {
+        id: "analytics",
+        label: "Analytics",
+        icon: <MdInsertChart className="text-lg" />,
+        path: "/analytics",
+        description: "View your progress",
+    },
+    {
+        id: "about",
+        label: "About",
+        icon: <MdInfo className="text-lg" />,
+        path: "/about",
+        description: "Learn about us",
+    },
+    {
+        id: "contact",
+        label: "Contact",
+        icon: <MdContactSupport className="text-lg" />,
+        path: "/contact",
+        description: "Get in touch",
+    },
 ];
 
 export const FloatingNavigation: React.FC<FloatingNavigationProps> = ({
-	onNavigate,
+    isDark,
+    onNavigate,
 }) => {
-	const [isOpen, setIsOpen] = useState(false);
-	const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-	const [isDark, setIsDark] = useState(false);
-	const containerRef = useRef<HTMLDivElement>(null);
+    const [isOpen, setIsOpen] = useState(false);
+    const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
 
-	useEffect(() => {
-		const checkTheme = () => {
-			setIsDark(document.documentElement.classList.contains("dark"));
-		};
-		checkTheme();
+    // Animation variants
+    const sidebarVariants = {
+        hidden: { x: "-100%" },
+        visible: { 
+            x: 0,
+            transition: { duration: 0.5 }
+        },
+    };
 
-		const observer = new MutationObserver(checkTheme);
-		observer.observe(document.documentElement, {
-			attributes: true,
-			attributeFilter: ["class"],
-		});
+    const toggleButtonVariants = {
+        initial: { scale: 1 },
+        hover: { scale: 1.05 },
+        tap: { scale: 0.95 },
+    };
 
-		return () => observer.disconnect();
-	}, []);
+    const navigationItemVariants = {
+        hidden: { opacity: 0, x: -20 },
+        visible: { 
+            opacity: 1, 
+            x: 0,
+            transition: { duration: 0.3 }
+        },
+    };
 
-	const handleNavigate = (item: NavigationItem) => {
-		onNavigate?.(item.path, item.id);
-		setIsOpen(false);
-	};
+    const floatingIconVariants = {
+        hidden: { opacity: 0, scale: 0.8 },
+        visible: (i: number) => ({
+            opacity: 1, 
+            scale: 1,
+            transition: { 
+                delay: i * 0.1,
+                duration: 0.5
+            }
+        }),
+    };
 
-	const toggleSidebar = () => {
-		setIsOpen(!isOpen);
-	};
+    const handleNavigate = (item: NavigationItem) => {
+        onNavigate?.(item.path, item.id);
+        setIsOpen(false);
+    };
 
-	return (
-		<>
-			{/* Sidebar Toggle Button */}
-			<button
-				onClick={toggleSidebar}
-				className={`
-          fixed ${
-						isOpen ? "left-60" : "left-6"
-					} top-6 z-50 w-12 h-12 rounded-2xl
-          flex items-center justify-center
-          transition-all duration-300 ease-out
-          hover:scale-110
-          backdrop-blur-3xl 
-          hover:cursor-pointer
-          bg-slate-500/20 hover:shadow-[0_0_20px_rgba(100,116,139,0.4)] focus:ring-slate-400
-        `}
-				aria-label="Toggle sidebar"
-			>
-				{/* Menu Icon - shown when closed */}
-				{!isOpen && (
-					<MdMenu
-						className={`${
-							isDark ? "text-slate-300" : "text-slate-600"
-						} text-2xl transition-all duration-300 hover:rotate-90`}
-					/>
-				)}
+    const toggleSidebar = () => {
+        setIsOpen(!isOpen);
+    };
 
-				{/* Close Icon - shown when open */}
-				{isOpen && (
-					<MdClose
-						className={`${
-							isDark ? "text-slate-300" : "text-slate-600"
-						} text-2xl transition-all duration-300 hover:rotate-90`}
-					/>
-				)}
-			</button>
-
-			{/* Sidebar */}
-			<div
-				ref={containerRef}
-				className={`
-          fixed left-0 top-0 h-full z-40 transition-transform duration-500 ease-out
-          ${isOpen ? "translate-x-0" : "-translate-x-full"}
-          ${
-						isDark
-							? "bg-slate-900/95 border-slate-700"
-							: "bg-white/95 border-gray-200"
-					}
-          backdrop-blur-xl border-r shadow-2xl
-          ${isOpen ? "w-80" : "w-0 overflow-hidden"}
-        `}
-			>
-				<div className="p-6 h-full flex flex-col">
-					{/* Logo Section */}
-					<div className="mb-8">
-						<div className="flex items-center gap-3">
-							<div className="relative">
-								<div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-									<img
-										src="/new_icon.png"
-										alt="PrepToDo Logo"
-										className="w-8 h-8 rounded-lg object-cover"
-									/>
-								</div>
-							</div>
-							<div>
-								<h1
-									className={`text-2xl font-serif font-bold ${
-										isDark ? "text-white" : "text-gray-900"
-									}`}
-								>
-									PrepToDo
-								</h1>
-								<p
-									className={`text-sm ${
-										isDark ? "text-gray-400" : "text-gray-600"
-									}`}
-								>
-									AI Study Platform
-								</p>
-							</div>
-						</div>
-					</div>
-
-					{/* Navigation Items */}
-					<nav className="flex-1 space-y-2">
-						{navigationItems.map((item) => (
-							<div
-								key={item.id}
-								className="relative group"
-								onMouseEnter={() => setHoveredItem(item.id)}
-								onMouseLeave={() => setHoveredItem(null)}
-							>
-								<button
-									onClick={() => handleNavigate(item)}
-									className={`
-                    w-full flex items-center gap-4 p-4 rounded-xl
+    return (
+        <>
+            {/* Sidebar Toggle Button */}
+            <motion.button
+                onClick={toggleSidebar}
+                className={`
+                    fixed top-6 z-50 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl sm:rounded-3xl
+                    flex items-center justify-center
                     transition-all duration-300 ease-out
+                    backdrop-blur-3xl 
+                    hover:cursor-pointer focus:outline-none
+                    ${
+                        isOpen 
+                            ? "left-80 sm:left-96 md:left-80" 
+                            : "left-6"
+                    }
+                    ${
+                        isDark
+                            ? "bg-bg-secondary-dark/80 hover:shadow-[0_0_20px_rgba(0,103,71,0.4)] border border-border-dark/50 focus:ring-brand-accent-dark/30"
+                            : "bg-bg-secondary-light/80 hover:shadow-[0_0_20px_rgba(0,103,71,0.3)] border border-border-light/50 focus:ring-brand-accent-light/30"
+                    }
+                `}
+                aria-label="Toggle sidebar"
+                variants={toggleButtonVariants}
+                initial="initial"
+                whileHover="hover"
+                whileTap="tap"
+            >
+                {/* Menu Icon - shown when closed */}
+                <motion.div
+                    animate={{ rotate: isOpen ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                >
+                    <MdMenu
+                        className={`text-2xl sm:text-2xl ${
+                            isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                        }`}
+                    />
+                </motion.div>
+            </motion.button>
+
+            {/* Sidebar */}
+            <motion.div
+                ref={containerRef}
+                className={`
+                    fixed left-0 top-0 h-full z-40
+                    backdrop-blur-xl border-r shadow-2xl
+                    ${isOpen ? "w-80 sm:w-96" : "w-0 overflow-hidden"}
+                    ${
+                        isDark
+                            ? "bg-bg-primary-dark/95 border-border-dark"
+                            : "bg-bg-primary-light/95 border-border-light"
+                    }
+                `}
+                variants={sidebarVariants}
+                initial="hidden"
+                animate={isOpen ? "visible" : "hidden"}
+            >
+                <div className="p-6 h-full flex flex-col">
+                    {/* Logo Section */}
+                    <div className="mb-8">
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <motion.div 
+                                    className={`
+                                        w-12 h-12 rounded-xl flex items-center justify-center shadow-lg border
+                                        ${
+                                            isDark
+                                                ? "bg-bg-secondary-dark border-border-dark"
+                                                : "bg-bg-secondary-light border-border-light"
+                                        }
+                                    `}
+                                    whileHover={{ scale: 1.05 }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    <img
+                                        src="/new_icon.png"
+                                        alt="PrepToDo Logo"
+                                        className="w-8 h-8 rounded-lg object-cover"
+                                    />
+                                </motion.div>
+                            </div>
+                            <div>
+                                <h1
+                                    className={`text-2xl font-serif font-bold ${
+                                        isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                                    }`}
+                                >
+                                    PrepToDo
+                                </h1>
+                                <p
+                                    className={`text-sm ${
+                                        isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                                    }`}
+                                >
+                                    AI Study Platform
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Navigation Items */}
+                    <nav className="flex-1 space-y-2">
+                        {navigationItems.map((item) => (
+                            <motion.div
+                                key={item.id}
+                                className="relative group"
+                                onMouseEnter={() => setHoveredItem(item.id)}
+                                onMouseLeave={() => setHoveredItem(null)}
+                                variants={navigationItemVariants}
+                                initial="hidden"
+                                animate="visible"
+                                whileHover={{ x: 4 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <motion.button
+                                    onClick={() => handleNavigate(item)}
+                                    className={`
+                                        w-full flex items-center gap-4 p-4 rounded-xl
+                                        transition-all duration-300 ease-out
+                                        hover:cursor-pointer
+                                        ${
+                                            isDark
+                                                ? "hover:bg-bg-tertiary-dark/50 text-text-secondary-dark hover:text-text-primary-dark"
+                                                : "hover:bg-bg-tertiary-light/50 text-text-secondary-light hover:text-text-primary-light"
+                                        }
+                                    `}
+                                >
+                                    <motion.div
+                                        className={`
+                                            w-10 h-10 rounded-xl flex items-center justify-center
+                                            ${
+                                                isDark
+                                                    ? "bg-bg-tertiary-dark/50 text-text-muted-dark group-hover:text-text-primary-dark group-hover:bg-bg-tertiary-dark/80"
+                                                    : "bg-bg-tertiary-light/50 text-text-muted-light group-hover:text-text-primary-light group-hover:bg-bg-tertiary-light/80"
+                                            }
+                                            transition-all duration-300
+                                        `}
+                                        whileHover={{ scale: 1.05 }}
+                                    >
+                                        <div className="text-lg">{item.icon}</div>
+                                    </motion.div>
+                                    <div className="text-left">
+                                        <div className="font-medium">{item.label}</div>
+                                        <div
+                                            className={`text-xs ${
+                                                isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                                            }`}
+                                        >
+                                            {item.description}
+                                        </div>
+                                    </div>
+                                </motion.button>
+
+                                {/* Tooltip for sidebar */}
+                                <AnimatePresence>
+                                    {hoveredItem === item.id && (
+                                        <motion.div
+                                            className={`
+                                                absolute left-full top-1/2 -translate-y-1/2 ml-4 px-3 py-2 rounded-lg
+                                                text-sm font-medium shadow-lg z-50
+                                                ${
+                                                    isDark
+                                                        ? "bg-bg-secondary-dark text-text-primary-dark border border-border-dark"
+                                                        : "bg-bg-secondary-light text-text-primary-light border border-border-light"
+                                                }
+                                            `}
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            exit={{ opacity: 0, x: -10 }}
+                                            transition={{ duration: 0.2 }}
+                                        >
+                                            {item.label}
+                                            <div
+                                                className={`
+                                                    absolute right-full top-1/2 -translate-y-1/2 w-2 h-2 rotate-45
+                                                    ${
+                                                        isDark
+                                                            ? "bg-bg-secondary-dark border-l border-b border-border-dark"
+                                                            : "bg-bg-secondary-light border-l border-b border-border-light"
+                                                    }
+                                                `}
+                                            />
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </motion.div>
+                        ))}
+                    </nav>
+
+                    {/* Bottom section */}
+                    <div
+                        className={`pt-6 border-t ${
+                            isDark ? "border-border-dark" : "border-border-light"
+                        }`}
+                    >
+                        <div
+                            className={`text-center text-sm ${
+                                isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                            }`}
+                        >
+                            v1.0.0 - MVP
+                        </div>
+                    </div>
+                </div>
+            </motion.div>
+
+            {/* Floating Navigation Icons */}
+            <motion.div
+                className={`
+                    fixed left-6 top-20 sm:top-24 z-30 
+                    flex flex-col gap-4 sm:gap-6
+                    transition-all duration-500 ease-out
                     hover:cursor-pointer
                     ${
-											isDark
-												? "hover:bg-slate-800/50 text-gray-300 hover:text-white"
-												: "hover:bg-gray-50 text-gray-600 hover:text-gray-900"
-										}
-                  `}
-								>
-									<div
-										className={`
-                    w-10 h-10 rounded-xl flex items-center justify-center
-                    ${
-											isDark
-												? "bg-slate-800/50 text-gray-400 group-hover:text-white group-hover:bg-slate-700/50"
-												: "bg-gray-100 text-gray-500 group-hover:text-gray-700 group-hover:bg-gray-200/50"
-										}
-                    transition-all duration-300
-                  `}
-									>
-										<div className="text-lg">{item.icon}</div>
-									</div>
-									<div className="text-left">
-										<div className="font-medium">{item.label}</div>
-										<div
-											className={`text-xs ${
-												isDark ? "text-gray-500" : "text-gray-400"
-											}`}
-										>
-											{item.description}
-										</div>
-									</div>
-								</button>
-
-								{/* Tooltip for sidebar */}
-								{hoveredItem === item.id && (
-									<div
-										className={`
-                    absolute left-full top-1/2 -translate-y-1/2 ml-4 px-3 py-2 rounded-lg
-                    text-sm font-medium shadow-lg z-50
-                    ${
-											isDark
-												? "bg-slate-800 text-white border border-slate-600"
-												: "bg-white text-gray-900 border border-gray-200"
-										}
-                  `}
-									>
-										{item.label}
-										<div
-											className={`
-                      absolute right-full top-1/2 -translate-y-1/2 w-2 h-2 rotate-45
-                      ${
-												isDark
-													? "bg-slate-800 border-l border-b border-slate-600"
-													: "bg-white border-l border-b border-gray-200"
-											}
-                    `}
-										/>
-									</div>
-								)}
-							</div>
-						))}
-					</nav>
-
-					{/* Bottom section */}
-					<div
-						className={`pt-6 border-t ${
-							isDark ? "border-slate-700" : "border-gray-200"
-						}`}
-					>
-						<div
-							className={`text-center text-sm ${
-								isDark ? "text-gray-400" : "text-gray-500"
-							}`}
-						>
-							v1.0.0 - MVP
-						</div>
-					</div>
-				</div>
-			</div>
-
-			{/* Floating Navigation Icons */}
-			<div
-				className={`
-        fixed left-6 top-20 z-30 
-        flex flex-col gap-6
-        transition-all duration-500 ease-out
-        hover:cursor-pointer
-        ${
-					isOpen
-						? "translate-x-20 opacity-0 pointer-events-none"
-						: "translate-x-0 opacity-100 pointer-events-auto"
-				}
-      `}
-			>
-				{navigationItems.map((item) => {
-					// Define contextual colors for each navigation item
-					const getIconColor = (id: string) => {
-						switch (id) {
-							case "home":
-								return `${isDark ? "text-blue-400" : "text-blue-600"} `;
-							case "features":
-								return `${isDark ? "text-purple-400" : "text-purple-600"} `;
-							case "practice":
-								return `${isDark ? "text-green-400" : "text-green-600"} `;
-							case "analytics":
-								return `${isDark ? "text-orange-400" : "text-orange-600"} `;
-							case "about":
-								return `${isDark ? "text-teal-400" : "text-teal-600"} `;
-							case "contact":
-								return `${isDark ? "text-indigo-400" : "text-indigo-600"} `;
-							default:
-								return `${isDark ? "text-gray-400" : "text-gray-600"} `;
-						}
-					};
-
-					return (
-						<div
-							key={item.id}
-							className="relative group"
-							onMouseEnter={() => setHoveredItem(item.id)}
-							onMouseLeave={() => setHoveredItem(null)}
-						>
-							<button
-								onClick={() => handleNavigate(item)}
-								className={`
-                  w-12 h-12 rounded-2xl
-                  flex items-center justify-center
-                  transition-all duration-300 ease-out
-                  hover:scale-110
-                  backdrop-blur-3xl 
-                  hover:cursor-pointer
-                  bg-slate-500/20 hover:shadow-[0_0_20px_rgba(100,116,139,0.4)] focus:ring-slate-400
+                        isOpen
+                            ? "translate-x-20 opacity-0 pointer-events-none"
+                            : "translate-x-0 opacity-100 pointer-events-auto"
+                    }
                 `}
-								aria-label={item.label}
-							>
-								<div
-									className={`
-                  transition-all duration-300
-                  ${getIconColor(item.id)} group-hover:scale-110
-                `}
-								>
-									{item.icon}
-								</div>
-							</button>
+            >
+                {navigationItems.map((item, index) => {
+                    return (
+                        <motion.div
+                            key={item.id}
+                            className="relative group"
+                            onMouseEnter={() => setHoveredItem(item.id)}
+                            onMouseLeave={() => setHoveredItem(null)}
+                            variants={floatingIconVariants}
+                            initial="hidden"
+                            animate="visible"
+                            custom={index}
+                        >
+                            <motion.button
+                                onClick={() => handleNavigate(item)}
+                                className={`
+                                    w-10 h-10 sm:w-12 sm:h-12 rounded-2xl
+                                    flex items-center justify-center
+                                    transition-all duration-300 ease-out
+                                    backdrop-blur-3xl 
+                                    hover:cursor-pointer focus:outline-none
+                                    ${
+                                        isDark
+                                            ? "bg-bg-secondary-dark/80 hover:shadow-[0_0_20px_rgba(0,103,71,0.4)] border border-border-dark/50 focus:ring-brand-accent-dark/30"
+                                            : "bg-bg-secondary-light/80 hover:shadow-[0_0_20px_rgba(0,103,71,0.3)] border border-border-light/50 focus:ring-brand-accent-light/30"
+                                    }
+                                `}
+                                aria-label={item.label}
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                <motion.div
+                                    className={`
+                                        transition-all duration-300
+                                        ${
+                                            isDark
+                                                ? "text-text-muted-dark group-hover:text-text-primary-dark"
+                                                : "text-text-muted-light group-hover:text-text-primary-light"
+                                        }
+                                        group-hover:scale-110
+                                    `}
+                                >
+                                    {item.icon}
+                                </motion.div>
+                            </motion.button>
 
-							{/* Floating tooltip */}
-							{hoveredItem === item.id && (
-								<div
-									className={`
-                    absolute left-full top-1/2 -translate-y-1/2 ml-4 px-3 py-2 rounded-lg
-                    text-sm font-medium shadow-lg z-50 whitespace-nowrap
-                    transition-all duration-300 ease-out
-                     text-white border 
-                    ${
-											isDark
-												? "bg-slate-700 border-slate-500"
-												: "border-slate-600 bg-slate-800"
-										}
-                  `}
-								>
-									{item.label}
-									<div
-										className={`
-                      absolute right-full top-1/2 -translate-y-1/2 w-2 h-2 rotate-45
-                       border-l border-b  ${
-													isDark
-														? "bg-slate-700 border-slate-500"
-														: "bg-slate-800 border-slate-600"
-												}
-                    `}
-									/>
-								</div>
-							)}
-						</div>
-					);
-				})}
-			</div>
+                            {/* Floating tooltip */}
+                            <AnimatePresence>
+                                {hoveredItem === item.id && (
+                                    <motion.div
+                                        className={`
+                                            absolute left-full top-1/2 -translate-y-1/2 ml-4 px-3 py-2 rounded-lg
+                                            text-sm font-medium shadow-lg z-50 whitespace-nowrap
+                                            ${
+                                                isDark
+                                                    ? "bg-bg-secondary-dark text-text-primary-dark border border-border-dark"
+                                                    : "bg-bg-secondary-light text-text-primary-light border border-border-light"
+                                            }
+                                        `}
+                                        initial={{ opacity: 0, x: -10, scale: 0.8 }}
+                                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                                        exit={{ opacity: 0, x: -10, scale: 0.8 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        {item.label}
+                                        <div
+                                            className={`
+                                                absolute right-full top-1/2 -translate-y-1/2 w-2 h-2 rotate-45
+                                                ${
+                                                    isDark
+                                                        ? "bg-bg-secondary-dark border-l border-b border-border-dark"
+                                                        : "bg-bg-secondary-light border-l border-b border-border-light"
+                                                }
+                                            `}
+                                        />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </motion.div>
+                    );
+                })}
+            </motion.div>
 
-			{/* Overlay when sidebar is open */}
-			{isOpen && (
-				<div
-					className="fixed inset-0 bg-black/20 z-30 backdrop-blur-sm"
-					onClick={() => setIsOpen(false)}
-				/>
-			)}
-		</>
-	);
+            {/* Overlay when sidebar is open */}
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        className="fixed inset-0 bg-black/20 z-30 backdrop-blur-sm"
+                        onClick={() => setIsOpen(false)}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                    />
+                )}
+            </AnimatePresence>
+        </>
+    );
 };
