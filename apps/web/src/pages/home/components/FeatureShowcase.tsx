@@ -138,7 +138,7 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ isDark }) => {
 	return (
 		<section
 			className={`relative py-16 sm:py-20 md:py-24 lg:py-28 overflow-hidden transition-colors duration-300 ${
-				isDark ? "bg-bg-secondary-dark" : "bg-bg-primary-light"
+				isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
 			}`}
 		>
 			{/* Background Elements */}
