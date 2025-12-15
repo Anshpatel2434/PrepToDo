@@ -1,240 +1,290 @@
-import React, { useState, useEffect, useRef } from "react";
+import React from "react";
 import { FaGraduationCap, FaBrain, FaChartLine } from "react-icons/fa";
+import { motion } from "framer-motion";
 
 interface IntroductionSectionProps {
-	isDark: boolean;
+    isDark: boolean;
 }
 
 export const IntroductionSection: React.FC<IntroductionSectionProps> = ({
-	isDark,
+    isDark,
 }) => {
-	const [isVisible, setIsVisible] = useState(false);
-	const [currentParagraph, setCurrentParagraph] = useState(0);
-	const sectionRef = useRef<HTMLDivElement>(null);
+    const paragraphs = [
+        {
+            title: "Revolutionizing Education Through AI",
+            content:
+                "PrepToDo is a cutting-edge educational platform that harnesses the power of artificial intelligence to create personalized learning experiences. Our platform excels in analyzing study patterns and helping students grow holistically.",
+            icon: FaGraduationCap,
+        },
+        {
+            title: "Adaptive Learning Intelligence",
+            content:
+                "Our sophisticated algorithms understand your unique learning style, track your progress in real-time, and adapt your study journey to maximize retention and performance. Every interaction builds upon your existing knowledge while strengthening weak areas.",
+            icon: FaBrain,
+        },
+        {
+            title: "Transformative Study Experience",
+            content:
+                "Experience a study platform that's not just personalized, but truly transformative—helping you achieve better grades, deeper understanding, and lasting knowledge retention through intelligent analytics and guidance.",
+            icon: FaChartLine,
+        },
+    ];
 
-	const paragraphs = React.useMemo(
-		() => [
-			{
-				title: "Revolutionizing Education Through AI",
-				content:
-					"PrepToDo is a cutting-edge educational platform that harnesses the power of artificial intelligence to create personalized learning experiences. Our platform excels in analyzing study patterns and helping students grow holistically.",
-				icon: FaGraduationCap,
-			},
-			{
-				title: "Adaptive Learning Intelligence",
-				content:
-					"Our sophisticated algorithms understand your unique learning style, track your progress in real-time, and adapt your study journey to maximize retention and performance. Every interaction builds upon your existing knowledge while strengthening weak areas.",
-				icon: FaBrain,
-			},
-			{
-				title: "Transformative Study Experience",
-				content:
-					"Experience a study platform that's not just personalized, but truly transformative—helping you achieve better grades, deeper understanding, and lasting knowledge retention through intelligent analytics and guidance.",
-				icon: FaChartLine,
-			},
-		],
-		[],
-	);
+    // Animation variants
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.3,
+                delayChildren: 0.2,
+            },
+        },
+    };
 
-	useEffect(() => {
-		const observer = new IntersectionObserver(
-			([entry]) => {
-				if (entry.isIntersecting) {
-					setIsVisible(true);
-					paragraphs.forEach((_, index) => {
-						setTimeout(() => {
-							setCurrentParagraph(index);
-						}, index * 800);
-					});
-				}
-			},
-			{ threshold: 0.3 },
-		);
+    const itemVariants = {
+        hidden: { opacity: 0, y: 30 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                duration: 0.8,
+            },
+        },
+    };
 
-		if (sectionRef.current) {
-			observer.observe(sectionRef.current);
-		}
+    const headerVariants = {
+        hidden: { opacity: 0, y: -20 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                duration: 0.8,
+            },
+        },
+    };
 
-		return () => observer.disconnect();
-	}, [paragraphs]);
+    return (
+        <section
+            className={`relative py-16 sm:py-20 md:py-24 lg:py-28 overflow-hidden transition-colors duration-300 ${
+                isDark ? "bg-bg-primary-dark" : "bg-bg-secondary-light"
+            }`}
+        >
+            {/* Background Elements */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <motion.div
+                    className={`absolute top-1/4 left-1/4 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-full blur-3xl ${
+                        isDark ? "bg-brand-primary-dark/20" : "bg-brand-primary-light/10"
+                    }`}
+                    animate={{
+                        y: [0, 30, 0],
+                        x: [0, 20, 0],
+                        scale: [1, 1.1, 1],
+                    }}
+                    transition={{
+                        duration: 8,
+                        repeat: Infinity,
+                        repeatType: "reverse",
+                    }}
+                />
+                <motion.div
+                    className={`absolute bottom-1/4 right-1/4 w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-full blur-3xl ${
+                        isDark
+                            ? "bg-brand-secondary-dark/20"
+                            : "bg-brand-secondary-light/10"
+                    }`}
+                    animate={{
+                        y: [0, -40, 0],
+                        x: [0, -30, 0],
+                        scale: [1, 1.15, 1],
+                    }}
+                    transition={{
+                        duration: 10,
+                        repeat: Infinity,
+                        repeatType: "reverse",
+                        delay: 1,
+                    }}
+                />
+            </div>
 
-	return (
-		<section
-			ref={sectionRef}
-			className={`relative py-24 overflow-hidden ${
-				isDark ? "bg-bg-primary-dark" : "bg-bg-secondary-light"
-			}`}
-		>
-			{/* Background Elements */}
-			<div className="absolute inset-0 overflow-hidden">
-				<div
-					className={`absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl animate-float ${
-						isDark ? "bg-brand-primary-dark/20" : "bg-brand-primary-light/10"
-					}`}
-					style={{ animationDelay: "0s", animationDuration: "8s" }}
-				/>
-				<div
-					className={`absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl animate-float ${
-						isDark
-							? "bg-brand-secondary-dark/20"
-							: "bg-brand-secondary-light/10"
-					}`}
-					style={{ animationDelay: "3s", animationDuration: "10s" }}
-				/>
-			</div>
+            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                {/* Section Header */}
+                <motion.div
+                    className="text-center mb-12 sm:mb-14 md:mb-16 lg:mb-20"
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, amount: 0.3 }}
+                    variants={headerVariants}
+                >
+                    <motion.div
+                        className={`inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full backdrop-blur-sm mb-4 sm:mb-6 border transition-colors duration-300 ${
+                            isDark
+                                ? "bg-brand-primary-dark/20 border-brand-primary-dark/30"
+                                : "bg-brand-primary-light/10 border-brand-primary-light/20"
+                        }`}
+                        whileHover={{ scale: 1.05 }}
+                    >
+                        <motion.div
+                            className={`w-2 h-2 rounded-full ${
+                                isDark ? "bg-brand-primary-dark" : "bg-brand-primary-light"
+                            }`}
+                            animate={{ opacity: [1, 0.5, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                        />
+                        <span
+                            className={`text-xs sm:text-sm font-medium transition-colors duration-300 ${
+                                isDark ? "text-brand-primary-dark" : "text-brand-primary-light"
+                            }`}
+                        >
+                            About PrepToDo
+                        </span>
+                    </motion.div>
 
-			<div className="relative max-w-6xl mx-auto px-6">
-				{/* Section Header */}
-				<div
-					className={`text-center mb-16 transition-all duration-1000 ease-out ${
-						isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-					}`}
-				>
-					<div
-						className={`inline-flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-sm mb-6 ${
-							isDark
-								? "bg-brand-primary-dark/20 border-brand-primary-dark/30"
-								: "bg-brand-primary-light/10 border-brand-primary-light/20"
-						} border`}
-					>
-						<div
-							className={`w-2 h-2 rounded-full animate-pulse-soft ${
-								isDark ? "bg-brand-primary-dark" : "bg-brand-primary-light"
-							}`}
-						/>
-						<span
-							className={`text-sm font-medium ${
-								isDark ? "text-brand-primary-dark" : "text-brand-primary-light"
-							}`}
-						>
-							About PrepToDo
-						</span>
-					</div>
+                    <h2
+                        className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold mb-4 sm:mb-6 transition-colors duration-300 ${
+                            isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                        }`}
+                    >
+                        Why Students Choose
+                        <br />
+                        <span
+                            className={`transition-colors duration-300 ${
+                                isDark ? "text-brand-primary-dark" : "text-brand-primary-light"
+                            }`}
+                        >
+                            PrepToDo
+                        </span>
+                    </h2>
 
-					<h2 className="text-4xl lg:text-5xl font-serif font-bold mb-6">
-						<span
-							className={`bg-gradient-to-r bg-clip-text text-transparent ${
-								isDark
-									? "from-text-primary-dark via-brand-primary-dark to-brand-secondary-dark"
-									: "from-text-primary-light via-brand-primary-light to-brand-secondary-light"
-							}`}
-						>
-							Why Students Choose
-						</span>
-						<br />
-						<span
-							className={`bg-gradient-to-r bg-clip-text text-transparent ${
-								isDark
-									? "from-brand-secondary-dark to-brand-accent-dark"
-									: "from-brand-secondary-light to-brand-accent-light"
-							}`}
-						>
-							PrepToDo
-						</span>
-					</h2>
+                    <motion.div
+                        className={`w-16 sm:w-20 md:w-24 h-1 mx-auto rounded-full transition-colors duration-300 ${
+                            isDark
+                                ? "bg-brand-primary-dark"
+                                : "bg-brand-primary-light"
+                        }`}
+                        initial={{ width: 0 }}
+                        whileInView={{ width: "auto" }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8, delay: 0.5 }}
+                    />
+                </motion.div>
 
-					<div
-						className={`w-24 h-1 mx-auto rounded-full bg-gradient-to-r ${
-							isDark
-								? "from-brand-primary-dark to-brand-secondary-dark"
-								: "from-brand-primary-light to-brand-secondary-light"
-						}`}
-					/>
-				</div>
+                {/* Content Cards */}
+                <motion.div
+                    className="space-y-6 sm:space-y-8 lg:space-y-10"
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, amount: 0.2 }}
+                    variants={containerVariants}
+                >
+                    {paragraphs.map((paragraph, index) => {
+                        const Icon = paragraph.icon;
+                        return (
+                            <motion.div
+                                key={index}
+                                variants={itemVariants}
+                                whileHover={{ y: -5 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <motion.div
+                                    className={`max-w-4xl mx-auto p-6 sm:p-8 md:p-10 lg:p-12 rounded-2xl sm:rounded-3xl backdrop-blur-sm shadow-lg transition-all duration-300 border ${
+                                        isDark
+                                            ? "bg-bg-secondary-dark/60 border-border-dark"
+                                            : "bg-bg-primary-light/60 border-border-light"
+                                    }`}
+                                    whileHover={{
+                                        boxShadow: isDark
+                                            ? "0 20px 40px rgba(0, 0, 0, 0.5)"
+                                            : "0 20px 40px rgba(0, 0, 0, 0.15)",
+                                    }}
+                                >
+                                    <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+                                        {/* Icon */}
+                                        <motion.div
+                                            className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 transition-colors duration-300 ${
+                                                isDark
+                                                    ? "bg-brand-primary-dark"
+                                                    : "bg-brand-primary-light"
+                                            }`}
+                                            whileHover={{
+                                                scale: 1.1,
+                                                rotate: [0, -10, 10, 0],
+                                            }}
+                                            transition={{ duration: 0.5 }}
+                                        >
+                                            <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                                            <motion.div
+                                                className={`absolute inset-0 rounded-xl sm:rounded-2xl blur-lg opacity-0 transition-colors duration-300 ${
+                                                    isDark
+                                                        ? "bg-brand-primary-dark"
+                                                        : "bg-brand-primary-light"
+                                                }`}
+                                                whileHover={{ opacity: 0.4 }}
+                                            />
+                                        </motion.div>
 
-				{/* Content Cards */}
-				<div className="space-y-8 lg:space-y-12">
-					{paragraphs.map((paragraph, index) => {
-						const Icon = paragraph.icon;
-						return (
-							<div
-								key={index}
-								className={`relative transition-all duration-1000 ease-out ${
-									isVisible && currentParagraph >= index
-										? "opacity-100 translate-y-0"
-										: "opacity-0 translate-y-12"
-								}`}
-								style={{ transitionDelay: `${index * 200}ms` }}
-							>
-								<div
-									className={`max-w-4xl mx-auto p-8 lg:p-12 rounded-3xl backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-500 group border ${
-										isDark
-											? "bg-bg-secondary-dark/60 border-border-dark"
-											: "bg-bg-primary-light/60 border-border-light"
-									}`}
-								>
-									<div className="flex items-start gap-6">
-										{/* Icon */}
-										<div
-											className={`relative w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300 flex-shrink-0 bg-gradient-to-br ${
-												isDark
-													? "from-brand-primary-dark to-brand-secondary-dark"
-													: "from-brand-primary-light to-brand-secondary-light"
-											}`}
-										>
-											<Icon className="w-6 h-6 text-white" />
-											<div
-												className={`absolute inset-0 rounded-2xl blur-lg opacity-0 group-hover:opacity-40 transition-opacity duration-300 bg-gradient-to-br ${
-													isDark
-														? "from-brand-primary-dark to-brand-secondary-dark"
-														: "from-brand-primary-light to-brand-secondary-light"
-												}`}
-											/>
-										</div>
+                                        {/* Text Content */}
+                                        <div className="flex-1 space-y-3 sm:space-y-4">
+                                            <h3
+                                                className={`text-xl sm:text-2xl md:text-3xl font-bold transition-colors duration-300 ${
+                                                    isDark
+                                                        ? "text-text-primary-dark"
+                                                        : "text-text-primary-light"
+                                                }`}
+                                            >
+                                                {paragraph.title}
+                                            </h3>
 
-										{/* Text Content */}
-										<div className="flex-1 space-y-4">
-											<h3
-												className={`text-2xl lg:text-3xl font-bold group-hover:scale-105 transition-transform duration-300 bg-gradient-to-r bg-clip-text text-transparent ${
-													isDark
-														? "from-brand-primary-dark to-brand-secondary-dark"
-														: "from-brand-primary-light to-brand-secondary-light"
-												}`}
-											>
-												{paragraph.title}
-											</h3>
+                                            <p
+                                                className={`text-base sm:text-lg md:text-xl leading-relaxed transition-colors duration-300 ${
+                                                    isDark
+                                                        ? "text-text-secondary-dark"
+                                                        : "text-text-secondary-light"
+                                                }`}
+                                            >
+                                                {paragraph.content}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </motion.div>
+                        );
+                    })}
+                </motion.div>
 
-											<p
-												className={`text-lg lg:text-xl leading-relaxed ${
-													isDark
-														? "text-text-secondary-dark"
-														: "text-text-secondary-light"
-												}`}
-											>
-												{paragraph.content}
-											</p>
-										</div>
-									</div>
-								</div>
-							</div>
-						);
-					})}
-				</div>
-
-				{/* Bottom Badge */}
-				<div className="text-center mt-16">
-					<div
-						className={`inline-flex items-center gap-2 ${
-							isDark ? "text-text-muted-dark" : "text-text-muted-light"
-						}`}
-					>
-						<div
-							className={`w-2 h-2 rounded-full animate-pulse-soft ${
-								isDark ? "bg-brand-primary-dark" : "bg-brand-primary-light"
-							}`}
-						/>
-						<span className="text-sm font-medium">
-							Experience the future of learning
-						</span>
-						<div
-							className={`w-2 h-2 rounded-full animate-pulse-soft ${
-								isDark ? "bg-brand-secondary-dark" : "bg-brand-secondary-light"
-							}`}
-							style={{ animationDelay: "0.5s" }}
-						/>
-					</div>
-				</div>
-			</div>
-		</section>
-	);
+                {/* Bottom Badge */}
+                <motion.div
+                    className="text-center mt-12 sm:mt-14 md:mt-16 lg:mt-20"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.8, delay: 0.5 }}
+                >
+                    <div
+                        className={`inline-flex items-center gap-2 sm:gap-3 transition-colors duration-300 ${
+                            isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                        }`}
+                    >
+                        <motion.div
+                            className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                                isDark ? "bg-brand-primary-dark" : "bg-brand-primary-light"
+                            }`}
+                            animate={{ opacity: [1, 0.5, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                        />
+                        <span className="text-xs sm:text-sm font-medium">
+                            Experience the future of learning
+                        </span>
+                        <motion.div
+                            className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                                isDark ? "bg-brand-secondary-dark" : "bg-brand-secondary-light"
+                            }`}
+                            animate={{ opacity: [1, 0.5, 1] }}
+                            transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+                        />
+                    </div>
+                </motion.div>
+            </div>
+        </section>
+    );
 };
