@@ -111,13 +111,13 @@ export const Footer: React.FC<FooterProps> = ({ isDark, className = "" }) => {
 		{
 			id: 1,
 			size: "w-64 h-64 sm:w-80 sm:h-80",
-			position: "top-1/4 left-1/4",
+			position: "top1/4 left-1/4",
 			delay: 0,
 		},
 		{
 			id: 2,
 			size: "w-56 h-56 sm:w-72 sm:h-72",
-			position: "bottom-1/4 right-1/4",
+			position: "bottom1/4 right-1/4",
 			delay: 1,
 		},
 	];
