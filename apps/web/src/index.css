@@ -41,15 +41,17 @@
      BRAND COLORS - Use as: bg-brand-primary-light, bg-brand-primary-dark
      Ed-Tech Focus: Deep Indigo + Bronze Gold strategy - Professional, academic, trust-building
      ───────────────────────────────────────────────────────────────────────── */
-  --color-brand-primary-light: #4c51bf;    /* Deep Indigo - classic ed-tech color, professional, non-vibrant */
-  --color-brand-primary-hover-light: #434190;
-  --color-brand-secondary-light: #6366f1;  /* Lighter Indigo - for subtle accents and text */
-  --color-brand-accent-light: #b8860b;     /* Bronze Gold - for text/icons (never bright yellow) */
+  --color-brand-primary-light: #4f6b5f;   /* Smoked Sage Ink */
+--color-brand-primary-hover-light: #435c52;
+--color-brand-secondary-light: #6f8b80; /* Quiet supporting sage */
+--color-brand-accent-light: #a8832a;    /* Aged brass gold (less shiny, more scholarly) */
+
   
-  --color-brand-primary-dark: #818cf8;     /* Lighter Indigo for dark theme */
-  --color-brand-primary-hover-dark: #a5b4fc;
-  --color-brand-secondary-dark: #a0aec0;   /* Muted blue-gray for dark theme */
-  --color-brand-accent-dark: #fbbf24;      /* Warmer gold for dark theme */
+  --color-brand-primary-dark: #9fbfb2;    /* Chalked sage glow */
+--color-brand-primary-hover-dark: #b2cec3;
+--color-brand-secondary-dark: #7f9f93;
+--color-brand-accent-dark: #d6b45a;     /* Soft lamp-gold */
+
 
   /* ─────────────────────────────────────────────────────────────────────────
      SEMANTIC COLORS - Use as: bg-success, text-error, etc.
