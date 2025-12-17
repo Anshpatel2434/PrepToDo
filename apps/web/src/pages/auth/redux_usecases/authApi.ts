@@ -1,360 +1,365 @@
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
 import { supabase } from "../../../services/apiClient";
-import type { UserItem } from "../../../types";
+import { startLoading, otpSent, otpVerified, authError } from "./authSlice";
 
 // Types for form data
 interface AuthCredentials {
-    email: string;
-    password: string;
+	email: string;
+	password: string;
 }
 
 // Types for the 3-step signup process
 interface SendEmailRequest {
-    email: string;
+	email: string;
 }
 
 interface VerifyOtpRequest {
-    email: string;
-    otp: string;
+	email: string;
+	token: string;
 }
 
-interface FinalizeSignupRequest {
-    email: string;
-    password?: string;
+interface updateUserPassword {
+	newPassword: string;
 }
-
-interface ConfirmTokenRequest {
-    token: string;
-}
-
-// Local auth state interface (managed by RTK Query cache)
-interface AuthState {
-    user: UserItem | null;
-    isAuthenticated: boolean;
-    isLoading: boolean;
-    error: string | null;
-    confirmationToken: string | null;
-    signupStep: number; // 1: email, 2: OTP, 3: password/setup
-    email: string;
-    isEmailVerified: boolean;
+interface CheckUserExistsResponse {
+	exists: boolean;
 }
 
 export const authApi = createApi({
-    reducerPath: 'authApi',
-    baseQuery: fakeBaseQuery(),
-    tagTypes: ['Auth'],
-    endpoints: (builder) => ({
-        // Step 1: Send OTP Email
-        sendOtpEmail: builder.mutation<{ success: boolean; message: string }, SendEmailRequest>({
-            queryFn: async ({ email }) => {
-                try {
-                    const { data, error } = await supabase.functions.invoke('send-otp-email', {
-                        body: { email }
-                    });
-                    
-                    if (error) return { error: { status: 'CUSTOM_ERROR', data: error.message } };
-                    return { data: data || { success: true, message: 'OTP sent successfully' } };
-                } catch (err) {
-                    const error = err as { message?: string };
-                    return { error: { status: 'CUSTOM_ERROR', data: error.message || 'Failed to send OTP' } };
-                }
-            },
-            onQueryStarted: async (_args, { dispatch, queryFulfilled }) => {
-                try {
-                    const { data } = await queryFulfilled;
-                    if (data?.success) {
-                        // Update auth state
-                        dispatch(authApi.util.updateQueryData('getAuthState', undefined, (draft) => {
-                            if (draft) {
-                                draft.signupStep = 2;
-                                draft.isLoading = false;
-                                draft.error = null;
-                            }
-                        }));
-                    }
-                } catch {
-                    // Error is handled by the queryFn
-                }
-            },
-        }),
+	reducerPath: "authApi",
+	baseQuery: fakeBaseQuery(),
+	tagTypes: ["Auth"],
+	endpoints: (builder) => ({
+		//SIGNUP STEP 1: Send the OTP to the user's email
+		sendOtpToEmail: builder.mutation<any, SendEmailRequest>({
+			queryFn: async ({ email }) => {
+				try {
+					const { data, error } = await supabase.auth.signInWithOtp({
+						email: email,
+					});
 
-        // Query to get current auth state
-        getAuthState: builder.query<AuthState, void>({
-            queryFn: () => {
-                // Return current state from localStorage or default state
-                const savedToken = sessionStorage.getItem('auth_token');
-                const savedUser = sessionStorage.getItem('auth_user');
-                
-                return {
-                    data: {
-                        user: savedUser ? JSON.parse(savedUser) : null,
-                        isAuthenticated: !!savedToken,
-                        isLoading: false,
-                        error: null,
-                        confirmationToken: savedToken,
-                        signupStep: 1,
-                        email: '',
-                        isEmailVerified: false,
-                    } as AuthState
-                };
-            },
-            providesTags: ['Auth'],
-        }),
+					if (error)
+						return { error: { status: "CUSTOM_ERROR", data: error.message } };
+					return {
+						data: data,
+						success: true,
+						message: "OTP sent successfully",
+					};
+				} catch (err) {
+					const error = err as { message?: string };
+					return {
+						error: {
+							status: "CUSTOM_ERROR",
+							data: error.message || "Failed to send OTP",
+						},
+					};
+				}
+			},
+			onQueryStarted: async ({ email }, { dispatch, queryFulfilled }) => {
+				try {
+					dispatch(startLoading());
+					await queryFulfilled;
+					// Update auth state
 
-        // Step 2: Verify OTP
-        verifyOtp: builder.mutation<{ success: boolean; token: string; message: string }, VerifyOtpRequest>({
-            queryFn: async ({ email, otp }) => {
-                try {
-                    const { data, error } = await supabase.functions.invoke('verify-otp', {
-                        body: { email, otp }
-                    });
-                    
-                    if (error) return { error: { status: 'CUSTOM_ERROR', data: error.message } };
-                    return { data };
-                } catch (err) {
-                    const error = err as { message?: string };
-                    return { error: { status: 'CUSTOM_ERROR', data: error.message || 'Failed to verify OTP' } };
-                }
-            },
-            onQueryStarted: async (_args, { dispatch, queryFulfilled }) => {
-                try {
-                    const { data } = await queryFulfilled;
-                    const result = data as { success: boolean; token: string };
-                    if (result?.success) {
-                        // Update auth state
-                        dispatch(authApi.util.updateQueryData('getAuthState', undefined, (draft) => {
-                            if (draft) {
-                                draft.signupStep = 3;
-                                draft.isEmailVerified = true;
-                                draft.confirmationToken = result.token;
-                                draft.error = null;
-                            }
-                        }));
-                    }
-                } catch {
-                    // Error is handled by the queryFn
-                }
-            },
-        }),
+					dispatch(otpSent({ email }));
+				} catch (err: any) {
+					dispatch(authError(err?.error?.data || "Failed to send OTP"));
+				}
+			},
+		}),
 
-        // Step 3: Finalize signup (set password or skip)
-        finalizeSignup: builder.mutation<{ success: boolean; user: UserItem; message: string }, FinalizeSignupRequest>({
-            queryFn: async ({ email, password }) => {
-                try {
-                    const { data, error } = await supabase.functions.invoke('finalize-signup', {
-                        body: { email, password }
-                    });
-                    
-                    if (error) return { error: { status: 'CUSTOM_ERROR', data: error.message } };
-                    return { data };
-                } catch (err) {
-                    const error = err as { message?: string };
-                    return { error: { status: 'CUSTOM_ERROR', data: error.message || 'Failed to complete signup' } };
-                }
-            },
-            onQueryStarted: async (_args, { dispatch, queryFulfilled }) => {
-                try {
-                    const { data } = await queryFulfilled;
-                    const result = data as { success: boolean; user: UserItem };
-                    if (result?.success && result.user) {
-                        // Update auth state with user data
-                        dispatch(authApi.util.updateQueryData('getAuthState', undefined, (draft) => {
-                            if (draft) {
-                                draft.user = result.user;
-                                draft.isAuthenticated = true;
-                                draft.signupStep = 1;
-                                draft.isEmailVerified = false;
-                                draft.confirmationToken = null;
-                                draft.error = null;
-                            }
-                        }));
-                        
-                        // Store in session
-                        sessionStorage.setItem('auth_token', result.user.confirmationToken);
-                        sessionStorage.setItem('auth_user', JSON.stringify(result.user));
-                    }
-                } catch {
-                    // Error is handled by the queryFn
-                }
-            },
-        }),
+		// Step 2: Verify OTP
+		verifyUserOtp: builder.mutation<any, VerifyOtpRequest>({
+			queryFn: async ({ email, token }) => {
+				try {
+					const { data, error } = await supabase.auth.verifyOtp({
+						email,
+						token,
+						type: "email",
+					});
 
-        // Traditional signup (fallback)
-        signUp: builder.mutation<unknown, AuthCredentials>({
-            queryFn: async ({ email, password }) => {
-                try {
-                    const { data, error } = await supabase.auth.signUp({
-                        email,
-                        password
-                    });
-                    if (error) return { error: { status: 'CUSTOM_ERROR', data: error.message } };
-                    return { data };
-                } catch (err) {
-                    const error = err as { message?: string };
-                    return { error: { status: 'CUSTOM_ERROR', data: error.message || 'Signup failed' } };
-                }
-            },
-            onQueryStarted: async (_args, { dispatch, queryFulfilled }) => {
-                try {
-                    const { data } = await queryFulfilled;
-                    const result = data as { user?: UserItem };
-                    if (result?.user) {
-                        // Update auth state
-                        dispatch(authApi.util.updateQueryData('getAuthState', undefined, (draft) => {
-                            if (draft) {
-                                draft.user = result.user!;
-                                draft.isAuthenticated = true;
-                                draft.error = null;
-                            }
-                        }));
-                    }
-                } catch {
-                    // Error is handled by the queryFn
-                }
-            },
-        }),
+					if (error)
+						return { error: { status: "CUSTOM_ERROR", data: error.message } };
+					return { data };
+				} catch (err) {
+					const error = err as { message?: string };
+					return {
+						error: {
+							status: "CUSTOM_ERROR",
+							data: error.message || "Failed to verify OTP",
+						},
+					};
+				}
+			},
+			onQueryStarted: async (_args, { dispatch, queryFulfilled }) => {
+				try {
+					dispatch(startLoading());
+					await queryFulfilled;
+					dispatch(otpVerified());
+					// 🚀 FETCH USER IMMEDIATELY
+					dispatch(
+						authApi.endpoints.fetchUser.initiate(undefined, {
+							forceRefetch: true,
+						})
+					);
+				} catch (err: any) {
+					dispatch(authError(err?.error?.data || "Invalid OTP"));
+				}
+			},
+		}),
 
-        // Traditional login
-        login: builder.mutation<unknown, AuthCredentials>({
-            queryFn: async ({ email, password }) => {
-                try {
-                    const { data, error } = await supabase.auth.signInWithPassword({
-                        email,
-                        password
-                    });
-                    if (error) return { error: { status: 'CUSTOM_ERROR', data: error.message } };
-                    return { data };
-                } catch (err) {
-                    const error = err as { message?: string };
-                    return { error: { status: 'CUSTOM_ERROR', data: error.message || 'Login failed' } };
-                }
-            },
-            onQueryStarted: async (_args, { dispatch, queryFulfilled }) => {
-                try {
-                    const { data } = await queryFulfilled;
-                    const result = data as { user?: UserItem; session?: { access_token?: string } };
-                    if (result?.user) {
-                        // Update auth state
-                        dispatch(authApi.util.updateQueryData('getAuthState', undefined, (draft) => {
-                            if (draft) {
-                                draft.user = result.user!;
-                                draft.isAuthenticated = true;
-                                draft.error = null;
-                            }
-                        }));
-                        
-                        // Store in session
-                        sessionStorage.setItem('auth_token', result.session?.access_token || '');
-                        sessionStorage.setItem('auth_user', JSON.stringify(result.user));
-                    }
-                } catch {
-                    // Error is handled by the queryFn
-                }
-            },
-        }),
+		//SIGNUP STEP 3: Set the password for the now-logged-in user
+		updateUserPassword: builder.mutation<any, updateUserPassword>({
+			queryFn: async ({ newPassword }) => {
+				try {
+					console.log(
+						"$$$$$$$$$$$$$$$$$$$ we have come here in updatePassword call"
+					);
+					const { data, error } = await supabase.auth.updateUser({
+						password: newPassword,
+					});
+					console.log("Is the password updated ? ");
+					console.log(data);
 
-        // Google OAuth login
-        loginWithGoogle: builder.mutation<unknown, void>({
-            queryFn: async () => {
-                try {
-                    const { data, error } = await supabase.auth.signInWithOAuth({
-                        provider: 'google',
-                        options: {
-                            redirectTo: `${window.location.origin}/auth/callback`
-                        }
-                    });
-                    if (error) return { error: { status: 'CUSTOM_ERROR', data: error.message } };
-                    return { data };
-                } catch (err) {
-                    const error = err as { message?: string };
-                    return { error: { status: 'CUSTOM_ERROR', data: error.message || 'Google login failed' } };
-                }
-            },
-        }),
+					if (error) {
+						console.log("$$$$$$$$$$$$$$$$$$$ error in updateUserPassword");
+						console.log(error);
+						return { error: { status: "CUSTOM_ERROR", data: error.message } };
+					}
+					return { data };
+				} catch (err) {
+					const error = err as { message?: string };
+					console.log("$$$$$$$$$$$$$$$$$$$ error in updateUserPassword");
+					console.log(err);
+					return {
+						error: {
+							status: "CUSTOM_ERROR",
+							data: error.message || "Failed to complete signup",
+						},
+					};
+				}
+			},
+		}),
 
-        // Confirm user session with token
-        confirmUser: builder.mutation<{ success: boolean; user: UserItem | null }, ConfirmTokenRequest>({
-            queryFn: async ({ token }) => {
-                try {
-                    const { data, error } = await supabase.functions.invoke('confirm-user', {
-                        body: { token }
-                    });
-                    
-                    if (error) return { error: { status: 'CUSTOM_ERROR', data: error.message } };
-                    return { data };
-                } catch (err) {
-                    const error = err as { message?: string };
-                    return { error: { status: 'CUSTOM_ERROR', data: error.message || 'Failed to confirm user' } };
-                }
-            },
-            onQueryStarted: async (args, { dispatch, queryFulfilled }) => {
-                try {
-                    const { data } = await queryFulfilled;
-                    const result = data as { success: boolean; user?: UserItem };
-                    if (result?.success && result?.user) {
-                        // Update auth state
-                        dispatch(authApi.util.updateQueryData('getAuthState', undefined, (draft) => {
-                            if (draft) {
-                                draft.user = result.user!;
-                                draft.isAuthenticated = true;
-                                draft.confirmationToken = args.token;
-                                draft.error = null;
-                            }
-                        }));
-                    }
-                } catch {
-                    // Error is handled by the queryFn
-                }
-            },
-        }),
+		// Traditional signup (fallback)
+		signUp: builder.mutation<unknown, AuthCredentials>({
+			queryFn: async ({ email, password }) => {
+				try {
+					const { data, error } = await supabase.auth.signUp({
+						email,
+						password,
+					});
+					if (error)
+						return { error: { status: "CUSTOM_ERROR", data: error.message } };
+					return { data };
+				} catch (err) {
+					const error = err as { message?: string };
+					return {
+						error: {
+							status: "CUSTOM_ERROR",
+							data: error.message || "Signup failed",
+						},
+					};
+				}
+			},
+		}),
 
-        // Logout
-        logout: builder.mutation<{ success: boolean }, void>({
-            queryFn: async () => {
-                try {
-                    const { error } = await supabase.auth.signOut();
-                    if (error) return { error: { status: 'CUSTOM_ERROR', data: error.message } };
-                    
-                    // Clear session storage
-                    sessionStorage.removeItem('auth_token');
-                    sessionStorage.removeItem('auth_user');
-                    
-                    return { data: { success: true } };
-                } catch (err) {
-                    const error = err as { message?: string };
-                    return { error: { status: 'CUSTOM_ERROR', data: error.message || 'Logout failed' } };
-                }
-            },
-            onQueryStarted: async (_args, { dispatch }) => {
-                // Reset auth state immediately for better UX
-                dispatch(authApi.util.updateQueryData('getAuthState', undefined, (draft) => {
-                    if (draft) {
-                        draft.user = null;
-                        draft.isAuthenticated = false;
-                        draft.error = null;
-                        draft.confirmationToken = null;
-                        draft.signupStep = 1;
-                        draft.email = '';
-                        draft.isEmailVerified = false;
-                    }
-                }));
-            },
-        }),
-    })
-})
+		// Traditional login
+		login: builder.mutation<unknown, AuthCredentials>({
+			queryFn: async ({ email, password }) => {
+				try {
+					const { data, error } = await supabase.auth.signInWithPassword({
+						email,
+						password,
+					});
+					if (error)
+						return { error: { status: "CUSTOM_ERROR", data: error.message } };
+					return { data };
+				} catch (err) {
+					const error = err as { message?: string };
+					return {
+						error: {
+							status: "CUSTOM_ERROR",
+							data: error.message || "Login failed",
+						},
+					};
+				}
+			},
+			onQueryStarted: async (_args, { dispatch, queryFulfilled }) => {
+				try {
+					await queryFulfilled;
+					// 🚀 FETCH USER IMMEDIATELY
+					dispatch(
+						authApi.endpoints.fetchUser.initiate(undefined, {
+							forceRefetch: true,
+						})
+					);
+				} catch (err: any) {
+					console.log("error in login onQueryStarted");
+					console.log(err);
+				}
+			},
+		}),
+
+		// Google OAuth login
+		loginWithGoogle: builder.mutation<unknown, void>({
+			queryFn: async () => {
+				try {
+					console.log("so now what we are not even reaching here???");
+					const { data, error } = await supabase.auth.signInWithOAuth({
+						provider: "google",
+						options: {
+							redirectTo: `${window.location.origin}/auth/callback`,
+						},
+					});
+					if (error) {
+						console.log("error while google login");
+						console.log(error);
+
+						return { error: { status: "CUSTOM_ERROR", data: error.message } };
+					}
+					return { data };
+				} catch (err) {
+					const error = err as { message?: string };
+					console.log("error while google login");
+					console.log(err);
+					return {
+						error: {
+							status: "CUSTOM_ERROR",
+							data: error.message || "Google login failed",
+						},
+					};
+				}
+			},
+			onQueryStarted: async (_args, { dispatch, queryFulfilled }) => {
+				try {
+					await queryFulfilled;
+					// 🚀 FETCH USER IMMEDIATELY
+					dispatch(
+						authApi.endpoints.fetchUser.initiate(undefined, {
+							forceRefetch: true,
+						})
+					);
+				} catch (err: any) {
+					console.log("error in loginWithGoogle onQueryStarted");
+					console.log(err);
+				}
+			},
+		}),
+
+		// Logout
+		logout: builder.mutation<{ success: boolean }, void>({
+			queryFn: async () => {
+				try {
+					const { error } = await supabase.auth.signOut();
+					if (error)
+						return { error: { status: "CUSTOM_ERROR", data: error.message } };
+
+					return { data: { success: true } };
+				} catch (err) {
+					const error = err as { message?: string };
+					return {
+						error: {
+							status: "CUSTOM_ERROR",
+							data: error.message || "Logout failed",
+						},
+					};
+				}
+			},
+			onQueryStarted: async (_args, { dispatch, queryFulfilled }) => {
+				try {
+					await queryFulfilled;
+					// 🚀 FETCH USER IMMEDIATELY
+					dispatch(
+						authApi.endpoints.fetchUser.initiate(undefined, {
+							forceRefetch: true,
+						})
+					);
+				} catch (err: any) {
+					console.log("error in logging out onQueryStarted");
+					console.log(err);
+				}
+			},
+		}),
+
+		//to get the current user
+		fetchUser: builder.query<any, void>({
+			queryFn: async () => {
+				console.log(
+					"---------------------- Fetch user called --------------------------------------"
+				);
+				try {
+					const {
+						data: { session },
+						error,
+					} = await supabase.auth.getSession();
+					if (error) {
+						return {
+							error: { status: "CUSTOM_ERROR", data: error.message },
+						};
+					}
+					return { data: session?.user, status: "success", isLoggedIn: true };
+				} catch (err) {
+					const error = err as { message?: string };
+					return {
+						error: {
+							status: "CUSTOM_ERROR",
+							data: error.message || "Fetching User failed",
+						},
+					};
+				}
+			},
+		}),
+
+		checkUserExists: builder.mutation<
+			CheckUserExistsResponse,
+			SendEmailRequest
+		>({
+			queryFn: async ({ email }) => {
+				try {
+					const { data, error } = await supabase
+						.from("user_profiles")
+						.select("id")
+						.eq("email", email)
+						.limit(1);
+
+					if (error) {
+						return {
+							error: {
+								status: "CUSTOM_ERROR",
+								data: error.message,
+							},
+						};
+					}
+
+					return {
+						data: {
+							exists: data.length > 0,
+						},
+					};
+				} catch (err: any) {
+					return {
+						error: {
+							status: "CUSTOM_ERROR",
+							data: err.message || "Failed to check user",
+						},
+					};
+				}
+			},
+		}),
+	}),
+});
 
 // Export hooks for usage in functional components
 export const {
-    // Queries
-    useGetAuthStateQuery,
-    
-    // Mutations
-    useSendOtpEmailMutation,
-    useVerifyOtpMutation,
-    useFinalizeSignupMutation,
-    useSignUpMutation,
-    useLoginMutation,
-    useLoginWithGoogleMutation,
-    useConfirmUserMutation,
-    useLogoutMutation,
+	//function queries
+	useSignUpMutation,
+	useLoginMutation,
+	useLoginWithGoogleMutation,
+	useLogoutMutation,
+	useFetchUserQuery,
+	useSendOtpToEmailMutation,
+	useVerifyUserOtpMutation,
+	useUpdateUserPasswordMutation,
+	useCheckUserExistsMutation,
 } = authApi;

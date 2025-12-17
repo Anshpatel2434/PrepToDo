@@ -1,11 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { AiFillSun } from "react-icons/ai";
 import { AiFillMoon } from "react-icons/ai";
+import { useTheme } from "../context/ThemeContext";
 
 interface FloatingThemeToggleProps {
-	isDark: boolean;
-	onThemeToggle: () => void;
 	className?: string;
 }
 
@@ -13,10 +12,9 @@ interface FloatingThemeToggleProps {
 // THEME TOGGLE COMPONENT
 // ============================================================================
 export const FloatingThemeToggle: React.FC<FloatingThemeToggleProps> = ({
-	isDark,
-	onThemeToggle,
 	className = "",
 }) => {
+	const { isDark, toggleTheme } = useTheme();
 	// Animation variants for the button and icons
 	const buttonVariants = {
 		initial: { scale: 1 },
@@ -38,9 +36,13 @@ export const FloatingThemeToggle: React.FC<FloatingThemeToggleProps> = ({
 		},
 	};
 
+	const handleThemeToggle = () => {
+		toggleTheme();
+	};
+
 	return (
 		<motion.button
-			onClick={onThemeToggle}
+			onClick={handleThemeToggle}
 			className={`
                 fixed top-6 right-6 z-50 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl sm:rounded-3xl
                 flex items-center justify-center
