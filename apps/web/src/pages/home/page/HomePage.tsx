@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useFetchUserQuery } from "../../auth/redux_usecases/authApi";
 import { FloatingNavigation } from "../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
@@ -11,74 +10,73 @@ import { Footer } from "../components/Footer";
 import { useTheme } from "../../../context/ThemeContext";
 
 export const HomePage: React.FC = () => {
-	const navigate = useNavigate();
-	const { data: authState } = useFetchUserQuery();
+    const { data: authState } = useFetchUserQuery();
 
-	const { isDark } = useTheme();
+    const { isDark } = useTheme();
 
-	// Auth popup state
-	const [authPopupOpen, setAuthPopupOpen] = useState(false);
-	const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
+    // Auth popup state
+    const [authPopupOpen, setAuthPopupOpen] = useState(false);
+    const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
 
-	useEffect(() => {
-		console.log("Auth state:", authState);
-		console.log("Checking comparision : ", authState?.role === "authenticated");
-	}, [authState]);
+    useEffect(() => {
+        console.log("Auth state:", authState);
+        console.log("Checking comparision : ", authState?.role === "authenticated");
+    }, [authState]);
 
-	const handleQuickAuth = (action: "signin" | "signup") => {
-		setAuthMode(action);
-		setAuthPopupOpen(true);
-	};
+    const handleQuickAuth = (action: "signin" | "signup") => {
+        setAuthMode(action);
+        setAuthPopupOpen(true);
+    };
 
-	const handleCloseAuthPopup = () => {
-		setAuthPopupOpen(false);
-	};
+    const handleCloseAuthPopup = () => {
+        setAuthPopupOpen(false);
+    };
 
-	return (
-		<div
-			className={`
+    return (
+        <div
+            className={`
             min-h-screen transition-colors duration-300
             ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"}
         `}
-		>
-			{/* Floating Theme Toggle */}
-			<FloatingThemeToggle />
+        >
+            {/* Floating Theme Toggle */}
+            <FloatingThemeToggle />
 
-			{/* Floating Navigation */}
-			<FloatingNavigation />
+            {/* Floating Navigation */}
+            <FloatingNavigation />
 
-			{/* Main Content */}
-			<div className="transition-all duration-500 ease-out">
-				{/* Hero Section */}
-				<section data-section="home">
-					<HeroSection
-						isDark={isDark}
-						isAuthenticated={authState?.role === "authenticated" || false}
-						onQuickAuth={handleQuickAuth}
-					/>
-				</section>
+            {/* Main Content */}
+            <div className="transition-all duration-500 ease-out">
+                {/* Hero Section */}
+                <section data-section="home">
+                    <HeroSection
+                        isDark={isDark}
+                        isAuthenticated={authState?.role === "authenticated" || false}
+                        onQuickAuth={handleQuickAuth}
+                    />
+                </section>
 
-				{/* Introduction Section */}
-				<section data-section="about">
-					<IntroductionSection isDark={isDark} />
-				</section>
+                {/* Introduction Section */}
+                <section data-section="about">
+                    <IntroductionSection isDark={isDark} />
+                </section>
 
-				{/* Feature Showcase */}
-				<section data-section="features">
-					<FeatureShowcase isDark={isDark} />
-				</section>
+                {/* Feature Showcase */}
+                <section data-section="features">
+                    <FeatureShowcase isDark={isDark} />
+                </section>
 
-				{/* Footer */}
-				<Footer isDark={isDark} />
-			</div>
+                {/* Footer */}
+                <Footer isDark={isDark} />
+            </div>
 
-			{/* Auth Popup */}
-			<AuthPopup
-				isOpen={authPopupOpen}
-				onClose={handleCloseAuthPopup}
-				isDark={isDark}
-				initialMode={"signin"}
-			/>
-		</div>
-	);
+            {/* Auth Popup */}
+            <AuthPopup
+                isOpen={authPopupOpen}
+                onClose={handleCloseAuthPopup}
+                isDark={isDark}
+                initialMode={authMode}
+            />
+        </div>
+    );
 };

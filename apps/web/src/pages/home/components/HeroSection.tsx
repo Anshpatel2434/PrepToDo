@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 interface HeroSectionProps {
     isDark: boolean;
@@ -55,6 +56,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     isAuthenticated = false, 
     onQuickAuth 
 }) => {
+    const navigate = useNavigate();
     return (
         <section
             className={`relative min-h-screen flex flex-col items-center justify-center overflow-hidden transition-colors duration-300 ${
@@ -208,6 +210,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     >
                         {isAuthenticated ? (
                             <motion.button
+                                onClick={() => navigate('/dashboard')}
                                 className={`w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl focus-ring overflow-hidden ${
                                     isDark
                                         ? "bg-brand-primary-dark hover:bg-brand-primary-hover-dark"

@@ -41,16 +41,16 @@
      BRAND COLORS - Use as: bg-brand-primary-light, bg-brand-primary-dark
      Ed-Tech Focus: Deep Indigo + Bronze Gold strategy - Professional, academic, trust-building
      ───────────────────────────────────────────────────────────────────────── */
-  --color-brand-primary-light: #4f6b5f;   /* Smoked Sage Ink */
---color-brand-primary-hover-light: #435c52;
---color-brand-secondary-light: #6f8b80; /* Quiet supporting sage */
---color-brand-accent-light: #a8832a;    /* Aged brass gold (less shiny, more scholarly) */
+  --color-brand-primary-light: #4a6b58;   /* Refined Sage - more muted for premium feel */
+--color-brand-primary-hover-light: #3d5a4a;
+--color-brand-secondary-light: #6a7f72; /* Quiet supporting sage */
+--color-brand-accent-light: #b8962a;    /* Muted brass gold (scholarly, not flashy) */
 
   
-  --color-brand-primary-dark: #9fbfb2;    /* Chalked sage glow */
---color-brand-primary-hover-dark: #b2cec3;
---color-brand-secondary-dark: #7f9f93;
---color-brand-accent-dark: #d6b45a;     /* Soft lamp-gold */
+  --color-brand-primary-dark: #a7c7b6;    /* Soft sage glow */
+--color-brand-primary-hover-dark: #b5d4c2;
+--color-brand-secondary-dark: #8ba596;
+--color-brand-accent-dark: #cbb55e;     /* Gentle lamp-gold */
 
 
   /* ─────────────────────────────────────────────────────────────────────────
@@ -183,5 +183,132 @@
 
   html {
     scrollbar-width: thin;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DASHBOARD ENHANCEMENTS - Premium Academic Feel
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* Dashboard Card Enhancements */
+  .dashboard-card {
+    @apply transition-all duration-300 ease-out;
+    backdrop-filter: blur(8px);
+    box-shadow: 
+      0 1px 3px rgba(0, 0, 0, 0.1),
+      0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+
+  .dashboard-card:hover {
+    box-shadow: 
+      0 4px 6px rgba(0, 0, 0, 0.1),
+      0 12px 48px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Premium Button Styles */
+  .btn-premium {
+    @apply transition-all duration-200 ease-out;
+    background: linear-gradient(135deg, var(--color-brand-primary-light), var(--color-brand-secondary-light));
+    color: white;
+    border: none;
+    font-weight: 500;
+    letter-spacing: 0.025em;
+  }
+
+  .btn-premium:hover {
+    background: linear-gradient(135deg, var(--color-brand-primary-hover-light), var(--color-brand-accent-light));
+    transform: translateY(-1px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Progress Bar Enhancements */
+  .progress-bar-premium {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-bar-premium::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
+    animation: shimmer 2s infinite;
+  }
+
+  /* Dashboard Stats Animation */
+  .stat-number {
+    @apply transition-all duration-500 ease-out;
+  }
+
+  .stat-number.animate {
+    animation: countUp 1s ease-out;
+  }
+
+  /* Calm Focus States */
+  .focus-calm:focus {
+    outline: none;
+    ring: 2px;
+    ring-color: var(--color-brand-accent-light);
+    ring-opacity: 0.3;
+  }
+
+  /* Academic Typography Enhancements */
+  .text-academic-heading {
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.3;
+  }
+
+  .text-academic-body {
+    line-height: 1.6;
+    color: var(--color-text-secondary-light);
+  }
+
+  /* Smooth Transitions for Theme Switching */
+  .theme-transition {
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ANIMATIONS FOR DASHBOARD
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive Dashboard Enhancements */
+@media (max-width: 768px) {
+  .dashboard-card {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Print Styles for Academic Use */
+@media print {
+  .dashboard-card {
+    box-shadow: none;
+    border: 1px solid #ddd;
   }
 }
