@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { useTheme } from "../../../context/useTheme";
+import { useTheme } from "../../../context/ThemeContext";
 import { FloatingNavigation } from "../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
 import { DashboardHeader } from "../components/DashboardHeader";

@@ -7,7 +7,7 @@ import { HeroSection } from "../components/HeroSection";
 import { IntroductionSection } from "../components/IntroductionSection";
 import { FeatureShowcase } from "../components/FeatureShowcase";
 import { Footer } from "../components/Footer";
-import { useTheme } from "../../../context/useTheme";
+import { useTheme } from "../../../context/ThemeContext";
 
 export const HomePage: React.FC = () => {
     const { data: authState } = useFetchUserQuery();
@@ -20,7 +20,6 @@ export const HomePage: React.FC = () => {
 
     useEffect(() => {
         console.log("Auth state:", authState);
-        console.log("Checking comparision : ", authState?.role === "authenticated");
     }, [authState]);
 
     const handleQuickAuth = (action: "signin" | "signup") => {
@@ -51,7 +50,7 @@ export const HomePage: React.FC = () => {
                 <section data-section="home">
                     <HeroSection
                         isDark={isDark}
-                        isAuthenticated={authState?.role === "authenticated" || false}
+                        isAuthenticated={Boolean(authState)}
                         onQuickAuth={handleQuickAuth}
                     />
                 </section>

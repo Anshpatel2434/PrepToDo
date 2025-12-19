@@ -19,7 +19,7 @@ import {
     useLogoutMutation,
 } from "../pages/auth/redux_usecases/authApi";
 import toast from "react-hot-toast";
-import { useTheme } from "../context/useTheme";
+import { useTheme } from "../context/ThemeContext";
 
 interface NavigationItem {
     id: string;
@@ -82,8 +82,8 @@ export const FloatingNavigation: React.FC = () => {
     const { isDark } = useTheme();
 
     const { data: authState } = useFetchUserQuery();
-    const user = authState;
-    const isAuthenticated = user?.role === "authenticated";
+    const user = authState ?? null;
+    const isAuthenticated = user !== null;
     const [logout, { isLoading: isLogoutLoading }] = useLogoutMutation();
 
     async function handleLogout() {
@@ -311,7 +311,7 @@ export const FloatingNavigation: React.FC = () => {
                                                                                                                 }
                                                     `}
                                     >
-                                        {user.email}
+                                        {user.email ?? ""}
                                     </div>
                                 </div>
                             </div>

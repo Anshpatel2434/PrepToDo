@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { AiFillSun } from "react-icons/ai";
 import { AiFillMoon } from "react-icons/ai";
-import { useTheme } from "../context/useTheme";
+import { useTheme } from "../context/ThemeContext";
 
 interface FloatingThemeToggleProps {
     className?: string;
