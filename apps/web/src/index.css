@@ -185,3 +185,108 @@
     scrollbar-width: thin;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DASHBOARD V1 - COMPONENT TOKENS
+   (No inline styles, no component-level colors)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  .dashboard-panel {
+    @apply rounded-2xl border;
+  }
+
+  .dashboard-panel-light {
+    @apply bg-bg-secondary-light border-border-light;
+  }
+
+  .dashboard-panel-dark {
+    @apply bg-bg-secondary-dark border-border-dark;
+  }
+
+  .dashboard-section-title {
+    @apply text-base sm:text-lg font-semibold tracking-tight;
+  }
+
+  .dashboard-tooltip {
+    @apply rounded-xl border px-3 py-2 shadow-lg;
+  }
+
+  .dashboard-tooltip-light {
+    @apply bg-bg-secondary-light border-border-light text-text-primary-light;
+  }
+
+  .dashboard-tooltip-dark {
+    @apply bg-bg-secondary-dark border-border-dark text-text-primary-dark;
+  }
+
+  .dashboard-heat-cell {
+    @apply border;
+  }
+
+  .dashboard-heat-0-light {
+    @apply bg-bg-tertiary-light border-border-light/60;
+  }
+  .dashboard-heat-1-light {
+    @apply bg-brand-primary-light/15 border-border-light/60;
+  }
+  .dashboard-heat-2-light {
+    @apply bg-brand-primary-light/30 border-border-light/60;
+  }
+  .dashboard-heat-3-light {
+    @apply bg-brand-primary-light/50 border-border-light/60;
+  }
+  .dashboard-heat-4-light {
+    @apply bg-brand-primary-light border-border-light/60;
+  }
+
+  .dashboard-heat-0-dark {
+    @apply bg-bg-tertiary-dark border-border-dark/70;
+  }
+  .dashboard-heat-1-dark {
+    @apply bg-brand-primary-dark/15 border-border-dark/70;
+  }
+  .dashboard-heat-2-dark {
+    @apply bg-brand-primary-dark/30 border-border-dark/70;
+  }
+  .dashboard-heat-3-dark {
+    @apply bg-brand-primary-dark/55 border-border-dark/70;
+  }
+  .dashboard-heat-4-dark {
+    @apply bg-brand-primary-dark border-border-dark/70;
+  }
+
+  progress.dashboard-meter {
+    @apply w-full h-2;
+  }
+}
+
+progress.dashboard-meter {
+  appearance: none;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+progress.dashboard-meter-light::-webkit-progress-bar {
+  background-color: var(--color-bg-tertiary-light);
+}
+
+progress.dashboard-meter-light::-webkit-progress-value {
+  background-color: var(--color-brand-primary-light);
+}
+
+progress.dashboard-meter-dark::-webkit-progress-bar {
+  background-color: var(--color-bg-tertiary-dark);
+}
+
+progress.dashboard-meter-dark::-webkit-progress-value {
+  background-color: var(--color-brand-primary-dark);
+}
+
+progress.dashboard-meter-light::-moz-progress-bar {
+  background-color: var(--color-brand-primary-light);
+}
+
+progress.dashboard-meter-dark::-moz-progress-bar {
+  background-color: var(--color-brand-primary-dark);
+}

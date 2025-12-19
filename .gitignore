@@ -1,0 +1,24 @@
+# Dependencies
+**/node_modules
+
+# Build outputs
+**/dist
+**/dist-ssr
+**/.turbo
+**/.next
+
+# Logs
+logs
+*.log
+
+# Env files
+.env
+.env.*
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Local tooling
+dev_server.log
