@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 
 interface ProgressChartProps {
   isDark: boolean;
@@ -18,10 +19,58 @@ const dummyProgressData = [
 export const ProgressChart: React.FC<ProgressChartProps> = ({ isDark }) => {
   const maxAccuracy = Math.max(...dummyProgressData.map(d => d.accuracy));
 
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: [0.25, 0.46, 0.45, 0.94] as const,
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const chartVariants = {
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.5,
+        delay: 0.2,
+      },
+    },
+  };
+
+  const barVariants = {
+    hidden: { height: 0, opacity: 0 },
+    visible: (i: number) => ({
+      height: "auto",
+      opacity: 1,
+      transition: {
+        height: {
+          duration: 0.8,
+          delay: 0.3 + i * 0.1,
+          ease: [0.25, 0.46, 0.45, 0.94] as const,
+        },
+        opacity: {
+          duration: 0.3,
+          delay: 0.3 + i * 0.1,
+        },
+      },
+    }),
+  };
+
   return (
-    <div
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
       className={`
-        rounded-xl p-6 border
+        dashboard-card
+        rounded-xl p-6 border focus-calm
         ${isDark 
           ? "bg-bg-secondary-dark border-border-dark" 
           : "bg-bg-secondary-light border-border-light"
@@ -30,69 +79,91 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({ isDark }) => {
     >
       {/* Header */}
       <div className="mb-6">
-        <h3
+        <motion.h3
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1 }}
           className={`
-            text-xl font-semibold mb-2
+            text-xl font-semibold mb-2 text-academic-heading
             ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
           `}
         >
           Progress Over Time
-        </h3>
-        <p
+        </motion.h3>
+        <motion.p
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
           className={`
-            text-sm
+            text-sm text-academic-body
             ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
           `}
         >
           Track your improvement over the past weeks
-        </p>
+        </motion.p>
       </div>
 
       {/* Placeholder Chart */}
-      <div className="relative">
+      <motion.div variants={chartVariants} className="relative">
         {/* Simple SVG Bar Chart */}
         <div className="mb-4">
-          <h4
+          <motion.h4
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
             className={`
-              text-sm font-medium mb-3
+              text-sm font-medium mb-3 text-academic-heading
               ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
             `}
           >
             Accuracy Trend (%)
-          </h4>
+          </motion.h4>
           
           <div className="flex items-end justify-between h-40 space-x-2">
             {dummyProgressData.map((data, index) => {
               const height = (data.accuracy / maxAccuracy) * 100;
               return (
-                <div key={index} className="flex flex-col items-center flex-1">
-                  <div
+                <motion.div
+                  key={index}
+                  custom={index}
+                  variants={barVariants}
+                  className="flex flex-col items-center flex-1"
+                >
+                  <motion.div
                     className={`
-                      w-full max-w-[60px] rounded-t transition-all duration-300
+                      w-full max-w-[60px] rounded-t progress-bar-premium
                       ${isDark 
-                        ? "bg-brand-primary-dark hover:bg-brand-primary-hover-dark" 
-                        : "bg-brand-primary-light hover:bg-brand-primary-hover-light"
+                        ? "bg-brand-primary-dark" 
+                        : "bg-brand-primary-light"
                       }
                     `}
                     style={{ height: `${Math.max(height, 10)}%` }}
                     title={`${data.week}: ${data.accuracy}%`}
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.2 }}
                   />
-                  <span
+                  <motion.span
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 + index * 0.05 }}
                     className={`
-                      text-xs mt-2 text-center
+                      text-xs mt-2 text-center text-academic-body
                       ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}
                     `}
                   >
                     {data.week}
-                  </span>
-                </div>
+                  </motion.span>
+                </motion.div>
               );
             })}
           </div>
         </div>
 
         {/* Summary Insight */}
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
           className={`
             p-4 rounded-lg border-l-4 mt-6
             ${isDark 
@@ -102,19 +173,28 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({ isDark }) => {
           `}
         >
           <div className="flex items-start space-x-3">
-            <span className="text-lg">📈</span>
+            <motion.span 
+              className="text-lg"
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+            >
+              📈
+            </motion.span>
             <div>
-              <h5 className="font-medium mb-1">Insight</h5>
-              <p className="text-sm">
+              <h5 className="font-medium mb-1 text-academic-heading">Insight</h5>
+              <p className="text-sm text-academic-body">
                 Your accuracy has improved by <strong>11%</strong> over the past 6 weeks. 
                 Keep practicing to maintain this upward trend!
               </p>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Placeholder Notice */}
-        <div
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
           className={`
             mt-4 p-3 rounded-lg border text-center text-sm
             ${isDark 
@@ -124,8 +204,8 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({ isDark }) => {
           `}
         >
           📊 <strong>Placeholder Data:</strong> Progress tracking will appear here with your real study data
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 };

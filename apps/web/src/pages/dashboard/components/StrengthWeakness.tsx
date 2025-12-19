@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 
 interface StrengthWeaknessProps {
   isDark: boolean;
@@ -19,20 +20,39 @@ const dummyPerformanceData = {
 };
 
 export const StrengthWeakness: React.FC<StrengthWeaknessProps> = ({ isDark }) => {
-  const getScoreColor = (_score: number, isStrength: boolean) => {
-    if (isStrength) {
-      return isDark ? "bg-brand-primary-dark" : "bg-brand-primary-light";
-    } else {
-      return isDark ? "bg-brand-secondary-dark" : "bg-brand-secondary-light";
-    }
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+        delayChildren: 0.1,
+      },
+    },
   };
 
-  const getScoreTextColor = (_score: number, isStrength: boolean) => {
-    if (isStrength) {
-      return isDark ? "text-text-primary-dark" : "text-text-primary-light";
-    } else {
-      return isDark ? "text-text-secondary-dark" : "text-text-secondary-light";
-    }
+  const sectionVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: [0.25, 0.46, 0.45, 0.94] as const,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: {
+        duration: 0.4,
+        ease: [0.25, 0.46, 0.45, 0.94] as const,
+      },
+    },
   };
 
   const getBorderColor = (isStrength: boolean) => {
@@ -43,62 +63,86 @@ export const StrengthWeakness: React.FC<StrengthWeaknessProps> = ({ isDark }) =>
 
   const PerformanceItem = ({ 
     item, 
-    isStrength 
+    isStrength,
+    index 
   }: { 
     item: typeof dummyPerformanceData.strengths[0]; 
     isStrength: boolean;
+    index: number;
   }) => (
-    <div className={`border-l-4 pl-4 py-3 ${getBorderColor(isStrength)}`}>
+    <motion.div
+      variants={itemVariants}
+      className={`border-l-4 pl-4 py-3 ${getBorderColor(isStrength)}`}
+    >
       <div className="flex justify-between items-start mb-2">
         <h4
           className={`
-            font-semibold text-sm
+            font-semibold text-sm text-academic-heading
             ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
           `}
         >
           {item.topic}
         </h4>
-        <span
+        <motion.span
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.5 + index * 0.1, type: "spring", stiffness: 300 }}
           className={`
-            text-xs font-bold px-2 py-1 rounded
-            ${getScoreTextColor(item.score, isStrength)}
+            text-xs font-bold px-2 py-1 rounded text-academic-heading
+            ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
           `}
         >
           {item.score}%
-        </span>
+        </motion.span>
       </div>
       <p
         className={`
-          text-xs
+          text-xs text-academic-body
           ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}
         `}
       >
         {item.description}
       </p>
       {/* Progress Bar */}
-      <div
+      <motion.div
         className={`
           mt-3 h-2 rounded-full overflow-hidden
           ${isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"}
         `}
       >
-        <div
+        <motion.div
           className={`
-            h-full transition-all duration-500 ease-out
-            ${getScoreColor(item.score, isStrength)}
+            h-full progress-bar-premium
+            ${isStrength 
+              ? (isDark ? "bg-brand-primary-dark" : "bg-brand-primary-light")
+              : (isDark ? "bg-brand-secondary-dark" : "bg-brand-secondary-light")
+            }
           `}
-          style={{ width: `${item.score}%` }}
+          initial={{ width: 0 }}
+          animate={{ width: `${item.score}%` }}
+          transition={{ 
+            duration: 1, 
+            delay: 0.7 + index * 0.1,
+            ease: [0.25, 0.46, 0.45, 0.94] as const
+          }}
         />
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+    >
       {/* Strengths Section */}
-      <div
+      <motion.div
+        variants={sectionVariants}
         className={`
-          rounded-xl p-6 border
+          dashboard-card
+          rounded-xl p-6 border focus-calm
           ${isDark 
             ? "bg-bg-secondary-dark border-border-dark" 
             : "bg-bg-secondary-light border-border-light"
@@ -106,11 +150,17 @@ export const StrengthWeakness: React.FC<StrengthWeaknessProps> = ({ isDark }) =>
         `}
       >
         <div className="flex items-center space-x-3 mb-6">
-          <div className="text-2xl">💪</div>
+          <motion.div 
+            className="text-2xl"
+            animate={{ rotate: [0, 10, -10, 0] }}
+            transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+          >
+            💪
+          </motion.div>
           <div>
             <h3
               className={`
-                text-xl font-semibold
+                text-xl font-semibold text-academic-heading
                 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
               `}
             >
@@ -118,7 +168,7 @@ export const StrengthWeakness: React.FC<StrengthWeaknessProps> = ({ isDark }) =>
             </h3>
             <p
               className={`
-                text-sm
+                text-sm text-academic-body
                 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
               `}
             >
@@ -129,15 +179,22 @@ export const StrengthWeakness: React.FC<StrengthWeaknessProps> = ({ isDark }) =>
 
         <div className="space-y-4">
           {dummyPerformanceData.strengths.map((strength, index) => (
-            <PerformanceItem key={index} item={strength} isStrength={true} />
+            <PerformanceItem 
+              key={index} 
+              item={strength} 
+              isStrength={true} 
+              index={index}
+            />
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Weaknesses Section */}
-      <div
+      <motion.div
+        variants={sectionVariants}
         className={`
-          rounded-xl p-6 border
+          dashboard-card
+          rounded-xl p-6 border focus-calm
           ${isDark 
             ? "bg-bg-secondary-dark border-border-dark" 
             : "bg-bg-secondary-light border-border-light"
@@ -145,11 +202,17 @@ export const StrengthWeakness: React.FC<StrengthWeaknessProps> = ({ isDark }) =>
         `}
       >
         <div className="flex items-center space-x-3 mb-6">
-          <div className="text-2xl">🎯</div>
+          <motion.div 
+            className="text-2xl"
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 2, repeat: Infinity, repeatDelay: 4 }}
+          >
+            🎯
+          </motion.div>
           <div>
             <h3
               className={`
-                text-xl font-semibold
+                text-xl font-semibold text-academic-heading
                 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
               `}
             >
@@ -157,7 +220,7 @@ export const StrengthWeakness: React.FC<StrengthWeaknessProps> = ({ isDark }) =>
             </h3>
             <p
               className={`
-                text-sm
+                text-sm text-academic-body
                 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
               `}
             >
@@ -168,13 +231,19 @@ export const StrengthWeakness: React.FC<StrengthWeaknessProps> = ({ isDark }) =>
 
         <div className="space-y-4">
           {dummyPerformanceData.weaknesses.map((weakness, index) => (
-            <PerformanceItem key={index} item={weakness} isStrength={false} />
+            <PerformanceItem 
+              key={index} 
+              item={weakness} 
+              isStrength={false} 
+              index={index}
+            />
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Overall Insight */}
-      <div
+      <motion.div
+        variants={sectionVariants}
         className={`
           lg:col-span-2 p-4 rounded-lg border-l-4
           ${isDark 
@@ -184,16 +253,25 @@ export const StrengthWeakness: React.FC<StrengthWeaknessProps> = ({ isDark }) =>
         `}
       >
         <div className="flex items-start space-x-3">
-          <span className="text-lg">💡</span>
+          <motion.span 
+            className="text-lg"
+            animate={{ 
+              scale: [1, 1.2, 1],
+              rotate: [0, 5, -5, 0]
+            }}
+            transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }}
+          >
+            💡
+          </motion.span>
           <div>
-            <h5 className="font-medium mb-1">Performance Insight</h5>
-            <p className="text-sm">
+            <h5 className="font-medium mb-1 text-academic-heading">Performance Insight</h5>
+            <p className="text-sm text-academic-body">
               You're performing strongest in reading and language skills. 
               Consider dedicating more time to quantitative reasoning to balance your performance.
             </p>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };

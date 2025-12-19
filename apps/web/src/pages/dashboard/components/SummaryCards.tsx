@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 
 interface SummaryCardsProps {
   isDark: boolean;
@@ -40,16 +41,46 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ isDark }) => {
     }
   ];
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: [0.25, 0.46, 0.45, 0.94] as const,
+      },
+    },
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+    >
       {cards.map((card, index) => (
-        <div
+        <motion.div
           key={index}
+          variants={cardVariants}
           className={`
-            rounded-xl p-6 border transition-all duration-200 hover:shadow-lg
+            dashboard-card
+            rounded-xl p-6 border focus-calm
             ${isDark 
-              ? "bg-bg-secondary-dark border-border-dark hover:border-brand-primary-dark" 
-              : "bg-bg-secondary-light border-border-light hover:border-brand-primary-light"
+              ? "bg-bg-secondary-dark border-border-dark" 
+              : "bg-bg-secondary-light border-border-light"
             }
           `}
         >
@@ -69,14 +100,16 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ isDark }) => {
 
           {/* Value */}
           <div className="mb-2">
-            <h3
+            <motion.h3
               className={`
+                stat-number
                 text-2xl md:text-3xl font-bold
+                text-academic-heading
                 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
               `}
             >
               {card.value}
-            </h3>
+            </motion.h3>
           </div>
 
           {/* Title & Description */}
@@ -84,6 +117,7 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ isDark }) => {
             <h4
               className={`
                 text-sm font-semibold mb-1
+                text-academic-body
                 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
               `}
             >
@@ -91,15 +125,15 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ isDark }) => {
             </h4>
             <p
               className={`
-                text-xs
+                text-xs text-academic-body
                 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}
               `}
             >
               {card.description}
             </p>
           </div>
-        </div>
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 };

@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { useTheme } from "../../../context/ThemeContext";
 import { useFetchUserQuery } from "../../auth/redux_usecases/authApi";
 import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
@@ -25,10 +26,36 @@ export const DashboardPage: React.FC = () => {
     return null; // or a loading spinner
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const sectionVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: [0.25, 0.46, 0.45, 0.94] as const,
+      },
+    },
+  };
+
   return (
-    <div
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
       className={`
-        min-h-screen transition-colors duration-300
+        min-h-screen theme-transition
         ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"}
       `}
     >
@@ -38,53 +65,62 @@ export const DashboardPage: React.FC = () => {
       {/* Main Dashboard Content */}
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Dashboard Header */}
-        <div className="mb-8">
-          <h1
+        <motion.div 
+          variants={sectionVariants}
+          className="mb-8"
+        >
+          <motion.h1
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
             className={`
-              text-3xl md:text-4xl font-bold mb-2
+              text-3xl md:text-4xl font-bold mb-2 text-academic-heading
               ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
             `}
           >
             Your Study Dashboard
-          </h1>
-          <p
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
             className={`
-              text-lg
+              text-lg text-academic-body
               ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
             `}
           >
             Track your progress and plan your next study session
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         {/* Dashboard Sections */}
         <div className="space-y-8">
           {/* 1. Top Summary Strip */}
-          <section>
+          <motion.section variants={sectionVariants}>
             <SummaryCards isDark={isDark} />
-          </section>
+          </motion.section>
 
           {/* 2. Progress Over Time */}
-          <section>
+          <motion.section variants={sectionVariants}>
             <ProgressChart isDark={isDark} />
-          </section>
+          </motion.section>
 
           {/* 3. Strengths & Weaknesses */}
-          <section>
+          <motion.section variants={sectionVariants}>
             <StrengthWeakness isDark={isDark} />
-          </section>
+          </motion.section>
 
           {/* 4. What to Do Next */}
-          <section>
+          <motion.section variants={sectionVariants}>
             <NextSteps isDark={isDark} />
-          </section>
+          </motion.section>
 
           {/* 5. Social Feature Preview */}
-          <section>
+          <motion.section variants={sectionVariants}>
             <SocialPreview isDark={isDark} />
-          </section>
+          </motion.section>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
