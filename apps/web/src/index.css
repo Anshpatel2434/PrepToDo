@@ -8,49 +8,53 @@
   /* ─────────────────────────────────────────────────────────────────────────
      BACKGROUND COLORS - Use as: bg-bg-primary-light, bg-bg-primary-dark
      Research-Based: Minimize eye strain (asthenopia) + WCAG AA compliance
+     Enhanced for Premium Academic Calmness
      ───────────────────────────────────────────────────────────────────────── */
-  --color-bg-primary-light: #faf9ef;  /* Warm Alabaster - mimics paper, reduces blue-light glare */
-  --color-bg-secondary-light: #f5f4e8;
-  --color-bg-tertiary-light: #ece8d8;
+  --color-bg-primary-light: #fbfbf7;  /* Pure cream - cleaner, more premium */
+  --color-bg-secondary-light: #f6f5f0; /* Subtle elevation */
+  --color-bg-tertiary-light: #f1efe8;  /* Component backgrounds */
   
-  --color-bg-primary-dark: #121212;   /* Dark Gray - prevents "smearing" on OLED screens */
-  --color-bg-secondary-dark: #1a1a1a;
-  --color-bg-tertiary-dark: #2a2a2a;
+  --color-bg-primary-dark: #0f1115;   /* Rich charcoal - more premium than pure black */
+  --color-bg-secondary-dark: #151922; /* Elevated surfaces */
+  --color-bg-tertiary-dark: #1e2430;  /* Cards and components */
 
   /* ─────────────────────────────────────────────────────────────────────────
      TEXT COLORS - Use as: text-text-primary-light, text-text-primary-dark
      Research-Based: Never use pure black (#000000), maximize readability
+     Enhanced for Better Contrast & Premium Feel
      ───────────────────────────────────────────────────────────────────────── */
-  --color-text-primary-light: #232d4b;  /* Deep Charcoal - never use pure black */
-  --color-text-secondary-light: #58595b; /* Slate Gray */
-  --color-text-muted-light: #6b7280;
+  --color-text-primary-light: #1a202c;  /* Rich charcoal - better contrast */
+  --color-text-secondary-light: #4a5568; /* Muted slate - improved readability */
+  --color-text-muted-light: #718096;      /* Softer gray - less harsh */
   
-  --color-text-primary-dark: #f8fafc;
-  --color-text-secondary-dark: #e5e7eb;
-  --color-text-muted-dark: #d1d5db;
+  --color-text-primary-dark: #f7fafc;    /* Crisp white - premium feel */
+  --color-text-secondary-dark: #e2e8f0;   /* Light gray - better readability */
+  --color-text-muted-dark: #cbd5e0;       /* Medium gray - improved contrast */
 
   /* ─────────────────────────────────────────────────────────────────────────
      BORDER COLORS - Use as: border-border-light, border-border-dark
+     Enhanced for Subtle, Premium Borders
      ───────────────────────────────────────────────────────────────────────── */
-  --color-border-light: #d1d5db;
-  --color-border-lighter: #e5e7eb;
-  --color-border-dark: #4a5568;
-  --color-border-darker: #718096;
+  --color-border-light: #e2e8f0;    /* Softer, more subtle */
+  --color-border-lighter: #edf2f7;  /* Very light borders */
+  --color-border-dark: #2d3748;     /* Richer dark borders */
+  --color-border-darker: #4a5568;   /* Darker accent */
 
   /* ─────────────────────────────────────────────────────────────────────────
      BRAND COLORS - Use as: bg-brand-primary-light, bg-brand-primary-dark
      Ed-Tech Focus: Deep Indigo + Bronze Gold strategy - Professional, academic, trust-building
+     Enhanced for Premium Academic Calmness
      ───────────────────────────────────────────────────────────────────────── */
-  --color-brand-primary-light: #4f6b5f;   /* Smoked Sage Ink */
---color-brand-primary-hover-light: #435c52;
---color-brand-secondary-light: #6f8b80; /* Quiet supporting sage */
---color-brand-accent-light: #a8832a;    /* Aged brass gold (less shiny, more scholarly) */
+  --color-brand-primary-light: #2d5a4f;   /* Deep forest green - trust & growth */
+  --color-brand-primary-hover-light: #24473f; /* Darker on hover */
+  --color-brand-secondary-light: #4a7c66; /* Supporting sage */
+  --color-brand-accent-light: #c89b3c;    /* Warm gold - achievement */
 
   
-  --color-brand-primary-dark: #9fbfb2;    /* Chalked sage glow */
---color-brand-primary-hover-dark: #b2cec3;
---color-brand-secondary-dark: #7f9f93;
---color-brand-accent-dark: #d6b45a;     /* Soft lamp-gold */
+  --color-brand-primary-dark: #6ba392;    /* Sage green glow */
+  --color-brand-primary-hover-dark: #7fb5a3;
+  --color-brand-secondary-dark: #5a8f7d;  /* Supporting sage dark */
+  --color-brand-accent-dark: #e6c569;     /* Warm gold dark */
 
 
   /* ─────────────────────────────────────────────────────────────────────────
@@ -185,3 +189,7 @@
     scrollbar-width: thin;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DASHBOARD ENHANCEMENTS - Premium Academic Calm
+   ═══════════════════════════════════════════════════════════════════════════ */
