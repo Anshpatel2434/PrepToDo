@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useMemo } from "react";
+import { motion } from "framer-motion";
 import type { UserProfile } from "../../../types";
 
 interface DashboardHeaderProps {
@@ -18,29 +19,57 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         .map((p) => p[0]?.toUpperCase())
         .join("");
 
+    // Calculate "Active this week" micro stat
+    const activeThisWeek = useMemo(() => {
+        const now = new Date();
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - now.getUTCDay());
+        // Mock data - in real app this would come from analytics
+        // Use a deterministic value for consistency during development
+        const dayOfMonth = now.getDate();
+        return (dayOfMonth % 7) + 3; // 3-9 days based on current date
+    }, []);
+
+    // Plan badge styling
+    const getPlanBadgeClass = () => {
+        const baseClass = "px-2 py-1 rounded-lg text-xs font-medium";
+        switch (userProfile.subscription_tier) {
+            case "pro":
+                return `${baseClass} ${isDark ? "bg-brand-primary-dark/20 text-brand-primary-dark" : "bg-brand-primary-light/20 text-brand-primary-light"}`;
+            case "premium":
+                return `${baseClass} ${isDark ? "bg-brand-accent-dark/20 text-brand-accent-dark" : "bg-brand-accent-light/20 text-brand-accent-light"}`;
+            default:
+                return `${baseClass} ${isDark ? "bg-bg-tertiary-dark text-text-muted-dark" : "bg-bg-tertiary-light text-text-muted-light"}`;
+        }
+    };
+
     return (
-        <header
+        <motion.header
             className={`dashboard-panel ${
                 isDark ? "dashboard-panel-dark" : "dashboard-panel-light"
-            } p-4 sm:p-6`}
+            } p-6`}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
         >
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+                {/* User Identity Section */}
+                <div className="flex items-start gap-5">
                     <div className="shrink-0">
                         {userProfile.avatar_url ? (
                             <img
                                 src={userProfile.avatar_url}
                                 alt={`${displayName} avatar`}
-                                className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover border ${
+                                className={`w-16 h-16 rounded-2xl object-cover border shadow-sm ${
                                     isDark ? "border-border-dark" : "border-border-light"
                                 }`}
                             />
                         ) : (
                             <div
-                                className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center border font-semibold ${
+                                className={`w-16 h-16 rounded-2xl flex items-center justify-center border font-semibold text-lg ${
                                     isDark
-                                            ? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark"
-                                            : "bg-bg-tertiary-light border-border-light text-text-primary-light"
+                                        ? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark"
+                                        : "bg-bg-tertiary-light border-border-light text-text-primary-light"
                                 }`}
                             >
                                 {initials || "U"}
@@ -48,41 +77,55 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                         )}
                     </div>
 
-                    <div>
-                        <div
-                            className={`text-xl sm:text-2xl font-semibold text-heading ${
-                                isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                            }`}
-                        >
-                            {displayName}
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-2">
+                            <h1
+                                className={`text-2xl sm:text-3xl font-bold text-heading truncate ${
+                                    isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                                }`}
+                            >
+                                {displayName}
+                            </h1>
+                            <span className={getPlanBadgeClass()}>
+                                {userProfile.subscription_tier.toUpperCase()}
+                            </span>
                         </div>
+
                         <div
-                            className={`text-sm ${
+                            className={`flex items-center gap-4 text-sm ${
                                 isDark ? "text-text-muted-dark" : "text-text-muted-light"
                             }`}
                         >
-                            @{userProfile.username} • {userProfile.subscription_tier.toUpperCase()}
+                            <span>@{userProfile.username}</span>
+                            <span className="flex items-center gap-1">
+                                <span className="text-brand-primary-light dark:text-brand-primary-dark">📊</span>
+                                Active this week: {activeThisWeek} days
+                            </span>
                         </div>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center sm:gap-4">
+                {/* Goal & Progress Section */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0 sm:min-w-[280px]">
                     <div
-                        className={`rounded-xl border px-3 py-2 ${
+                        className={`rounded-xl border px-4 py-3 ${
                             isDark
                                 ? "border-border-dark bg-bg-tertiary-dark/40"
                                 : "border-border-light bg-bg-tertiary-light/50"
                         }`}
                     >
-                        <div
-                            className={`text-xs ${
-                                isDark ? "text-text-muted-dark" : "text-text-muted-light"
-                            }`}
-                        >
-                            Daily goal
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-brand-primary-light dark:text-brand-primary-dark text-sm">⏱️</span>
+                            <div
+                                className={`text-xs font-medium uppercase tracking-wide ${
+                                    isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                                }`}
+                            >
+                                Daily goal
+                            </div>
                         </div>
                         <div
-                            className={`text-sm font-semibold ${
+                            className={`text-xl font-bold ${
                                 isDark ? "text-text-primary-dark" : "text-text-primary-light"
                             }`}
                         >
@@ -91,29 +134,32 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                     </div>
 
                     <div
-                        className={`rounded-xl border px-3 py-2 ${
+                        className={`rounded-xl border px-4 py-3 ${
                             isDark
                                 ? "border-border-dark bg-bg-tertiary-dark/40"
                                 : "border-border-light bg-bg-tertiary-light/50"
                         }`}
                     >
-                        <div
-                            className={`text-xs ${
-                                isDark ? "text-text-muted-dark" : "text-text-muted-light"
-                            }`}
-                        >
-                            Plan
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-brand-accent-light dark:text-brand-accent-dark text-sm">🎯</span>
+                            <div
+                                className={`text-xs font-medium uppercase tracking-wide ${
+                                    isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                                }`}
+                            >
+                                Status
+                            </div>
                         </div>
                         <div
-                            className={`text-sm font-semibold ${
+                            className={`text-xl font-bold ${
                                 isDark ? "text-text-primary-dark" : "text-text-primary-light"
                             }`}
                         >
-                            {userProfile.subscription_tier.toUpperCase()}
+                            On Track
                         </div>
                     </div>
                 </div>
             </div>
-        </header>
+        </motion.header>
     );
 };

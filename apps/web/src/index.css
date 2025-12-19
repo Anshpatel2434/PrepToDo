@@ -290,3 +290,95 @@ progress.dashboard-meter-light::-moz-progress-bar {
 progress.dashboard-meter-dark::-moz-progress-bar {
   background-color: var(--color-brand-primary-dark);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DASHBOARD V1 - REFINEMENT ENHANCEMENTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Smooth transitions for all dashboard elements */
+.dashboard-panel {
+  transition: all 0.2s ease-out;
+}
+
+.dashboard-panel:hover {
+  transform: translateY(-1px);
+}
+
+/* Enhanced grid symmetry */
+.dashboard-grid-balanced {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .dashboard-grid-balanced {
+    grid-template-columns: 7fr 5fr;
+  }
+}
+
+/* Improved heatmap cells with better hover states */
+.dashboard-heat-cell {
+  transition: all 0.15s ease-out;
+}
+
+.dashboard-heat-cell:hover {
+  transform: scale(1.1);
+  z-index: 10;
+  position: relative;
+}
+
+/* Enhanced section spacing for better visual hierarchy */
+.dashboard-section-spacing {
+  margin-bottom: 2rem;
+}
+
+.dashboard-section-spacing:last-child {
+  margin-bottom: 0;
+}
+
+/* Smooth fade animations */
+@keyframes smoothFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-smooth-fade-in {
+  animation: smoothFadeIn 0.25s ease-out forwards;
+}
+
+/* Enhanced skeleton loading animations */
+@keyframes skeletonShimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton-loading {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  background-size: 200px 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+}
+
+.dark .skeleton-loading {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+}

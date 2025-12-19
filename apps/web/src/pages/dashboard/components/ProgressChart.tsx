@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { motion } from "framer-motion";
 import {
     CartesianGrid,
     Line,
@@ -89,26 +90,40 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({ analytics, isDark 
         : "var(--color-brand-primary-light)";
 
     return (
-        <section
+        <motion.section
             className={`dashboard-panel ${
                 isDark ? "dashboard-panel-dark" : "dashboard-panel-light"
-            } p-4 sm:p-5 h-full`}
+            } p-5 h-full`}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut", delay: 0.2 }}
         >
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start justify-between gap-4 mb-4">
                 <div>
-                    <h2
-                        className={`dashboard-section-title ${
-                            isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                        }`}
-                    >
-                        Progress (weekly)
-                    </h2>
+                    <div className="flex items-center gap-2 mb-2">
+                        <h2
+                            className={`dashboard-section-title ${
+                                isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                            }`}
+                        >
+                            📈 Progress
+                        </h2>
+                        <span
+                            className={`text-xs px-2 py-1 rounded-lg border ${
+                                isDark 
+                                    ? "border-border-dark bg-bg-tertiary-dark/40 text-text-muted-dark" 
+                                    : "border-border-light bg-bg-tertiary-light/50 text-text-muted-light"
+                            }`}
+                        >
+                            Last 8 weeks
+                        </span>
+                    </div>
                     <p
-                        className={`mt-1 text-sm ${
+                        className={`text-sm ${
                             isDark ? "text-text-muted-dark" : "text-text-muted-light"
                         }`}
                     >
-                        Average accuracy over the last 8 weeks
+                        Weekly accuracy trend
                     </p>
                 </div>
             </div>
@@ -138,6 +153,6 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({ analytics, isDark 
                     </LineChart>
                 </ResponsiveContainer>
             </div>
-        </section>
+        </motion.section>
     );
 };

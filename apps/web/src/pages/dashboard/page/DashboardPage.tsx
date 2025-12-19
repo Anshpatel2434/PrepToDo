@@ -1,4 +1,5 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../../../context/ThemeContext";
 import { FloatingNavigation } from "../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
@@ -9,6 +10,7 @@ import { ProgressChart } from "../components/ProgressChart";
 import { StrengthWeakness } from "../components/StrengthWeakness";
 import { NextSteps } from "../components/NextSteps";
 import { SocialPreview } from "../components/SocialPreview";
+import { DashboardSkeleton } from "../components/SkeletonLoader";
 import type {
     LeaderboardEntry,
     PracticeSession,
@@ -303,6 +305,16 @@ const computeQuestionTypeAccuracy = (
 
 export const DashboardPage: React.FC = () => {
     const { isDark } = useTheme();
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        // Simulate initial data loading with 1.5s controlled delay
+        const timer = setTimeout(() => {
+            setIsLoading(false);
+        }, 1500);
+
+        return () => clearTimeout(timer);
+    }, []);
 
     const nowIso = useMemo(() => new Date().toISOString(), []);
     const endDateUtc = useMemo(() => {
@@ -334,32 +346,66 @@ export const DashboardPage: React.FC = () => {
             <FloatingThemeToggle />
             <FloatingNavigation />
 
-            <main className="pt-24 pb-10 px-4 sm:px-6 lg:px-8">
-                <div className="mx-auto max-w-7xl space-y-6">
-                    <DashboardHeader userProfile={userProfile} isDark={isDark} />
+            <AnimatePresence mode="wait">
+                {isLoading ? (
+                    <DashboardSkeleton key="skeleton" />
+                ) : (
+                    <motion.main
+                        key="content"
+                        className="pt-24 pb-10 px-4 sm:px-6 lg:px-8"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.25 }}
+                    >
+                        <div className="mx-auto max-w-7xl space-y-6">
+                            <motion.div
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.25, delay: 0.1 }}
+                            >
+                                <DashboardHeader userProfile={userProfile} isDark={isDark} />
+                            </motion.div>
 
-                    <SummaryCards analytics={analytics} sessions={sessions} isDark={isDark} />
+                            <motion.div
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.25, delay: 0.2 }}
+                            >
+                                <SummaryCards analytics={analytics} sessions={sessions} isDark={isDark} />
+                            </motion.div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                        <div className="lg:col-span-5">
-                            <ActivityHeatmap analytics={analytics} isDark={isDark} weeks={12} />
-                        </div>
-                        <div className="lg:col-span-7">
-                            <ProgressChart analytics={analytics} isDark={isDark} />
-                        </div>
-                    </div>
+                            <motion.div
+                                className="grid grid-cols-1 lg:grid-cols-12 gap-6"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.25, delay: 0.3 }}
+                            >
+                                <div className="lg:col-span-5">
+                                    <ActivityHeatmap analytics={analytics} isDark={isDark} weeks={12} />
+                                </div>
+                                <div className="lg:col-span-7">
+                                    <ProgressChart analytics={analytics} isDark={isDark} />
+                                </div>
+                            </motion.div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                        <div className="lg:col-span-7">
-                            <StrengthWeakness performance={questionTypePerformance} isDark={isDark} />
+                            <motion.div
+                                className="grid grid-cols-1 lg:grid-cols-12 gap-6"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.25, delay: 0.4 }}
+                            >
+                                <div className="lg:col-span-7">
+                                    <StrengthWeakness performance={questionTypePerformance} isDark={isDark} />
+                                </div>
+                                <div className="lg:col-span-5 space-y-6">
+                                    <NextSteps performance={questionTypePerformance} isDark={isDark} />
+                                    <SocialPreview leaderboard={leaderboard} isDark={isDark} />
+                                </div>
+                            </motion.div>
                         </div>
-                        <div className="lg:col-span-5 space-y-6">
-                            <NextSteps performance={questionTypePerformance} isDark={isDark} />
-                            <SocialPreview leaderboard={leaderboard} isDark={isDark} />
-                        </div>
-                    </div>
-                </div>
-            </main>
+                    </motion.main>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

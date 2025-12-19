@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import type { LeaderboardEntry } from "../../../types";
 
 interface SocialPreviewProps {
@@ -11,25 +12,41 @@ export const SocialPreview: React.FC<SocialPreviewProps> = ({
     isDark,
 }) => {
     return (
-        <section
+        <motion.section
             className={`dashboard-panel ${
                 isDark ? "dashboard-panel-dark" : "dashboard-panel-light"
-            } p-4 sm:p-5`}
+            } p-5`}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut", delay: 0.5 }}
         >
-            <h2
-                className={`dashboard-section-title ${
-                    isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                }`}
-            >
-                Social (preview)
-            </h2>
-            <p
-                className={`mt-1 text-sm ${
-                    isDark ? "text-text-muted-dark" : "text-text-muted-light"
-                }`}
-            >
-                Peers practiced today. Compare progress is coming soon.
-            </p>
+            <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                    <h2
+                        className={`dashboard-section-title ${
+                            isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                        }`}
+                    >
+                        👥 Social Preview
+                    </h2>
+                    <span
+                        className={`text-xs px-2 py-1 rounded-lg border ${
+                            isDark 
+                                ? "border-border-dark bg-bg-tertiary-dark/40 text-text-muted-dark" 
+                                : "border-border-light bg-bg-tertiary-light/50 text-text-muted-light"
+                        }`}
+                    >
+                        Coming soon
+                    </span>
+                </div>
+                <p
+                    className={`text-sm ${
+                        isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                    }`}
+                >
+                    Compare progress with peers • Community features
+                </p>
+            </div>
 
             <div
                 className={`mt-4 rounded-xl border ${
@@ -112,6 +129,6 @@ export const SocialPreview: React.FC<SocialPreviewProps> = ({
                     You’ll be able to compare consistency and accuracy with peers in your cohort.
                 </div>
             </div>
-        </section>
+        </motion.section>
     );
 };

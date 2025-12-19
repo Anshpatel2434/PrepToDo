@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { motion } from "framer-motion";
 import type { PracticeSession, UserAnalytics } from "../../../types";
 
 interface SummaryCardsProps {
@@ -54,37 +55,91 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
     }, [analytics, sessions]);
 
     const cards = [
-        { label: "Questions attempted", value: totals.totalQuestions.toLocaleString() },
-        { label: "Overall accuracy", value: `${totals.accuracy}%` },
-        { label: "Minutes practiced", value: totals.totalMinutes.toLocaleString() },
-        { label: "Current streak", value: `${totals.currentStreak}` },
+        { 
+            icon: "📊", 
+            label: "Questions attempted", 
+            value: totals.totalQuestions.toLocaleString(), 
+            unit: "",
+            description: "Total practice questions"
+        },
+        { 
+            icon: "🎯", 
+            label: "Overall accuracy", 
+            value: `${totals.accuracy}%`, 
+            unit: "%",
+            description: "Correct answer rate"
+        },
+        { 
+            icon: "⏱️", 
+            label: "Minutes practiced", 
+            value: totals.totalMinutes.toLocaleString(), 
+            unit: "min",
+            description: "Total study time"
+        },
+        { 
+            icon: "🔥", 
+            label: "Current streak", 
+            value: `${totals.currentStreak}`, 
+            unit: "days",
+            description: "Consecutive active days"
+        },
     ] as const;
 
     return (
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {cards.map((c) => (
-                <div
+        <motion.section 
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut", delay: 0.1 }}
+        >
+            {cards.map((c, index) => (
+                <motion.div
                     key={c.label}
                     className={`dashboard-panel ${
                         isDark ? "dashboard-panel-dark" : "dashboard-panel-light"
-                    } p-4`}
+                    } p-5 hover:shadow-sm transition-shadow`}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25, ease: "easeOut", delay: 0.1 + index * 0.05 }}
                 >
-                    <div
-                        className={`text-xs uppercase tracking-wide ${
-                            isDark ? "text-text-muted-dark" : "text-text-muted-light"
-                        }`}
-                    >
-                        {c.label}
+                    <div className="flex items-center gap-3 mb-3">
+                        <span className="text-2xl">{c.icon}</span>
+                        <div
+                            className={`text-sm font-medium ${
+                                isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                            }`}
+                        >
+                            {c.label}
+                        </div>
                     </div>
-                    <div
-                        className={`mt-2 text-2xl sm:text-3xl font-semibold ${
-                            isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                        }`}
-                    >
-                        {c.value}
+                    
+                    <div className="space-y-1">
+                        <div
+                            className={`text-3xl font-bold ${
+                                isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                            }`}
+                        >
+                            {c.value}
+                            {c.unit && (
+                                <span
+                                    className={`text-lg font-medium ml-1 ${
+                                        isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                                    }`}
+                                >
+                                    {c.unit}
+                                </span>
+                            )}
+                        </div>
+                        <div
+                            className={`text-xs ${
+                                isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                            }`}
+                        >
+                            {c.description}
+                        </div>
                     </div>
-                </div>
+                </motion.div>
             ))}
-        </section>
+        </motion.section>
     );
 };
