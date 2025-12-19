@@ -5,109 +5,144 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @theme {
-  /* ─────────────────────────────────────────────────────────────────────────
+	/* ─────────────────────────────────────────────────────────────────────────
      BACKGROUND COLORS - Use as: bg-bg-primary-light, bg-bg-primary-dark
      Research-Based: Minimize eye strain (asthenopia) + WCAG AA compliance
      ───────────────────────────────────────────────────────────────────────── */
-  --color-bg-primary-light: #faf9ef;  /* Warm Alabaster - mimics paper, reduces blue-light glare */
-  --color-bg-secondary-light: #f5f4e8;
-  --color-bg-tertiary-light: #ece8d8;
-  
-  --color-bg-primary-dark: #121212;   /* Dark Gray - prevents "smearing" on OLED screens */
-  --color-bg-secondary-dark: #1a1a1a;
-  --color-bg-tertiary-dark: #2a2a2a;
+	--color-bg-primary-light: #faf9ef; /* Warm Alabaster - mimics paper, reduces blue-light glare */
+	--color-bg-secondary-light: #f5f4e8;
+	--color-bg-tertiary-light: #ece8d8;
 
-  /* ─────────────────────────────────────────────────────────────────────────
+	--color-bg-primary-dark: #121212; /* Dark Gray - prevents "smearing" on OLED screens */
+	--color-bg-secondary-dark: #1a1a1a;
+	--color-bg-tertiary-dark: #2a2a2a;
+
+	/* ─────────────────────────────────────────────────────────────────────────
      TEXT COLORS - Use as: text-text-primary-light, text-text-primary-dark
      Research-Based: Never use pure black (#000000), maximize readability
      ───────────────────────────────────────────────────────────────────────── */
-  --color-text-primary-light: #232d4b;  /* Deep Charcoal - never use pure black */
-  --color-text-secondary-light: #58595b; /* Slate Gray */
-  --color-text-muted-light: #6b7280;
-  
-  --color-text-primary-dark: #f8fafc;
-  --color-text-secondary-dark: #e5e7eb;
-  --color-text-muted-dark: #d1d5db;
+	--color-text-primary-light: #232d4b; /* Deep Charcoal - never use pure black */
+	--color-text-secondary-light: #58595b; /* Slate Gray */
+	--color-text-muted-light: #6b7280;
 
-  /* ─────────────────────────────────────────────────────────────────────────
+	--color-text-primary-dark: #f8fafc;
+	--color-text-secondary-dark: #e5e7eb;
+	--color-text-muted-dark: #d1d5db;
+
+	/* ─────────────────────────────────────────────────────────────────────────
      BORDER COLORS - Use as: border-border-light, border-border-dark
      ───────────────────────────────────────────────────────────────────────── */
-  --color-border-light: #d1d5db;
-  --color-border-lighter: #e5e7eb;
-  --color-border-dark: #4a5568;
-  --color-border-darker: #718096;
+	--color-border-light: #d1d5db;
+	--color-border-lighter: #e5e7eb;
+	--color-border-dark: #4a5568;
+	--color-border-darker: #718096;
 
-  /* ─────────────────────────────────────────────────────────────────────────
+	/* ─────────────────────────────────────────────────────────────────────────
      BRAND COLORS - Use as: bg-brand-primary-light, bg-brand-primary-dark
      Ed-Tech Focus: Deep Indigo + Bronze Gold strategy - Professional, academic, trust-building
      ───────────────────────────────────────────────────────────────────────── */
-  --color-brand-primary-light: #4f6b5f;   /* Smoked Sage Ink */
---color-brand-primary-hover-light: #435c52;
---color-brand-secondary-light: #6f8b80; /* Quiet supporting sage */
---color-brand-accent-light: #a8832a;    /* Aged brass gold (less shiny, more scholarly) */
+	--color-brand-primary-light: #4f6b5f; /* Smoked Sage Ink */
+	--color-brand-primary-hover-light: #435c52;
+	--color-brand-secondary-light: #6f8b80; /* Quiet supporting sage */
+	--color-brand-accent-light: #a8832a; /* Aged brass gold (less shiny, more scholarly) */
 
-  
-  --color-brand-primary-dark: #9fbfb2;    /* Chalked sage glow */
---color-brand-primary-hover-dark: #b2cec3;
---color-brand-secondary-dark: #7f9f93;
---color-brand-accent-dark: #d6b45a;     /* Soft lamp-gold */
+	--color-brand-primary-dark: #9fbfb2; /* Chalked sage glow */
+	--color-brand-primary-hover-dark: #b2cec3;
+	--color-brand-secondary-dark: #7f9f93;
+	--color-brand-accent-dark: #d6b45a; /* Soft lamp-gold */
 
-
-  /* ─────────────────────────────────────────────────────────────────────────
+	/* ─────────────────────────────────────────────────────────────────────────
      SEMANTIC COLORS - Use as: bg-success, text-error, etc.
      ───────────────────────────────────────────────────────────────────────── */
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
-  --color-info: #3b82f6;
-  --color-gold-decoration: #ffd700;    /* Web Gold - DECORATION ONLY (stars, trophies, confetti) */
-  --color-gold-text: #b8860b;          /* Bronze Gold - for text/icons */
+	--color-success: #10b981;
+	--color-warning: #f59e0b;
+	--color-error: #ef4444;
+	--color-info: #3b82f6;
+	--color-gold-decoration: #ffd700; /* Web Gold - DECORATION ONLY (stars, trophies, confetti) */
+	--color-gold-text: #b8860b; /* Bronze Gold - for text/icons */
 
-  /* ─────────────────────────────────────────────────────────────────────────
+	/* ─────────────────────────────────────────────────────────────────────────
      ANIMATIONS
      ───────────────────────────────────────────────────────────────────────── */
-  --animate-fade-in: fadeIn 0.4s ease-out forwards;
-  --animate-slide-up: slideUp 0.4s ease-out forwards;
-  --animate-slide-down: slideDown 0.4s ease-out forwards;
-  --animate-scale-in: scaleIn 0.3s ease-out forwards;
-  --animate-bounce-subtle: bounceSubtle 0.6s ease-out infinite;
-  --animate-pulse-soft: pulseSoft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  --animate-float: float 3s ease-in-out infinite;
+	--animate-fade-in: fadeIn 0.4s ease-out forwards;
+	--animate-slide-up: slideUp 0.4s ease-out forwards;
+	--animate-slide-down: slideDown 0.4s ease-out forwards;
+	--animate-scale-in: scaleIn 0.3s ease-out forwards;
+	--animate-bounce-subtle: bounceSubtle 0.6s ease-out infinite;
+	--animate-pulse-soft: pulseSoft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+	--animate-float: float 3s ease-in-out infinite;
 
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
 
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+	@keyframes slideUp {
+		from {
+			opacity: 0;
+			transform: translateY(16px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
 
-  @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-16px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+	@keyframes slideDown {
+		from {
+			opacity: 0;
+			transform: translateY(-16px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
 
-  @keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
-  }
+	@keyframes scaleIn {
+		from {
+			opacity: 0;
+			transform: scale(0.95);
+		}
+		to {
+			opacity: 1;
+			transform: scale(1);
+		}
+	}
 
-  @keyframes bounceSubtle {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
-  }
+	@keyframes bounceSubtle {
+		0%,
+		100% {
+			transform: translateY(0);
+		}
+		50% {
+			transform: translateY(-4px);
+		}
+	}
 
-  @keyframes pulseSoft {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
-  }
+	@keyframes pulseSoft {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.7;
+		}
+	}
 
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
-  }
+	@keyframes float {
+		0%,
+		100% {
+			transform: translateY(0);
+		}
+		50% {
+			transform: translateY(-8px);
+		}
+	}
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -116,32 +151,32 @@
 
 /* Font Families - Humanist Sans-Serif for better readability */
 .font-humanist {
-  font-family: 'Inter', 'Roboto', system-ui, -apple-system, sans-serif;
-  /* Good distinction between 'I', 'l', and '1' */
+	font-family: "Inter", "Roboto", system-ui, -apple-system, sans-serif;
+	/* Good distinction between 'I', 'l', and '1' */
 }
 
 /* Optimal Line Length (The Measure) */
 .text-measure {
-  /* Desktop: 60-75 characters per line */
-  max-width: 65ch;
+	/* Desktop: 60-75 characters per line */
+	max-width: 65ch;
 }
 
 @media (max-width: 768px) {
-  .text-measure {
-    /* Mobile: 35-45 characters per line */
-    max-width: 45ch;
-  }
+	.text-measure {
+		/* Mobile: 35-45 characters per line */
+		max-width: 45ch;
+	}
 }
 
 /* Typography Classes - Research-Based */
 .text-reading {
-  /* Minimum line height 1.6 for passage text to prevent crowding */
-  line-height: 1.6;
+	/* Minimum line height 1.6 for passage text to prevent crowding */
+	line-height: 1.6;
 }
 
 .text-heading {
-  /* Slightly tighter for headings */
-  line-height: 1.4;
+	/* Slightly tighter for headings */
+	line-height: 1.4;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -149,41 +184,41 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @layer base {
-  * {
-    box-sizing: border-box;
-  }
+	* {
+		box-sizing: border-box;
+	}
 
-  body {
-    margin: 0;
-    font-family: system-ui, -apple-system, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
+	body {
+		margin: 0;
+		font-family: system-ui, -apple-system, sans-serif;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+	}
 
-  /* Scrollbar styles */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
+	/* Scrollbar styles */
+	::-webkit-scrollbar {
+		width: 8px;
+		height: 8px;
+	}
 
-  ::-webkit-scrollbar-track {
-    @apply bg-bg-tertiary-light dark:bg-bg-tertiary-dark;
-    border-radius: 4px;
-  }
+	::-webkit-scrollbar-track {
+		@apply bg-bg-tertiary-light dark:bg-bg-tertiary-dark;
+		border-radius: 4px;
+	}
 
-  ::-webkit-scrollbar-thumb {
-    @apply bg-text-muted-light dark:bg-text-muted-dark;
-    border-radius: 4px;
-    transition: background 0.3s ease;
-  }
+	::-webkit-scrollbar-thumb {
+		@apply bg-text-muted-light dark:bg-text-muted-dark;
+		border-radius: 4px;
+		transition: background 0.3s ease;
+	}
 
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-text-secondary-light dark:bg-text-secondary-dark;
-  }
+	::-webkit-scrollbar-thumb:hover {
+		@apply bg-text-secondary-light dark:bg-text-secondary-dark;
+	}
 
-  html {
-    scrollbar-width: thin;
-  }
+	html {
+		scrollbar-width: thin;
+	}
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -192,103 +227,51 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @layer components {
-  .dashboard-panel {
-    @apply rounded-2xl border;
-  }
+	.dashboard-panel {
+		@apply rounded-2xl border;
+	}
 
-  .dashboard-panel-light {
-    @apply bg-bg-secondary-light border-border-light;
-  }
+	.dashboard-heat-0-light {
+		@apply bg-bg-tertiary-light border-border-light/60;
+	}
+	.dashboard-heat-1-light {
+		@apply bg-brand-primary-light/15 border-border-light/60;
+	}
+	.dashboard-heat-2-light {
+		@apply bg-brand-primary-light/30 border-border-light/60;
+	}
+	.dashboard-heat-3-light {
+		@apply bg-brand-primary-light/50 border-border-light/60;
+	}
+	.dashboard-heat-4-light {
+		@apply bg-brand-primary-light border-border-light/60;
+	}
 
-  .dashboard-panel-dark {
-    @apply bg-bg-secondary-dark border-border-dark;
-  }
+	.dashboard-heat-0-dark {
+		@apply bg-bg-tertiary-dark border-border-dark/70;
+	}
+	.dashboard-heat-1-dark {
+		@apply bg-brand-primary-dark/15 border-border-dark/70;
+	}
+	.dashboard-heat-2-dark {
+		@apply bg-brand-primary-dark/30 border-border-dark/70;
+	}
+	.dashboard-heat-3-dark {
+		@apply bg-brand-primary-dark/55 border-border-dark/70;
+	}
+	.dashboard-heat-4-dark {
+		@apply bg-brand-primary-dark border-border-dark/70;
+	}
 
-  .dashboard-section-title {
-    @apply text-base sm:text-lg font-semibold tracking-tight;
-  }
-
-  .dashboard-tooltip {
-    @apply rounded-xl border px-3 py-2 shadow-lg;
-  }
-
-  .dashboard-tooltip-light {
-    @apply bg-bg-secondary-light border-border-light text-text-primary-light;
-  }
-
-  .dashboard-tooltip-dark {
-    @apply bg-bg-secondary-dark border-border-dark text-text-primary-dark;
-  }
-
-  .dashboard-heat-cell {
-    @apply border;
-  }
-
-  .dashboard-heat-0-light {
-    @apply bg-bg-tertiary-light border-border-light/60;
-  }
-  .dashboard-heat-1-light {
-    @apply bg-brand-primary-light/15 border-border-light/60;
-  }
-  .dashboard-heat-2-light {
-    @apply bg-brand-primary-light/30 border-border-light/60;
-  }
-  .dashboard-heat-3-light {
-    @apply bg-brand-primary-light/50 border-border-light/60;
-  }
-  .dashboard-heat-4-light {
-    @apply bg-brand-primary-light border-border-light/60;
-  }
-
-  .dashboard-heat-0-dark {
-    @apply bg-bg-tertiary-dark border-border-dark/70;
-  }
-  .dashboard-heat-1-dark {
-    @apply bg-brand-primary-dark/15 border-border-dark/70;
-  }
-  .dashboard-heat-2-dark {
-    @apply bg-brand-primary-dark/30 border-border-dark/70;
-  }
-  .dashboard-heat-3-dark {
-    @apply bg-brand-primary-dark/55 border-border-dark/70;
-  }
-  .dashboard-heat-4-dark {
-    @apply bg-brand-primary-dark border-border-dark/70;
-  }
-
-  progress.dashboard-meter {
-    @apply w-full h-2;
-  }
+	progress.dashboard-meter {
+		@apply w-full h-2;
+	}
 }
 
 progress.dashboard-meter {
-  appearance: none;
-  border-radius: 9999px;
-  overflow: hidden;
-}
-
-progress.dashboard-meter-light::-webkit-progress-bar {
-  background-color: var(--color-bg-tertiary-light);
-}
-
-progress.dashboard-meter-light::-webkit-progress-value {
-  background-color: var(--color-brand-primary-light);
-}
-
-progress.dashboard-meter-dark::-webkit-progress-bar {
-  background-color: var(--color-bg-tertiary-dark);
-}
-
-progress.dashboard-meter-dark::-webkit-progress-value {
-  background-color: var(--color-brand-primary-dark);
-}
-
-progress.dashboard-meter-light::-moz-progress-bar {
-  background-color: var(--color-brand-primary-light);
-}
-
-progress.dashboard-meter-dark::-moz-progress-bar {
-  background-color: var(--color-brand-primary-dark);
+	appearance: none;
+	border-radius: 9999px;
+	overflow: hidden;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -296,89 +279,68 @@ progress.dashboard-meter-dark::-moz-progress-bar {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* Smooth transitions for all dashboard elements */
-.dashboard-panel {
-  transition: all 0.2s ease-out;
-}
-
-.dashboard-panel:hover {
-  transform: translateY(-1px);
-}
 
 /* Enhanced grid symmetry */
 .dashboard-grid-balanced {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 1.5rem;
 }
 
 @media (min-width: 1024px) {
-  .dashboard-grid-balanced {
-    grid-template-columns: 7fr 5fr;
-  }
-}
-
-/* Improved heatmap cells with better hover states */
-.dashboard-heat-cell {
-  transition: all 0.15s ease-out;
+	.dashboard-grid-balanced {
+		grid-template-columns: 7fr 5fr;
+	}
 }
 
 .dashboard-heat-cell:hover {
-  transform: scale(1.1);
-  z-index: 10;
-  position: relative;
-}
-
-/* Enhanced section spacing for better visual hierarchy */
-.dashboard-section-spacing {
-  margin-bottom: 2rem;
-}
-
-.dashboard-section-spacing:last-child {
-  margin-bottom: 0;
+	transform: scale(1.1);
+	z-index: 10;
+	position: relative;
 }
 
 /* Smooth fade animations */
 @keyframes smoothFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
 .animate-smooth-fade-in {
-  animation: smoothFadeIn 0.25s ease-out forwards;
+	animation: smoothFadeIn 0.25s ease-out forwards;
 }
 
 /* Enhanced skeleton loading animations */
 @keyframes skeletonShimmer {
-  0% {
-    background-position: -200px 0;
-  }
-  100% {
-    background-position: calc(200px + 100%) 0;
-  }
+	0% {
+		background-position: -200px 0;
+	}
+	100% {
+		background-position: calc(200px + 100%) 0;
+	}
 }
 
 .skeleton-loading {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
-  );
-  background-size: 200px 100%;
-  animation: skeletonShimmer 1.5s ease-in-out infinite;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.1),
+		transparent
+	);
+	background-size: 200px 100%;
+	animation: skeletonShimmer 1.5s ease-in-out infinite;
 }
 
 .dark .skeleton-loading {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.05),
-    transparent
-  );
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.05),
+		transparent
+	);
 }
