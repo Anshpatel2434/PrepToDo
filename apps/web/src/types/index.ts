@@ -253,5 +253,64 @@ export const LeaderboardEntrySchema = z.object({
 export type LeaderboardEntry = z.infer<typeof LeaderboardEntrySchema>;
 
 /* =========================================================
+   📝 Daily Practice Types
+   ========================================================= */
+
+export type QuestionType = 
+    | 'rc_question' 
+    | 'para_summary' 
+    | 'para_jumble' 
+    | 'odd_one_out' 
+    | 'para_completion';
+
+export const DailyPassageSchema = z.object({
+    id: UUIDSchema,
+    title: z.string(),
+    content: z.string(),
+    genre: z.string(),
+});
+
+export type DailyPassage = z.infer<typeof DailyPassageSchema>;
+
+export const OptionSchema = z.object({
+    id: z.string(),
+    text: z.string(),
+});
+
+export type Option = z.infer<typeof OptionSchema>;
+
+export const DailyQuestionSchema = z.object({
+    id: UUIDSchema,
+    passageId: UUIDSchema.nullable(),
+    questionType: z.enum([
+        'rc_question',
+        'para_summary',
+        'para_jumble',
+        'odd_one_out',
+        'para_completion',
+    ]),
+    questionText: z.string(),
+    options: z.array(OptionSchema),
+    sentences: z.array(z.string()).optional(),
+    correctAnswer: z.string(),
+    rationale: z.string(),
+    personalizedRationale: z.string().optional(),
+    difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
+    tags: z.array(z.string()).optional(),
+});
+
+export type DailyQuestion = z.infer<typeof DailyQuestionSchema>;
+
+export const UserAttemptSchema = z.object({
+    questionId: UUIDSchema,
+    selectedOption: z.string().nullable(),
+    confidenceLevel: z.number().min(1).max(3),
+    status: z.enum(['answered', 'skipped', 'marked_for_review']),
+    timeSpentSeconds: z.number().optional(),
+});
+
+export type UserAttempt = z.infer<typeof UserAttemptSchema>;
+
+/* =========================================================
    🔚 END
    ========================================================= */
