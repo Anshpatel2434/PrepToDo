@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { FaEnvelope } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import { EmailService } from "../../../services/email_handling/emailService";
+import { EmailService } from "../../../services/email-handling/emailService";
 
 interface EmailStepProps {
 	isDark: boolean;

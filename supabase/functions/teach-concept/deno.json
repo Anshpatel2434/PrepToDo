@@ -1,0 +1,24 @@
+{
+	"compilerOptions": {
+		"strict": true,
+		"jsx": "react-jsx",
+		"lib": ["deno.window", "deno.unstable"]
+	},
+	"imports": {
+		"@supabase/functions-js/edge-runtime.d.ts": "jsr:@supabase/functions-js/edge-runtime.d.ts"
+	},
+	"tasks": {
+		"dev": "deno run --allow-net --allow-env --watch index.ts"
+	},
+	"fmt": {
+		"useTabs": false,
+		"indentWidth": 2,
+		"semiColons": false,
+		"singleQuote": false
+	},
+	"lint": {
+		"rules": {
+			"tags": ["recommended"]
+		}
+	}
+}
