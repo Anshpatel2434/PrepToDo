@@ -37,12 +37,21 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
     }, [dispatch, isExamMode]);
 
     const handleSubmit = useCallback(() => {
-        dispatch(submitAnswer());
-    }, [dispatch]);
+        dispatch(submitAnswer({
+            user_id: 'user-id', // TODO: Get from auth context
+            session_id: 'session-id', // TODO: Get from session
+            passage_id: question.passageId ?? null,
+            correct_answer: question.correctAnswer,
+        }));
+    }, [dispatch, question]);
 
     const handleMarkForReview = useCallback(() => {
-        dispatch(toggleMarkForReview());
-    }, [dispatch]);
+        dispatch(toggleMarkForReview({
+            user_id: 'user-id', // TODO: Get from auth context
+            session_id: 'session-id', // TODO: Get from session
+            passage_id: question.passageId ?? null,
+        }));
+    }, [dispatch, question]);
 
     const getOptionClass = (option: Option) => {
         const isSelected = selectedOption === option.id;

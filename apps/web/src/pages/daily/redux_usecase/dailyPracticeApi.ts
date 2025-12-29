@@ -1,8 +1,13 @@
 // dailyPracticeApi.ts
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
 import { supabase } from "../../../services/apiClient";
-import type { TestDataState } from "./dailyPracticeSlice";
-import type { PracticeSession, QuestionAttempt, UUID } from "../../../types";
+import type { PracticeSession, QuestionAttempt, UUID, Question, Passage, Exam } from "../../../types";
+
+interface TestDataState {
+    examInfo: Exam;
+    passages: Passage[];
+    questions: Question[];
+}
 
 interface StartDailySessionQuery {
     user_id: UUID;

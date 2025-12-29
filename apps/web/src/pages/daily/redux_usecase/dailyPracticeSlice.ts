@@ -113,6 +113,17 @@ const dailyPracticeSlice = createSlice({
             state.selectedOption = action.payload;
         },
 
+        // Clear response for current question
+        clearResponse: (state) => {
+            state.selectedOption = null;
+            state.confidenceLevel = null;
+            const questionId = state.questionOrder[state.currentQuestionIndex];
+            if (questionId && state.attempts[questionId]) {
+                // Remove the attempt for current question
+                delete state.attempts[questionId];
+            }
+        },
+
         // Confidence level
         setConfidenceLevel: (state, action: PayloadAction<number | null>) => {
             state.confidenceLevel = action.payload;
@@ -287,6 +298,7 @@ export const {
     goToNextQuestion,
     goToPreviousQuestion,
     setSelectedOption,
+    clearResponse,
     setConfidenceLevel,
     submitAnswer,
     toggleMarkForReview,
@@ -405,8 +417,8 @@ export const selectTotalTimeSpent = createSelector(
 );
 
 export const selectAccuracyPercentage = createSelector(
-    [selectAttempts, selectQuestionOrder],
-    (attempts, questionOrder) => {
+    [selectAttempts],
+    (attempts) => {
         const answeredQuestions = Object.values(attempts).filter(
             attempt => {
                 const userAnswer = attempt.user_answer as any;
