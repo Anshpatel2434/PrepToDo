@@ -1,994 +1,589 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
-import { MdArrowBack, MdArrowForward } from "react-icons/md";
+import { useLocation, useNavigate } from "react-router-dom";
+import { MdArrowForward, MdChevronLeft, MdChevronRight } from "react-icons/md";
 import { useTheme } from "../../../../context/ThemeContext";
 import { FloatingNavigation } from "../../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../../ui_components/ThemeToggle";
 import {
-    selectViewMode,
-    selectCurrentQuestionIndex,
-    selectAttempts,
-    selectIsFirstQuestion,
-    selectIsLastQuestion,
-    goToNextQuestion,
-    goToPreviousQuestion,
-    setViewMode,
-    submitAnswer,
-    toggleMarkForReview,
-    selectElapsedTime,
-    incrementElapsedTime,
-    selectSelectedOption,
-    setSelectedOption as setVAOption,
-    clearResponse,
-    initializeSession,
+	selectViewMode,
+	selectCurrentQuestionIndex,
+	selectAttempts,
+	selectIsFirstQuestion,
+	selectIsLastQuestion,
+	goToNextQuestion,
+	goToPreviousQuestion,
+	setViewMode,
+	selectElapsedTime,
+	selectStartTime,
+	incrementElapsedTime,
+	clearResponse,
+	toggleMarkForReview,
+	submitAnswer,
+	initializeSession,
+	setStartTime,
+	selectSelectedOption,
 } from "../../redux_usecase/dailyPracticeSlice";
-import { dailyVAData } from "../../mock_data/dailyMockData";
-import { VALayout } from "../Component/VALayout";
+import { QuestionPalette } from "../../components/QuestionPalette";
+import { QuestionPanel } from "../../components/QuestionPanel";
+import type { Question } from "../../../../types";
+import { useSaveSessionDetailsMutation, useSaveQuestionAttemptsMutation } from "../../redux_usecase/dailyPracticeApi";
 
 const DailyVAPage: React.FC = () => {
-    const dispatch = useDispatch();
-    const { isDark } = useTheme();
+	const dispatch = useDispatch();
+	const navigate = useNavigate();
+	const location = useLocation();
+	const { isDark } = useTheme();
 
-    // Local state
-    const [isLoading, setIsLoading] = useState(true);
-    const [showPalette, setShowPalette] = useState(true);
+	// Get session data from location state
+	const { sessionId, testData } = location.state || {};
 
-    // Redux state
-    const viewMode = useSelector(selectViewMode);
-    const currentQuestionIndex = useSelector(selectCurrentQuestionIndex);
-    const attempts = useSelector(selectAttempts);
-    const isFirstQuestion = useSelector(selectIsFirstQuestion);
-    const isLastQuestion = useSelector(selectIsLastQuestion);
-    const elapsedTime = useSelector(selectElapsedTime);
-    const selectedOption = useSelector(selectSelectedOption);
+	// Local state
+	const [isLoading, setIsLoading] = useState(true);
+	const [showPalette, setShowPalette] = useState(true);
+	const [questions, setQuestions] = useState<Question[]>([]);
 
-    // Use mock data for questions
-    const questions = dailyVAData.questions;
-    const currentQuestion = questions[currentQuestionIndex];
+	// Redux state
+	const viewMode = useSelector(selectViewMode);
+	const currentQuestionIndex = useSelector(selectCurrentQuestionIndex);
+	const attempts = useSelector(selectAttempts);
+	const isFirstQuestion = useSelector(selectIsFirstQuestion);
+	const isLastQuestion = useSelector(selectIsLastQuestion);
+	const elapsedTime = useSelector(selectElapsedTime);
+	const startTime = useSelector(selectStartTime);
+	const selectedOption = useSelector(selectSelectedOption);
 
-    // Helper function to get attempt status
-    const getAttemptStatus = (questionId: string): 'answered' | 'marked_for_review' | 'not_visited' => {
-        const attempt = attempts[questionId];
-        if (!attempt) return 'not_visited';
-        if (attempt.marked_for_review) return 'marked_for_review';
-        const userAnswer = attempt.user_answer as any;
-        if (userAnswer?.user_answer != null) return 'answered';
-        return 'not_visited';
-    };
+	// API mutations
+	const [saveSessionDetails] = useSaveSessionDetailsMutation();
+	const [saveQuestionAttempts] = useSaveQuestionAttemptsMutation();
 
-    // Initialize session
-    useEffect(() => {
-        const initSession = async () => {
-            setIsLoading(true);
+	const currentQuestion = questions[currentQuestionIndex];
 
-            // Simulate data loading
-            await new Promise((resolve) => setTimeout(resolve, 500));
+	// Initialize session
+	useEffect(() => {
+		const initSession = async () => {
+			setIsLoading(true);
 
-            // Initialize Redux with VA question IDs
-            const questionIds = dailyVAData.questions.map((q) => q.id);
-            dispatch(initializeSession({
-                questionIds,
-                currentIndex: 0,
-                elapsedTime: 0,
-            }));
+			if (!testData || !sessionId) {
+				console.error('No test data or session ID');
+				navigate('/daily');
+				return;
+			}
 
-            setIsLoading(false);
-        };
+			// Filter VA questions (questions without passage_id)
+			const vaQuestions = testData.questions.filter((q: Question) => 
+				q.passage_id === null && q.question_type !== 'rc_question'
+			);
 
-        initSession();
-    }, [dispatch]);
+			setQuestions(vaQuestions);
 
-    // Timer effect
-    useEffect(() => {
-        const timer = setInterval(() => {
-            dispatch(incrementElapsedTime());
-        }, 1000);
+			// Initialize Redux with question IDs
+			const questionIds = vaQuestions.map((q: Question) => q.id);
+			dispatch(initializeSession({
+				questionIds,
+				currentIndex: 0,
+				elapsedTime: 0,
+			}));
 
-        return () => clearInterval(timer);
-    }, [dispatch]);
+			// Set start time
+			dispatch(setStartTime(Date.now()));
 
-    // Save state before closing tab
-    useEffect(() => {
-        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-            // Save current state to localStorage
-            const state = {
-                attempts,
-                currentQuestionIndex,
-                elapsedTime,
-                viewMode,
-            };
-            localStorage.setItem('dailyPracticeState_VA', JSON.stringify(state));
-            
-            // TODO: Make API call to save attempts to database
-            // This would use the saveSessionDetails and saveQuestionAttempts mutations
-            
-            // Show confirmation if user has unsaved progress
-            if (viewMode === 'exam' && Object.keys(attempts).length > 0) {
-                e.preventDefault();
-                e.returnValue = '';
-            }
-        };
+			setIsLoading(false);
+		};
 
-        window.addEventListener('beforeunload', handleBeforeUnload);
-        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-    }, [attempts, currentQuestionIndex, elapsedTime, viewMode]);
+		initSession();
+	}, [dispatch, testData, sessionId, navigate]);
 
-    // Handle navigation
-    const handleNextQuestion = useCallback(() => {
-        if (!isLastQuestion) {
-            dispatch(goToNextQuestion());
-        } else {
-            // Show submit confirmation
-            const answeredCount = Object.values(attempts).filter(
-                (a) => {
-                    const userAnswer = a.user_answer as any;
-                    return userAnswer?.user_answer != null;
-                }
-            ).length;
-            if (answeredCount < questions.length) {
-                if (
-                    window.confirm(
-                        `You have ${answeredCount} of ${questions.length} questions answered. Submit anyway?`
-                    )
-                ) {
-                    dispatch(setViewMode("solution"));
-                }
-            } else {
-                dispatch(setViewMode("solution"));
-            }
-        }
-    }, [dispatch, isLastQuestion, attempts, questions.length]);
+	// Timer effect
+	useEffect(() => {
+		if (viewMode === 'exam' && !isLoading) {
+			const timer = setInterval(() => {
+				dispatch(incrementElapsedTime());
+			}, 1000);
 
-    const handlePreviousQuestion = useCallback(() => {
-        if (!isFirstQuestion) {
-            dispatch(goToPreviousQuestion());
-        }
-    }, [dispatch, isFirstQuestion]);
+			return () => clearInterval(timer);
+		}
+	}, [dispatch, viewMode, isLoading]);
 
-    const handleQuestionClick = useCallback(
-        (index: number) => {
-            dispatch({
-                type: "dailyPractice/setCurrentQuestionIndex",
-                payload: index,
-            });
-        },
-        [dispatch]
-    );
+	// Save state before closing tab
+	useEffect(() => {
+		const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
+			// Save current state
+			if (viewMode === 'exam' && Object.keys(attempts).length > 0) {
+				e.preventDefault();
+				e.returnValue = '';
 
-    const handleSubmit = useCallback(() => {
-        dispatch(submitAnswer({
-            user_id: 'user-id', // TODO: Get from auth context
-            session_id: 'session-id', // TODO: Get from session
-            passage_id: currentQuestion?.passageId ?? null,
-            correct_answer: currentQuestion?.correctAnswer,
-        }));
-        setTimeout(() => {
-            handleNextQuestion();
-        }, 300);
-    }, [dispatch, handleNextQuestion, currentQuestion]);
+				// Save session and attempts
+				await handleSaveProgress();
+			}
+		};
 
-    const handleMarkForReview = useCallback(() => {
-        dispatch(toggleMarkForReview({
-            user_id: 'user-id', // TODO: Get from auth context
-            session_id: 'session-id', // TODO: Get from session
-            passage_id: currentQuestion?.passageId ?? null,
-        }));
-    }, [dispatch, currentQuestion]);
+		window.addEventListener('beforeunload', handleBeforeUnload);
+		return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+	}, [attempts, currentQuestionIndex, elapsedTime, viewMode, sessionId]);
 
-    const handleToggleViewMode = useCallback(() => {
-        dispatch(setViewMode(viewMode === "exam" ? "solution" : "exam"));
-    }, [dispatch, viewMode]);
+	// Handle save progress
+	const handleSaveProgress = async () => {
+		if (!sessionId) return;
 
-    const formatTime = (seconds: number): string => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins.toString().padStart(2, "0")}:${secs
-            .toString()
-            .padStart(2, "0")}`;
-    };
+		try {
+			// Calculate stats
+			const answeredCount = Object.values(attempts).filter(
+				(a) => {
+					const userAnswer = a.user_answer as any;
+					return userAnswer?.user_answer != null;
+				}
+			).length;
+			const correctCount = Object.values(attempts).filter(a => a.is_correct).length;
+			const scorePercentage = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
 
-    // Calculate progress
-    const answeredCount = Object.values(attempts).filter(
-        (a) => {
-            const userAnswer = a.user_answer as any;
-            return userAnswer?.user_answer != null;
-        }
-    ).length;
-    const progress = (answeredCount / questions.length) * 100;
+			// Save session details
+			await saveSessionDetails({
+				session_id: sessionId,
+				time_spent_seconds: elapsedTime,
+				status: viewMode === 'solution' ? 'completed' : 'in_progress',
+				total_questions: questions.length,
+				correct_answers: correctCount,
+				score_percentage: scorePercentage,
+				current_question_index: currentQuestionIndex,
+				...(viewMode === 'solution' && { completed_at: new Date().toISOString() }),
+			});
 
-    // VA-specific handlers
-    const handleOptionSelect = useCallback(
-        (optionId: string) => {
-            dispatch(setVAOption(optionId));
-        },
-        [dispatch]
-    );
+			// Save question attempts
+			if (Object.keys(attempts).length > 0) {
+				await saveQuestionAttempts({
+					attempts: Object.values(attempts),
+				});
+			}
+		} catch (error) {
+			console.error('Error saving progress:', error);
+		}
+	};
 
-    if (isLoading) {
-        return (
-            <div
-                className={`min-h-screen ${
-                    isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
-                }`}
-            >
-                <FloatingThemeToggle />
-                <FloatingNavigation />
-                <div className="flex items-center justify-center h-screen">
-                    <div className="flex flex-col items-center gap-4">
-                        <div
-                            className={`
-                            w-16 h-16 rounded-full border-4 animate-spin
-                            ${
-                                                            isDark
-                                                                ? "border-brand-primary-dark border-t-transparent"
-                                                                : "border-brand-primary-light border-t-transparent"
-                                                        }
-                        `}
-                        />
-                        <p
-                            className={
-                                isDark
-                                    ? "text-text-secondary-dark"
-                                    : "text-text-secondary-light"
-                            }
-                        >
-                            Loading Daily VA Practice...
-                        </p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+	// Handle save and next
+	const handleSaveAndNext = useCallback(async () => {
+		if (!currentQuestion || !sessionId) return;
 
-    const isExamMode = viewMode === "exam";
+		// Determine correct answer from question data
+		const correctAnswer = currentQuestion.correct_answer;
+		
+		// Update attempt in Redux
+		dispatch(submitAnswer({
+			user_id: 'user-id', // Will be replaced with actual user ID
+			session_id: sessionId,
+			passage_id: null,
+			correct_answer: correctAnswer,
+		}));
 
-    // Render VA-specific content
-    const renderVAContent = () => {
-        if (!currentQuestion) return null;
+		// Reset start time for next question
+		dispatch(setStartTime(Date.now()));
 
-        // For para jumble, we need special handling
-        if (currentQuestion.questionType === "para_jumble") {
-            return (
-                <div className="space-y-6">
-                    {/* Sentences */}
-                    <div className="space-y-3">
-                        <p
-                            className={`
-                            text-sm font-medium
-                            ${
-                                                            isDark
-                                                                ? "text-text-secondary-dark"
-                                                                : "text-text-secondary-light"
-                                                        }
-                        `}
-                        >
-                            Arrange these sentences in the correct order:
-                        </p>
-                        {currentQuestion.sentences?.map((sentence, index) => (
-                            <motion.div
-                                key={index}
-                                className={`
-                                    p-4 rounded-xl border
-                                    ${
-                                                                            isDark
-                                                                                ? "bg-bg-tertiary-dark border-border-dark"
-                                                                                : "bg-bg-tertiary-light border-border-light"
-                                                                        }
-                                `}
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                            >
-                                <span
-                                    className={`
-                                    inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-medium mr-3
-                                    ${
-                                                                            isDark
-                                                                                ? "bg-bg-secondary-dark text-text-muted-dark"
-                                                                                : "bg-bg-secondary-light text-text-muted-light"
-                                                                        }
-                                `}
-                                >
-                                    {index + 1}
-                                </span>
-                                {sentence}
-                            </motion.div>
-                        ))}
-                    </div>
+		// Move to next question
+		if (!isLastQuestion) {
+			dispatch(goToNextQuestion());
+		} else {
+			// All questions answered, show completion confirmation
+			const answeredCount = Object.values(attempts).filter(
+				(a) => {
+					const userAnswer = a.user_answer as any;
+					return userAnswer?.user_answer != null;
+				}
+			).length + 1; // +1 for current question
 
-                    {/* Answer Input */}
-                    <div className="space-y-3">
-                        <label
-                            className={`
-                            block text-sm font-medium
-                            ${
-                                                            isDark
-                                                                ? "text-text-secondary-dark"
-                                                                : "text-text-secondary-light"
-                                                        }
-                        `}
-                        >
-                            Enter your sequence (e.g., 2143):
-                        </label>
-                        <input
-                            type="text"
-                            value={selectedOption || ""}
-                            onChange={(e) => {
-                                const value = e.target.value.replace(/[^1-4]/g, "");
-                                if (value.length <= 4) {
-                                    handleOptionSelect(value);
-                                }
-                            }}
-                            placeholder="Enter 4 digit sequence"
-                            maxLength={4}
-                            disabled={!isExamMode}
-                            className={`
-                                w-full p-4 rounded-xl border-2 text-center text-2xl tracking-widest font-mono
-                                focus:outline-none focus:ring-2 focus:ring-brand-primary-light
-                                ${
-                                                                    isDark
-                                                                        ? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark placeholder-text-muted-dark"
-                                                                        : "bg-bg-tertiary-light border-border-light text-text-primary-light placeholder-text-muted-light"
-                                                                }
-                                ${
-                                                                    !isExamMode &&
-                                                                    currentQuestion.correctAnswer ===
-                                                                        selectedOption
-                                                                        ? "border-success"
-                                                                        : ""
-                                                                }
-                                ${
-                                                                    !isExamMode &&
-                                                                    currentQuestion.correctAnswer !==
-                                                                        selectedOption
-                                                                        ? "border-error"
-                                                                        : ""
-                                                                }
-                            `}
-                        />
-                        <p
-                            className={`
-                            text-xs
-                            ${
-                                                            isDark
-                                                                ? "text-text-muted-dark"
-                                                                : "text-text-muted-light"
-                                                        }
-                        `}
-                        >
-                            Enter the order (1-4) in which sentences should appear
-                        </p>
-                    </div>
-                </div>
-            );
-        }
+			if (window.confirm(`You have completed ${answeredCount} of ${questions.length} questions. Submit for review?`)) {
+				await handleSubmitSession();
+			}
+		}
+	}, [dispatch, currentQuestion, sessionId, startTime, isLastQuestion, attempts, questions.length]);
 
-        // Standard VA options (para summary, para completion, odd one out)
-        return (
-            <div className="space-y-3">
-                {currentQuestion.options.map((option, index) => {
-                    const isSelected = selectedOption === option.id;
-                    const isCorrect = currentQuestion.correctAnswer === option.id;
-                    const showResult = !isExamMode;
+	// Handle mark for review and next
+	const handleMarkAndNext = useCallback(() => {
+		if (!currentQuestion || !sessionId) return;
 
-                    let optionClass = `
-                        w-full p-4 rounded-xl border-2 text-left transition-all duration-200
-                    `;
+		dispatch(toggleMarkForReview({
+			user_id: 'user-id',
+			session_id: sessionId,
+			passage_id: null,
+		}));
 
-                    if (isExamMode) {
-                        optionClass += isSelected
-                            ? isDark
-                                ? "bg-brand-primary-dark/20 border-brand-primary-dark text-text-primary-dark"
-                                : "bg-brand-primary-light/10 border-brand-primary-light text-text-primary-light"
-                            : isDark
-                            ? "bg-bg-tertiary-dark border-border-dark hover:border-brand-primary-dark text-text-secondary-dark"
-                            : "bg-bg-tertiary-light border-border-light hover:border-brand-primary-light text-text-secondary-light";
-                    } else if (showResult) {
-                        if (isCorrect) {
-                            optionClass += isDark
-                                ? "bg-success/20 border-success text-success"
-                                : "bg-success/10 border-success text-success";
-                        } else if (isSelected && !isCorrect) {
-                            optionClass += isDark
-                                ? "bg-error/20 border-error text-error"
-                                : "bg-error/10 border-error text-error";
-                        } else {
-                            optionClass += isDark
-                                ? "bg-bg-tertiary-dark border-border-dark text-text-muted-dark"
-                                : "bg-bg-tertiary-light border-border-light text-text-muted-light";
-                        }
-                    }
+		// Reset start time for next question
+		dispatch(setStartTime(Date.now()));
 
-                    return (
-                        <motion.button
-                            key={option.id}
-                            onClick={() => isExamMode && handleOptionSelect(option.id)}
-                            className={optionClass}
-                            disabled={!isExamMode}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            whileHover={isExamMode ? { scale: 1.01 } : {}}
-                            whileTap={isExamMode ? { scale: 0.99 } : {}}
-                        >
-                            <div className="flex items-start gap-3">
-                                <span
-                                    className={`
-                                    w-8 h-8 flex items-center justify-center rounded-lg font-semibold text-sm shrink-0
-                                    ${
-                                                                            isExamMode
-                                                                                ? selectedOption === option.id
-                                                                                    ? isDark
-                                                                                        ? "bg-brand-primary-dark text-white"
-                                                                                        : "bg-brand-primary-light text-white"
-                                                                                    : isDark
-                                                                                    ? "bg-bg-secondary-dark text-text-muted-dark"
-                                                                                    : "bg-bg-secondary-light text-text-muted-light"
-                                                                                : ""
-                                                                        }
-                                    ${
-                                                                            !isExamMode &&
-                                                                            currentQuestion.correctAnswer ===
-                                                                                option.id
-                                                                                ? isDark
-                                                                                    ? "bg-success text-white"
-                                                                                    : "bg-success text-white"
-                                                                                : ""
-                                                                        }
-                                    ${
-                                                                            !isExamMode &&
-                                                                            selectedOption === option.id &&
-                                                                            currentQuestion.correctAnswer !==
-                                                                                option.id
-                                                                                ? isDark
-                                                                                    ? "bg-error text-white"
-                                                                                    : "bg-error text-white"
-                                                                                : ""
-                                                                        }
-                                `}
-                                >
-                                    {option.id}
-                                </span>
-                                <span className="flex-1">{option.text}</span>
-                            </div>
-                        </motion.button>
-                    );
-                })}
-            </div>
-        );
-    };
+		if (!isLastQuestion) {
+			dispatch(goToNextQuestion());
+		}
+	}, [dispatch, currentQuestion, sessionId, isLastQuestion]);
 
-    return (
-        <div
-            className={`min-h-screen ${
-                isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
-            }`}
-        >
-            <FloatingThemeToggle />
-            <FloatingNavigation />
+	// Handle submit session
+	const handleSubmitSession = async () => {
+		await handleSaveProgress();
+		dispatch(setViewMode('solution'));
+	};
 
-            {/* Top Header */}
-            <motion.header
-                className={`
-                    fixed top-0 left-0 right-0 z-30 h-16
-                    backdrop-blur-xl border-b
-                    ${
-                                            isDark
-                                                ? "bg-bg-primary-dark/90 border-border-dark"
-                                                : "bg-bg-primary-light/90 border-border-light"
-                                        }
-                `}
-                initial={{ y: -60 }}
-                animate={{ y: 0 }}
-                transition={{ duration: 0.3 }}
-            >
-                <div className="h-full px-6 flex items-center justify-between">
-                    {/* Left: Title and Progress */}
-                    <div className="flex items-center gap-6">
-                        <h1
-                            className={`
-                            font-serif font-bold text-xl
-                            ${
-                                                            isDark
-                                                                ? "text-text-primary-dark"
-                                                                : "text-text-primary-light"
-                                                        }
-                        `}
-                        >
-                            Daily Practice: VA
-                        </h1>
+	const handlePreviousQuestion = useCallback(() => {
+		if (!isFirstQuestion) {
+			dispatch(goToPreviousQuestion());
+		}
+	}, [dispatch, isFirstQuestion]);
 
-                        {/* Progress Bar */}
-                        <div className="hidden md:flex items-center gap-3">
-                            <div
-                                className={`
-                                w-32 h-2 rounded-full overflow-hidden
-                                ${
-                                                                    isDark
-                                                                        ? "bg-bg-tertiary-dark"
-                                                                        : "bg-bg-tertiary-light"
-                                                                }
-                            `}
-                            >
-                                <motion.div
-                                    className={`h-full ${
-                                        isDark ? "bg-brand-primary-dark" : "bg-brand-primary-light"
-                                    }`}
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${progress}%` }}
-                                    transition={{ duration: 0.3 }}
-                                />
-                            </div>
-                            <span
-                                className={`
-                                text-sm font-medium
-                                ${
-                                                                    isDark
-                                                                        ? "text-text-secondary-dark"
-                                                                        : "text-text-secondary-light"
-                                                                }
-                            `}
-                            >
-                                {answeredCount}/{questions.length}
-                            </span>
-                        </div>
-                    </div>
+	const handleNextQuestion = useCallback(() => {
+		if (!isLastQuestion) {
+			dispatch(goToNextQuestion());
+		}
+	}, [dispatch, isLastQuestion]);
 
-                    {/* Center: Timer (hidden in solution mode) */}
-                    {isExamMode && (
-                        <div
-                            className={`
-                            px-4 py-2 rounded-lg font-mono text-lg
-                            ${
-                                                            isDark
-                                                                ? "bg-bg-tertiary-dark text-text-primary-dark"
-                                                                : "bg-bg-tertiary-light text-text-primary-light"
-                                                        }
-                        `}
-                        >
-                            {formatTime(elapsedTime)}
-                        </div>
-                    )}
+	const handleClearResponse = useCallback(() => {
+		dispatch(clearResponse());
+	}, [dispatch]);
 
-                    {/* Right: Actions */}
-                    <div className="flex items-center gap-3">
-                        {/* Toggle Palette */}
-                        <motion.button
-                            onClick={() => setShowPalette(!showPalette)}
-                            className={`
-                                p-2 rounded-lg border transition-colors
-                                ${
-                                                                    isDark
-                                                                        ? "border-border-dark hover:bg-bg-tertiary-dark"
-                                                                        : "border-border-light hover:bg-bg-tertiary-light"
-                                                                }
-                            `}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                        >
-                            <span
-                                className={`
-                                text-sm font-medium
-                                ${
-                                                                    isDark
-                                                                        ? "text-text-secondary-dark"
-                                                                        : "text-text-secondary-light"
-                                                                }
-                            `}
-                            >
-                                {showPalette ? "Hide" : "Show"} Palette
-                            </span>
-                        </motion.button>
+	// Calculate progress
+	const answeredCount = Object.values(attempts).filter(
+		(a) => {
+			const userAnswer = a.user_answer as any;
+			return userAnswer?.user_answer != null;
+		}
+	).length;
+	const progress = questions.length > 0 ? (answeredCount / questions.length) * 100 : 0;
 
-                        {/* View Mode Toggle */}
-                        <motion.button
-                            onClick={handleToggleViewMode}
-                            className={`
-                                px-4 py-2 rounded-lg font-medium transition-colors
-                                ${
-                                                                    isDark
-                                                                        ? "bg-brand-primary-dark text-white hover:bg-brand-primary-hover-dark"
-                                                                        : "bg-brand-primary-light text-white hover:bg-brand-primary-hover-light"
-                                                                }
-                            `}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                        >
-                            {isExamMode ? "View Solutions" : "Back to Exam"}
-                        </motion.button>
-                    </div>
-                </div>
-            </motion.header>
+	if (isLoading) {
+		return (
+			<div
+				className={`min-h-screen ${
+					isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
+				}`}
+			>
+				<FloatingThemeToggle />
+				<FloatingNavigation />
+				<div className="flex items-center justify-center h-screen">
+					<div className="flex flex-col items-center gap-4">
+						<div
+							className={`
+								w-16 h-16 rounded-full border-4 animate-spin
+								${
+									isDark
+										? "border-brand-primary-dark border-t-transparent"
+										: "border-brand-primary-light border-t-transparent"
+								}
+							`}
+						/>
+						<p
+							className={
+								isDark
+									? "text-text-secondary-dark"
+									: "text-text-secondary-light"
+							}
+						>
+							Loading Daily VA Practice...
+						</p>
+					</div>
+				</div>
+			</div>
+		);
+	}
 
-            {/* Main Content */}
-            <main className="pt-16 pb-24 min-h-screen">
-                <VALayout
-                    isDark={isDark}
-                    question={currentQuestion!}
-                    isExamMode={isExamMode}
-                >
-                    {/* Render VA-specific content */}
-                    {renderVAContent()}
+	const isExamMode = viewMode === 'exam';
 
-                    {/* Confidence Selector (Exam Mode Only) */}
-                    {isExamMode && (
-                        <div className="mt-8 pt-6 border-t border-dashed">
-                            <div className="flex items-center gap-6">
-                                <div className="flex-1">
-                                    <p
-                                        className={`
-                                        text-sm font-medium mb-3
-                                        ${
-                                                                                    isDark
-                                                                                        ? "text-text-secondary-dark"
-                                                                                        : "text-text-secondary-light"
-                                                                                }
-                                    `}
-                                    >
-                                        How confident are you about this answer?
-                                    </p>
-                                    <div className="flex gap-3">
-                                        {[1, 2, 3].map((level) => (
-                                            <motion.button
-                                                key={level}
-                                                onClick={() => handleOptionSelect("" + level)}
-                                                className={`
-                                                    flex-1 py-3 rounded-xl font-medium border-2 transition-all duration-200
-                                                    ${
-                                                                                                            selectedOption ===
-                                                                                                            String(level)
-                                                                                                                ? level === 1
-                                                                                                                    ? isDark
-                                                                                                                        ? "bg-error/20 border-error text-error"
-                                                                                                                        : "bg-error/10 border-error text-error"
-                                                                                                                    : level === 2
-                                                                                                                    ? isDark
-                                                                                                                        ? "bg-warning/20 border-warning text-warning"
-                                                                                                                        : "bg-warning/10 border-warning text-warning"
-                                                                                                                    : isDark
-                                                                                                                    ? "bg-success/20 border-success text-success"
-                                                                                                                    : "bg-success/10 border-success text-success"
-                                                                                                                : isDark
-                                                                                                                ? "bg-bg-tertiary-dark border-border-dark text-text-muted-dark"
-                                                                                                                : "bg-bg-tertiary-light border-border-light text-text-muted-light"
-                                                                                                        }
-                                                `}
-                                                whileHover={{ scale: 1.02 }}
-                                                whileTap={{ scale: 0.98 }}
-                                            >
-                                                {level === 1 ? "Low" : level === 2 ? "Medium" : "High"}
-                                            </motion.button>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+	return (
+		<div
+			className={`min-h-screen ${
+				isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
+			}`}
+		>
+			<FloatingThemeToggle />
+			<FloatingNavigation />
 
-                    {/* Action Buttons */}
-                    {isExamMode && (
-                        <div className="mt-8 flex gap-3">
-                            <motion.button
-                                onClick={handleMarkForReview}
-                                className={`
-                                    px-6 py-3 rounded-xl font-medium border-2 transition-all duration-200
-                                    ${
-                                                                            isDark
-                                                                                ? "border-brand-primary-dark text-brand-primary-dark hover:bg-brand-primary-dark/10"
-                                                                                : "border-brand-primary-light text-brand-primary-light hover:bg-brand-primary-light/10"
-                                                                        }
-                                `}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                            >
-                                Mark for Review
-                            </motion.button>
-                            <motion.button
-                                onClick={handleSubmit}
-                                className={`
-                                    flex-1 px-6 py-3 rounded-xl font-medium text-white transition-all duration-200
-                                    ${
-                                                                            isDark
-                                                                                ? "bg-brand-primary-dark hover:bg-brand-primary-hover-dark"
-                                                                                : "bg-brand-primary-light hover:bg-brand-primary-hover-light"
-                                                                        }
-                                `}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                            >
-                                Submit Answer
-                            </motion.button>
-                        </div>
-                    )}
-                </VALayout>
+			{/* Top Header */}
+			<motion.header
+				className={`
+					fixed top-0 left-0 right-0 z-30 h-16
+					backdrop-blur-xl border-b
+					${
+						isDark
+							? "bg-bg-primary-dark/90 border-border-dark"
+							: "bg-bg-primary-light/90 border-border-light"
+					}
+				`}
+				initial={{ y: -60 }}
+				animate={{ y: 0 }}
+				transition={{ duration: 0.3 }}
+			>
+				<div className="h-full px-6 flex items-center justify-between">
+					{/* Left: Title and Progress */}
+					<div className="flex items-center gap-6">
+						<h1
+							className={`
+								font-serif font-bold text-xl
+								${
+									isDark
+										? "text-text-primary-dark"
+										: "text-text-primary-light"
+								}
+							`}
+						>
+							Daily Practice: VA
+						</h1>
 
-                {/* Question Palette (Bottom for VA) */}
-                <AnimatePresence>
-                    {showPalette && (
-                        <motion.div
-                            className={`
-                                fixed bottom-24 left-0 right-0 z-20
-                                backdrop-blur-xl border-t
-                                ${
-                                                                    isDark
-                                                                        ? "bg-bg-primary-dark/95 border-border-dark"
-                                                                        : "bg-bg-primary-light/95 border-border-light"
-                                                                }
-                            `}
-                            initial={{ y: "100%" }}
-                            animate={{ y: 0 }}
-                            exit={{ y: "100%" }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            <div className="px-6 py-4">
-                                <div className="flex items-center justify-between mb-3">
-                                    <span
-                                        className={`
-                                        text-xs font-medium uppercase tracking-wide
-                                        ${
-                                                                                    isDark
-                                                                                        ? "text-text-muted-dark"
-                                                                                        : "text-text-muted-light"
-                                                                                }
-                                    `}
-                                    >
-                                        Question Palette
-                                    </span>
-                                    <div className="flex gap-4 text-xs">
-                                        <span className="flex items-center gap-1">
-                                            <span className="w-3 h-3 rounded bg-success" />
-                                            Answered (
-                                            {
-                                                Object.values(attempts).filter(
-                                                    (a) => {
-                                                        const userAnswer = a.user_answer as any;
-                                                        return userAnswer?.user_answer != null && !a.marked_for_review;
-                                                    }
-                                                ).length
-                                            }
-                                            )
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                            <span className="w-3 h-3 rounded bg-info" />
-                                            Marked (
-                                            {
-                                                Object.values(attempts).filter(
-                                                    (a) => a.marked_for_review
-                                                ).length
-                                            }
-                                            )
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                            <span className="w-3 h-3 rounded bg-gray-400" />
-                                            Not Visited (
-                                            {
-                                                questions.length - Object.keys(attempts).length
-                                            }
-                                            )
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="flex gap-2 justify-center">
-                                    {questions.map((q, index) => {
-                                        const status = getAttemptStatus(q.id);
+						{/* Progress Bar */}
+						<div className="hidden md:flex items-center gap-3">
+							<div
+								className={`
+									w-32 h-2 rounded-full overflow-hidden
+									${
+										isDark
+											? "bg-bg-tertiary-dark"
+											: "bg-bg-tertiary-light"
+									}
+								`}
+							>
+								<motion.div
+									className={`h-full ${
+										isDark ? "bg-brand-primary-dark" : "bg-brand-primary-light"
+									}`}
+									initial={{ width: 0 }}
+									animate={{ width: `${progress}%` }}
+									transition={{ duration: 0.3 }}
+								/>
+							</div>
+							<span
+								className={`
+									text-sm font-medium
+									${
+										isDark
+											? "text-text-secondary-dark"
+											: "text-text-secondary-light"
+									}
+								`}
+							>
+								{answeredCount}/{questions.length}
+							</span>
+						</div>
+					</div>
+				</div>
+			</motion.header>
 
-                                        let bgClass = isDark
-                                            ? "bg-bg-tertiary-dark"
-                                            : "bg-bg-tertiary-light";
-                                        if (status === "answered")
-                                            bgClass = isDark ? "bg-success/80" : "bg-success";
-                                        else if (status === "marked_for_review")
-                                            bgClass = isDark ? "bg-info/80" : "bg-info";
+			{/* Main Content */}
+			<div className="pt-16 h-screen flex overflow-hidden relative">
+				{/* Question Panel - Full width without passage */}
+				<div 
+					className={`
+						flex-1 h-full overflow-y-auto
+						transition-all duration-300
+						${showPalette ? 'mr-64' : 'mr-0'}
+					`}
+				>
+					<div className="max-w-4xl mx-auto p-6">
+						{currentQuestion && (
+							<QuestionPanel
+								question={{
+									id: currentQuestion.id,
+									passageId: null,
+									questionType: currentQuestion.question_type as any,
+									questionText: currentQuestion.question_text,
+									options: currentQuestion.options ? 
+										(Array.isArray(currentQuestion.options) ? currentQuestion.options : []) : [],
+									correctAnswer: currentQuestion.correct_answer,
+									rationale: currentQuestion.rationale,
+									difficulty: currentQuestion.difficulty as any,
+									tags: currentQuestion.tags || [],
+								}}
+								isDark={isDark}
+							/>
+						)}
+					</div>
+				</div>
 
-                                        return (
-                                            <motion.button
-                                                key={q.id}
-                                                onClick={() => handleQuestionClick(index)}
-                                                className={`
-                                                    w-12 h-12 rounded-xl font-medium text-lg
-                                                    transition-all duration-200
-                                                    ${
-                                                                                                            index ===
-                                                                                                            currentQuestionIndex
-                                                                                                                ? isDark
-                                                                                                                    ? "bg-brand-primary-dark text-white ring-2 ring-brand-accent-dark"
-                                                                                                                    : "bg-brand-primary-light text-white ring-2 ring-brand-accent-light"
-                                                                                                                : bgClass +
-                                                                                                                  " text-white"
-                                                                                                        }
-                                                `}
-                                                whileHover={{ scale: 1.1 }}
-                                                whileTap={{ scale: 0.95 }}
-                                            >
-                                                {index + 1}
-                                            </motion.button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </main>
+				{/* Palette Toggle Button */}
+				<motion.button
+					onClick={() => setShowPalette(!showPalette)}
+					className={`
+						absolute top-1/2 -translate-y-1/2 z-40
+						w-8 h-16 rounded-l-lg border border-r-0
+						transition-all duration-300
+						${
+							isDark
+								? "bg-bg-secondary-dark border-border-dark hover:bg-bg-tertiary-dark"
+								: "bg-bg-secondary-light border-border-light hover:bg-bg-tertiary-light"
+						}
+					`}
+					style={{ right: showPalette ? '256px' : '0' }}
+					whileHover={{ scale: 1.05 }}
+					whileTap={{ scale: 0.95 }}
+				>
+					{showPalette ? (
+						<MdChevronRight className={`w-5 h-5 mx-auto ${
+							isDark ? 'text-text-secondary-dark' : 'text-text-secondary-light'
+						}`} />
+					) : (
+						<MdChevronLeft className={`w-5 h-5 mx-auto ${
+							isDark ? 'text-text-secondary-dark' : 'text-text-secondary-light'
+						}`} />
+					)}
+				</motion.button>
 
-            {/* Bottom Navigation Footer */}
-            <motion.footer
-                className={`
-                        fixed bottom-0 left-0 right-0 z-30
-                        backdrop-blur-xl border-t
-                        ${
-                                                isDark
-                                                    ? "bg-bg-primary-dark/90 border-border-dark"
-                                                    : "bg-bg-primary-light/90 border-border-light"
-                                            }
-                    `}
-                initial={{ y: 60 }}
-                animate={{ y: 0 }}
-                transition={{ duration: 0.3 }}
-            >
-                {isExamMode ? (
-                    // Exam Mode Footer
-                    <div className="px-6 py-4 flex items-center justify-between">
-                        {/* Left Section: Mark for Review and Next + Clear Response */}
-                        <div className="flex items-center gap-3">
-                            <motion.button
-                                onClick={() => {
-                                    dispatch(toggleMarkForReview({
-                                        user_id: 'user-id', // TODO: Get from auth context
-                                        session_id: 'session-id', // TODO: Get from session
-                                        passage_id: currentQuestion?.passageId ?? null,
-                                    }));
-                                    if (!isLastQuestion) {
-                                        dispatch(goToNextQuestion());
-                                    }
-                                }}
-                                className={`
-                                    flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium border-2
-                                    transition-all duration-200
-                                    ${
-                                        isDark
-                                            ? "border-brand-primary-dark text-brand-primary-dark hover:bg-brand-primary-dark/10"
-                                            : "border-brand-primary-light text-brand-primary-light hover:bg-brand-primary-light/10"
-                                    }
-                                `}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                            >
-                                Mark for Review & Next
-                            </motion.button>
-                            <motion.button
-                                onClick={() => dispatch(clearResponse())}
-                                className={`
-                                    px-4 py-2.5 rounded-lg font-medium border
-                                    transition-all duration-200
-                                    ${
-                                        isDark
-                                            ? "border-border-dark text-text-secondary-dark hover:bg-bg-tertiary-dark"
-                                            : "border-border-light text-text-secondary-light hover:bg-bg-tertiary-light"
-                                    }
-                                `}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                            >
-                                Clear Response
-                            </motion.button>
-                        </div>
+				{/* Question Palette (Right Sidebar) */}
+				<AnimatePresence>
+					{showPalette && <QuestionPalette isDark={isDark} />}
+				</AnimatePresence>
+			</div>
 
-                        {/* Right Section: Save and Next + Submit */}
-                        <div className="flex items-center gap-3">
-                            <motion.button
-                                onClick={() => {
-                                    dispatch(submitAnswer({
-                                        user_id: 'user-id', // TODO: Get from auth context
-                                        session_id: 'session-id', // TODO: Get from session
-                                        passage_id: currentQuestion?.passageId ?? null,
-                                        correct_answer: currentQuestion?.correctAnswer,
-                                    }));
-                                    if (!isLastQuestion) {
-                                        dispatch(goToNextQuestion());
-                                    }
-                                }}
-                                disabled={isLastQuestion}
-                                className={`
-                                    flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium
-                                    transition-all duration-200
-                                    ${
-                                        isLastQuestion
-                                            ? "opacity-50 cursor-not-allowed"
-                                            : isDark
-                                            ? "bg-bg-tertiary-dark text-text-primary-dark hover:bg-bg-secondary-dark"
-                                            : "bg-bg-tertiary-light text-text-primary-light hover:bg-bg-secondary-light"
-                                    }
-                                `}
-                                whileHover={!isLastQuestion ? { scale: 1.02 } : {}}
-                                whileTap={!isLastQuestion ? { scale: 0.98 } : {}}
-                            >
-                                Save & Next
-                                <MdArrowForward className="w-5 h-5" />
-                            </motion.button>
-                            <motion.button
-                                onClick={handleToggleViewMode}
-                                className={`
-                                    px-6 py-2.5 rounded-lg font-medium text-white
-                                    transition-all duration-200
-                                    ${
-                                        isDark
-                                            ? "bg-brand-primary-dark hover:bg-brand-primary-hover-dark"
-                                            : "bg-brand-primary-light hover:bg-brand-primary-hover-light"
-                                    }
-                                `}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                            >
-                                Submit
-                            </motion.button>
-                        </div>
-                    </div>
-                ) : (
-                    // Solution Mode Footer
-                    <div className="px-6 py-4 flex items-center justify-between">
-                        {/* Left: Previous Button */}
-                        <motion.button
-                            onClick={handlePreviousQuestion}
-                            disabled={isFirstQuestion}
-                            className={`
-                                flex items-center gap-2 px-6 py-3 rounded-xl font-medium
-                                transition-all duration-200
-                                ${
-                                    isFirstQuestion
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : isDark
-                                        ? "bg-bg-tertiary-dark text-text-primary-dark hover:bg-bg-secondary-dark"
-                                        : "bg-bg-tertiary-light text-text-primary-light hover:bg-bg-secondary-light"
-                                }
-                            `}
-                            whileHover={!isFirstQuestion ? { scale: 1.02 } : {}}
-                            whileTap={!isFirstQuestion ? { scale: 0.98 } : {}}
-                        >
-                            <MdArrowBack className="w-5 h-5" />
-                            Previous
-                        </motion.button>
+			{/* Bottom Navigation Footer */}
+			<motion.footer
+				className={`
+					fixed bottom-0 left-0 right-0 z-30
+					backdrop-blur-xl border-t
+					${
+						isDark
+							? "bg-bg-primary-dark/90 border-border-dark"
+							: "bg-bg-primary-light/90 border-border-light"
+					}
+				`}
+				initial={{ y: 60 }}
+				animate={{ y: 0 }}
+				transition={{ duration: 0.3 }}
+			>
+				{isExamMode ? (
+					// Exam Mode Footer
+					<div className="px-6 py-4 flex items-center justify-between">
+						{/* Left Section: Mark for Review and Next + Clear Response */}
+						<div className="flex items-center gap-3">
+							<motion.button
+								onClick={handleMarkAndNext}
+								className={`
+									flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium border-2
+									transition-all duration-200
+									${
+										isDark
+											? "border-brand-primary-dark text-brand-primary-dark hover:bg-brand-primary-dark/10"
+											: "border-brand-primary-light text-brand-primary-light hover:bg-brand-primary-light/10"
+									}
+								`}
+								whileHover={{ scale: 1.02 }}
+								whileTap={{ scale: 0.98 }}
+							>
+								Mark for Review & Next
+							</motion.button>
+							<motion.button
+								onClick={handleClearResponse}
+								className={`
+									px-4 py-2.5 rounded-lg font-medium border
+									transition-all duration-200
+									${
+										isDark
+											? "border-border-dark text-text-secondary-dark hover:bg-bg-tertiary-dark"
+											: "border-border-light text-text-secondary-light hover:bg-bg-tertiary-light"
+									}
+								`}
+								whileHover={{ scale: 1.02 }}
+								whileTap={{ scale: 0.98 }}
+							>
+								Clear Response
+							</motion.button>
+						</div>
 
-                        {/* Center */}
-                        <div className="text-sm font-medium">
-                            <span
-                                className={
-                                    isDark
-                                        ? "text-text-secondary-dark"
-                                        : "text-text-secondary-light"
-                                }
-                            >
-                                Question {currentQuestionIndex + 1} of {questions.length}
-                            </span>
-                        </div>
+						{/* Right Section: Save and Next + Submit */}
+						<div className="flex items-center gap-3">
+							<motion.button
+								onClick={handleSaveAndNext}
+								disabled={!selectedOption}
+								className={`
+									flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium
+									transition-all duration-200
+									${
+										!selectedOption
+											? "opacity-50 cursor-not-allowed"
+											: isDark
+											? "bg-bg-tertiary-dark text-text-primary-dark hover:bg-bg-secondary-dark"
+											: "bg-bg-tertiary-light text-text-primary-light hover:bg-bg-secondary-light"
+									}
+								`}
+								whileHover={selectedOption ? { scale: 1.02 } : {}}
+								whileTap={selectedOption ? { scale: 0.98 } : {}}
+							>
+								Save & Next
+								<MdArrowForward className="w-5 h-5" />
+							</motion.button>
+							<motion.button
+								onClick={handleSubmitSession}
+								className={`
+									px-6 py-2.5 rounded-lg font-medium text-white
+									transition-all duration-200
+									${
+										isDark
+											? "bg-brand-primary-dark hover:bg-brand-primary-hover-dark"
+											: "bg-brand-primary-light hover:bg-brand-primary-hover-light"
+									}
+								`}
+								whileHover={{ scale: 1.02 }}
+								whileTap={{ scale: 0.98 }}
+							>
+								Submit
+							</motion.button>
+						</div>
+					</div>
+				) : (
+					// Solution Mode Footer
+					<div className="px-6 py-4 flex items-center justify-between">
+						{/* Left: Previous Button */}
+						<motion.button
+							onClick={handlePreviousQuestion}
+							disabled={isFirstQuestion}
+							className={`
+								flex items-center gap-2 px-6 py-3 rounded-xl font-medium
+								transition-all duration-200
+								${
+									isFirstQuestion
+										? "opacity-50 cursor-not-allowed"
+										: isDark
+										? "bg-bg-tertiary-dark text-text-primary-dark hover:bg-bg-secondary-dark"
+										: "bg-bg-tertiary-light text-text-primary-light hover:bg-bg-secondary-light"
+								}
+							`}
+							whileHover={!isFirstQuestion ? { scale: 1.02 } : {}}
+							whileTap={!isFirstQuestion ? { scale: 0.98 } : {}}
+						>
+							Previous
+						</motion.button>
 
-                        {/* Right: Next Button */}
-                        <motion.button
-                            onClick={handleNextQuestion}
-                            disabled={isLastQuestion}
-                            className={`
-                                flex items-center gap-2 px-6 py-3 rounded-xl font-medium
-                                transition-all duration-200
-                                ${
-                                    isLastQuestion
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : isDark
-                                        ? "bg-brand-primary-dark text-white hover:bg-brand-primary-hover-dark"
-                                        : "bg-brand-primary-light text-white hover:bg-brand-primary-hover-light"
-                                }
-                            `}
-                            whileHover={!isLastQuestion ? { scale: 1.02 } : {}}
-                            whileTap={!isLastQuestion ? { scale: 0.98 } : {}}
-                        >
-                            Next
-                            <MdArrowForward className="w-5 h-5" />
-                        </motion.button>
-                    </div>
-                )}
-            </motion.footer>
-        </div>
-    );
+						{/* Center: Question Info */}
+						<div className="text-sm font-medium">
+							<span
+								className={
+									isDark
+										? "text-text-secondary-dark"
+										: "text-text-secondary-light"
+								}
+							>
+								Question {currentQuestionIndex + 1} of {questions.length}
+							</span>
+						</div>
+
+						{/* Right: Next Button */}
+						<motion.button
+							onClick={handleNextQuestion}
+							disabled={isLastQuestion}
+							className={`
+								flex items-center gap-2 px-6 py-3 rounded-xl font-medium
+								transition-all duration-200
+								${
+									isLastQuestion
+										? "opacity-50 cursor-not-allowed"
+										: isDark
+										? "bg-brand-primary-dark text-white hover:bg-brand-primary-hover-dark"
+										: "bg-brand-primary-light text-white hover:bg-brand-primary-hover-light"
+								}
+							`}
+							whileHover={!isLastQuestion ? { scale: 1.02 } : {}}
+							whileTap={!isLastQuestion ? { scale: 0.98 } : {}}
+						>
+							Next
+							<MdArrowForward className="w-5 h-5" />
+						</motion.button>
+					</div>
+				)}
+			</motion.footer>
+		</div>
+	);
 };
 
 export default DailyVAPage;
