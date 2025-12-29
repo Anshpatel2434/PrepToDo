@@ -7,8 +7,6 @@ import {
     selectViewMode,
     selectSolutionViewType,
     setSelectedOption,
-    submitAnswer,
-    toggleMarkForReview,
 } from '../redux_usecase/dailyPracticeSlice';
 import { ConfidenceSelector } from './ConfidenceSelector';
 import { SolutionToggle } from './SolutionToggle';
@@ -35,23 +33,6 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
         if (!isExamMode) return;
         dispatch(setSelectedOption(optionId));
     }, [dispatch, isExamMode]);
-
-    const handleSubmit = useCallback(() => {
-        dispatch(submitAnswer({
-            user_id: 'user-id', // TODO: Get from auth context
-            session_id: 'session-id', // TODO: Get from session
-            passage_id: question.passageId ?? null,
-            correct_answer: question.correctAnswer,
-        }));
-    }, [dispatch, question]);
-
-    const handleMarkForReview = useCallback(() => {
-        dispatch(toggleMarkForReview({
-            user_id: 'user-id', // TODO: Get from auth context
-            session_id: 'session-id', // TODO: Get from session
-            passage_id: question.passageId ?? null,
-        }));
-    }, [dispatch, question]);
 
     const getOptionClass = (option: Option) => {
         const isSelected = selectedOption === option.id;
@@ -461,40 +442,6 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 
                 {/* Solution View */}
                 {!isExamMode && renderSolutionContent()}
-
-                {/* Action Buttons (Exam Mode Only) */}
-                {isExamMode && (
-                    <div className="flex gap-3 pt-4">
-                        <motion.button
-                            onClick={handleMarkForReview}
-                            className={`
-                                px-6 py-3 rounded-xl font-medium border-2 transition-all duration-200
-                                ${isDark 
-                                    ? 'border-brand-primary-dark text-brand-primary-dark hover:bg-brand-primary-dark/10' 
-                                    : 'border-brand-primary-light text-brand-primary-light hover:bg-brand-primary-light/10'
-                                }
-                            `}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                        >
-                            Mark for Review
-                        </motion.button>
-                        <motion.button
-                            onClick={handleSubmit}
-                            className={`
-                                flex-1 px-6 py-3 rounded-xl font-medium text-white transition-all duration-200
-                                ${isDark 
-                                    ? 'bg-brand-primary-dark hover:bg-brand-primary-hover-dark' 
-                                    : 'bg-brand-primary-light hover:bg-brand-primary-hover-light'
-                                }
-                            `}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                        >
-                            Submit Answer
-                        </motion.button>
-                    </div>
-                )}
 
                 {/* Spacer for fixed footer */}
                 <div className="h-24" />
