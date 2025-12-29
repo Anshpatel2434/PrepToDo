@@ -22,13 +22,14 @@ import {
     toggleMarkForReview,
     submitAnswer,
     initializeSession,
+    initializeSessionWithAttempts,
     setStartTime,
     selectSelectedOption,
 } from "../../redux_usecase/dailyPracticeSlice";
 import { SplitPaneLayout } from "../Component/SplitPaneLayout";
 import { QuestionPalette } from "../../components/QuestionPalette";
 import { QuestionPanel } from "../../components/QuestionPanel";
-import type { Question, Passage } from "../../../../types";
+import type { Question, Passage, Option } from "../../../../types";
 import { useSaveSessionDetailsMutation, useSaveQuestionAttemptsMutation } from "../../redux_usecase/dailyPracticeApi";
 
 const DailyRCPage: React.FC = () => {
@@ -38,7 +39,7 @@ const DailyRCPage: React.FC = () => {
     const { isDark } = useTheme();
 
     // Get session data from location state
-    const { sessionId, testData } = location.state || {};
+    const { sessionId, testData, existingAttempts } = location.state || {};
 
     // Local state
     const [isLoading, setIsLoading] = useState(true);
@@ -69,6 +70,52 @@ const DailyRCPage: React.FC = () => {
         genre: passageData.genre,
     } : null;
 
+    // Helper function to transform options from API format to Option[] format
+    const transformOptions = (options: any): Option[] => {
+        if (!options) return [];
+        
+        if (Array.isArray(options)) {
+            // If already in array format, transform to Option format
+            return options.map((option, index) => ({
+                id: String.fromCharCode(65 + index), // A, B, C, D, etc.
+                text: typeof option === 'string' ? option : option.text || String(option),
+            }));
+        } else if (typeof options === 'object') {
+            // If in object format (e.g., {A: "text", B: "text"}), transform to array
+            return Object.entries(options).map(([key, value]) => ({
+                id: key,
+                text: typeof value === 'string' ? value : String(value),
+            }));
+        }
+        
+        return [];
+    };
+
+    // Helper function to extract sentences for para jumble and odd one out questions
+    const getSentencesForQuestion = (question: Question): string[] | undefined => {
+        if (!question || !question.question_text) return undefined;
+        
+        // For para jumble questions, extract sentences from question text or options
+        if (question.question_type === 'para_jumble') {
+            if (question.options && Array.isArray(question.options)) {
+                return question.options.map(opt => 
+                    typeof opt === 'string' ? opt : opt.text || String(opt)
+                );
+            }
+        }
+        
+        // For odd one out questions
+        if (question.question_type === 'odd_one_out') {
+            if (question.options && Array.isArray(question.options)) {
+                return question.options.map(opt => 
+                    typeof opt === 'string' ? opt : opt.text || String(opt)
+                );
+            }
+        }
+        
+        return undefined;
+    };
+
     // Initialize session
     useEffect(() => {
         const initSession = async () => {
@@ -92,13 +139,42 @@ const DailyRCPage: React.FC = () => {
             setQuestions(rcQuestions);
             setPassages(rcPassages);
 
-            // Initialize Redux with question IDs
+            // Initialize Redux with question IDs and existing attempts if available
             const questionIds = rcQuestions.map((q: Question) => q.id);
-            dispatch(initializeSession({
-                questionIds,
-                currentIndex: 0,
-                elapsedTime: 0,
-            }));
+            
+            if (existingAttempts && Object.keys(existingAttempts).length > 0) {
+                // Transform existing attempts to the format expected by Redux
+                const transformedAttempts: Record<string, any> = {};
+                existingAttempts.forEach((attempt: any) => {
+                    transformedAttempts[attempt.question_id] = {
+                        user_id: attempt.user_id,
+                        session_id: attempt.session_id,
+                        question_id: attempt.question_id,
+                        passage_id: attempt.passage_id,
+                        user_answer: attempt.user_answer,
+                        is_correct: attempt.is_correct,
+                        time_spent_seconds: attempt.time_spent_seconds,
+                        confidence_level: attempt.confidence_level,
+                        marked_for_review: attempt.marked_for_review,
+                        rationale_viewed: attempt.rationale_viewed,
+                        rationale_helpful: attempt.rationale_helpful,
+                        ai_feedback: attempt.ai_feedback,
+                    };
+                });
+                
+                dispatch(initializeSessionWithAttempts({
+                    questionIds,
+                    currentIndex: 0,
+                    elapsedTime: 0,
+                    attempts: transformedAttempts,
+                }));
+            } else {
+                dispatch(initializeSession({
+                    questionIds,
+                    currentIndex: 0,
+                    elapsedTime: 0,
+                }));
+            }
 
             // Set start time
             dispatch(setStartTime(Date.now()));
@@ -108,34 +184,6 @@ const DailyRCPage: React.FC = () => {
 
         initSession();
     }, [dispatch, testData, sessionId, navigate]);
-
-    // Timer effect
-    useEffect(() => {
-        if (viewMode === 'exam' && !isLoading) {
-            const timer = setInterval(() => {
-                dispatch(incrementElapsedTime());
-            }, 1000);
-
-            return () => clearInterval(timer);
-        }
-    }, [dispatch, viewMode, isLoading]);
-
-    // Save state before closing tab
-    useEffect(() => {
-        const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
-            // Save current state
-            if (viewMode === 'exam' && Object.keys(attempts).length > 0) {
-                e.preventDefault();
-                e.returnValue = '';
-
-                // Save session and attempts
-                await handleSaveProgress();
-            }
-        };
-
-        window.addEventListener('beforeunload', handleBeforeUnload);
-        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-    }, [attempts, currentQuestionIndex, elapsedTime, viewMode, sessionId]);
 
     // Handle save progress
     const handleSaveProgress = async () => {
@@ -175,6 +223,40 @@ const DailyRCPage: React.FC = () => {
         }
     };
 
+    // Timer effect
+    useEffect(() => {
+        if (viewMode === 'exam' && !isLoading) {
+            const timer = setInterval(() => {
+                dispatch(incrementElapsedTime());
+            }, 1000);
+
+            return () => clearInterval(timer);
+        }
+    }, [dispatch, viewMode, isLoading]);
+
+    // Save state before closing tab
+    useEffect(() => {
+        const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
+            // Save current state
+            if (viewMode === 'exam' && Object.keys(attempts).length > 0) {
+                e.preventDefault();
+                e.returnValue = '';
+
+                // Save session and attempts
+                await handleSaveProgress();
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [attempts, currentQuestionIndex, elapsedTime, viewMode, sessionId, handleSaveProgress]);
+
+    // Handle submit session
+    const handleSubmitSession = async () => {
+        await handleSaveProgress();
+        dispatch(setViewMode('solution'));
+    };
+
     // Handle save and next
     const handleSaveAndNext = useCallback(async () => {
         if (!currentQuestion || !sessionId) return;
@@ -209,7 +291,7 @@ const DailyRCPage: React.FC = () => {
                 await handleSubmitSession();
             }
         }
-    }, [dispatch, currentQuestion, sessionId, startTime, isLastQuestion, attempts, questions.length]);
+    }, [dispatch, currentQuestion, sessionId, startTime, isLastQuestion, attempts, questions.length, handleSubmitSession]);
 
     // Handle mark for review and next
     const handleMarkAndNext = useCallback(() => {
@@ -228,12 +310,6 @@ const DailyRCPage: React.FC = () => {
             dispatch(goToNextQuestion());
         }
     }, [dispatch, currentQuestion, sessionId, isLastQuestion]);
-
-    // Handle submit session
-    const handleSubmitSession = async () => {
-        await handleSaveProgress();
-        dispatch(setViewMode('solution'));
-    };
 
     const handlePreviousQuestion = useCallback(() => {
         if (!isFirstQuestion) {
@@ -388,21 +464,21 @@ const DailyRCPage: React.FC = () => {
                     >
                         {/* Question Panel */}
                         {currentQuestion && (
-                            <QuestionPanel
-                                question={{
-                                    id: currentQuestion.id,
-                                    passageId: currentQuestion.passage_id,
-                                    questionType: currentQuestion.question_type as any,
-                                    questionText: currentQuestion.question_text,
-                                    options: currentQuestion.options ? 
-                                        (Array.isArray(currentQuestion.options) ? currentQuestion.options : []) : [],
-                                    correctAnswer: currentQuestion.correct_answer,
-                                    rationale: currentQuestion.rationale,
-                                    difficulty: currentQuestion.difficulty as any,
-                                    tags: currentQuestion.tags || [],
-                                }}
-                                isDark={isDark}
-                            />
+                           <QuestionPanel
+                               question={{
+                                   id: currentQuestion.id,
+                                   passageId: currentQuestion.passage_id,
+                                   questionType: currentQuestion.question_type as any,
+                                   questionText: currentQuestion.question_text,
+                                   options: transformOptions(currentQuestion.options),
+                                   sentences: getSentencesForQuestion(currentQuestion),
+                                   correctAnswer: currentQuestion.correct_answer,
+                                   rationale: currentQuestion.rationale,
+                                   difficulty: currentQuestion.difficulty as any,
+                                   tags: currentQuestion.tags || [],
+                               }}
+                               isDark={isDark}
+                           />
                         )}
                     </SplitPaneLayout>
                 </div>
