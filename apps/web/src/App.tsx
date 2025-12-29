@@ -18,6 +18,7 @@ import TeachConceptPage from "./pages/teach-concept/page/TeachConceptPage";
 import DailyRCPage from "./pages/daily/daily_rc/Page/DailyRCPage";
 import DailyVAPage from "./pages/daily/daily_va/Page/DailyVAPage";
 import { useLazyFetchDailyTestDataQuery } from "./pages/daily/redux_usecase/dailyPracticeApi";
+import DailyPage from "./pages/daily/page/DailyPage";
 
 function App() {
 	const [triggerFetchDailyPracticeFunction, { error }] =
@@ -65,6 +66,7 @@ function App() {
 					<Route path="/auth" element={<AuthPage />} />
 					<Route path="/auth/callback" element={<AuthCallback />} />
 					<Route path="/trialAI/teach_concept" element={<TeachConceptPage />} />
+					<Route path="/daily" element={<DailyPage />} />
 					<Route path="/daily/rc" element={<DailyRCPage />} />
 					<Route path="/daily/va" element={<DailyVAPage />} />
 					{/* Add more routes as needed */}
