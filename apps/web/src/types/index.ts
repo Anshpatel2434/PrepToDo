@@ -8,6 +8,8 @@ export const UUIDSchema = z.string().uuid();
 export const TimestampSchema = z.string(); // ISO string from Supabase
 export const JSONSchema = z.any();
 
+export type UUID = z.infer<typeof UUIDSchema>
+
 /* =========================================================
    👤 User & Profile
    ========================================================= */
@@ -54,6 +56,22 @@ export const TheoryChunkSchema = z.object({
 export type TheoryChunk = z.infer<typeof TheoryChunkSchema>;
 
 /* =========================================================
+   📄 Exams
+   ========================================================= */
+
+export const ExamSchema = z.object({
+    id: UUIDSchema,
+    name: z.string(),
+    year: z.number(),
+    exam_type: z.string(),
+    slot: z.string(),
+    is_official: z.boolean(),
+    created_at: TimestampSchema
+})
+
+export type Exam = z.infer<typeof ExamSchema>
+
+/* =========================================================
    📄 Passages
    ========================================================= */
 
@@ -84,7 +102,7 @@ export const QuestionSchema = z.object({
     passage_id: UUIDSchema.nullable(),
     question_text: z.string(),
     question_type: z.enum([
-        "mcq",
+        "rc_question",
         "true_false",
         "inference",
         "tone",
@@ -92,10 +110,10 @@ export const QuestionSchema = z.object({
         "detail",
         "para_jumble",
         "para_summary",
-        "fill_in_blank",
+        "para_completion",
         "critical_reasoning",
         "vocab_in_context",
-        "short_answer",
+        "odd_one_out",
     ]),
     options: JSONSchema.optional(),
     correct_answer: JSONSchema,
@@ -132,10 +150,12 @@ export type Embedding = z.infer<typeof EmbeddingSchema>;
 export const PracticeSessionSchema = z.object({
     id: UUIDSchema,
     user_id: UUIDSchema,
+    paper_id: UUIDSchema,
     session_type: z.enum([
         "practice",
         "timed_test",
-        "daily_challenge",
+        "daily_challenge_rc",
+        "daily_challenge_va",
         "mock_exam",
         "vocab_review",
         "microlearning",
@@ -145,8 +165,20 @@ export const PracticeSessionSchema = z.object({
     mode: z.enum(["tutor", "test", "adaptive"]).nullable(),
     passage_ids: z.array(UUIDSchema).nullable(),
     question_ids: z.array(UUIDSchema).nullable(),
+    target_difficuly: z.string(),
+    target_genres: z.array(z.string()),
+    target_question_types: z.array(z.string()),
     time_limit_seconds: z.number().nullable(),
     time_spent_seconds: z.number(),
+    started_at: TimestampSchema,
+    completed_at: TimestampSchema,
+    paused_at: TimestampSchema,
+    pause_duration_seconds: z.number(),
+    total_questions: z.number(),
+    correct_answers: z.number(),
+    current_question_index : z.number(),
+    is_group_session: z.boolean(),
+    group_id: UUIDSchema,
     status: z.enum(["in_progress", "completed", "abandoned", "paused"]),
     score_percentage: z.number().nullable(),
     points_earned: z.number(),
@@ -166,11 +198,13 @@ export const QuestionAttemptSchema = z.object({
     session_id: UUIDSchema,
     question_id: UUIDSchema,
     passage_id: UUIDSchema.nullable(),
-    user_answer: JSONSchema,
+    user_answer: JSONSchema, // {"user_answer" : "answer"}
     is_correct: z.boolean(),
     time_spent_seconds: z.number(),
     confidence_level: z.number().min(1).max(5).nullable(),
+    marked_for_review: z.boolean(),
     rationale_viewed: z.boolean(),
+    rationale_helpful: z.boolean(),
     ai_feedback: z.string().nullable(),
     created_at: TimestampSchema,
 });

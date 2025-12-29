@@ -1,4 +1,4 @@
-import type { DailyPassage, DailyQuestion } from '../../types';
+import type { DailyPassage, DailyQuestion } from '../../../types';
 
 // =========================================================
 // MOCK DATA FOR DAILY PRACTICE

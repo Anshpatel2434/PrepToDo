@@ -4,6 +4,7 @@ import { authApi } from "../pages/auth/redux_usecases/authApi";
 import authReducer from "../pages/auth/redux_usecases/authSlice";
 import { conceptTeachingApi } from "../pages/teach-concept/redux_usecases/teachConceptApi";
 import dailyPracticeReducer from "../pages/daily/redux_usecase/dailyPracticeSlice";
+import { dailyPracticeApi } from "../pages/daily/redux_usecase/dailyPracticeApi";
 
 export const store = configureStore({
     reducer: {
@@ -16,11 +17,16 @@ export const store = configureStore({
 
         // Daily Practice state
         dailyPractice: dailyPracticeReducer,
+
+        // Daily Practice api
+        [dailyPracticeApi.reducerPath] : dailyPracticeApi.reducer
     },
     // Adding the api middleware enables caching, invalidation, polling,
     // and other useful features of RTK Query
     middleware: (getDefaultMiddleware) =>
-        getDefaultMiddleware().concat(authApi.middleware, conceptTeachingApi.middleware),
+        getDefaultMiddleware().concat(authApi.middleware
+            , conceptTeachingApi.middleware,
+        dailyPracticeApi.middleware),
 });
 
 //optional, but required for refetchOnFocus/refetchOnReconnect behaviours

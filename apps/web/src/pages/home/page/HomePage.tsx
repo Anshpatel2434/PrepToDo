@@ -8,74 +8,83 @@ import { IntroductionSection } from "../components/IntroductionSection";
 import { FeatureShowcase } from "../components/FeatureShowcase";
 import { Footer } from "../components/Footer";
 import { useTheme } from "../../../context/ThemeContext";
+import { dailyPracticeApi } from "../../daily/redux_usecase/dailyPracticeApi";
 
 export const HomePage: React.FC = () => {
-    const { data: authState } = useFetchUserQuery();
+	const { data: authState } = useFetchUserQuery();
 
-    const { isDark } = useTheme();
+	const { isDark } = useTheme();
 
-    // Auth popup state
-    const [authPopupOpen, setAuthPopupOpen] = useState(false);
-    const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
+	// Auth popup state
+	const [authPopupOpen, setAuthPopupOpen] = useState(false);
+	const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
 
-    useEffect(() => {
-        console.log("Auth state:", authState);
-    }, [authState]);
+	useEffect(() => {
+		console.log("Auth state:", authState);
+	}, [authState]);
 
-    const handleQuickAuth = (action: "signin" | "signup") => {
-        setAuthMode(action);
-        setAuthPopupOpen(true);
-    };
+	const handleQuickAuth = (action: "signin" | "signup") => {
+		setAuthMode(action);
+		setAuthPopupOpen(true);
+	};
 
-    const handleCloseAuthPopup = () => {
-        setAuthPopupOpen(false);
-    };
+	const handleCloseAuthPopup = () => {
+		setAuthPopupOpen(false);
+	};
 
-    return (
-        <div
-            className={`
+	const { data } =
+		dailyPracticeApi.endpoints.fetchDailyTestData.useQueryState();
+
+	useEffect(() => {
+		console.log("What the hell is the data stored here : ");
+		console.log(data);
+	}, [data]);
+
+	return (
+		<div
+			className={`
             min-h-screen transition-colors duration-300
             ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"}
         `}
-        >
-            {/* Floating Theme Toggle */}
-            <FloatingThemeToggle />
+		>
+			{/* Floating Theme Toggle */}
+			<FloatingThemeToggle />
 
-            {/* Floating Navigation */}
-            <FloatingNavigation />
+			{/* Floating Navigation */}
+			<FloatingNavigation />
 
-            {/* Main Content */}
-            <div className="transition-all duration-500 ease-out">
-                {/* Hero Section */}
-                <section data-section="home">
-                    <HeroSection
-                        isDark={isDark}
-                        isAuthenticated={Boolean(authState)}
-                        onQuickAuth={handleQuickAuth}
-                    />
-                </section>
+			{/* Main Content */}
+			<div className="transition-all duration-500 ease-out">
+				{/* Hero Section */}
+				<section data-section="home">
+					<HeroSection
+						isDark={isDark}
+						isAuthenticated={Boolean(authState)}
+						onQuickAuth={handleQuickAuth}
+					/>
+				</section>
 
-                {/* Introduction Section */}
-                <section data-section="about">
-                    <IntroductionSection isDark={isDark} />
-                </section>
+				{/* Introduction Section */}
+				<section data-section="about">
+					<IntroductionSection isDark={isDark} />
+				</section>
 
-                {/* Feature Showcase */}
-                <section data-section="features">
-                    <FeatureShowcase isDark={isDark} />
-                </section>
+				{/* Feature Showcase */}
+				<section data-section="features">
+					<FeatureShowcase isDark={isDark} />
+				</section>
 
-                {/* Footer */}
-                <Footer isDark={isDark} />
-            </div>
+				{/* Footer */}
+				<Footer isDark={isDark} />
+			</div>
 
-            {/* Auth Popup */}
-            <AuthPopup
-                isOpen={authPopupOpen}
-                onClose={handleCloseAuthPopup}
-                isDark={isDark}
-                initialMode={authMode}
-            />
-        </div>
-    );
+			{/* Auth Popup */}
+			<AuthPopup
+				isOpen={authPopupOpen}
+				onClose={handleCloseAuthPopup}
+				isDark={isDark}
+				initialMode={authMode}
+			/>
+		</div>
+	);
 };

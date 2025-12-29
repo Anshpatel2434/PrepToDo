@@ -9,7 +9,7 @@ import {
     setSelectedOption,
     submitAnswer,
     toggleMarkForReview,
-} from '../../redux_usecase/dailyPracticeSlice';
+} from '../redux_usecase/dailyPracticeSlice';
 import { ConfidenceSelector } from './ConfidenceSelector';
 import { SolutionToggle } from './SolutionToggle';
 
