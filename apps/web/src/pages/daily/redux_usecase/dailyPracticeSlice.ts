@@ -288,6 +288,27 @@ const dailyPracticeSlice = createSlice({
             state.viewMode = 'exam';
             state.solutionViewType = 'common';
         },
+
+        // Initialize practice session with existing attempts (for resuming)
+        initializeSessionWithAttempts: (
+            state,
+            action: PayloadAction<{
+                questionIds: UUID[];
+                currentIndex?: number;
+                elapsedTime?: number;
+                attempts: Record<UUID, Omit<QuestionAttempt, 'id' | 'created_at'>>;
+            }>
+        ) => {
+            state.questionOrder = action.payload.questionIds;
+            state.currentQuestionIndex = action.payload.currentIndex ?? 0;
+            state.startTime = Date.now();
+            state.elapsedTimeSeconds = action.payload.elapsedTime ?? 0;
+            state.attempts = action.payload.attempts;
+            state.selectedOption = null;
+            state.confidenceLevel = null;
+            state.viewMode = 'exam';
+            state.solutionViewType = 'common';
+        },
     },
 });
 
@@ -312,6 +333,7 @@ export const {
     loadExistingAttempts,
     resetDailyPractice,
     initializeSession,
+    initializeSessionWithAttempts,
 } = dailyPracticeSlice.actions;
 
 // Selectors

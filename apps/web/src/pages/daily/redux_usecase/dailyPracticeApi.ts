@@ -12,6 +12,8 @@ interface TestDataState {
 interface StartDailySessionQuery {
     user_id: UUID;
     paper_id: UUID;
+    passage_ids?: UUID[];
+    question_ids?: UUID[];
 }
 
 interface SaveSessionDetailsQuery {
@@ -145,7 +147,7 @@ export const dailyPracticeApi = createApi({
 
         // Start the session for RC
         startDailyRCSession: builder.mutation<PracticeSession, StartDailySessionQuery>({
-            queryFn: async ({ user_id, paper_id }) => {
+            queryFn: async ({ user_id, paper_id, passage_ids, question_ids }) => {
                 try {
                     // Step 1: Get current user
                     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -167,6 +169,8 @@ export const dailyPracticeApi = createApi({
                                 user_id: user_id,
                                 paper_id: paper_id,
                                 session_type: "daily_challenge_rc",
+                                passage_ids: passage_ids && passage_ids.length > 0 ? passage_ids : null,
+                                question_ids: question_ids && question_ids.length > 0 ? question_ids : null,
                             },
                         ])
                         .select();
@@ -200,7 +204,7 @@ export const dailyPracticeApi = createApi({
 
         // Start the session for VA
         startDailyVASession: builder.mutation<PracticeSession, StartDailySessionQuery>({
-            queryFn: async ({ user_id, paper_id }) => {
+            queryFn: async ({ user_id, paper_id, passage_ids, question_ids }) => {
                 try {
                     // Step 1: Get current user
                     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -222,6 +226,8 @@ export const dailyPracticeApi = createApi({
                                 user_id: user_id,
                                 paper_id: paper_id,
                                 session_type: "daily_challenge_va",
+                                passage_ids: passage_ids && passage_ids.length > 0 ? passage_ids : null,
+                                question_ids: question_ids && question_ids.length > 0 ? question_ids : null,
                             },
                         ])
                         .select();

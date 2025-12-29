@@ -5,8 +5,9 @@ import { useTheme } from "../../../context/ThemeContext";
 import { FloatingNavigation } from "../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
 import { MdMenuBook, MdSpellcheck } from "react-icons/md";
-import { useLazyFetchDailyTestDataQuery, useStartDailyRCSessionMutation, useStartDailyVASessionMutation } from "../redux_usecase/dailyPracticeApi";
+import { useLazyFetchDailyTestDataQuery, useStartDailyRCSessionMutation, useStartDailyVASessionMutation, useLazyFetchExistingSessionDetailsQuery } from "../redux_usecase/dailyPracticeApi";
 import { supabase } from "../../../services/apiClient";
+import type { Question } from "../../../types";
 
 const DailyPage: React.FC = () => {
     const navigate = useNavigate();
@@ -16,6 +17,7 @@ const DailyPage: React.FC = () => {
     const [fetchDailyData] = useLazyFetchDailyTestDataQuery();
     const [startRCSession] = useStartDailyRCSessionMutation();
     const [startVASession] = useStartDailyVASessionMutation();
+    const [fetchExistingSession] = useLazyFetchExistingSessionDetailsQuery();
 
     const handleStartPractice = async (type: 'rc' | 'va') => {
         setIsStarting(true);
@@ -36,11 +38,61 @@ const DailyPage: React.FC = () => {
                 return;
             }
 
+            // Check for existing session
+            const sessionType = type === 'rc' ? 'daily_challenge_rc' : 'daily_challenge_va';
+            const { data: existingSession, error: existingSessionError } = await fetchExistingSession({
+                user_id: user.id,
+                paper_id: testData.examInfo.id,
+                session_type: sessionType,
+            });
+
+            if (existingSession && !existingSessionError) {
+                // Resume existing session
+                console.log('Resuming existing session:', existingSession.session.id);
+                navigate(type === 'rc' ? '/daily/rc' : '/daily/va', {
+                    state: {
+                        sessionId: existingSession.session.id,
+                        testData,
+                        existingAttempts: existingSession.attempts,
+                    }
+                });
+                return;
+            }
+
+            // Prepare passage and question IDs
+            let passageIds: string[] = [];
+            let questionIds: string[] = [];
+
+            if (type === 'rc') {
+                // Filter RC questions and get associated passage IDs
+                const rcQuestions = testData.questions.filter((q: Question) =>
+                    q.question_type === 'rc_question' || q.passage_id !== null
+                );
+                questionIds = rcQuestions.map((q: Question) => q.id);
+
+                // Get unique passage IDs from RC questions
+                const passageIdSet = new Set<string>();
+                rcQuestions.forEach((q: Question) => {
+                    if (q.passage_id) {
+                        passageIdSet.add(q.passage_id);
+                    }
+                });
+                passageIds = Array.from(passageIdSet);
+            } else {
+                // Filter VA questions (questions without passage_id)
+                const vaQuestions = testData.questions.filter((q: Question) =>
+                    q.passage_id === null && q.question_type !== 'rc_question'
+                );
+                questionIds = vaQuestions.map((q: Question) => q.id);
+            }
+
             // Start appropriate session
             if (type === 'rc') {
                 const { data: session } = await startRCSession({
                     user_id: user.id,
                     paper_id: testData.examInfo.id,
+                    passage_ids: passageIds,
+                    question_ids: questionIds,
                 });
                 if (session) {
                     navigate('/daily/rc', { state: { sessionId: session.id, testData } });
@@ -49,6 +101,8 @@ const DailyPage: React.FC = () => {
                 const { data: session } = await startVASession({
                     user_id: user.id,
                     paper_id: testData.examInfo.id,
+                    passage_ids: passageIds,
+                    question_ids: questionIds,
                 });
                 if (session) {
                     navigate('/daily/va', { state: { sessionId: session.id, testData } });
