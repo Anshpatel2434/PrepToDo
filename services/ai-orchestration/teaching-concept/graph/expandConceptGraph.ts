@@ -1,4 +1,4 @@
-import { supabase } from "../config/supabase";
+import { supabase } from "../../config/supabase";
 
 export async function expandConceptGraph(conceptNodeId: string) {
 	console.log("🧠 [Graph Traversal] Expanding graph for node:", conceptNodeId);
