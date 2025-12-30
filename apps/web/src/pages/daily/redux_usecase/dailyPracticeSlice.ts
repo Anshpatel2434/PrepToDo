@@ -226,31 +226,36 @@ const dailyPracticeSlice = createSlice({
             state,
             action: PayloadAction<{
                 questionId: UUID;
-                userId: UUID;
-                passageId: UUID | null;
                 confidence_level: number;
             }>
         ) => {
-            const { questionId, confidence_level, userId, passageId } =
-                action.payload;
-            const existing = state.attempts[questionId];
+            const { questionId, confidence_level } = action.payload;
 
-            if (existing) {
-                state.attempts[questionId] = {
-                    ...existing,
+            // First check if there's a pending attempt
+            const pending = state.pendingAttempts[questionId];
+            if (pending) {
+                state.pendingAttempts[questionId] = {
+                    ...pending,
                     confidence_level: confidence_level,
                 };
             } else {
-                // Initialize a partial attempt just to set confidence level
-                state.attempts[questionId] = {
-                    user_id: userId,
-                    session_id: state.session.id!,
-                    question_id: questionId,
-                    passage_id: passageId,
-                    confidence_level: confidence_level,
-                    time_spent_seconds: 0,
-                    is_correct: false,
-                };
+                // Check if there's an existing saved attempt to copy from
+                const existing = state.attempts[questionId];
+                if (existing) {
+                    state.pendingAttempts[questionId] = {
+                        ...existing,
+                        confidence_level: confidence_level,
+                    };
+                } else {
+                    // Initialize a partial attempt in pending
+                    state.pendingAttempts[questionId] = {
+                        question_id: questionId,
+                        session_id: state.session.id!,
+                        confidence_level: confidence_level,
+                        time_spent_seconds: 0,
+                        is_correct: false,
+                    };
+                }
             }
         },
 
