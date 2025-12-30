@@ -45,13 +45,13 @@ export const dailyPracticeApi = createApi({
         // Get today's daily practice data
         fetchDailyTestData: builder.query<TestDataState, void>({
             queryFn: async () => {
-                console.log("-------------------IN FETCHING DAILY TEST DATA API-----------------");
+                console.log('[DailyPracticeApi] fetchDailyTestData called');
                 try {
                     // Step 1: Get current user
                     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
                     if (userError || !user) {
-                        console.log("User is not logged in !!");
+                        console.log('[DailyPracticeApi] User is not authenticated');
                         return {
                             error: {
                                 status: "UNAUTHORIZED",
@@ -59,6 +59,8 @@ export const dailyPracticeApi = createApi({
                             },
                         };
                     }
+
+                    console.log('[DailyPracticeApi] User authenticated:', user.id);
 
                     // Step 2: Get the daily practice exam details from the table
                     const { data: examInfo, error: examInfoError } = await supabase
@@ -68,8 +70,7 @@ export const dailyPracticeApi = createApi({
                         .limit(1);
 
                     if (examInfoError) {
-                        console.log("Error while fetching daily exam details");
-                        console.log(examInfoError);
+                        console.log('[DailyPracticeApi] Error while fetching daily exam details:', examInfoError);
                         return {
                             error: {
                                 status: "CUSTOM_ERROR",
@@ -78,6 +79,8 @@ export const dailyPracticeApi = createApi({
                         };
                     }
 
+                    console.log('[DailyPracticeApi] Fetched exam info:', examInfo[0].id);
+
                     // Step 3: Get the passage linked with the particular exam id
                     const { data: passage, error: passageError } = await supabase
                         .from("passages")
@@ -85,8 +88,7 @@ export const dailyPracticeApi = createApi({
                         .eq("paper_id", examInfo[0].id);
 
                     if (passageError) {
-                        console.log("Error while fetching daily exam passages");
-                        console.log(passageError);
+                        console.log('[DailyPracticeApi] Error while fetching daily exam passages:', passageError);
                         return {
                             error: {
                                 status: "CUSTOM_ERROR",
@@ -95,6 +97,8 @@ export const dailyPracticeApi = createApi({
                         };
                     }
 
+                    console.log('[DailyPracticeApi] Fetched', passage.length, 'passages');
+
                     // Step 4: Get the questions linked with the particular exam id
                     const { data: questions, error: questionError } = await supabase
                         .from("questions")
@@ -102,8 +106,7 @@ export const dailyPracticeApi = createApi({
                         .eq("paper_id", examInfo[0].id);
 
                     if (questionError) {
-                        console.log("Error while fetching daily exam questions");
-                        console.log(questionError);
+                        console.log('[DailyPracticeApi] Error while fetching daily exam questions:', questionError);
                         return {
                             error: {
                                 status: "CUSTOM_ERROR",
@@ -111,6 +114,8 @@ export const dailyPracticeApi = createApi({
                             },
                         };
                     }
+
+                    console.log('[DailyPracticeApi] Fetched', questions.length, 'questions');
 
                     return {
                         data: {
@@ -120,8 +125,7 @@ export const dailyPracticeApi = createApi({
                         },
                     };
                 } catch (error) {
-                    console.log("In catch block of fetchDailyTestData");
-                    console.log(error);
+                    console.log('[DailyPracticeApi] Error in fetchDailyTestData:', error);
                     const e = error as { message?: string };
                     return {
                         error: {
@@ -137,12 +141,13 @@ export const dailyPracticeApi = createApi({
         // Start the session for RC
         startDailyRCSession: builder.mutation<PracticeSession, StartDailySessionQuery>({
             queryFn: async ({ user_id, paper_id, passage_ids, question_ids }) => {
+                console.log('[DailyPracticeApi] startDailyRCSession called for user:', user_id);
                 try {
                     // Step 1: Get current user
                     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
                     if (userError || !user) {
-                        console.log("User is not logged in !!");
+                        console.log('[DailyPracticeApi] User is not authenticated');
                         return {
                             error: {
                                 status: "UNAUTHORIZED",
@@ -165,8 +170,7 @@ export const dailyPracticeApi = createApi({
                         .select();
 
                     if (error) {
-                        console.log("Error while creating daily RC session");
-                        console.log(error);
+                        console.log('[DailyPracticeApi] Error while creating daily RC session:', error);
                         return {
                             error: {
                                 status: "CUSTOM_ERROR",
@@ -175,10 +179,10 @@ export const dailyPracticeApi = createApi({
                         };
                     }
 
+                    console.log('[DailyPracticeApi] RC session created:', data[0].id);
                     return { data: data[0] };
                 } catch (error) {
-                    console.log("In catch block of startDailyRCSession");
-                    console.log(error);
+                    console.log('[DailyPracticeApi] Error in startDailyRCSession:', error);
                     const e = error as { message?: string };
                     return {
                         error: {
@@ -194,12 +198,13 @@ export const dailyPracticeApi = createApi({
         // Start the session for VA
         startDailyVASession: builder.mutation<PracticeSession, StartDailySessionQuery>({
             queryFn: async ({ user_id, paper_id, passage_ids, question_ids }) => {
+                console.log('[DailyPracticeApi] startDailyVASession called for user:', user_id);
                 try {
                     // Step 1: Get current user
                     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
                     if (userError || !user) {
-                        console.log("User is not logged in !!");
+                        console.log('[DailyPracticeApi] User is not authenticated');
                         return {
                             error: {
                                 status: "UNAUTHORIZED",
@@ -222,8 +227,7 @@ export const dailyPracticeApi = createApi({
                         .select();
 
                     if (error) {
-                        console.log("Error while creating daily VA session");
-                        console.log(error);
+                        console.log('[DailyPracticeApi] Error while creating daily VA session:', error);
                         return {
                             error: {
                                 status: "CUSTOM_ERROR",
@@ -232,10 +236,10 @@ export const dailyPracticeApi = createApi({
                         };
                     }
 
+                    console.log('[DailyPracticeApi] VA session created:', data[0].id);
                     return { data: data[0] };
                 } catch (error) {
-                    console.log("In catch block of startDailyVASession");
-                    console.log(error);
+                    console.log('[DailyPracticeApi] Error in startDailyVASession:', error);
                     const e = error as { message?: string };
                     return {
                         error: {
@@ -252,12 +256,13 @@ export const dailyPracticeApi = createApi({
         fetchExistingSessionDetails: builder.query<
             { session: PracticeSession; attempts: QuestionAttempt[] },FetchExistingSessionQuery>({
             queryFn: async ({ user_id, paper_id, session_type }) => {
+                console.log('[DailyPracticeApi] fetchExistingSessionDetails called for session type:', session_type);
                 try {
                     // Step 1: Get current user
                     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
                     if (userError || !user) {
-                        console.log("User is not logged in !!");
+                        console.log('[DailyPracticeApi] User is not authenticated');
                         return {
                             error: {
                                 status: "UNAUTHORIZED",
@@ -278,8 +283,7 @@ export const dailyPracticeApi = createApi({
                         .limit(1);
 
                     if (sessionError) {
-                        console.log("Error while fetching existing session");
-                        console.log(sessionError);
+                        console.log('[DailyPracticeApi] Error while fetching existing session:', sessionError);
                         return {
                             error: {
                                 status: "CUSTOM_ERROR",
@@ -289,6 +293,7 @@ export const dailyPracticeApi = createApi({
                     }
 
                     if (!sessionData || sessionData.length === 0) {
+                        console.log('[DailyPracticeApi] No existing session found');
                         return {
                             error: {
                                 status: "NOT_FOUND",
@@ -298,6 +303,7 @@ export const dailyPracticeApi = createApi({
                     }
 
                     const session = sessionData[0];
+                    console.log('[DailyPracticeApi] Found existing session:', session.id);
 
                     // Step 3: Fetch all attempts for this session
                     const { data: attemptsData, error: attemptsError } = await supabase
@@ -306,8 +312,7 @@ export const dailyPracticeApi = createApi({
                         .eq("session_id", session.id);
 
                     if (attemptsError) {
-                        console.log("Error while fetching question attempts");
-                        console.log(attemptsError);
+                        console.log('[DailyPracticeApi] Error while fetching question attempts:', attemptsError);
                         return {
                             error: {
                                 status: "CUSTOM_ERROR",
@@ -316,6 +321,7 @@ export const dailyPracticeApi = createApi({
                         };
                     }
 
+                    console.log('[DailyPracticeApi] Fetched', attemptsData?.length || 0, 'existing attempts');
                     return {
                         data: {
                             session: session,
@@ -323,8 +329,7 @@ export const dailyPracticeApi = createApi({
                         },
                     };
                 } catch (error) {
-                    console.log("In catch block of fetchExistingSessionDetails");
-                    console.log(error);
+                    console.log('[DailyPracticeApi] Error in fetchExistingSessionDetails:', error);
                     const e = error as { message?: string };
                     return {
                         error: {
@@ -349,12 +354,14 @@ export const dailyPracticeApi = createApi({
                 score_percentage,
                 current_question_index,
             }) => {
+                console.log('[DailyPracticeApi] saveSessionDetails called for session:', session_id);
+                console.log('[DailyPracticeApi] Session status:', status, 'Time spent:', time_spent_seconds, 'Score:', score_percentage);
                 try {
                     // Step 1: Get current user
                     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
                     if (userError || !user) {
-                        console.log("User is not logged in !!");
+                        console.log('[DailyPracticeApi] User is not authenticated');
                         return {
                             error: {
                                 status: "UNAUTHORIZED",
@@ -385,8 +392,7 @@ export const dailyPracticeApi = createApi({
                         .select();
 
                     if (error) {
-                        console.log("Error while saving session details");
-                        console.log(error);
+                        console.log('[DailyPracticeApi] Error while saving session details:', error);
                         return {
                             error: {
                                 status: "CUSTOM_ERROR",
@@ -395,10 +401,10 @@ export const dailyPracticeApi = createApi({
                         };
                     }
 
+                    console.log('[DailyPracticeApi] Session details saved successfully');
                     return { data: data[0] };
                 } catch (error) {
-                    console.log("In catch block of saveSessionDetails");
-                    console.log(error);
+                    console.log('[DailyPracticeApi] Error in saveSessionDetails:', error);
                     const e = error as { message?: string };
                     return {
                         error: {
@@ -414,12 +420,13 @@ export const dailyPracticeApi = createApi({
         // Save question attempts (batch upsert)
         saveQuestionAttempts: builder.mutation<QuestionAttempt[], SaveQuestionAttemptsQuery>({
             queryFn: async ({ attempts }) => {
+                console.log('[DailyPracticeApi] saveQuestionAttempts called with', attempts.length, 'attempts');
                 try {
                     // Step 1: Get current user
                     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
                     if (userError || !user) {
-                        console.log("User is not logged in !!");
+                        console.log('[DailyPracticeApi] User is not authenticated');
                         return {
                             error: {
                                 status: "UNAUTHORIZED",
@@ -435,8 +442,7 @@ export const dailyPracticeApi = createApi({
                         .select();
 
                     if (error) {
-                        console.log("Error while saving question attempts");
-                        console.log(error);
+                        console.log('[DailyPracticeApi] Error while saving question attempts:', error);
                         return {
                             error: {
                                 status: "CUSTOM_ERROR",
@@ -445,10 +451,10 @@ export const dailyPracticeApi = createApi({
                         };
                     }
 
+                    console.log('[DailyPracticeApi] Question attempts saved successfully');
                     return { data: data || [] };
                 } catch (error) {
-                    console.log("In catch block of saveQuestionAttempts");
-                    console.log(error);
+                    console.log('[DailyPracticeApi] Error in saveQuestionAttempts:', error);
                     const e = error as { message?: string };
                     return {
                         error: {

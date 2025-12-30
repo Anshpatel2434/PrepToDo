@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-import { MdArrowForward, MdChevronLeft, MdChevronRight } from "react-icons/md";
+import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 import { useTheme } from "../../../../context/ThemeContext";
 import { FloatingNavigation } from "../../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../../ui_components/ThemeToggle";
@@ -28,7 +28,7 @@ import {
 } from "../../redux_usecase/dailyPracticeSlice";
 import { QuestionPalette } from "../../components/QuestionPalette";
 import { QuestionPanel } from "../../components/QuestionPanel";
-import type { Question, Option } from "../../../../types";
+import type { Question, QuestionAttempt, UUID } from "../../../../types";
 import { useSaveSessionDetailsMutation, useSaveQuestionAttemptsMutation } from "../../redux_usecase/dailyPracticeApi";
 
 const DailyVAPage: React.FC = () => {
@@ -40,114 +40,44 @@ const DailyVAPage: React.FC = () => {
     // Get session data from location state
     const { sessionId, testData, existingAttempts } = location.state || {};
 
-    // Local state
+    // UI state only (questions come from testData)
     const [isLoading, setIsLoading] = useState(true);
     const [showPalette, setShowPalette] = useState(true);
-    const [questions, setQuestions] = useState<Question[]>([]);
 
-    // Redux state
-    const viewMode = useSelector(selectViewMode);
-    const currentQuestionIndex = useSelector(selectCurrentQuestionIndex);
-    const attempts = useSelector(selectAttempts);
-    const isFirstQuestion = useSelector(selectIsFirstQuestion);
-    const isLastQuestion = useSelector(selectIsLastQuestion);
-    const elapsedTime = useSelector(selectElapsedTime);
-    const startTime = useSelector(selectStartTime);
-    const selectedOption = useSelector(selectSelectedOption);
-
-    // API mutations
-    const [saveSessionDetails] = useSaveSessionDetailsMutation();
-    const [saveQuestionAttempts] = useSaveQuestionAttemptsMutation();
+    // Derived state from testData (immutable during session)
+    const questions: Question[] = testData?.questions.filter((q: Question) =>
+        q.passage_id === null && q.question_type !== 'rc_question'
+    ) || [];
 
     const currentQuestion = questions[currentQuestionIndex];
-
-    // Helper function to transform options from API format to Option[] format
-    const transformOptions = (options: any): Option[] => {
-        if (!options) return [];
-        
-        if (Array.isArray(options)) {
-            // If already in array format, transform to Option format
-            return options.map((option, index) => ({
-                id: String.fromCharCode(65 + index), // A, B, C, D, etc.
-                text: typeof option === 'string' ? option : option.text || String(option),
-            }));
-        } else if (typeof options === 'object') {
-            // If in object format (e.g., {A: "text", B: "text"}), transform to array
-            return Object.entries(options).map(([key, value]) => ({
-                id: key,
-                text: typeof value === 'string' ? value : String(value),
-            }));
-        }
-        
-        return [];
-    };
-
-    // Helper function to extract sentences for para jumble and odd one out questions
-    const getSentencesForQuestion = (question: Question): string[] | undefined => {
-        if (!question || !question.question_text) return undefined;
-        
-        // For para jumble questions, extract sentences from question text or options
-        if (question.question_type === 'para_jumble') {
-            if (question.options && Array.isArray(question.options)) {
-                return question.options.map(opt => 
-                    typeof opt === 'string' ? opt : opt.text || String(opt)
-                );
-            }
-        }
-        
-        // For odd one out questions
-        if (question.question_type === 'odd_one_out') {
-            if (question.options && Array.isArray(question.options)) {
-                return question.options.map(opt => 
-                    typeof opt === 'string' ? opt : opt.text || String(opt)
-                );
-            }
-        }
-        
-        return undefined;
-    };
 
     // Initialize session
     useEffect(() => {
         const initSession = async () => {
+            console.log('[DailyVAPage] Initializing VA session');
             setIsLoading(true);
 
             if (!testData || !sessionId) {
-                console.error('No test data or session ID');
+                console.error('[DailyVAPage] No test data or session ID');
                 navigate('/daily');
                 return;
             }
 
-            // Filter VA questions (questions without passage_id)
-            const vaQuestions = testData.questions.filter((q: Question) => 
-                q.passage_id === null && q.question_type !== 'rc_question'
-            );
-
-            setQuestions(vaQuestions);
+            console.log('[DailyVAPage] Session ID:', sessionId);
+            console.log('[DailyVAPage] Total VA questions:', questions.length);
 
             // Initialize Redux with question IDs and existing attempts if available
-            const questionIds = vaQuestions.map((q: Question) => q.id);
-            
-            if (existingAttempts && Object.keys(existingAttempts).length > 0) {
-                // Transform existing attempts to the format expected by Redux
-                const transformedAttempts: Record<string, any> = {};
-                existingAttempts.forEach((attempt: any) => {
-                    transformedAttempts[attempt.question_id] = {
-                        user_id: attempt.user_id,
-                        session_id: attempt.session_id,
-                        question_id: attempt.question_id,
-                        passage_id: attempt.passage_id,
-                        user_answer: attempt.user_answer,
-                        is_correct: attempt.is_correct,
-                        time_spent_seconds: attempt.time_spent_seconds,
-                        confidence_level: attempt.confidence_level,
-                        marked_for_review: attempt.marked_for_review,
-                        rationale_viewed: attempt.rationale_viewed,
-                        rationale_helpful: attempt.rationale_helpful,
-                        ai_feedback: attempt.ai_feedback,
-                    };
+            const questionIds = questions.map((q: Question) => q.id);
+
+            if (existingAttempts && existingAttempts.length > 0) {
+                // Transform existing attempts to format expected by Redux
+                console.log('[DailyVAPage] Loading existing attempts:', existingAttempts.length);
+                const transformedAttempts: Record<UUID, Omit<QuestionAttempt, 'id' | 'created_at'>> = {};
+                existingAttempts.forEach((attempt: QuestionAttempt) => {
+                    const { id, created_at, ...attemptData } = attempt;
+                    transformedAttempts[attempt.question_id] = attemptData;
                 });
-                
+
                 dispatch(initializeSessionWithAttempts({
                     questionIds,
                     currentIndex: 0,
@@ -155,6 +85,7 @@ const DailyVAPage: React.FC = () => {
                     attempts: transformedAttempts,
                 }));
             } else {
+                console.log('[DailyVAPage] No existing attempts, initializing fresh session');
                 dispatch(initializeSession({
                     questionIds,
                     currentIndex: 0,
@@ -169,14 +100,18 @@ const DailyVAPage: React.FC = () => {
         };
 
         initSession();
-    }, [dispatch, testData, sessionId, navigate]);
+    }, [dispatch, testData, sessionId, navigate, questions, existingAttempts]);
 
     // Handle save progress
-    const handleSaveProgress = async () => {
-        if (!sessionId) return;
+    const handleSaveProgress = useCallback(async () => {
+        console.log('[DailyVAPage] handleSaveProgress called');
+        if (!sessionId) {
+            console.error('[DailyVAPage] No session ID');
+            return;
+        }
 
         try {
-            // Calculate stats
+            // Calculate stats from attempts (QuestionAttempt type)
             const answeredCount = Object.values(attempts).filter(
                 (a) => {
                     const userAnswer = a.user_answer as any;
@@ -185,6 +120,8 @@ const DailyVAPage: React.FC = () => {
             ).length;
             const correctCount = Object.values(attempts).filter(a => a.is_correct).length;
             const scorePercentage = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
+
+            console.log('[DailyVAPage] Saving session - Questions:', questions.length, 'Answered:', answeredCount, 'Correct:', correctCount, 'Score:', scorePercentage);
 
             // Save session details
             await saveSessionDetails({
@@ -200,23 +137,38 @@ const DailyVAPage: React.FC = () => {
 
             // Save question attempts
             if (Object.keys(attempts).length > 0) {
+                const attemptsToSave = Object.values(attempts).map((attempt) => ({
+                    ...attempt,
+                    // Add missing required fields for database
+                    user_answer: attempt.user_answer as any,
+                    marked_for_review: attempt.marked_for_review ?? false,
+                    rationale_viewed: attempt.rationale_viewed ?? false,
+                    rationale_helpful: attempt.rationale_helpful ?? null,
+                    ai_feedback: attempt.ai_feedback ?? null,
+                }));
                 await saveQuestionAttempts({
-                    attempts: Object.values(attempts),
+                    attempts: attemptsToSave,
                 });
             }
+
+            console.log('[DailyVAPage] Progress saved successfully');
         } catch (error) {
-            console.error('Error saving progress:', error);
+            console.error('[DailyVAPage] Error saving progress:', error);
         }
-    };
+    }, [sessionId, attempts, elapsedTime, viewMode, currentQuestionIndex, questions.length, saveSessionDetails, saveQuestionAttempts]);
 
     // Timer effect
     useEffect(() => {
         if (viewMode === 'exam' && !isLoading) {
+            console.log('[DailyVAPage] Starting timer');
             const timer = setInterval(() => {
                 dispatch(incrementElapsedTime());
             }, 1000);
 
-            return () => clearInterval(timer);
+            return () => {
+                console.log('[DailyVAPage] Stopping timer');
+                clearInterval(timer);
+            };
         }
     }, [dispatch, viewMode, isLoading]);
 
@@ -225,6 +177,7 @@ const DailyVAPage: React.FC = () => {
         const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
             // Save current state
             if (viewMode === 'exam' && Object.keys(attempts).length > 0) {
+                console.log('[DailyVAPage] User is leaving page, saving progress');
                 e.preventDefault();
                 e.returnValue = '';
 
@@ -235,21 +188,26 @@ const DailyVAPage: React.FC = () => {
 
         window.addEventListener('beforeunload', handleBeforeUnload);
         return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-    }, [attempts, currentQuestionIndex, elapsedTime, viewMode, sessionId, handleSaveProgress]);
+    }, [attempts, viewMode, handleSaveProgress]);
 
     // Handle submit session
-    const handleSubmitSession = async () => {
+    const handleSubmitSession = useCallback(async () => {
+        console.log('[DailyVAPage] Submitting session');
         await handleSaveProgress();
         dispatch(setViewMode('solution'));
-    };
+    }, [handleSaveProgress, dispatch]);
 
     // Handle save and next
     const handleSaveAndNext = useCallback(async () => {
-        if (!currentQuestion || !sessionId) return;
+        if (!currentQuestion || !sessionId) {
+            console.error('[DailyVAPage] No current question or session ID');
+            return;
+        }
 
         // Determine correct answer from question data
         const correctAnswer = currentQuestion.correct_answer;
-        
+        console.log('[DailyVAPage] Saving answer for question:', currentQuestion.id);
+
         // Update attempt in Redux
         dispatch(submitAnswer({
             user_id: 'user-id', // Will be replaced with actual user ID
@@ -277,11 +235,16 @@ const DailyVAPage: React.FC = () => {
                 await handleSubmitSession();
             }
         }
-    }, [dispatch, currentQuestion, sessionId, startTime, isLastQuestion, attempts, questions.length, handleSubmitSession]);
+    }, [dispatch, currentQuestion, sessionId, isLastQuestion, attempts, questions.length, handleSubmitSession]);
 
     // Handle mark for review and next
     const handleMarkAndNext = useCallback(() => {
-        if (!currentQuestion || !sessionId) return;
+        if (!currentQuestion || !sessionId) {
+            console.error('[DailyVAPage] No current question or session ID');
+            return;
+        }
+
+        console.log('[DailyVAPage] Marking question for review:', currentQuestion.id);
 
         dispatch(toggleMarkForReview({
             user_id: 'user-id',
@@ -298,18 +261,21 @@ const DailyVAPage: React.FC = () => {
     }, [dispatch, currentQuestion, sessionId, isLastQuestion]);
 
     const handlePreviousQuestion = useCallback(() => {
+        console.log('[DailyVAPage] Going to previous question');
         if (!isFirstQuestion) {
             dispatch(goToPreviousQuestion());
         }
     }, [dispatch, isFirstQuestion]);
 
     const handleNextQuestion = useCallback(() => {
+        console.log('[DailyVAPage] Going to next question');
         if (!isLastQuestion) {
             dispatch(goToNextQuestion());
         }
     }, [dispatch, isLastQuestion]);
 
     const handleClearResponse = useCallback(() => {
+        console.log('[DailyVAPage] Clearing response');
         dispatch(clearResponse());
     }, [dispatch]);
 
@@ -441,7 +407,7 @@ const DailyVAPage: React.FC = () => {
             {/* Main Content */}
             <div className="pt-16 h-screen flex overflow-hidden relative">
                 {/* Question Panel - Full width without passage */}
-                <div 
+                <div
                     className={`
                         flex-1 h-full overflow-hidden
                         transition-all duration-300
@@ -450,21 +416,7 @@ const DailyVAPage: React.FC = () => {
                 >
                     <div className="max-w-4xl mx-auto p-6 h-full overflow-y-auto">
                         {currentQuestion && (
-                            <QuestionPanel
-                                question={{
-                                    id: currentQuestion.id,
-                                    passageId: null,
-                                    questionType: currentQuestion.question_type as any,
-                                    questionText: currentQuestion.question_text,
-                                    options: transformOptions(currentQuestion.options),
-                                    sentences: getSentencesForQuestion(currentQuestion),
-                                    correctAnswer: currentQuestion.correct_answer,
-                                    rationale: currentQuestion.rationale,
-                                    difficulty: currentQuestion.difficulty as any,
-                                    tags: currentQuestion.tags || [],
-                                }}
-                                isDark={isDark}
-                            />
+                            <QuestionPanel question={currentQuestion} isDark={isDark} />
                         )}
                     </div>
                 </div>
@@ -499,165 +451,169 @@ const DailyVAPage: React.FC = () => {
 
                 {/* Question Palette (Right Sidebar) */}
                 <AnimatePresence>
-                    {showPalette && <QuestionPalette isDark={isDark} />}
-                </AnimatePresence>
-            </div>
-
-            {/* Bottom Navigation Footer */}
-            <motion.footer
-                className={`
-                    fixed bottom-0 left-0 right-0 z-30
-                    backdrop-blur-xl border-t
-                    ${
-                        isDark
-                            ? "bg-bg-primary-dark/90 border-border-dark"
-                            : "bg-bg-primary-light/90 border-border-light"
-                    }
-                `}
-                initial={{ y: 60 }}
-                animate={{ y: 0 }}
-                transition={{ duration: 0.3 }}
-            >
-                {isExamMode ? (
-                    // Exam Mode Footer
-                    <div className="px-6 py-4 flex items-center justify-between">
-                        {/* Left Section: Mark for Review and Next + Clear Response */}
-                        <div className="flex items-center gap-3">
-                            <motion.button
-                                onClick={handleMarkAndNext}
-                                className={`
-                                    flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium border-2
-                                    transition-all duration-200
-                                    ${
-                                        isDark
-                                            ? "border-brand-primary-dark text-brand-primary-dark hover:bg-brand-primary-dark/10"
-                                            : "border-brand-primary-light text-brand-primary-light hover:bg-brand-primary-light/10"
-                                    }
-                                `}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                            >
-                                Mark for Review & Next
-                            </motion.button>
-                            <motion.button
-                                onClick={handleClearResponse}
-                                className={`
-                                    px-4 py-2.5 rounded-lg font-medium border
-                                    transition-all duration-200
-                                    ${
-                                        isDark
-                                            ? "border-border-dark text-text-secondary-dark hover:bg-bg-tertiary-dark"
-                                            : "border-border-light text-text-secondary-light hover:bg-bg-tertiary-light"
-                                    }
-                                `}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                            >
-                                Clear Response
-                            </motion.button>
-                        </div>
-
-                        {/* Right Section: Save and Next + Submit */}
-                        <div className="flex items-center gap-3">
-                            <motion.button
-                                onClick={handleSaveAndNext}
-                                disabled={!selectedOption}
-                                className={`
-                                    flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium
-                                    transition-all duration-200
-                                    ${
-                                        !selectedOption
-                                            ? "opacity-50 cursor-not-allowed"
-                                            : isDark
-                                            ? "bg-bg-tertiary-dark text-text-primary-dark hover:bg-bg-secondary-dark"
-                                            : "bg-bg-tertiary-light text-text-primary-light hover:bg-bg-secondary-light"
-                                    }
-                                `}
-                                whileHover={selectedOption ? { scale: 1.02 } : {}}
-                                whileTap={selectedOption ? { scale: 0.98 } : {}}
-                            >
-                                Save & Next
-                                <MdArrowForward className="w-5 h-5" />
-                            </motion.button>
-                            <motion.button
-                                onClick={handleSubmitSession}
-                                className={`
-                                    px-6 py-2.5 rounded-lg font-medium text-white
-                                    transition-all duration-200
-                                    ${
-                                        isDark
-                                            ? "bg-brand-primary-dark hover:bg-brand-primary-hover-dark"
-                                            : "bg-brand-primary-light hover:bg-brand-primary-hover-light"
-                                    }
-                                `}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                            >
-                                Submit
-                            </motion.button>
-                        </div>
-                    </div>
-                ) : (
-                    // Solution Mode Footer
-                    <div className="px-6 py-4 flex items-center justify-between">
-                        {/* Left: Previous Button */}
-                        <motion.button
-                            onClick={handlePreviousQuestion}
-                            disabled={isFirstQuestion}
+                    {showPalette && (
+                        <motion.div
+                            initial={{ x: 300, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: 300, opacity: 0 }}
+                            transition={{ duration: 0.3 }}
                             className={`
-                                flex items-center gap-2 px-6 py-3 rounded-xl font-medium
-                                transition-all duration-200
+                                w-64 h-full border-l overflow-y-auto
                                 ${
-                                    isFirstQuestion
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : isDark
-                                        ? "bg-bg-tertiary-dark text-text-primary-dark hover:bg-bg-secondary-dark"
-                                        : "bg-bg-tertiary-light text-text-primary-light hover:bg-bg-secondary-light"
-                                }
-                            `}
-                            whileHover={!isFirstQuestion ? { scale: 1.02 } : {}}
-                            whileTap={!isFirstQuestion ? { scale: 0.98 } : {}}
-                        >
-                            Previous
-                        </motion.button>
-
-                        {/* Center: Question Info */}
-                        <div className="text-sm font-medium">
-                            <span
-                                className={
                                     isDark
-                                        ? "text-text-secondary-dark"
-                                        : "text-text-secondary-light"
-                                }
-                            >
-                                Question {currentQuestionIndex + 1} of {questions.length}
-                            </span>
-                        </div>
-
-                        {/* Right: Next Button */}
-                        <motion.button
-                            onClick={handleNextQuestion}
-                            disabled={isLastQuestion}
-                            className={`
-                                flex items-center gap-2 px-6 py-3 rounded-xl font-medium
-                                transition-all duration-200
-                                ${
-                                    isLastQuestion
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : isDark
-                                        ? "bg-brand-primary-dark text-white hover:bg-brand-primary-hover-dark"
-                                        : "bg-brand-primary-light text-white hover:bg-brand-primary-hover-light"
+                                        ? "bg-bg-secondary-dark border-border-dark scrollbar-dark"
+                                        : "bg-bg-secondary-light border-border-light scrollbar-light"
                                 }
                             `}
-                            whileHover={!isLastQuestion ? { scale: 1.02 } : {}}
-                            whileTap={!isLastQuestion ? { scale: 0.98 } : {}}
                         >
-                            Next
-                            <MdArrowForward className="w-5 h-5" />
-                        </motion.button>
-                    </div>
-                )}
-            </motion.footer>
+                            <QuestionPalette
+                                questions={questions}
+                                attempts={attempts}
+                                isDark={isDark}
+                            />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Footer */}
+                <motion.footer
+                    className={`
+                        fixed bottom-0 left-0 right-0 z-30 h-20
+                        backdrop-blur-xl border-t flex items-center justify-between px-6
+                        ${
+                            isDark
+                                ? "bg-bg-primary-dark/90 border-border-dark"
+                                : "bg-bg-primary-light/90 border-border-light"
+                        }
+                    `}
+                    initial={{ y: 80 }}
+                    animate={{ y: 0 }}
+                    transition={{ duration: 0.3 }}
+                >
+                    {isExamMode ? (
+                        <>
+                            {/* Left Section */}
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={handleMarkAndNext}
+                                    className={`
+                                        px-6 py-3 rounded-xl border-2 font-medium transition-all duration-200
+                                        ${
+                                            isDark
+                                                ? "border-brand-primary-dark text-brand-primary-dark hover:bg-brand-primary-dark/10"
+                                                : "border-brand-primary-light text-brand-primary-light hover:bg-brand-primary-light/10"
+                                        }
+                                    `}
+                                >
+                                    Mark for Review & Next
+                                </button>
+                                <button
+                                    onClick={handleClearResponse}
+                                    className={`
+                                        px-6 py-3 rounded-xl border-2 font-medium transition-all duration-200
+                                        ${
+                                            isDark
+                                                ? "border-border-dark text-text-secondary-dark hover:border-brand-primary-dark hover:text-brand-primary-dark"
+                                                : "border-border-light text-text-secondary-light hover:border-brand-primary-light hover:text-brand-primary-light"
+                                        }
+                                    `}
+                                >
+                                    Clear Response
+                                </button>
+                            </div>
+
+                            {/* Right Section */}
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={handleSaveAndNext}
+                                    disabled={!selectedOption}
+                                    className={`
+                                        px-6 py-3 rounded-xl font-medium transition-all duration-200
+                                        ${
+                                            selectedOption
+                                                ? isDark
+                                                    ? "bg-brand-primary-dark text-white hover:scale-105"
+                                                    : "bg-brand-primary-light text-white hover:scale-105"
+                                                : isDark
+                                                ? "bg-bg-tertiary-dark text-text-muted-dark cursor-not-allowed"
+                                                : "bg-bg-tertiary-light text-text-muted-light cursor-not-allowed"
+                                        }
+                                    `}
+                                >
+                                    Save & Next
+                                </button>
+                                <button
+                                    onClick={handleSubmitSession}
+                                    className={`
+                                        px-6 py-3 rounded-xl font-medium text-white transition-all duration-200
+                                        ${
+                                            isDark
+                                                ? "bg-success hover:scale-105"
+                                                : "bg-success hover:scale-105"
+                                        }
+                                    `}
+                                >
+                                    Submit
+                                </button>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            {/* Solution Mode Footer */}
+                            <div className="flex items-center gap-4">
+                                <button
+                                    onClick={handlePreviousQuestion}
+                                    disabled={isFirstQuestion}
+                                    className={`
+                                        px-6 py-3 rounded-xl border-2 font-medium transition-all duration-200
+                                        ${
+                                            !isFirstQuestion
+                                                ? isDark
+                                                    ? "border-border-dark text-text-secondary-dark hover:border-brand-primary-dark hover:text-brand-primary-dark"
+                                                    : "border-border-light text-text-secondary-light hover:border-brand-primary-light hover:text-brand-primary-light"
+                                                : isDark
+                                                ? "border-border-dark text-text-muted-dark cursor-not-allowed"
+                                                : "border-border-light text-text-muted-light cursor-not-allowed"
+                                        }
+                                    `}
+                                >
+                                    Previous
+                                </button>
+                                <span
+                                    className={`
+                                        px-4 py-2 rounded-lg
+                                        ${
+                                            isDark
+                                                ? "bg-bg-tertiary-dark text-text-secondary-dark"
+                                                : "bg-bg-tertiary-light text-text-secondary-light"
+                                        }
+                                    `}
+                                >
+                                    {currentQuestionIndex + 1} / {questions.length}
+                                </span>
+                                <button
+                                    onClick={handleNextQuestion}
+                                    disabled={isLastQuestion}
+                                    className={`
+                                        px-6 py-3 rounded-xl border-2 font-medium transition-all duration-200
+                                        ${
+                                            !isLastQuestion
+                                                ? isDark
+                                                    ? "border-border-dark text-text-secondary-dark hover:border-brand-primary-dark hover:text-brand-primary-dark"
+                                                    : "border-border-light text-text-secondary-light hover:border-brand-primary-light hover:text-brand-primary-light"
+                                                : isDark
+                                                ? "border-border-dark text-text-muted-dark cursor-not-allowed"
+                                                : "border-border-light text-text-muted-light cursor-not-allowed"
+                                        }
+                                    `}
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </motion.footer>
+            </div>
         </div>
     );
 };

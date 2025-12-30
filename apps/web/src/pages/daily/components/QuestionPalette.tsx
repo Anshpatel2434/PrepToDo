@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
+import type { Question } from "../../../types";
 import {
     selectAttempts,
     selectCurrentQuestionIndex,
@@ -10,12 +11,12 @@ import {
 } from "../redux_usecase/dailyPracticeSlice";
 
 interface QuestionPaletteProps {
+    questions: Question[];
     isDark: boolean;
 }
 
-export const QuestionPalette: React.FC<QuestionPaletteProps> = ({ isDark }) => {
+export const QuestionPalette: React.FC<QuestionPaletteProps> = ({ questions, isDark }) => {
     const dispatch = useDispatch();
-    const questionOrder = useSelector(selectQuestionOrder);
     const attempts = useSelector(selectAttempts);
     const currentIndex = useSelector(selectCurrentQuestionIndex);
     const viewMode = useSelector(selectViewMode);

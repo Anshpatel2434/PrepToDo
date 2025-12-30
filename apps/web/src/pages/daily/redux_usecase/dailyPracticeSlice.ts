@@ -47,6 +47,7 @@ const dailyPracticeSlice = createSlice({
     reducers: {
         // Mode management
         setViewMode: (state, action: PayloadAction<'exam' | 'solution'>) => {
+            console.log('[DailyPracticeSlice] setViewMode:', action.payload);
             state.viewMode = action.payload;
         },
         setSolutionViewType: (state, action: PayloadAction<'common' | 'personalized'>) => {
@@ -55,6 +56,7 @@ const dailyPracticeSlice = createSlice({
 
         // Navigation
         setCurrentQuestionIndex: (state, action: PayloadAction<number>) => {
+            console.log('[DailyPracticeSlice] setCurrentQuestionIndex:', action.payload);
             state.currentQuestionIndex = action.payload;
             const questionId = state.questionOrder[action.payload];
             if (questionId) {
@@ -64,9 +66,11 @@ const dailyPracticeSlice = createSlice({
                     const userAnswer = attempt.user_answer as any;
                     state.selectedOption = userAnswer?.user_answer ?? null;
                     state.confidenceLevel = attempt.confidence_level ?? null;
+                    console.log('[DailyPracticeSlice] Loaded existing attempt for question:', questionId);
                 } else {
                     state.selectedOption = null;
                     state.confidenceLevel = null;
+                    console.log('[DailyPracticeSlice] No existing attempt for question:', questionId);
                 }
             } else {
                 state.selectedOption = null;
@@ -76,6 +80,7 @@ const dailyPracticeSlice = createSlice({
         goToNextQuestion: (state) => {
             if (state.currentQuestionIndex < state.questionOrder.length - 1) {
                 state.currentQuestionIndex += 1;
+                console.log('[DailyPracticeSlice] goToNextQuestion:', state.currentQuestionIndex);
                 const questionId = state.questionOrder[state.currentQuestionIndex];
                 if (questionId) {
                     const attempt = state.attempts[questionId];
@@ -83,9 +88,11 @@ const dailyPracticeSlice = createSlice({
                         const userAnswer = attempt.user_answer as any;
                         state.selectedOption = userAnswer?.user_answer ?? null;
                         state.confidenceLevel = attempt.confidence_level ?? null;
+                        console.log('[DailyPracticeSlice] Loaded existing attempt for question:', questionId);
                     } else {
                         state.selectedOption = null;
                         state.confidenceLevel = null;
+                        console.log('[DailyPracticeSlice] No existing attempt for question:', questionId);
                     }
                 }
             }
@@ -93,6 +100,7 @@ const dailyPracticeSlice = createSlice({
         goToPreviousQuestion: (state) => {
             if (state.currentQuestionIndex > 0) {
                 state.currentQuestionIndex -= 1;
+                console.log('[DailyPracticeSlice] goToPreviousQuestion:', state.currentQuestionIndex);
                 const questionId = state.questionOrder[state.currentQuestionIndex];
                 if (questionId) {
                     const attempt = state.attempts[questionId];
@@ -100,9 +108,11 @@ const dailyPracticeSlice = createSlice({
                         const userAnswer = attempt.user_answer as any;
                         state.selectedOption = userAnswer?.user_answer ?? null;
                         state.confidenceLevel = attempt.confidence_level ?? null;
+                        console.log('[DailyPracticeSlice] Loaded existing attempt for question:', questionId);
                     } else {
                         state.selectedOption = null;
                         state.confidenceLevel = null;
+                        console.log('[DailyPracticeSlice] No existing attempt for question:', questionId);
                     }
                 }
             }
@@ -110,22 +120,26 @@ const dailyPracticeSlice = createSlice({
 
         // Answer selection
         setSelectedOption: (state, action: PayloadAction<string | null>) => {
+            console.log('[DailyPracticeSlice] setSelectedOption:', action.payload);
             state.selectedOption = action.payload;
         },
 
         // Clear response for current question
         clearResponse: (state) => {
+            console.log('[DailyPracticeSlice] clearResponse');
             state.selectedOption = null;
             state.confidenceLevel = null;
             const questionId = state.questionOrder[state.currentQuestionIndex];
             if (questionId && state.attempts[questionId]) {
                 // Remove the attempt for current question
                 delete state.attempts[questionId];
+                console.log('[DailyPracticeSlice] Cleared attempt for question:', questionId);
             }
         },
 
         // Confidence level
         setConfidenceLevel: (state, action: PayloadAction<number | null>) => {
+            console.log('[DailyPracticeSlice] setConfidenceLevel:', action.payload);
             state.confidenceLevel = action.payload;
         },
 
@@ -149,6 +163,10 @@ const dailyPracticeSlice = createSlice({
             const userAnswerValue = state.selectedOption;
             const isCorrect = userAnswerValue === correct_answer;
 
+            console.log('[DailyPracticeSlice] submitAnswer for question:', questionId);
+            console.log('[DailyPracticeSlice] User answer:', userAnswerValue, 'Correct answer:', correct_answer, 'Is correct:', isCorrect);
+            console.log('[DailyPracticeSlice] Time spent on this attempt:', timeSpent, 'seconds');
+
             // Get existing attempt or create new structure
             const existingAttempt = state.attempts[questionId];
 
@@ -159,8 +177,8 @@ const dailyPracticeSlice = createSlice({
                 passage_id,
                 user_answer: { user_answer: userAnswerValue },
                 is_correct: isCorrect,
-                time_spent_seconds: existingAttempt?.time_spent_seconds 
-                    ? existingAttempt.time_spent_seconds + timeSpent 
+                time_spent_seconds: existingAttempt?.time_spent_seconds
+                    ? existingAttempt.time_spent_seconds + timeSpent
                     : timeSpent,
                 confidence_level: state.confidenceLevel,
                 marked_for_review: existingAttempt?.marked_for_review ?? false,
@@ -168,6 +186,8 @@ const dailyPracticeSlice = createSlice({
                 rationale_helpful: existingAttempt?.rationale_helpful ?? null,
                 ai_feedback: existingAttempt?.ai_feedback ?? null,
             };
+
+            console.log('[DailyPracticeSlice] Attempt saved to Redux state for question:', questionId);
         },
 
         // Mark for review
@@ -185,12 +205,15 @@ const dailyPracticeSlice = createSlice({
             const { user_id, session_id, passage_id } = action.payload;
             const existingAttempt = state.attempts[questionId];
             const currentMarkedStatus = existingAttempt?.marked_for_review ?? false;
+            const newMarkedStatus = !currentMarkedStatus;
+
+            console.log('[DailyPracticeSlice] toggleMarkForReview for question:', questionId, 'New status:', newMarkedStatus);
 
             if (existingAttempt) {
                 // Update existing attempt
                 state.attempts[questionId] = {
                     ...existingAttempt,
-                    marked_for_review: !currentMarkedStatus,
+                    marked_for_review: newMarkedStatus,
                 };
             } else {
                 // Create new attempt with marked status
@@ -209,6 +232,8 @@ const dailyPracticeSlice = createSlice({
                     ai_feedback: null,
                 };
             }
+
+            console.log('[DailyPracticeSlice] Attempt marked for review:', questionId);
         },
 
         // Update specific attempt fields
@@ -229,9 +254,11 @@ const dailyPracticeSlice = createSlice({
 
         // Timer
         setStartTime: (state, action: PayloadAction<number | null>) => {
+            console.log('[DailyPracticeSlice] setStartTime:', action.payload);
             state.startTime = action.payload;
         },
         setElapsedTime: (state, action: PayloadAction<number>) => {
+            console.log('[DailyPracticeSlice] setElapsedTime:', action.payload);
             state.elapsedTimeSeconds = action.payload;
         },
         incrementElapsedTime: (state) => {
@@ -256,18 +283,23 @@ const dailyPracticeSlice = createSlice({
             state,
             action: PayloadAction<QuestionAttempt[]>
         ) => {
+            console.log('[DailyPracticeSlice] loadExistingAttempts:', action.payload.length, 'attempts');
             const attemptsMap: Record<UUID, Omit<QuestionAttempt, 'id' | 'created_at'>> = {};
-            
+
             action.payload.forEach((attempt) => {
                 const { id, created_at, ...attemptData } = attempt;
                 attemptsMap[attempt.question_id] = attemptData;
             });
-            
+
             state.attempts = attemptsMap;
+            console.log('[DailyPracticeSlice] Loaded', Object.keys(attemptsMap).length, 'existing attempts into Redux state');
         },
 
         // Reset state
-        resetDailyPractice: () => initialState,
+        resetDailyPractice: () => {
+            console.log('[DailyPracticeSlice] resetDailyPractice');
+            return initialState;
+        },
 
         // Initialize practice session
         initializeSession: (
@@ -278,6 +310,7 @@ const dailyPracticeSlice = createSlice({
                 elapsedTime?: number;
             }>
         ) => {
+            console.log('[DailyPracticeSlice] initializeSession with', action.payload.questionIds.length, 'questions');
             state.questionOrder = action.payload.questionIds;
             state.currentQuestionIndex = action.payload.currentIndex ?? 0;
             state.startTime = Date.now();
@@ -287,6 +320,7 @@ const dailyPracticeSlice = createSlice({
             state.confidenceLevel = null;
             state.viewMode = 'exam';
             state.solutionViewType = 'common';
+            console.log('[DailyPracticeSlice] Session initialized with fresh state');
         },
 
         // Initialize practice session with existing attempts (for resuming)
@@ -299,6 +333,8 @@ const dailyPracticeSlice = createSlice({
                 attempts: Record<UUID, Omit<QuestionAttempt, 'id' | 'created_at'>>;
             }>
         ) => {
+            console.log('[DailyPracticeSlice] initializeSessionWithAttempts with', action.payload.questionIds.length, 'questions');
+            console.log('[DailyPracticeSlice] Loading', Object.keys(action.payload.attempts).length, 'existing attempts');
             state.questionOrder = action.payload.questionIds;
             state.currentQuestionIndex = action.payload.currentIndex ?? 0;
             state.startTime = Date.now();
@@ -308,6 +344,7 @@ const dailyPracticeSlice = createSlice({
             state.confidenceLevel = null;
             state.viewMode = 'exam';
             state.solutionViewType = 'common';
+            console.log('[DailyPracticeSlice] Session initialized with existing attempts');
         },
     },
 });

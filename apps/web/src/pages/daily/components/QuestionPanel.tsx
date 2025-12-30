@@ -31,6 +31,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 
 	const handleOptionSelect = useCallback(
 		(optionId: string) => {
+			console.log('[QuestionPanel] Option selected:', optionId);
 			if (!isExamMode) return;
 			dispatch(setSelectedOption(optionId));
 		},
@@ -63,6 +64,8 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 	const getSentencesForQuestion = (question: Question): Option[] => {
 		if (!question || !question.question_text) return [];
 
+		console.log('[QuestionPanel] Getting sentences for question type:', question.question_type);
+
 		// For para jumble questions, extract sentences from question text or options
 		if (
 			question.question_type === "para_jumble" ||
@@ -72,12 +75,14 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 				question.jumbled_sentences &&
 				typeof question.jumbled_sentences === "object"
 			) {
-				return Object.entries(question.jumbled_sentences).map(
+				const sentences = Object.entries(question.jumbled_sentences).map(
 					([key, value]) => ({
 						id: key,
 						text: typeof value === "string" ? value : String(value),
 					})
 				);
+				console.log('[QuestionPanel] Extracted', sentences.length, 'sentences');
+				return sentences;
 			}
 		}
 
@@ -157,8 +162,8 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 					<div className="flex items-start gap-3">
 						<span
 							className={`
-                            w-8 h-8 flex items-center justify-center rounded-lg font-semibold text-sm shrink-0
-                            ${
+                                w-8 h-8 flex items-center justify-center rounded-lg font-semibold text-sm shrink-0
+                                ${
 															isExamMode
 																? selectedOption === option.id
 																	? isDark
@@ -168,27 +173,26 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 																	? "bg-bg-secondary-dark text-text-muted-dark"
 																	: "bg-bg-secondary-light text-text-muted-light"
 																: ""
-														}
-                            ${
+															}
+                                ${
 															!isExamMode &&
-															question.correct_answer.correct_answer ===
-																option.id
+															question.correct_answer.correct_answer === option.id
 																? isDark
 																	? "bg-success text-white"
 																	: "bg-success text-white"
 																: ""
-														}
-                            ${
+															}
+                                ${
 															!isExamMode &&
 															selectedOption === option.id &&
-															question.correct_answer.correct_answer !==
-																option.id
+															question.correct_answer.correct_answer !== option.id
 																? isDark
 																	? "bg-error text-white"
 																	: "bg-error text-white"
 																: ""
-														}
-                        `}
+															}
+                                }
+                            `}
 						>
 							{option.id}
 						</span>
@@ -199,47 +203,48 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 		</div>
 	);
 
-	//use question_type to differentiate between renderParaJumble and oddOneOut, oddOneOut should also have an input field and the senteces are rendered in the same way
+	// Render para_jumble and odd_one_out (both use same rendering)
 	const renderParaJumble = () => (
 		<div className="space-y-4">
 			<div
 				className={`
-                p-4 rounded-xl border
-                ${
+                    p-4 rounded-xl border
+                    ${
 									isDark
 										? "bg-bg-tertiary-dark border-border-dark"
 										: "bg-bg-tertiary-light border-border-light"
 								}
-            `}
+                `}
 			>
 				<p
 					className={`
-                    text-sm font-medium mb-3
-                    ${
-											isDark
-												? "text-text-secondary-dark"
-												: "text-text-secondary-light"
-										}
-                `}
+                        text-sm font-medium mb-3
+                        ${
+													isDark
+														? "text-text-secondary-dark"
+														: "text-text-secondary-light"
+												}
+                    `}
 				>
-					Jumbled Sentences (1-4):
+					{question.question_type === "para_jumble"
+						? "Jumbled Sentences (1-4):"
+						: "Select the sentence that does NOT belong:"}
 				</p>
 				<div className="space-y-2">
-					{getSentencesForQuestion(question?.jumbled_sentences)?.map(
-						(sentence, index) => (
-							<div
-								key={index}
-								className={`
+					{getSentencesForQuestion(question)?.map((sentence, index) => (
+						<div
+							key={index}
+							className={`
                                 p-3 rounded-lg border
                                 ${
-																	isDark
-																		? "bg-bg-secondary-dark border-border-dark"
-																		: "bg-bg-secondary-light border-border-light"
-																}
+																isDark
+																	? "bg-bg-secondary-dark border-border-dark"
+																	: "bg-bg-secondary-light border-border-light"
+															}
                             `}
-							>
-								<span
-									className={`
+						>
+							<span
+								className={`
                                 inline-flex items-center justify-center w-6 h-6 rounded text-xs font-medium mr-2
                                 ${
 																	isDark
@@ -247,13 +252,12 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 																		: "bg-bg-tertiary-light text-text-muted-light"
 																}
                             `}
-								>
-									{sentence.id}
-								</span>
-								{sentence.text}
-							</div>
-						)
-					)}
+							>
+								{sentence.id}
+							</span>
+							{sentence.text}
+						</div>
+					))}
 				</div>
 			</div>
 
@@ -261,18 +265,20 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 				<div className="space-y-3">
 					<label
 						className={`
-                        block text-sm font-medium
-                        ${
+                            block text-sm font-medium
+                            ${
 													isDark
 														? "text-text-secondary-dark"
 														: "text-text-secondary-light"
 												}
-                    `}
+                        `}
 					>
-						Enter your sequence (e.g., 2143):
+						{question.question_type === "para_jumble"
+							? "Enter your sequence (e.g., 2143):"
+							: "Select the option (e.g., B):"}
 					</label>
 					<input
-						type="text"
+						type={question.question_type === "para_jumble" ? "text" : "text"}
 						value={jumbleSequence}
 						onChange={(e) => {
 							const value = e.target.value.replace(/[^1-4]/g, "");
@@ -281,7 +287,11 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 								dispatch(setSelectedOption(value));
 							}
 						}}
-						placeholder="Enter 4 digit sequence"
+						placeholder={
+							question.question_type === "para_jumble"
+								? "Enter 4 digit sequence"
+								: "Enter option letter"
+						}
 						maxLength={4}
 						className={`
                             w-full p-4 rounded-xl border-2 text-center text-xl tracking-widest font-mono
@@ -295,28 +305,30 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 					/>
 					<p
 						className={`
-                        text-xs
-                        ${
+                            text-xs
+                            ${
 													isDark
 														? "text-text-muted-dark"
 														: "text-text-muted-light"
 												}
-                    `}
+                        `}
 					>
-						Enter the order (1-4) in which sentences should appear
+						{question.question_type === "para_jumble"
+							? "Enter the order (1-4) in which sentences should appear"
+							: "Enter the letter of the sentence that doesn't belong"}
 					</p>
 				</div>
 			) : (
 				<div className="space-y-3">
 					<p
 						className={`
-                        text-sm font-medium
-                        ${
+                            text-sm font-medium
+                            ${
 													isDark
 														? "text-text-secondary-dark"
 														: "text-text-secondary-light"
 												}
-                    `}
+                        `}
 					>
 						Your Answer:{" "}
 						<span className="font-mono">
@@ -325,120 +337,21 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 					</p>
 					<p
 						className={`
-                        text-sm font-medium
-                        ${isDark ? "text-success" : "text-success"}
-                    `}
+                            text-sm font-medium
+                            ${isDark ? "text-success" : "text-success"}
+                        `}
 					>
 						Correct Answer:{" "}
-						<span className="font-mono">{question.correct_answer}</span>
+						<span className="font-mono">
+							{question.question_type === "para_jumble"
+								? question.correct_answer
+								: question.correct_answer}
+						</span>
 					</p>
 				</div>
 			)}
 		</div>
 	);
-
-	// const renderOddOneOut = () => (
-	// 	<div className="space-y-4">
-	// 		<p
-	// 			className={`
-	//             text-sm font-medium mb-3
-	//             ${
-	// 								isDark
-	// 									? "text-text-secondary-dark"
-	// 									: "text-text-secondary-light"
-	// 							}
-	//         `}
-	// 		>
-	// 			Select the sentence that does NOT belong:
-	// 		</p>
-	// 		<div className="space-y-3">
-	// 			{question.sentences?.map((sentence, index) => {
-	// 				const optionId = ["A", "B", "C", "D"][index] as string;
-	// 				const isSelected = selectedOption === optionId;
-	// 				const isCorrect = question.correctAnswer === optionId;
-	// 				const showResult = !isExamMode;
-
-	// 				let optionClass = `
-	//                     w-full p-4 rounded-xl border-2 text-left transition-all duration-200
-	//                 `;
-
-	// 				if (isExamMode) {
-	// 					optionClass += isSelected
-	// 						? isDark
-	// 							? "bg-brand-primary-dark/20 border-brand-primary-dark"
-	// 							: "bg-brand-primary-light/10 border-brand-primary-light"
-	// 						: isDark
-	// 						? "bg-bg-tertiary-dark border-border-dark hover:border-brand-primary-dark"
-	// 						: "bg-bg-tertiary-light border-border-light hover:border-brand-primary-light";
-	// 				} else if (showResult) {
-	// 					if (isCorrect) {
-	// 						optionClass += isDark
-	// 							? "bg-success/20 border-success"
-	// 							: "bg-success/10 border-success";
-	// 					} else if (isSelected && !isCorrect) {
-	// 						optionClass += isDark
-	// 							? "bg-error/20 border-error"
-	// 							: "bg-error/10 border-error";
-	// 					} else {
-	// 						optionClass += isDark
-	// 							? "bg-bg-tertiary-dark border-border-dark"
-	// 							: "bg-bg-tertiary-light border-border-light";
-	// 					}
-	// 				}
-
-	// 				return (
-	// 					<motion.button
-	// 						key={optionId}
-	// 						onClick={() => handleOptionSelect(optionId)}
-	// 						className={optionClass}
-	// 						disabled={!isExamMode}
-	// 						initial={{ opacity: 0, x: 20 }}
-	// 						animate={{ opacity: 1, x: 0 }}
-	// 						transition={{ delay: index * 0.1 }}
-	// 						whileHover={isExamMode ? { scale: 1.01 } : {}}
-	// 						whileTap={isExamMode ? { scale: 0.99 } : {}}
-	// 					>
-	// 						<div className="flex items-start gap-3">
-	// 							<span
-	// 								className={`
-	//                                 w-8 h-8 flex items-center justify-center rounded-lg font-semibold text-sm shrink-0
-	//                                 ${
-	// 																		isExamMode
-	// 																			? isSelected
-	// 																				? isDark
-	// 																					? "bg-brand-primary-dark text-white"
-	// 																					: "bg-brand-primary-light text-white"
-	// 																				: isDark
-	// 																				? "bg-bg-secondary-dark text-text-muted-dark"
-	// 																				: "bg-bg-secondary-light text-text-muted-light"
-	// 																			: ""
-	// 																	}
-	//                                 ${
-	// 																		!isExamMode && isCorrect
-	// 																			? isDark
-	// 																				? "bg-success text-white"
-	// 																				: "bg-success text-white"
-	// 																			: ""
-	// 																	}
-	//                                 ${
-	// 																		!isExamMode && isSelected && !isCorrect
-	// 																			? isDark
-	// 																				? "bg-error text-white"
-	// 																				: "bg-error text-white"
-	// 																			: ""
-	// 																	}
-	//                             `}
-	// 							>
-	// 								{optionId}
-	// 							</span>
-	// 							<span className="flex-1">{sentence}</span>
-	// 						</div>
-	// 					</motion.button>
-	// 				);
-	// 			})}
-	// 		</div>
-	// 	</div>
-	// );
 
 	const renderSolutionContent = () => {
 		const rationale =
@@ -462,13 +375,13 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 				<div className="flex items-center justify-between mb-4">
 					<h4
 						className={`
-                        font-semibold
-                        ${
+                            font-semibold
+                            ${
 													isDark
 														? "text-text-primary-dark"
 														: "text-text-primary-light"
 												}
-                    `}
+                        `}
 					>
 						{solutionViewType === "personalized"
 							? "AI Insight"
@@ -481,8 +394,8 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 				</div>
 				<p
 					className={`
-                    leading-relaxed
-                    ${
+                        leading-relaxed
+                        ${
 											isDark
 												? "text-text-secondary-dark"
 												: "text-text-secondary-light"
@@ -495,54 +408,54 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 				{/* Analysis Panel */}
 				<div
 					className={`
-                    mt-6 pt-4 border-t space-y-3
-                    ${isDark ? "border-border-dark" : "border-border-light"}
-                `}
+                        mt-6 pt-4 border-t space-y-3
+                        ${isDark ? "border-border-dark" : "border-border-light"}
+                    `}
 				>
 					<h5
 						className={`
-                        text-sm font-semibold uppercase tracking-wide
-                        ${
+                            text-sm font-semibold uppercase tracking-wide
+                            ${
 													isDark
 														? "text-text-muted-dark"
 														: "text-text-muted-light"
 												}
-                    `}
+                        `}
 					>
 						Analysis
 					</h5>
 					<div className="grid grid-cols-2 gap-4">
 						<div
 							className={`
-                            p-3 rounded-lg
-                            ${
+                                p-3 rounded-lg
+                                ${
 															isDark
 																? "bg-bg-tertiary-dark"
 																: "bg-bg-tertiary-light"
 														}
-                        `}
+                            `}
 						>
 							<p
 								className={`
-                                text-xs
-                                ${
-																	isDark
-																		? "text-text-muted-dark"
-																		: "text-text-muted-light"
-																}
-                            `}
+                                    text-xs
+                                    ${
+																isDark
+																	? "text-text-muted-dark"
+																	: "text-text-muted-light"
+															}
+                                `}
 							>
 								Difficulty
 							</p>
 							<p
 								className={`
-                                font-semibold capitalize
-                                ${
-																	isDark
-																		? "text-text-primary-dark"
-																		: "text-text-primary-light"
-																}
-                            `}
+                                    font-semibold capitalize
+                                    ${
+																isDark
+																	? "text-text-primary-dark"
+																	: "text-text-primary-light"
+															}
+                                `}
 							>
 								{question.difficulty || "Medium"}
 							</p>
@@ -550,23 +463,23 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 						{question.tags && question.tags.length > 0 && (
 							<div
 								className={`
-                                p-3 rounded-lg
-                                ${
-																	isDark
-																		? "bg-bg-tertiary-dark"
-																		: "bg-bg-tertiary-light"
-																}
-                            `}
+                                    p-3 rounded-lg
+                                    ${
+															isDark
+																? "bg-bg-tertiary-dark"
+																: "bg-bg-tertiary-light"
+														}
+                                `}
 							>
 								<p
 									className={`
-                                    text-xs
-                                    ${
+                                        text-xs
+                                        ${
 																			isDark
 																				? "text-text-muted-dark"
 																				: "text-text-muted-light"
 																		}
-                                `}
+                                    `}
 								>
 									Topics
 								</p>
@@ -577,10 +490,10 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 											className={`
                                                 text-xs px-2 py-0.5 rounded
                                                 ${
-																									isDark
-																										? "bg-brand-primary-dark/30 text-brand-primary-dark"
-																										: "bg-brand-primary-light/20 text-brand-primary-light"
-																								}
+																					isDark
+																						? "bg-brand-primary-dark/30 text-brand-primary-dark"
+																						: "bg-brand-primary-light/20 text-brand-primary-light"
+																				}
                                             `}
 										>
 											{tag}
@@ -598,22 +511,22 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 	return (
 		<div
 			className={`
-            h-full overflow-y-auto
-            ${isDark ? "scrollbar-dark" : "scrollbar-light"}
-        `}
+                h-full overflow-y-auto
+                ${isDark ? "scrollbar-dark" : "scrollbar-light"}
+            `}
 		>
 			<div className="p-6 space-y-6">
 				{/* Question Type Badge */}
 				<div className="flex items-center gap-2">
 					<span
 						className={`
-                        px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wide
-                        ${
+                            px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wide
+                            ${
 													isDark
 														? "bg-brand-primary-dark/30 text-brand-primary-dark"
 														: "bg-brand-primary-light/20 text-brand-primary-light"
 												}
-                    `}
+                        `}
 					>
 						{question.question_type === "rc_question"
 							? "Reading Comprehension"
@@ -630,8 +543,8 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 					{question.difficulty && (
 						<span
 							className={`
-                            px-3 py-1 rounded-full text-xs font-medium capitalize
-                            ${
+                                px-3 py-1 rounded-full text-xs font-medium capitalize
+                                ${
 															question.difficulty === "easy"
 																? isDark
 																	? "bg-success/30 text-success"
@@ -644,7 +557,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 																? "bg-error/30 text-error"
 																: "bg-error/20 text-error"
 														}
-                        `}
+                            `}
 						>
 							{question.difficulty}
 						</span>
@@ -658,13 +571,13 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 				>
 					<h3
 						className={`
-                        text-lg font-semibold leading-relaxed
-                        ${
+                            text-lg font-semibold leading-relaxed
+                            ${
 													isDark
 														? "text-text-primary-dark"
 														: "text-text-primary-light"
 												}
-                    `}
+                        `}
 					>
 						{question.question_text}
 					</h3>
