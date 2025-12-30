@@ -1,12 +1,12 @@
-import React, { useState, useCallback } from "react";
+import React, { useCallback } from "react";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
-import type { DailyQuestion, Option, Question } from "../../../types";
+import type { Option, Question } from "../../../types";
 import {
-	selectSelectedOption,
 	selectViewMode,
-	selectSolutionViewType,
-	setSelectedOption,
+	selectCurrentAttempt,
+	submitAnswer,
+	selectSolutionViewType, // Assuming you add this selector to slice
 } from "../redux_usecase/dailyPracticeSlice";
 import { ConfidenceSelector } from "./ConfidenceSelector";
 import { SolutionToggle } from "./SolutionToggle";
@@ -22,585 +22,253 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 }) => {
 	const dispatch = useDispatch();
 	const viewMode = useSelector(selectViewMode);
-	const solutionViewType = useSelector(selectSolutionViewType);
-	const selectedOption = useSelector(selectSelectedOption);
+	const solutionViewType = useSelector(selectSolutionViewType); // "common" | "personalized"
+	const currentAttempt = useSelector(selectCurrentAttempt);
+
 	const isExamMode = viewMode === "exam";
 
-	// For para jumble and odd one out
-	const [jumbleSequence, setJumbleSequence] = useState("");
+	// Derived State
+	const userAnswer = (currentAttempt?.user_answer as any)?.user_answer || "";
+	const selectedOption = userAnswer; // For standard questions
+	const jumbleSequence = userAnswer; // For TITA questions
 
-	const handleOptionSelect = useCallback(
-		(optionId: string) => {
-			console.log('[QuestionPanel] Option selected:', optionId);
+	const handleAnswerUpdate = useCallback(
+		(answerValue: string) => {
 			if (!isExamMode) return;
-			dispatch(setSelectedOption(optionId));
+
+			// Determine correctness immediately for the record
+			// (Note: For TITA, strictly matching string; for options, matching ID)
+			const isCorrect =
+				answerValue === question.correct_answer ||
+				answerValue === question.correct_answer?.correct_answer;
+
+			dispatch(
+				submitAnswer({
+					questionId: question.id,
+					userId: "current-user-id", // Replace with selector or context
+					passageId: question.passage_id,
+					answer: answerValue,
+					isCorrect,
+				})
+			);
 		},
-		[dispatch, isExamMode]
+		[dispatch, question, isExamMode]
 	);
 
-	// Helper function to transform options from API format to Option[] format
+	// Helpers
 	const transformOptions = (options: any): Option[] => {
 		if (!options) return [];
-
 		if (Array.isArray(options)) {
-			// If already in array format, transform to Option format
-			return options.map((option, index) => ({
-				id: String.fromCharCode(65 + index), // A, B, C, D, etc.
-				text:
-					typeof option === "string" ? option : option.text || String(option),
-			}));
-		} else if (typeof options === "object") {
-			// If in object format (e.g., {A: "text", B: "text"}), transform to array
-			return Object.entries(options).map(([key, value]) => ({
-				id: key,
-				text: typeof value === "string" ? value : String(value),
+			return options.map((opt, i) => ({
+				id: String.fromCharCode(65 + i),
+				text: typeof opt === "string" ? opt : opt.text || String(opt),
 			}));
 		}
-
-		return [];
+		return Object.entries(options).map(([k, v]) => ({
+			id: k,
+			text: typeof v === "string" ? v : String(v),
+		}));
 	};
 
-	// Helper function to extract sentences for para jumble and odd one out questions
-	const getSentencesForQuestion = (question: Question): Option[] => {
-		if (!question || !question.question_text) return [];
-
-		console.log('[QuestionPanel] Getting sentences for question type:', question.question_type);
-
-		// For para jumble questions, extract sentences from question text or options
-		if (
-			question.question_type === "para_jumble" ||
-			question.question_type === "odd_one_out"
-		) {
-			if (
-				question.jumbled_sentences &&
-				typeof question.jumbled_sentences === "object"
-			) {
-				const sentences = Object.entries(question.jumbled_sentences).map(
-					([key, value]) => ({
-						id: key,
-						text: typeof value === "string" ? value : String(value),
-					})
-				);
-				console.log('[QuestionPanel] Extracted', sentences.length, 'sentences');
-				return sentences;
-			}
-		}
-
-		return [];
+	const getSentences = (q: Question): Option[] => {
+		if (!q.jumbled_sentences || typeof q.jumbled_sentences !== "object")
+			return [];
+		return Object.entries(q.jumbled_sentences).map(([k, v]) => ({
+			id: k,
+			text: typeof v === "string" ? v : String(v),
+		}));
 	};
 
 	const getOptionClass = (option: Option) => {
 		const isSelected = selectedOption === option.id;
-		const isCorrect = question.correct_answer === option.id;
-		const showResult = !isExamMode;
+		const correctAnswerId =
+			question.correct_answer?.correct_answer || question.correct_answer;
+		const isCorrect = correctAnswerId === option.id;
 
 		if (isExamMode) {
-			return `
-                w-full p-4 rounded-xl border-2 text-left transition-all duration-200
-                ${
-									isSelected
-										? isDark
-											? "bg-brand-primary-dark/20 border-brand-primary-dark text-text-primary-dark"
-											: "bg-brand-primary-light/10 border-brand-primary-light text-text-primary-light"
-										: isDark
-										? "bg-bg-tertiary-dark border-border-dark hover:border-brand-primary-dark text-text-secondary-dark"
-										: "bg-bg-tertiary-light border-border-light hover:border-brand-primary-light text-text-secondary-light"
-								}
-                ${isSelected ? "ring-2 ring-brand-accent-light" : ""}
-            `;
+			return `w-full p-4 rounded-xl border-2 text-left transition-all duration-200 ${
+				isSelected
+					? isDark
+						? "bg-brand-primary-dark/20 border-brand-primary-dark text-text-primary-dark ring-2 ring-brand-accent-light"
+						: "bg-brand-primary-light/10 border-brand-primary-light text-text-primary-light ring-2 ring-brand-accent-light"
+					: isDark
+					? "bg-bg-tertiary-dark border-border-dark hover:border-brand-primary-dark"
+					: "bg-bg-tertiary-light border-border-light hover:border-brand-primary-light"
+			}`;
 		}
+		// Solution Mode
+		if (isCorrect)
+			return `w-full p-4 rounded-xl border-2 text-left ${
+				isDark
+					? "bg-success/20 border-success text-success"
+					: "bg-success/10 border-success text-success"
+			}`;
+		if (isSelected && !isCorrect)
+			return `w-full p-4 rounded-xl border-2 text-left ${
+				isDark
+					? "bg-error/20 border-error text-error"
+					: "bg-error/10 border-error text-error"
+			}`;
 
-		// Solution mode
-		if (showResult) {
-			if (isCorrect) {
-				return `
-                    w-full p-4 rounded-xl border-2 text-left
-                    ${
-											isDark
-												? "bg-success/20 border-success text-success"
-												: "bg-success/10 border-success text-success"
-										}
-                `;
-			}
-			if (isSelected && !isCorrect) {
-				return `
-                    w-full p-4 rounded-xl border-2 text-left
-                    ${
-											isDark
-												? "bg-error/20 border-error text-error"
-												: "bg-error/10 border-error text-error"
-										}
-                `;
-			}
-			return `
-                w-full p-4 rounded-xl border-2 text-left
-                ${
-									isDark
-										? "bg-bg-tertiary-dark border-border-dark text-text-muted-dark"
-										: "bg-bg-tertiary-light border-border-light text-text-muted-light"
-								}
-            `;
-		}
-
-		return "";
-	};
-
-	const renderStandardOptions = (options: Option[]) => (
-		<div className="space-y-3">
-			{options.map((option, index) => (
-				<motion.button
-					key={option.id}
-					onClick={() => handleOptionSelect(option.id)}
-					className={getOptionClass(option)}
-					disabled={!isExamMode}
-					initial={{ opacity: 0, x: 20 }}
-					animate={{ opacity: 1, x: 0 }}
-					transition={{ delay: index * 0.1 }}
-					whileHover={isExamMode ? { scale: 1.01 } : {}}
-					whileTap={isExamMode ? { scale: 0.99 } : {}}
-				>
-					<div className="flex items-start gap-3">
-						<span
-							className={`
-                                w-8 h-8 flex items-center justify-center rounded-lg font-semibold text-sm shrink-0
-                                ${
-															isExamMode
-																? selectedOption === option.id
-																	? isDark
-																		? "bg-brand-primary-dark text-white"
-																		: "bg-brand-primary-light text-white"
-																	: isDark
-																	? "bg-bg-secondary-dark text-text-muted-dark"
-																	: "bg-bg-secondary-light text-text-muted-light"
-																: ""
-															}
-                                ${
-															!isExamMode &&
-															question.correct_answer.correct_answer === option.id
-																? isDark
-																	? "bg-success text-white"
-																	: "bg-success text-white"
-																: ""
-															}
-                                ${
-															!isExamMode &&
-															selectedOption === option.id &&
-															question.correct_answer.correct_answer !== option.id
-																? isDark
-																	? "bg-error text-white"
-																	: "bg-error text-white"
-																: ""
-															}
-                                }
-                            `}
-						>
-							{option.id}
-						</span>
-						<span className="flex-1">{option.text}</span>
-					</div>
-				</motion.button>
-			))}
-		</div>
-	);
-
-	// Render para_jumble and odd_one_out (both use same rendering)
-	const renderParaJumble = () => (
-		<div className="space-y-4">
-			<div
-				className={`
-                    p-4 rounded-xl border
-                    ${
-									isDark
-										? "bg-bg-tertiary-dark border-border-dark"
-										: "bg-bg-tertiary-light border-border-light"
-								}
-                `}
-			>
-				<p
-					className={`
-                        text-sm font-medium mb-3
-                        ${
-													isDark
-														? "text-text-secondary-dark"
-														: "text-text-secondary-light"
-												}
-                    `}
-				>
-					{question.question_type === "para_jumble"
-						? "Jumbled Sentences (1-4):"
-						: "Select the sentence that does NOT belong:"}
-				</p>
-				<div className="space-y-2">
-					{getSentencesForQuestion(question)?.map((sentence, index) => (
-						<div
-							key={index}
-							className={`
-                                p-3 rounded-lg border
-                                ${
-																isDark
-																	? "bg-bg-secondary-dark border-border-dark"
-																	: "bg-bg-secondary-light border-border-light"
-															}
-                            `}
-						>
-							<span
-								className={`
-                                inline-flex items-center justify-center w-6 h-6 rounded text-xs font-medium mr-2
-                                ${
-																	isDark
-																		? "bg-bg-tertiary-dark text-text-muted-dark"
-																		: "bg-bg-tertiary-light text-text-muted-light"
-																}
-                            `}
-							>
-								{sentence.id}
-							</span>
-							{sentence.text}
-						</div>
-					))}
-				</div>
-			</div>
-
-			{isExamMode ? (
-				<div className="space-y-3">
-					<label
-						className={`
-                            block text-sm font-medium
-                            ${
-													isDark
-														? "text-text-secondary-dark"
-														: "text-text-secondary-light"
-												}
-                        `}
-					>
-						{question.question_type === "para_jumble"
-							? "Enter your sequence (e.g., 2143):"
-							: "Select the option (e.g., B):"}
-					</label>
-					<input
-						type={question.question_type === "para_jumble" ? "text" : "text"}
-						value={jumbleSequence}
-						onChange={(e) => {
-							const value = e.target.value.replace(/[^1-4]/g, "");
-							if (value.length <= 4) {
-								setJumbleSequence(value);
-								dispatch(setSelectedOption(value));
-							}
-						}}
-						placeholder={
-							question.question_type === "para_jumble"
-								? "Enter 4 digit sequence"
-								: "Enter option letter"
-						}
-						maxLength={4}
-						className={`
-                            w-full p-4 rounded-xl border-2 text-center text-xl tracking-widest font-mono
-                            focus:outline-none focus:ring-2 focus:ring-brand-primary-light
-                            ${
-															isDark
-																? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark placeholder-text-muted-dark"
-																: "bg-bg-tertiary-light border-border-light text-text-primary-light placeholder-text-muted-light"
-														}
-                        `}
-					/>
-					<p
-						className={`
-                            text-xs
-                            ${
-													isDark
-														? "text-text-muted-dark"
-														: "text-text-muted-light"
-												}
-                        `}
-					>
-						{question.question_type === "para_jumble"
-							? "Enter the order (1-4) in which sentences should appear"
-							: "Enter the letter of the sentence that doesn't belong"}
-					</p>
-				</div>
-			) : (
-				<div className="space-y-3">
-					<p
-						className={`
-                            text-sm font-medium
-                            ${
-													isDark
-														? "text-text-secondary-dark"
-														: "text-text-secondary-light"
-												}
-                        `}
-					>
-						Your Answer:{" "}
-						<span className="font-mono">
-							{jumbleSequence || selectedOption || "-"}
-						</span>
-					</p>
-					<p
-						className={`
-                            text-sm font-medium
-                            ${isDark ? "text-success" : "text-success"}
-                        `}
-					>
-						Correct Answer:{" "}
-						<span className="font-mono">
-							{question.question_type === "para_jumble"
-								? question.correct_answer
-								: question.correct_answer}
-						</span>
-					</p>
-				</div>
-			)}
-		</div>
-	);
-
-	const renderSolutionContent = () => {
-		const rationale =
-			solutionViewType === "personalized"
-				? question.rationale
-				: question.rationale;
-
-		return (
-			<motion.div
-				initial={{ opacity: 0, y: 20 }}
-				animate={{ opacity: 1, y: 0 }}
-				className={`
-                    mt-6 p-6 rounded-xl border
-                    ${
-											isDark
-												? "bg-bg-secondary-dark border-border-dark"
-												: "bg-bg-secondary-light border-border-light"
-										}
-                `}
-			>
-				<div className="flex items-center justify-between mb-4">
-					<h4
-						className={`
-                            font-semibold
-                            ${
-													isDark
-														? "text-text-primary-dark"
-														: "text-text-primary-light"
-												}
-                        `}
-					>
-						{solutionViewType === "personalized"
-							? "AI Insight"
-							: "Common Solution"}
-					</h4>
-					<SolutionToggle
-						hasPersonalizedRationale={!!question.rationale}
-						isDark={isDark}
-					/>
-				</div>
-				<p
-					className={`
-                        leading-relaxed
-                        ${
-											isDark
-												? "text-text-secondary-dark"
-												: "text-text-secondary-light"
-										}
-                `}
-				>
-					{rationale}
-				</p>
-
-				{/* Analysis Panel */}
-				<div
-					className={`
-                        mt-6 pt-4 border-t space-y-3
-                        ${isDark ? "border-border-dark" : "border-border-light"}
-                    `}
-				>
-					<h5
-						className={`
-                            text-sm font-semibold uppercase tracking-wide
-                            ${
-													isDark
-														? "text-text-muted-dark"
-														: "text-text-muted-light"
-												}
-                        `}
-					>
-						Analysis
-					</h5>
-					<div className="grid grid-cols-2 gap-4">
-						<div
-							className={`
-                                p-3 rounded-lg
-                                ${
-															isDark
-																? "bg-bg-tertiary-dark"
-																: "bg-bg-tertiary-light"
-														}
-                            `}
-						>
-							<p
-								className={`
-                                    text-xs
-                                    ${
-																isDark
-																	? "text-text-muted-dark"
-																	: "text-text-muted-light"
-															}
-                                `}
-							>
-								Difficulty
-							</p>
-							<p
-								className={`
-                                    font-semibold capitalize
-                                    ${
-																isDark
-																	? "text-text-primary-dark"
-																	: "text-text-primary-light"
-															}
-                                `}
-							>
-								{question.difficulty || "Medium"}
-							</p>
-						</div>
-						{question.tags && question.tags.length > 0 && (
-							<div
-								className={`
-                                    p-3 rounded-lg
-                                    ${
-															isDark
-																? "bg-bg-tertiary-dark"
-																: "bg-bg-tertiary-light"
-														}
-                                `}
-							>
-								<p
-									className={`
-                                        text-xs
-                                        ${
-																			isDark
-																				? "text-text-muted-dark"
-																				: "text-text-muted-light"
-																		}
-                                    `}
-								>
-									Topics
-								</p>
-								<div className="flex flex-wrap gap-1 mt-1">
-									{question.tags.slice(0, 2).map((tag) => (
-										<span
-											key={tag}
-											className={`
-                                                text-xs px-2 py-0.5 rounded
-                                                ${
-																					isDark
-																						? "bg-brand-primary-dark/30 text-brand-primary-dark"
-																						: "bg-brand-primary-light/20 text-brand-primary-light"
-																				}
-                                            `}
-										>
-											{tag}
-										</span>
-									))}
-								</div>
-							</div>
-						)}
-					</div>
-				</div>
-			</motion.div>
-		);
+		return `w-full p-4 rounded-xl border-2 text-left opacity-50 ${
+			isDark
+				? "bg-bg-tertiary-dark border-border-dark"
+				: "bg-bg-tertiary-light border-border-light"
+		}`;
 	};
 
 	return (
 		<div
-			className={`
-                h-full overflow-y-auto
-                ${isDark ? "scrollbar-dark" : "scrollbar-light"}
-            `}
+			className={`h-full overflow-y-auto ${
+				isDark ? "scrollbar-dark" : "scrollbar-light"
+			}`}
 		>
 			<div className="p-6 space-y-6">
-				{/* Question Type Badge */}
+				{/* Badge */}
 				<div className="flex items-center gap-2">
 					<span
-						className={`
-                            px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wide
-                            ${
-													isDark
-														? "bg-brand-primary-dark/30 text-brand-primary-dark"
-														: "bg-brand-primary-light/20 text-brand-primary-light"
-												}
-                        `}
+						className={`px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wide ${
+							isDark
+								? "bg-brand-primary-dark/30 text-brand-primary-dark"
+								: "bg-brand-primary-light/20 text-brand-primary-light"
+						}`}
 					>
-						{question.question_type === "rc_question"
-							? "Reading Comprehension"
-							: question.question_type === "para_summary"
-							? "Para Summary"
-							: question.question_type === "para_jumble"
-							? "Para Jumble (TITA)"
-							: question.question_type === "odd_one_out"
-							? "Odd One Out"
-							: question.question_type === "para_completion"
-							? "Para Completion"
-							: "Question"}
+						{question.question_type.replace(/_/g, " ")}
 					</span>
-					{question.difficulty && (
-						<span
-							className={`
-                                px-3 py-1 rounded-full text-xs font-medium capitalize
-                                ${
-															question.difficulty === "easy"
-																? isDark
-																	? "bg-success/30 text-success"
-																	: "bg-success/20 text-success"
-																: question.difficulty === "medium"
-																? isDark
-																	? "bg-warning/30 text-warning"
-																	: "bg-warning/20 text-warning"
-																: isDark
-																? "bg-error/30 text-error"
-																: "bg-error/20 text-error"
-														}
-                            `}
-						>
-							{question.difficulty}
-						</span>
-					)}
+					<span
+						className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${
+							isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"
+						}`}
+					>
+						{question.difficulty || "Medium"}
+					</span>
 				</div>
 
-				{/* Question Text */}
-				<motion.div
+				{/* Text */}
+				<motion.h3
 					initial={{ opacity: 0, y: 10 }}
 					animate={{ opacity: 1, y: 0 }}
+					className={`text-lg font-semibold leading-relaxed ${
+						isDark ? "text-text-primary-dark" : "text-text-primary-light"
+					}`}
 				>
-					<h3
-						className={`
-                            text-lg font-semibold leading-relaxed
-                            ${
-													isDark
-														? "text-text-primary-dark"
-														: "text-text-primary-light"
-												}
-                        `}
-					>
-						{question.question_text}
-					</h3>
-				</motion.div>
+					{question.question_text}
+				</motion.h3>
 
-				{/* Options or Special Input */}
-				{question.question_type === "para_jumble" && renderParaJumble()}
-				{question.question_type === "odd_one_out" && renderParaJumble()}
-				{question.question_type !== "para_jumble" &&
-					question.question_type !== "odd_one_out" &&
-					renderStandardOptions(transformOptions(question.options))}
+				{/* Content Area */}
+				{question.question_type === "para_jumble" ||
+				question.question_type === "odd_one_out" ? (
+					<div className="space-y-4">
+						<div
+							className={`p-4 rounded-xl border ${
+								isDark
+									? "bg-bg-tertiary-dark border-border-dark"
+									: "bg-bg-tertiary-light border-border-light"
+							}`}
+						>
+							{getSentences(question).map((s) => (
+								<div
+									key={s.id}
+									className={`p-3 mb-2 rounded-lg border flex gap-3 ${
+										isDark
+											? "bg-bg-secondary-dark border-border-dark"
+											: "bg-bg-secondary-light border-border-light"
+									}`}
+								>
+									<span className="font-mono font-bold opacity-50">{s.id}</span>
+									<span>{s.text}</span>
+								</div>
+							))}
+						</div>
+						{isExamMode ? (
+							<input
+								type="text"
+								value={jumbleSequence}
+								onChange={(e) => {
+									const val = e.target.value.toUpperCase().slice(0, 4);
+									handleAnswerUpdate(val);
+								}}
+								placeholder="Enter Sequence (e.g. 2143)"
+								className={`w-full p-4 rounded-xl border-2 text-center text-xl tracking-widest font-mono focus:outline-none focus:ring-2 focus:ring-brand-primary-light ${
+									isDark
+										? "bg-bg-tertiary-dark border-border-dark"
+										: "bg-bg-tertiary-light border-border-light"
+								}`}
+							/>
+						) : (
+							<div className="p-4 rounded-xl border text-center font-mono text-lg">
+								Your Answer:{" "}
+								<span
+									className={
+										question.correct_answer === userAnswer
+											? "text-success"
+											: "text-error"
+									}
+								>
+									{userAnswer || "-"}
+								</span>
+								<br />
+								Correct:{" "}
+								<span className="text-success">{question.correct_answer}</span>
+							</div>
+						)}
+					</div>
+				) : (
+					<div className="space-y-3">
+						{transformOptions(question.options).map((opt, i) => (
+							<motion.button
+								key={opt.id}
+								onClick={() => handleAnswerUpdate(opt.id)}
+								className={getOptionClass(opt)}
+								disabled={!isExamMode}
+								initial={{ opacity: 0, x: 20 }}
+								animate={{ opacity: 1, x: 0 }}
+								transition={{ delay: i * 0.1 }}
+							>
+								<div className="flex items-start gap-3">
+									<span className="font-mono font-bold opacity-70">
+										{opt.id}
+									</span>
+									<span className="flex-1">{opt.text}</span>
+								</div>
+							</motion.button>
+						))}
+					</div>
+				)}
 
-				{/* Confidence Selector (Exam Mode Only) */}
+				{/* Footer Elements */}
 				{isExamMode && (
 					<div className="pt-4">
 						<ConfidenceSelector isDark={isDark} />
 					</div>
 				)}
 
-				{/* Solution View */}
-				{!isExamMode && renderSolutionContent()}
-
-				{/* Spacer for fixed footer */}
+				{!isExamMode && (
+					<motion.div
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						className={`mt-6 p-6 rounded-xl border ${
+							isDark
+								? "bg-bg-secondary-dark border-border-dark"
+								: "bg-bg-secondary-light border-border-light"
+						}`}
+					>
+						<div className="flex justify-between items-center mb-4">
+							<h4 className="font-semibold">Solution</h4>
+							<SolutionToggle
+								hasPersonalizedRationale={!!question.rationale}
+								isDark={isDark}
+							/>
+						</div>
+						<p className="leading-relaxed opacity-90">
+							{
+								solutionViewType === "personalized"
+									? question.rationale
+									: question.rationale /* Use actual field if available */
+							}
+						</p>
+					</motion.div>
+				)}
 				<div className="h-24" />
 			</div>
 		</div>

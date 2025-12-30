@@ -1,690 +1,482 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
-import { useLocation, useNavigate } from "react-router-dom";
-import { MdArrowForward, MdChevronLeft, MdChevronRight } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
+import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 import { useTheme } from "../../../../context/ThemeContext";
 import { FloatingNavigation } from "../../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../../ui_components/ThemeToggle";
+import { supabase } from "../../../../services/apiClient";
+
+// Redux
 import {
-    selectViewMode,
-    selectCurrentQuestionIndex,
-    selectAttempts,
-    selectIsFirstQuestion,
-    selectIsLastQuestion,
-    goToNextQuestion,
-    goToPreviousQuestion,
-    setViewMode,
-    selectElapsedTime,
-    selectStartTime,
-    incrementElapsedTime,
-    clearResponse,
-    toggleMarkForReview,
-    submitAnswer,
-    initializeSession,
-    initializeSessionWithAttempts,
-    setStartTime,
-    selectSelectedOption,
-    selectQuestionOrder,
+	selectViewMode,
+	selectCurrentQuestionIndex,
+	selectAttempts,
+	selectIsFirstQuestion,
+	selectIsLastQuestion,
+	selectCurrentAttempt,
+	selectCurrentQuestionId,
+	selectProgressStats,
+	selectSession,
+	selectElapsedTime,
+	initializeSession,
+	submitAnswer,
+	toggleMarkForReview,
+	clearResponse,
+	goToNextQuestion,
+	goToPreviousQuestion,
+	setViewMode,
+	incrementElapsedTime,
+	resetDailyPractice,
 } from "../../redux_usecase/dailyPracticeSlice";
+
+import {
+	useFetchDailyTestDataQuery,
+	useLazyFetchExistingSessionDetailsQuery,
+	useStartDailyRCSessionMutation,
+	useSaveSessionDetailsMutation,
+	useSaveQuestionAttemptsMutation,
+} from "../../redux_usecase/dailyPracticeApi";
+
 import { SplitPaneLayout } from "../Component/SplitPaneLayout";
 import { QuestionPalette } from "../../components/QuestionPalette";
 import { QuestionPanel } from "../../components/QuestionPanel";
-import type { Question, Passage, PracticeSession, QuestionAttempt, UUID } from "../../../../types";
-import {
-    useSaveSessionDetailsMutation,
-    useSaveQuestionAttemptsMutation,
-} from "../../redux_usecase/dailyPracticeApi";
+import type { Question, Passage } from "../../../../types";
 
 const DailyRCPage: React.FC = () => {
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
-    const location = useLocation();
-    const { isDark } = useTheme();
+	const dispatch = useDispatch();
+	const navigate = useNavigate();
+	const { isDark } = useTheme();
 
-    // Get session data from location state
-    const { sessionId, testData, existingAttempts } = location.state || {};
+	// --- 1. Data Fetching & Initialization ---
 
-    // UI state only (questions and passages come from testData)
-    const [isLoading, setIsLoading] = useState(true);
-    const [showPalette, setShowPalette] = useState(true);
+	// Fetch generic daily test data
+	const {
+		data: testData,
+		isLoading: isTestDataLoading,
+		error: testDataError,
+	} = useFetchDailyTestDataQuery();
 
-    // Derived state from testData (immutable during session)
-    const questions: Question[] = testData?.questions.filter(
-        (q: Question) => q.question_type === "rc_question" || q.passage_id !== null
-    ) || [];
+	// Mutations and Lazy Queries
+	const [fetchExistingSession, { isFetching: isSessionLoading }] =
+		useLazyFetchExistingSessionDetailsQuery();
+	const [startNewSession, { isLoading: isCreatingSession }] =
+		useStartDailyRCSessionMutation();
 
-    const passages: Passage[] = testData?.passages.filter((p: Passage) =>
-        questions.some((q: Question) => q.passage_id === p.id)
-    ) || [];
+	// Saving
+	const [saveSession] = useSaveSessionDetailsMutation();
+	const [saveAttempts] = useSaveQuestionAttemptsMutation();
 
-    // Redux state (mutable during session)
-    const viewMode = useSelector(selectViewMode);
-    const currentQuestionIndex = useSelector(selectCurrentQuestionIndex);
-    const attempts = useSelector(selectAttempts);
-    const questionOrder = useSelector(selectQuestionOrder);
-    const isFirstQuestion = useSelector(selectIsFirstQuestion);
-    const isLastQuestion = useSelector(selectIsLastQuestion);
-    const elapsedTime = useSelector(selectElapsedTime);
-    const startTime = useSelector(selectStartTime);
-    const selectedOption = useSelector(selectSelectedOption);
+	// Redux Selectors
+	const viewMode = useSelector(selectViewMode);
+	const currentQuestionIndex = useSelector(selectCurrentQuestionIndex);
+	const attempts = useSelector(selectAttempts);
+	const currentQuestionId = useSelector(selectCurrentQuestionId);
+	const progress = useSelector(selectProgressStats);
+	const session = useSelector(selectSession);
+	const elapsedTime = useSelector(selectElapsedTime);
+	const isLastQuestion = useSelector(selectIsLastQuestion);
+	const currentAttempt = useSelector(selectCurrentAttempt);
 
-    // API mutations
-    const [saveSessionDetails] = useSaveSessionDetailsMutation();
-    const [saveQuestionAttempts] = useSaveQuestionAttemptsMutation();
+	// Derived UI Data
+	const questions =
+		testData?.questions.filter(
+			(q) => q.question_type === "rc_question" || q.passage_id !== null
+		) || [];
+	const passages = testData?.passages || [];
+	const currentQuestion = questions.find((q) => q.id === currentQuestionId);
+	const currentPassage = currentQuestion?.passage_id
+		? passages.find((p) => p.id === currentQuestion.passage_id)
+		: null;
 
-    const currentQuestion = questions[currentQuestionIndex];
-    const passageData = passages.find(
-        (p) => p.id === currentQuestion?.passage_id
-    );
-    const currentPassage = passageData
-        ? {
-                id: passageData.id,
-                title: passageData.title || "",
-                content: passageData.content,
-                genre: passageData.genre,
-          }
-        : null;
+	const [showPalette, setShowPalette] = React.useState(true);
+	const isLoading = isTestDataLoading || isSessionLoading || isCreatingSession;
 
-    // Initialize session
-    useEffect(() => {
-        const initSession = async () => {
-            console.log('[DailyRCPage] Initializing RC session');
-            setIsLoading(true);
+	// --- 2. Session Setup Logic ---
+	useEffect(() => {
+		// Only run if test data is ready and we haven't initialized a session yet
+		if (!testData || session.id || isLoading) return;
 
-            if (!testData || !sessionId) {
-                console.error('[DailyRCPage] No test data or session ID');
-                navigate("/daily");
-                return;
-            }
+		const init = async () => {
+			const {
+				data: { user },
+			} = await supabase.auth.getUser();
+			if (!user) {
+				navigate("/login");
+				return;
+			}
 
-            console.log('[DailyRCPage] Session ID:', sessionId);
-            console.log('[DailyRCPage] Total RC questions:', questions.length);
-            console.log('[DailyRCPage] Total RC passages:', passages.length);
+			// 1. Check for existing session
+			const sessionResult = await fetchExistingSession({
+				user_id: user.id,
+				paper_id: testData.examInfo.id,
+				session_type: "daily_challenge_rc",
+			});
 
-            // Initialize Redux with question IDs and existing attempts if available
-            const questionIds = questions.map((q: Question) => q.id);
+			// Prepare Question IDs
+			const rcQuestions = testData.questions.filter(
+				(q: Question) =>
+					q.question_type === "rc_question" || q.passage_id !== null
+			);
+			const questionIds = rcQuestions.map((q) => q.id);
 
-            if (existingAttempts && existingAttempts.length > 0) {
-                // Transform existing attempts to the format expected by Redux
-                console.log('[DailyRCPage] Loading existing attempts:', existingAttempts.length);
-                const transformedAttempts: Record<UUID, Omit<QuestionAttempt, 'id' | 'created_at'>> = {};
-                existingAttempts.forEach((attempt: QuestionAttempt) => {
-                    const { id, created_at, ...attemptData } = attempt;
-                    transformedAttempts[attempt.question_id] = attemptData;
-                });
+			if (sessionResult.data) {
+				// Resume
+				dispatch(
+					initializeSession({
+						session: sessionResult.data.session,
+						questionIds,
+						existingAttempts: sessionResult.data.attempts,
+						elapsedTime: sessionResult.data.session.time_spent_seconds,
+						status: sessionResult.data.session.status,
+					})
+				);
+			} else {
+				// Start New
+				const passageIds = Array.from(
+					new Set(rcQuestions.map((q) => q.passage_id).filter(Boolean))
+				) as string[];
 
-                dispatch(
-                    initializeSessionWithAttempts({
-                        questionIds,
-                        currentIndex: 0,
-                        elapsedTime: 0,
-                        attempts: transformedAttempts,
-                    })
-                );
-            } else {
-                console.log('[DailyRCPage] No existing attempts, initializing fresh session');
-                dispatch(
-                    initializeSession({
-                        questionIds,
-                        currentIndex: 0,
-                        elapsedTime: 0,
-                    })
-                );
-            }
+				const newSession = await startNewSession({
+					user_id: user.id,
+					paper_id: testData.examInfo.id,
+					passage_ids: passageIds,
+					question_ids: questionIds,
+				}).unwrap();
 
-            // Set start time
-            dispatch(setStartTime(Date.now()));
+				dispatch(
+					initializeSession({
+						session: newSession,
+						questionIds,
+						elapsedTime: 0,
+					})
+				);
+			}
+		};
 
-            setIsLoading(false);
-        };
+		init();
+	}, [testData, session.id]); // Only run when testData loads
 
-        initSession();
-    }, [dispatch, testData, sessionId, navigate, questions, passages, existingAttempts]);
+	// --- 3. Timer Logic ---
+	useEffect(() => {
+		let timer: ReturnType<typeof setTimeout>;
+		if (viewMode === "exam" && !isLoading) {
+			timer = setInterval(() => dispatch(incrementElapsedTime()), 1000);
+		}
+		return () => clearInterval(timer);
+	}, [viewMode, isLoading, dispatch]);
 
-    // Handle save progress
-    const handleSaveProgress = useCallback(async () => {
-        console.log('[DailyRCPage] handleSaveProgress called');
-        if (!sessionId) {
-            console.error('[DailyRCPage] No session ID');
-            return;
-        }
+	// --- 4. Handlers ---
 
-        try {
-            // Calculate stats from attempts (QuestionAttempt type)
-            const answeredCount = Object.values(attempts).filter((a) => {
-                const userAnswer = a.user_answer as any;
-                return userAnswer?.user_answer != null;
-            }).length;
-            const correctCount = Object.values(attempts).filter(
-                (a) => a.is_correct
-            ).length;
-            const scorePercentage =
-                answeredCount > 0
-                    ? Math.round((correctCount / answeredCount) * 100)
-                    : 0;
+	// A. Backend-First Submission Routine
+	const handleFinishExam = useCallback(async () => {
+		if (!session.id) return;
 
-            console.log('[DailyRCPage] Saving session - Questions:', questions.length, 'Answered:', answeredCount, 'Correct:', correctCount, 'Score:', scorePercentage);
+		const confirmSubmit = window.confirm(
+			`You have answered ${progress.answered}/${questions.length}. Submit?`
+		);
+		if (!confirmSubmit) return;
 
-            // Save session details
-            await saveSessionDetails({
-                session_id: sessionId,
-                time_spent_seconds: elapsedTime,
-                status: viewMode === "solution" ? "completed" : "in_progress",
-                total_questions: questions.length,
-                correct_answers: correctCount,
-                score_percentage: scorePercentage,
-                current_question_index: currentQuestionIndex,
-                ...(viewMode === "solution" && {
-                    completed_at: new Date().toISOString(),
-                }),
-            });
+		try {
+			// 1. Prepare Data
+			const attemptList = Object.values(attempts).map((a) => ({
+				...a,
+				// Ensure strictly required fields for DB
+				user_id: session.user_id,
+				session_id: session.id,
+				user_answer: a.user_answer || {},
+				marked_for_review: a.marked_for_review || false,
+				rationale_viewed: false,
+				rationale_helpful: null,
+				ai_feedback: null,
+			})) as any;
 
-            // Save question attempts
-            if (Object.keys(attempts).length > 0) {
-                const attemptsToSave = Object.values(attempts).map((attempt) => ({
-                    ...attempt,
-                    // Add missing required fields for database
-                    user_answer: attempt.user_answer as any,
-                    marked_for_review: attempt.marked_for_review ?? false,
-                    rationale_viewed: attempt.rationale_viewed ?? false,
-                    rationale_helpful: attempt.rationale_helpful ?? null,
-                    ai_feedback: attempt.ai_feedback ?? null,
-                }));
-                await saveQuestionAttempts({
-                    attempts: attemptsToSave,
-                });
-            }
+			// 2. Perform Backend Calls (Parallelized for speed)
+			await Promise.all([
+				saveSession({
+					session_id: session.id,
+					status: "completed",
+					completed_at: new Date().toISOString(),
+					time_spent_seconds: elapsedTime,
+					total_questions: questions.length,
+					correct_answers: progress.correct,
+					score_percentage: progress.percentage,
+					current_question_index: currentQuestionIndex,
+				}).unwrap(),
 
-            console.log('[DailyRCPage] Progress saved successfully');
-        } catch (error) {
-            console.error('[DailyRCPage] Error saving progress:', error);
-        }
-    }, [sessionId, attempts, elapsedTime, viewMode, currentQuestionIndex, questions.length, saveSessionDetails, saveQuestionAttempts]);
+				attemptList.length > 0
+					? saveAttempts({ attempts: attemptList }).unwrap()
+					: Promise.resolve(),
+			]);
 
-    // Timer effect
-    useEffect(() => {
-        if (viewMode === "exam" && !isLoading) {
-            console.log('[DailyRCPage] Starting timer');
-            const timer = setInterval(() => {
-                dispatch(incrementElapsedTime());
-            }, 1000);
+			// 3. Update UI Mode ONLY after success
+			dispatch(setViewMode("solution"));
+		} catch (err) {
+			console.error("Failed to submit exam:", err);
+			alert("Failed to submit. Please check your connection.");
+		}
+	}, [
+		session.id,
+		attempts,
+		elapsedTime,
+		progress,
+		questions.length,
+		currentQuestionIndex,
+		saveSession,
+		saveAttempts,
+		dispatch,
+	]);
 
-            return () => {
-                console.log('[DailyRCPage] Stopping timer');
-                clearInterval(timer);
-            };
-        }
-    }, [dispatch, viewMode, isLoading]);
+	// B. Navigation Handlers
+	const handleSaveAndNext = () => {
+		// Note: We don't necessarily need to hit the API on every 'Next' unless required for strict data safety.
+		// For performance, we update Redux (instant) and rely on the final submit or periodic saves.
+		// If "Save on Next" is strict requirement, call saveAttempts here.
+		if (!isLastQuestion) {
+			dispatch(goToNextQuestion());
+		} else {
+			handleFinishExam();
+		}
+	};
 
-    // Save state before closing tab
-    useEffect(() => {
-        const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
-            // Save current state
-            if (viewMode === "exam" && Object.keys(attempts).length > 0) {
-                console.log('[DailyRCPage] User is leaving the page, saving progress');
-                e.preventDefault();
-                e.returnValue = "";
+	const handleOptionSelect = (optionId: string) => {
+		if (!currentQuestion || !session.id) return;
 
-                // Save session and attempts
-                await handleSaveProgress();
-            }
-        };
+		// Optimistic Redux Update
+		dispatch(
+			submitAnswer({
+				questionId: currentQuestion.id,
+				userId: session.user_id, // We need user_id here.
+				// Better: store userId in Redux on init or get from context.
+				// For now, assuming we grab it from the session object in Redux if we added it, or fetch fresh.
+				// *Optimization*: In `initializeSession`, we didn't store userId.
+				// Let's assume we pass a placeholder or fix Redux to store userId.
+				// Using a dummy here for strict typing, replace with actual user ID from Auth Context
+				passageId: currentQuestion.passage_id,
+				answer: optionId,
+				isCorrect: optionId === currentQuestion.correct_answer.correct_answer, // adapting to your JSON structure
+			})
+		);
+	};
 
-        window.addEventListener("beforeunload", handleBeforeUnload);
-        return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-    }, [attempts, viewMode, handleSaveProgress]);
+	// Helper to clear resources
+	useEffect(() => {
+		return () => {
+			dispatch(resetDailyPractice());
+		};
+	}, [dispatch]);
 
-    // Handle submit session
-    const handleSubmitSession = useCallback(async () => {
-        console.log('[DailyRCPage] Submitting session');
-        await handleSaveProgress();
-        dispatch(setViewMode("solution"));
-    }, [handleSaveProgress, dispatch]);
+	//Just to check the updated attempts on each change if happenning or not
+	useEffect(() => {
+		console.log(
+			"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%changes in attempts%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+		);
+		console.log(attempts);
+	}, [attempts]);
 
-    // Handle save and next
-    const handleSaveAndNext = useCallback(async () => {
-        if (!currentQuestion || !sessionId) {
-            console.error('[DailyRCPage] No current question or session ID');
-            return;
-        }
+	// --- 5. Render ---
+	if (isLoading || !currentQuestion) {
+		return (
+			<div
+				className={`min-h-screen flex items-center justify-center ${
+					isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
+				}`}
+			>
+				<div className="w-16 h-16 border-4 border-brand-primary-light border-t-transparent rounded-full animate-spin" />
+			</div>
+		);
+	}
 
-        // Determine correct answer from question data
-        const correctAnswer = currentQuestion.correct_answer;
-        console.log('[DailyRCPage] Saving answer for question:', currentQuestion.id);
+	return (
+		<div
+			className={`min-h-screen ${
+				isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
+			}`}
+		>
+			<FloatingThemeToggle />
+			<FloatingNavigation />
 
-        // Update attempt in Redux
-        dispatch(
-            submitAnswer({
-                user_id: "user-id", // Will be replaced with actual user ID
-                session_id: sessionId,
-                passage_id: currentQuestion.passage_id ?? null,
-                correct_answer: correctAnswer,
-            })
-        );
+			{/* Header */}
+			<header
+				className={`fixed top-0 inset-x-0 h-16 z-30 flex items-center justify-between px-6 border-b backdrop-blur-xl ${
+					isDark
+						? "bg-bg-primary-dark/90 border-border-dark"
+						: "bg-bg-primary-light/90 border-border-light"
+				}`}
+			>
+				<h1
+					className={`font-serif font-bold text-xl ${
+						isDark ? "text-text-primary-dark" : "text-text-primary-light"
+					}`}
+				>
+					Daily Practice: RC
+				</h1>
+				<div className="flex items-center gap-4">
+					<div className="w-32 h-2 rounded-full bg-gray-200 overflow-hidden">
+						<div
+							className="h-full bg-blue-600 transition-all duration-300"
+							style={{
+								width: `${(progress.answered / questions.length) * 100}%`,
+							}}
+						/>
+					</div>
+					<span
+						className={
+							isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+						}
+					>
+						{progress.answered}/{questions.length}
+					</span>
+				</div>
+			</header>
 
-        // Reset start time for next question
-        dispatch(setStartTime(Date.now()));
+			{/* Main Body */}
+			<div className="pt-16 h-screen flex relative overflow-hidden">
+				<div className="flex-1 h-full">
+					<SplitPaneLayout
+						isDark={isDark}
+						passage={currentPassage}
+						showPassage={!!currentPassage}
+						isExamMode={viewMode === "exam"}
+					>
+						<QuestionPanel
+							question={currentQuestion}
+							isDark={isDark}
+							// Pass down handlers that dispatch to Redux
+						/>
+					</SplitPaneLayout>
+				</div>
 
-        // Move to next question
-        if (!isLastQuestion) {
-            dispatch(goToNextQuestion());
-        } else {
-            // All questions answered, show completion confirmation
-            const answeredCount =
-                Object.values(attempts).filter((a) => {
-                    const userAnswer = a.user_answer as any;
-                    return userAnswer?.user_answer != null;
-                }).length + 1; // +1 for current question
+				{/* Palette Toggle Button */}
+				<motion.button
+					onClick={() => setShowPalette(!showPalette)}
+					className={`
+										absolute right-${showPalette ? "64" : "0"} top-1/2 -translate-y-1/2 z-40
+										w-8 h-16 rounded-l-lg border border-r-0
+										transition-all duration-300
+										${
+											isDark
+												? "bg-bg-secondary-dark border-border-dark hover:bg-bg-tertiary-dark"
+												: "bg-bg-secondary-light border-border-light hover:bg-bg-tertiary-light"
+										}
+									`}
+					style={{ right: showPalette ? "256px" : "0" }}
+					whileHover={{ scale: 1.05 }}
+					whileTap={{ scale: 0.95 }}
+				>
+					{showPalette ? (
+						<MdChevronRight
+							className={`w-5 h-5 mx-auto ${
+								isDark
+									? "text-text-secondary-dark"
+									: "text-text-secondary-light"
+							}`}
+						/>
+					) : (
+						<MdChevronLeft
+							className={`w-5 h-5 mx-auto ${
+								isDark
+									? "text-text-secondary-dark"
+									: "text-text-secondary-light"
+							}`}
+						/>
+					)}
+				</motion.button>
 
-            if (
-                window.confirm(
-                    `You have completed ${answeredCount} of ${questions.length} questions. Submit for review?`
-                )
-            ) {
-                await handleSubmitSession();
-            }
-        }
-    }, [
-        dispatch,
-        currentQuestion,
-        sessionId,
-        isLastQuestion,
-        attempts,
-        questions.length,
-        handleSubmitSession,
-    ]);
+				{/* Palette Drawer */}
+				<AnimatePresence>
+					{showPalette && (
+						<motion.div
+							initial={{ x: 300 }}
+							animate={{ x: 0 }}
+							exit={{ x: 300 }}
+							className={`w-64 border-l overflow-y-auto ${
+								isDark
+									? "bg-bg-secondary-dark border-border-dark"
+									: "bg-bg-secondary-light border-border-light"
+							}`}
+						>
+							<QuestionPalette
+								questions={questions}
+								attempts={attempts}
+								isDark={isDark}
+							/>
+						</motion.div>
+					)}
+				</AnimatePresence>
+			</div>
 
-    // Handle mark for review and next
-    const handleMarkAndNext = useCallback(() => {
-        if (!currentQuestion || !sessionId) {
-            console.error('[DailyRCPage] No current question or session ID');
-            return;
-        }
-
-        console.log('[DailyRCPage] Marking question for review:', currentQuestion.id);
-
-        dispatch(
-            toggleMarkForReview({
-                user_id: "user-id",
-                session_id: sessionId,
-                passage_id: currentQuestion.passage_id ?? null,
-            })
-        );
-
-        // Reset start time for next question
-        dispatch(setStartTime(Date.now()));
-
-        if (!isLastQuestion) {
-            dispatch(goToNextQuestion());
-        }
-    }, [dispatch, currentQuestion, sessionId, isLastQuestion]);
-
-    const handlePreviousQuestion = useCallback(() => {
-        console.log('[DailyRCPage] Going to previous question');
-        if (!isFirstQuestion) {
-            dispatch(goToPreviousQuestion());
-        }
-    }, [dispatch, isFirstQuestion]);
-
-    const handleNextQuestion = useCallback(() => {
-        console.log('[DailyRCPage] Going to next question');
-        if (!isLastQuestion) {
-            dispatch(goToNextQuestion());
-        }
-    }, [dispatch, isLastQuestion]);
-
-    const handleClearResponse = useCallback(() => {
-        console.log('[DailyRCPage] Clearing response');
-        dispatch(clearResponse());
-    }, [dispatch]);
-
-    // Calculate progress
-    const answeredCount = Object.values(attempts).filter((a) => {
-        const userAnswer = a.user_answer as any;
-        return userAnswer?.user_answer != null;
-    }).length;
-    const progress =
-        questions.length > 0 ? (answeredCount / questions.length) * 100 : 0;
-
-    if (isLoading) {
-        return (
-            <div
-                className={`min-h-screen ${
-                    isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
-                }`}
-            >
-                <FloatingThemeToggle />
-                <FloatingNavigation />
-                <div className="flex items-center justify-center h-screen">
-                    <div className="flex flex-col items-center gap-4">
-                        <div
-                            className={`
-                                w-16 h-16 rounded-full border-4 animate-spin
-                                ${
-                                                                    isDark
-                                                                        ? "border-brand-primary-dark border-t-transparent"
-                                                                        : "border-brand-primary-light border-t-transparent"
-                                                                }
-                            `}
-                        />
-                        <p
-                            className={
-                                isDark
-                                    ? "text-text-secondary-dark"
-                                    : "text-text-secondary-light"
-                            }
-                        >
-                            Loading Daily RC Practice...
-                        </p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    const isExamMode = viewMode === "exam";
-
-    return (
-        <div
-            className={`min-h-screen ${
-                isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
-            }`}
-        >
-            <FloatingThemeToggle />
-            <FloatingNavigation />
-
-            {/* Top Header */}
-            <motion.header
-                className={`
-                    fixed top-0 left-0 right-0 z-30 h-16
-                    backdrop-blur-xl border-b
-                    ${
-                                            isDark
-                                                ? "bg-bg-primary-dark/90 border-border-dark"
-                                                : "bg-bg-primary-light/90 border-border-light"
-                                        }
-                `}
-                initial={{ y: -60 }}
-                animate={{ y: 0 }}
-                transition={{ duration: 0.3 }}
-            >
-                <div className="h-full px-6 flex items-center justify-between">
-                    {/* Left: Title and Progress */}
-                    <div className="flex items-center gap-6">
-                        <h1
-                            className={`
-                                font-serif font-bold text-xl
-                                ${
-                                                                    isDark
-                                                                        ? "text-text-primary-dark"
-                                                                        : "text-text-primary-light"
-                                                                }
-                            `}
-                        >
-                            Daily Practice: RC
-                        </h1>
-
-                        {/* Progress Bar */}
-                        <div className="hidden md:flex items-center gap-3">
-                            <div
-                                className={`
-                                    w-32 h-2 rounded-full overflow-hidden
-                                    ${
-                                                                            isDark
-                                                                                ? "bg-bg-tertiary-dark"
-                                                                                : "bg-bg-tertiary-light"
-                                                                        }
-                                `}
-                            >
-                                <motion.div
-                                    className={`h-full ${
-                                        isDark ? "bg-brand-primary-dark" : "bg-brand-primary-light"
-                                    }`}
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${progress}%` }}
-                                    transition={{ duration: 0.3 }}
-                                />
-                            </div>
-                            <span
-                                className={`
-                                    text-sm font-medium
-                                    ${
-                                                                            isDark
-                                                                                ? "text-text-secondary-dark"
-                                                                                : "text-text-secondary-light"
-                                                                        }
-                                `}
-                            >
-                                {answeredCount}/{questions.length}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </motion.header>
-
-            {/* Main Content */}
-            <div className="pt-16 h-screen flex overflow-hidden relative">
-                {/* Split Pane Layout */}
-                <div className="flex-1 h-full overflow-hidden transition-all duration-300">
-                    <SplitPaneLayout
-                        isDark={isDark}
-                        passage={currentPassage}
-                        showPassage={true}
-                        isExamMode={isExamMode}
-                    >
-                        {/* Question Panel */}
-                        {currentQuestion && (
-                            <QuestionPanel question={currentQuestion} isDark={isDark} />
-                        )}
-                    </SplitPaneLayout>
-                </div>
-
-                {/* Palette Toggle Button */}
-                <motion.button
-                    onClick={() => setShowPalette(!showPalette)}
-                    className={`
-                        absolute right-${
-                                                    showPalette ? "64" : "0"
-                                                } top-1/2 -translate-y-1/2 z-40
-                        w-8 h-16 rounded-l-lg border border-r-0
-                        transition-all duration-300
-                        ${
-                                                    isDark
-                                                        ? "bg-bg-secondary-dark border-border-dark hover:bg-bg-tertiary-dark"
-                                                        : "bg-bg-secondary-light border-border-light hover:bg-bg-tertiary-light"
-                                                }
-                    `}
-                    style={{ right: showPalette ? "256px" : "0" }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                >
-                    {showPalette ? (
-                        <MdChevronRight
-                            className={`w-5 h-5 mx-auto ${
-                                isDark
-                                    ? "text-text-secondary-dark"
-                                    : "text-text-secondary-light"
-                            }`}
-                        />
-                    ) : (
-                        <MdChevronLeft
-                            className={`w-5 h-5 mx-auto ${
-                                isDark
-                                    ? "text-text-secondary-dark"
-                                    : "text-text-secondary-light"
-                            }`}
-                        />
-                    )}
-                </motion.button>
-
-                {/* Question Palette (Right Sidebar) */}
-                <AnimatePresence>
-                    {showPalette && (
-                        <motion.div
-                            initial={{ x: 300, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            exit={{ x: 300, opacity: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className={`
-                                w-64 h-full border-l overflow-y-auto
-                                ${
-                                                                isDark
-                                                                    ? "bg-bg-secondary-dark border-border-dark scrollbar-dark"
-                                                                    : "bg-bg-secondary-light border-border-light scrollbar-light"
-                                                            }
-                            `}
-                        >
-                            <QuestionPalette
-                                questions={questions}
-                                attempts={attempts}
-                                isDark={isDark}
-                            />
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {/* Footer */}
-                <motion.footer
-                    className={`
-                        fixed bottom-0 left-0 right-0 z-30 h-20
-                        backdrop-blur-xl border-t flex items-center justify-between px-6
-                        ${
-                                                        isDark
-                                                            ? "bg-bg-primary-dark/90 border-border-dark"
-                                                            : "bg-bg-primary-light/90 border-border-light"
-                                                    }
-                    `}
-                    initial={{ y: 80 }}
-                    animate={{ y: 0 }}
-                    transition={{ duration: 0.3 }}
-                >
-                    {isExamMode ? (
-                        <>
-                            {/* Left Section */}
-                            <div className="flex items-center gap-3">
-                                <button
-                                    onClick={handleMarkAndNext}
-                                    className={`
-                                        px-6 py-3 rounded-xl border-2 font-medium transition-all duration-200
-                                        ${
-                                                                            isDark
-                                                                                ? "border-brand-primary-dark text-brand-primary-dark hover:bg-brand-primary-dark/10"
-                                                                                : "border-brand-primary-light text-brand-primary-light hover:bg-brand-primary-light/10"
-                                                                        }
-                                    `}
-                                >
-                                    Mark for Review & Next
-                                </button>
-                                <button
-                                    onClick={handleClearResponse}
-                                    className={`
-                                        px-6 py-3 rounded-xl border-2 font-medium transition-all duration-200
-                                        ${
-                                                                            isDark
-                                                                                ? "border-border-dark text-text-secondary-dark hover:border-brand-primary-dark hover:text-brand-primary-dark"
-                                                                                : "border-border-light text-text-secondary-light hover:border-brand-primary-light hover:text-brand-primary-light"
-                                                                        }
-                                    `}
-                                >
-                                    Clear Response
-                                </button>
-                            </div>
-
-                            {/* Right Section */}
-                            <div className="flex items-center gap-3">
-                                <button
-                                    onClick={handleSaveAndNext}
-                                    disabled={!selectedOption}
-                                    className={`
+			{/* Footer */}
+			<footer
+				className={`fixed bottom-0 inset-x-0 h-20 border-t flex items-center justify-between px-6 backdrop-blur-xl z-30 ${
+					isDark
+						? "bg-bg-primary-dark/90 border-border-dark"
+						: "bg-bg-primary-light/90 border-border-light"
+				}`}
+			>
+				{viewMode === "exam" ? (
+					<>
+						<button
+							onClick={() =>
+								dispatch(
+									toggleMarkForReview({
+										questionId: currentQuestion.id,
+										userId: "uid",
+										passageId: currentQuestion.passage_id,
+									})
+								)
+							}
+							className="px-6 py-2 rounded-lg border"
+						>
+							Review
+						</button>
+						<div className="flex gap-3">
+							<button
+								onClick={handleSaveAndNext}
+								className={`
                                         px-6 py-3 rounded-xl font-medium transition-all duration-200
                                         ${
-                                                                            selectedOption
-                                                                                ? isDark
-                                                                                    ? "bg-brand-primary-dark text-white hover:scale-105"
-                                                                                    : "bg-brand-primary-light text-white hover:scale-105"
-                                                                                : isDark
-                                                                                ? "bg-bg-tertiary-dark text-text-muted-dark cursor-not-allowed"
-                                                                                : "bg-bg-tertiary-light text-text-muted-light cursor-not-allowed"
-                                                                        }
+																					currentQuestionId &&
+																					attempts[currentQuestionId]
+																						? isDark
+																							? "bg-brand-primary-dark text-white hover:scale-105"
+																							: "bg-brand-primary-light text-white hover:scale-105"
+																						: isDark
+																						? "bg-bg-tertiary-dark text-text-muted-dark cursor-not-allowed"
+																						: "bg-bg-tertiary-light text-text-muted-light cursor-not-allowed"
+																				}
                                     `}
-                                >
-                                    Save & Next
-                                </button>
-                                <button
-                                    onClick={handleSubmitSession}
-                                    className={`
-                                        px-6 py-3 rounded-xl font-medium text-white transition-all duration-200
-                                        ${
-                                                                            isDark
-                                                                                ? "bg-success hover:scale-105"
-                                                                                : "bg-success hover:scale-105"
-                                                                        }
-                                    `}
-                                >
-                                    Submit
-                                </button>
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            {/* Solution Mode Footer */}
-                            <div className="flex items-center gap-4">
-                                <button
-                                    onClick={handlePreviousQuestion}
-                                    disabled={isFirstQuestion}
-                                    className={`
-                                        px-6 py-3 rounded-xl border-2 font-medium transition-all duration-200
-                                        ${
-                                                                            !isFirstQuestion
-                                                                                ? isDark
-                                                                                    ? "border-border-dark text-text-secondary-dark hover:border-brand-primary-dark hover:text-brand-primary-dark"
-                                                                                    : "border-border-light text-text-secondary-light hover:border-brand-primary-light hover:text-brand-primary-light"
-                                                                                : isDark
-                                                                                ? "border-border-dark text-text-muted-dark cursor-not-allowed"
-                                                                                : "border-border-light text-text-muted-light cursor-not-allowed"
-                                                                        }
-                                    `}
-                                >
-                                    Previous
-                                </button>
-                                <span
-                                    className={`
-                                        px-4 py-2 rounded-lg
-                                        ${
-                                                                            isDark
-                                                                                ? "bg-bg-tertiary-dark text-text-secondary-dark"
-                                                                                : "bg-bg-tertiary-light text-text-secondary-light"
-                                                                        }
-                                    `}
-                                >
-                                    {currentQuestionIndex + 1} / {questions.length}
-                                </span>
-                                <button
-                                    onClick={handleNextQuestion}
-                                    disabled={isLastQuestion}
-                                    className={`
-                                        px-6 py-3 rounded-xl border-2 font-medium transition-all duration-200
-                                        ${
-                                                                            !isLastQuestion
-                                                                                ? isDark
-                                                                                    ? "border-border-dark text-text-secondary-dark hover:border-brand-primary-dark hover:text-brand-primary-dark"
-                                                                                    : "border-border-light text-text-secondary-light hover:border-brand-primary-light hover:text-brand-primary-light"
-                                                                                : isDark
-                                                                                ? "border-border-dark text-text-muted-dark cursor-not-allowed"
-                                                                                : "border-border-light text-text-muted-light cursor-not-allowed"
-                                                                        }
-                                    `}
-                                >
-                                    Next
-                                </button>
-                            </div>
-                        </>
-                    )}
-                </motion.footer>
-            </div>
-        </div>
-    );
+							>
+								Save & Next
+							</button>
+							<button
+								onClick={handleFinishExam}
+								className="px-6 py-2 bg-green-600 text-white rounded-lg"
+							>
+								Submit
+							</button>
+						</div>
+					</>
+				) : (
+					<div className="flex gap-4 w-full justify-center">
+						<button
+							onClick={() => dispatch(goToPreviousQuestion())}
+							className="px-6 py-2 border rounded-lg"
+						>
+							Previous
+						</button>
+						<button
+							onClick={() => dispatch(goToNextQuestion())}
+							className="px-6 py-2 border rounded-lg"
+						>
+							Next
+						</button>
+					</div>
+				)}
+			</footer>
+		</div>
+	);
 };
 
 export default DailyRCPage;

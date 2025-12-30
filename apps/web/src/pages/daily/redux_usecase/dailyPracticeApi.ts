@@ -421,6 +421,8 @@ export const dailyPracticeApi = createApi({
         saveQuestionAttempts: builder.mutation<QuestionAttempt[], SaveQuestionAttemptsQuery>({
             queryFn: async ({ attempts }) => {
                 console.log('[DailyPracticeApi] saveQuestionAttempts called with', attempts.length, 'attempts');
+                console.log("this is the data : ")
+                console.log(attempts)
                 try {
                     // Step 1: Get current user
                     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -438,7 +440,7 @@ export const dailyPracticeApi = createApi({
                     // Step 2: Upsert attempts
                     const { data, error } = await supabase
                         .from("question_attempts")
-                        .upsert(attempts, { onConflict: "user_id,session_id,question_id" })
+                        .upsert(attempts, { onConflict: "user_id, session_id, question_id" })
                         .select();
 
                     if (error) {

@@ -1,10 +1,9 @@
 import React, { useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import type { DailyPassage } from "../../../../types";
 
 interface SplitPaneLayoutProps {
 	isDark: boolean;
-	passage: DailyPassage | null;
+	passage: any | null;
 	children: React.ReactNode;
 	showPassage: boolean;
 	isExamMode: boolean;
@@ -56,7 +55,7 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
 					{/* Passage Header */}
 					<div
 						className={`
-                        flex-shrink-0 p-4 border-b
+                        shrink-0 p-4 border-b
                         ${isDark ? "border-border-dark" : "border-border-light"}
                     `}
 					>

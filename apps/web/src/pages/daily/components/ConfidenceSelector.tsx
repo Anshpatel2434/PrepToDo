@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -7,8 +7,9 @@ import {
 	MdOutlineSentimentSatisfied,
 } from "react-icons/md";
 import {
-	selectConfidenceLevel,
-	setConfidenceLevel,
+	selectAttempts,
+	selectCurrentQuestionId,
+	updateConfidenceLevel,
 } from "../redux_usecase/dailyPracticeSlice";
 
 interface ConfidenceSelectorProps {
@@ -21,7 +22,19 @@ export const ConfidenceSelector: React.FC<ConfidenceSelectorProps> = ({
 	disabled = false,
 }) => {
 	const dispatch = useDispatch();
-	const confidenceLevel = useSelector(selectConfidenceLevel);
+
+	const attempts = useSelector(selectAttempts);
+	const currentQuestionId = useSelector(selectCurrentQuestionId);
+	const userId = currentQuestionId
+		? attempts[currentQuestionId]?.user_id
+		: "user-id";
+	const passageId = currentQuestionId
+		? attempts[currentQuestionId]?.passage_id
+		: "passage-id";
+	const questionId = currentQuestionId
+		? attempts[currentQuestionId]?.question_id
+		: "question-id";
+	const [confidenceLevel, setConfidenceLevel] = useState<number>(0);
 
 	const options = [
 		{
@@ -50,7 +63,9 @@ export const ConfidenceSelector: React.FC<ConfidenceSelectorProps> = ({
             transition-all duration-200
         `;
 
-		const isSelected = confidenceLevel === level;
+		const isSelected = currentQuestionId
+			? attempts[currentQuestionId]?.confidence_level === level
+			: false;
 
 		if (isSelected) {
 			if (level === 1) {
@@ -89,9 +104,18 @@ export const ConfidenceSelector: React.FC<ConfidenceSelectorProps> = ({
 					return (
 						<motion.button
 							key={option.level}
-							onClick={() =>
-								!disabled && dispatch(setConfidenceLevel(option.level))
-							}
+							onClick={() => {
+								setConfidenceLevel(option.level);
+								!disabled &&
+									dispatch(
+										updateConfidenceLevel({
+											userId: userId ? userId : "",
+											passageId: passageId ? passageId : "",
+											questionId: questionId ? questionId : "",
+											confidence_level: option.level,
+										})
+									);
+							}}
 							className={getOptionStyles(option.level)}
 							disabled={disabled}
 							whileHover={!disabled ? { scale: 1.02 } : {}}
