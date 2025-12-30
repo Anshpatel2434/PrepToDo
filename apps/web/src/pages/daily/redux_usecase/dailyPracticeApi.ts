@@ -254,93 +254,92 @@ export const dailyPracticeApi = createApi({
 
         // Fetch existing session details (for resuming)
         fetchExistingSessionDetails: builder.query<
-            { session: PracticeSession; attempts: QuestionAttempt[] },FetchExistingSessionQuery>({
-            queryFn: async ({ user_id, paper_id, session_type }) => {
-                console.log('[DailyPracticeApi] fetchExistingSessionDetails called for session type:', session_type);
-                try {
-                    // Step 1: Get current user
-                    const { data: { user }, error: userError } = await supabase.auth.getUser();
+            { session: PracticeSession; attempts: QuestionAttempt[] }, FetchExistingSessionQuery>({
+                queryFn: async ({ user_id, paper_id, session_type }) => {
+                    console.log('[DailyPracticeApi] fetchExistingSessionDetails called for session type:', session_type);
+                    try {
+                        // Step 1: Get current user
+                        const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-                    if (userError || !user) {
-                        console.log('[DailyPracticeApi] User is not authenticated');
+                        if (userError || !user) {
+                            console.log('[DailyPracticeApi] User is not authenticated');
+                            return {
+                                error: {
+                                    status: "UNAUTHORIZED",
+                                    data: "User not authenticated",
+                                },
+                            };
+                        }
+
+                        // Step 2: Fetch the most recent in-progress or paused session
+                        const { data: sessionData, error: sessionError } = await supabase
+                            .from("practice_sessions")
+                            .select("*")
+                            .eq("user_id", user_id)
+                            .eq("paper_id", paper_id)
+                            .eq("session_type", session_type)
+                            .order("created_at", { ascending: false })
+                            .limit(1);
+
+                        if (sessionError) {
+                            console.log('[DailyPracticeApi] Error while fetching existing session:', sessionError);
+                            return {
+                                error: {
+                                    status: "CUSTOM_ERROR",
+                                    data: sessionError.message,
+                                },
+                            };
+                        }
+
+                        if (!sessionData || sessionData.length === 0) {
+                            console.log('[DailyPracticeApi] No existing session found');
+                            return {
+                                error: {
+                                    status: "NOT_FOUND",
+                                    data: "No existing session found",
+                                },
+                            };
+                        }
+
+                        const session = sessionData[0];
+                        console.log('[DailyPracticeApi] Found existing session:', session.id);
+
+                        // Step 3: Fetch all attempts for this session
+                        const { data: attemptsData, error: attemptsError } = await supabase
+                            .from("question_attempts")
+                            .select("*")
+                            .eq("session_id", session.id);
+
+                        if (attemptsError) {
+                            console.log('[DailyPracticeApi] Error while fetching question attempts:', attemptsError);
+                            return {
+                                error: {
+                                    status: "CUSTOM_ERROR",
+                                    data: attemptsError.message,
+                                },
+                            };
+                        }
+
+                        console.log('[DailyPracticeApi] Fetched', attemptsData?.length || 0, 'existing attempts');
                         return {
-                            error: {
-                                status: "UNAUTHORIZED",
-                                data: "User not authenticated",
+                            data: {
+                                session: session,
+                                attempts: attemptsData || [],
                             },
                         };
-                    }
-
-                    // Step 2: Fetch the most recent in-progress or paused session
-                    const { data: sessionData, error: sessionError } = await supabase
-                        .from("practice_sessions")
-                        .select("*")
-                        .eq("user_id", user_id)
-                        .eq("paper_id", paper_id)
-                        .eq("session_type", session_type)
-                        .in("status", ["in_progress", "paused"])
-                        .order("created_at", { ascending: false })
-                        .limit(1);
-
-                    if (sessionError) {
-                        console.log('[DailyPracticeApi] Error while fetching existing session:', sessionError);
+                    } catch (error) {
+                        console.log('[DailyPracticeApi] Error in fetchExistingSessionDetails:', error);
+                        const e = error as { message?: string };
                         return {
                             error: {
                                 status: "CUSTOM_ERROR",
-                                data: sessionError.message,
+                                data: e.message || "Error while fetching existing session details",
                             },
                         };
                     }
-
-                    if (!sessionData || sessionData.length === 0) {
-                        console.log('[DailyPracticeApi] No existing session found');
-                        return {
-                            error: {
-                                status: "NOT_FOUND",
-                                data: "No existing session found",
-                            },
-                        };
-                    }
-
-                    const session = sessionData[0];
-                    console.log('[DailyPracticeApi] Found existing session:', session.id);
-
-                    // Step 3: Fetch all attempts for this session
-                    const { data: attemptsData, error: attemptsError } = await supabase
-                        .from("question_attempts")
-                        .select("*")
-                        .eq("session_id", session.id);
-
-                    if (attemptsError) {
-                        console.log('[DailyPracticeApi] Error while fetching question attempts:', attemptsError);
-                        return {
-                            error: {
-                                status: "CUSTOM_ERROR",
-                                data: attemptsError.message,
-                            },
-                        };
-                    }
-
-                    console.log('[DailyPracticeApi] Fetched', attemptsData?.length || 0, 'existing attempts');
-                    return {
-                        data: {
-                            session: session,
-                            attempts: attemptsData || [],
-                        },
-                    };
-                } catch (error) {
-                    console.log('[DailyPracticeApi] Error in fetchExistingSessionDetails:', error);
-                    const e = error as { message?: string };
-                    return {
-                        error: {
-                            status: "CUSTOM_ERROR",
-                            data: e.message || "Error while fetching existing session details",
-                        },
-                    };
-                }
-            },
-            providesTags: ["Session", "Attempts"],
-        }),
+                },
+                providesTags: ["Session", "Attempts"],
+            }),
 
         // Save session details (update existing session)
         saveSessionDetails: builder.mutation<PracticeSession, SaveSessionDetailsQuery>({
