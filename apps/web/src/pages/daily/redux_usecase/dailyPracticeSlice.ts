@@ -13,7 +13,7 @@ interface DailyPracticeState {
     // Core Data
     currentQuestionIndex: number;
     questionOrder: UUID[];
-    attempts: Record<UUID, Partial<QuestionAttempt>>; // Keyed by Question ID
+    attempts: Record<UUID, Partial<QuestionAttempt>>; // Keyed by Question ID - only saved entries
 
     // Session Metadata
     session: PracticeSession;
@@ -23,6 +23,9 @@ interface DailyPracticeState {
     // UI Transients
     isSubmitting: boolean;
     showQuestionPalette: boolean;
+
+    // Pending - tracks unsaved answer changes until user commits or navigates away
+    pendingAttempts: Record<UUID, Partial<QuestionAttempt>>;
 }
 
 const initialState: DailyPracticeState = {
@@ -63,6 +66,7 @@ const initialState: DailyPracticeState = {
     elapsedTimeSeconds: 0,
     isSubmitting: false,
     showQuestionPalette: true,
+    pendingAttempts: {},
 };
 
 const dailyPracticeSlice = createSlice({
@@ -121,9 +125,9 @@ const dailyPracticeSlice = createSlice({
                 ? Math.floor((timeNow - state.startTime) / 1000)
                 : 0;
 
-            const existing = state.attempts[questionId];
+            const existing = state.pendingAttempts[questionId] || state.attempts[questionId];
 
-            state.attempts[questionId] = {
+            state.pendingAttempts[questionId] = {
                 ...existing,
                 user_id: userId,
                 session_id: state.session.id!,
@@ -138,6 +142,54 @@ const dailyPracticeSlice = createSlice({
 
             // Reset start time for the next interaction
             state.startTime = timeNow;
+        },
+
+        // Commit pending attempt to saved attempts (called on Save & Next or Mark & Next)
+        commitPendingAttempt: (
+            state,
+            action: PayloadAction<{
+                questionId: UUID;
+                userId: UUID;
+                passageId: UUID | null;
+                markForReview?: boolean;
+            }>
+        ) => {
+            const { questionId, userId, passageId, markForReview } = action.payload;
+            const pending = state.pendingAttempts[questionId];
+
+            if (pending) {
+                state.attempts[questionId] = {
+                    ...pending,
+                    marked_for_review: markForReview ?? pending.marked_for_review ?? false,
+                };
+                // Clear from pending
+                delete state.pendingAttempts[questionId];
+            } else {
+                // If no pending, just mark for review with empty answer
+                state.attempts[questionId] = {
+                    user_id: userId,
+                    session_id: state.session.id!,
+                    question_id: questionId,
+                    passage_id: passageId,
+                    marked_for_review: markForReview ?? true,
+                    time_spent_seconds: 0,
+                    is_correct: false,
+                };
+            }
+        },
+
+        // Clear pending attempt (called on navigation without saving)
+        clearPendingAttempt: (
+            state,
+            action: PayloadAction<UUID>
+        ) => {
+            const questionId = action.payload;
+            delete state.pendingAttempts[questionId];
+        },
+
+        // Clear all pending attempts (cleanup)
+        clearAllPendingAttempts: (state) => {
+            state.pendingAttempts = {};
         },
 
         toggleMarkForReview: (
@@ -208,15 +260,29 @@ const dailyPracticeSlice = createSlice({
             if (state.attempts[questionId]) {
                 delete state.attempts[questionId];
             }
+            // Also clear from pending if exists
+            if (state.pendingAttempts[questionId]) {
+                delete state.pendingAttempts[questionId];
+            }
         },
 
         // --- Navigation ---
         setCurrentQuestionIndex: (state, action: PayloadAction<number>) => {
+            // Clear pending attempt for previous question when navigating
+            const previousQuestionId = state.questionOrder[state.currentQuestionIndex];
+            if (previousQuestionId) {
+                delete state.pendingAttempts[previousQuestionId];
+            }
             state.currentQuestionIndex = action.payload;
             state.startTime = Date.now(); // Reset question timer on navigation
         },
 
         goToNextQuestion: (state) => {
+            // Clear pending attempt for current question when navigating without saving
+            const currentQuestionId = state.questionOrder[state.currentQuestionIndex];
+            if (currentQuestionId) {
+                delete state.pendingAttempts[currentQuestionId];
+            }
             if (state.currentQuestionIndex < state.questionOrder.length - 1) {
                 state.currentQuestionIndex++;
                 state.startTime = Date.now();
@@ -224,6 +290,11 @@ const dailyPracticeSlice = createSlice({
         },
 
         goToPreviousQuestion: (state) => {
+            // Clear pending attempt for current question when navigating without saving
+            const currentQuestionId = state.questionOrder[state.currentQuestionIndex];
+            if (currentQuestionId) {
+                delete state.pendingAttempts[currentQuestionId];
+            }
             if (state.currentQuestionIndex > 0) {
                 state.currentQuestionIndex--;
                 state.startTime = Date.now();
@@ -274,6 +345,10 @@ export const selectAttempts = createSelector(
     selectDailyState,
     (s) => s.attempts
 );
+export const selectPendingAttempts = createSelector(
+    selectDailyState,
+    (s) => s.pendingAttempts
+);
 export const selectQuestionOrder = createSelector(
     selectDailyState,
     (s) => s.questionOrder
@@ -294,8 +369,8 @@ export const selectCurrentQuestionId = createSelector(
 );
 
 export const selectCurrentAttempt = createSelector(
-    [selectAttempts, selectCurrentQuestionId],
-    (attempts, id) => (id ? attempts[id] : undefined)
+    [selectAttempts, selectPendingAttempts, selectCurrentQuestionId],
+    (attempts, pendingAttempts, id) => (id ? (pendingAttempts[id] || attempts[id]) : undefined)
 );
 
 export const selectIsLastQuestion = createSelector(
@@ -340,6 +415,9 @@ export const {
     toggleQuestionPalette,
     resetDailyPractice,
     updateConfidenceLevel,
+    commitPendingAttempt,
+    clearPendingAttempt,
+    clearAllPendingAttempts,
 } = dailyPracticeSlice.actions;
 
 export default dailyPracticeSlice.reducer;
