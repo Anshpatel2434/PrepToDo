@@ -48,7 +48,6 @@ export const dailyPracticeApi = createApi({
                 console.log("-------------------IN FETCHING DAILY TEST DATA API-----------------");
                 try {
                     // Step 1: Get current user
-                    console.log("1. Checking if the user is logged in or not");
                     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
                     if (userError || !user) {
@@ -60,10 +59,8 @@ export const dailyPracticeApi = createApi({
                             },
                         };
                     }
-                    console.log("User is logged in");
 
                     // Step 2: Get the daily practice exam details from the table
-                    console.log("2. Fetching the daily exam details");
                     const { data: examInfo, error: examInfoError } = await supabase
                         .from("exam_papers")
                         .select("*")
@@ -81,10 +78,7 @@ export const dailyPracticeApi = createApi({
                         };
                     }
 
-                    console.log("The daily exam details response is:", examInfo);
-
                     // Step 3: Get the passage linked with the particular exam id
-                    console.log("3. Fetching the daily exam passage");
                     const { data: passage, error: passageError } = await supabase
                         .from("passages")
                         .select("*")
@@ -101,10 +95,7 @@ export const dailyPracticeApi = createApi({
                         };
                     }
 
-                    console.log("The daily exam passage response is:", passage);
-
                     // Step 4: Get the questions linked with the particular exam id
-                    console.log("4. Fetching the daily exam questions");
                     const { data: questions, error: questionError } = await supabase
                         .from("questions")
                         .select("*")
@@ -120,8 +111,6 @@ export const dailyPracticeApi = createApi({
                             },
                         };
                     }
-
-                    console.log("The daily exam question response is:", questions);
 
                     return {
                         data: {

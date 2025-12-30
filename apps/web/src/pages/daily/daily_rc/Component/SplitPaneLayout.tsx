@@ -155,7 +155,7 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
 					{isExamMode && (
 						<div
 							className={`
-                            flex-shrink-0 px-4 py-2 text-center text-xs
+                            shrink-0 px-4 py-2 text-center text-xs
                             ${
 															isDark
 																? "bg-bg-tertiary-dark text-text-muted-dark"
