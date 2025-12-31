@@ -5,6 +5,7 @@ export {
     default as dailyPracticeReducer,
 } from './redux_usecase/dailyPracticeSlice';
 
+/*
 // Mock Data
 export { 
     dailyRCData, 
@@ -18,6 +19,7 @@ export {
     paraCompletionQuestion,
     oddOneOutQuestion,
 } from './mock_data/dailyMockData';
+*/
 
 // Shared Components
 export { default as QuestionPalette } from './components/QuestionPalette';

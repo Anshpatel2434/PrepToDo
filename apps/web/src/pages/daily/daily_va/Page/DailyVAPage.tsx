@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from "react";
+import React, { useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../../../context/ThemeContext";
@@ -21,7 +21,6 @@ import {
     selectElapsedTime,
     selectPendingAttempts,
     initializeSession,
-    toggleMarkForReview,
     clearResponse,
     goToNextQuestion,
     goToPreviousQuestion,
@@ -69,7 +68,7 @@ const DailyVAPage: React.FC = () => {
     const isLastQuestion = useSelector(selectIsLastQuestion);
 
     //navigation restricitons
-    const [allowNavigation, setAllowNavigation] = useState(false);
+    const allowNavigation = false;
     const shouldBlock =
         !allowNavigation && viewMode === "exam" && Object.keys(attempts).length > 0;
 
@@ -184,6 +183,7 @@ const DailyVAPage: React.FC = () => {
                 rationale_viewed: false,
                 rationale_helpful: null,
                 ai_feedback: null,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             })) as any;
 
             await Promise.all([
@@ -299,7 +299,7 @@ const DailyVAPage: React.FC = () => {
     // ... Render (Keep UI JSX similar to DailyRCPage but without SplitPane for passages) ...
     return (
         <div
-            className={`min-h-screen ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
+            className={`h-screen flex flex-col ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
                 }`}
         >
             <FloatingThemeToggle />
@@ -307,19 +307,19 @@ const DailyVAPage: React.FC = () => {
 
             {/* Header */}
             <header
-                className={`fixed top-0 inset-x-0 h-16 z-30 flex items-center justify-between px-6 border-b backdrop-blur-xl ${isDark
+                className={`shrink-0 h-16 z-30 flex items-center justify-between px-4 md:px-6 border-b backdrop-blur-xl ${isDark
                     ? "bg-bg-primary-dark/90 border-border-dark"
                     : "bg-bg-primary-light/90 border-border-light"
                     }`}
             >
                 <h1
-                    className={`font-serif font-bold text-xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                    className={`font-serif font-bold text-lg md:text-xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
                         }`}
                 >
-                    Daily Practice: VA
+                    <span className="hidden sm:inline">Daily Practice: </span>VA
                 </h1>
-                <div className="flex items-center gap-4">
-                    <div className="w-32 h-2 rounded-full bg-gray-200 overflow-hidden">
+                <div className="flex items-center gap-2 md:gap-4">
+                    <div className="w-20 md:w-32 h-2 rounded-full bg-gray-200 overflow-hidden">
                         <div
                             className="h-full bg-blue-600 transition-all duration-300"
                             style={{
@@ -328,9 +328,9 @@ const DailyVAPage: React.FC = () => {
                         />
                     </div>
                     <span
-                        className={
+                        className={`text-sm ${
                             isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
-                        }
+                        }`}
                     >
                         {progress.answered}/{questions.length}
                     </span>
@@ -338,8 +338,8 @@ const DailyVAPage: React.FC = () => {
             </header>
 
             {/* Main Body */}
-            <div className="pt-16 h-screen flex relative overflow-hidden">
-                <div className="flex-1 h-full">
+            <div className="flex-1 flex relative overflow-hidden">
+                <div className="flex-1 h-full overflow-hidden">
                     <QuestionPanel question={currentQuestion} isDark={isDark} />
                 </div>
 
@@ -350,7 +350,7 @@ const DailyVAPage: React.FC = () => {
                                             absolute right-${showPalette ? "64" : "0"
                         } top-1/2 -translate-y-1/2 z-40
                                             w-8 h-16 rounded-l-lg border border-r-0
-                                            transition-all duration-300
+                                            transition-all duration-300 hidden md:flex
                                             ${isDark
                             ? "bg-bg-secondary-dark border-border-dark hover:bg-bg-tertiary-dark"
                             : "bg-bg-secondary-light border-border-light hover:bg-bg-tertiary-light"
@@ -384,11 +384,22 @@ const DailyVAPage: React.FC = () => {
                             initial={{ x: 300 }}
                             animate={{ x: 0 }}
                             exit={{ x: 300 }}
-                            className={`w-64 border-l overflow-y-auto ${isDark
-                                ? "bg-bg-secondary-dark border-border-dark"
-                                : "bg-bg-secondary-light border-border-light"
-                                }`}
+                            className={`
+                                fixed md:relative inset-y-0 right-0 z-50 md:z-auto
+                                w-72 md:w-64 border-l overflow-y-auto shadow-2xl md:shadow-none
+                                ${isDark
+                                    ? "bg-bg-secondary-dark border-border-dark"
+                                    : "bg-bg-secondary-light border-border-light"
+                                }
+                            `}
                         >
+                            {/* Mobile Close Button */}
+                            <button 
+                                onClick={() => setShowPalette(false)}
+                                className="md:hidden absolute top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-800"
+                            >
+                                <MdChevronRight className="w-6 h-6" />
+                            </button>
                             <QuestionPalette
                                 questions={questions}
                                 attempts={attempts}
@@ -398,53 +409,69 @@ const DailyVAPage: React.FC = () => {
                         </motion.div>
                     )}
                 </AnimatePresence>
+
+                {/* Mobile Palette Toggle */}
+                {!showPalette && (
+                    <button
+                        onClick={() => setShowPalette(true)}
+                        className={`md:hidden absolute right-0 top-1/2 -translate-y-1/2 z-40 w-8 h-12 text-white rounded-l-lg flex items-center justify-center ${isDark ? "bg-brand-primary-dark" : "bg-brand-primary-light"}`}
+                    >
+                        <MdChevronLeft className="w-5 h-5" />
+                    </button>
+                )}
             </div>
 
             {/* Footer */}
             <footer
-                className={`fixed bottom-0 inset-x-0 h-20 border-t flex items-center justify-between px-6 backdrop-blur-xl z-30 ${isDark
+                className={`shrink-0 min-h-[5rem] md:h-20 border-t flex flex-col md:flex-row items-center justify-between px-4 md:px-6 py-4 md:py-0 backdrop-blur-xl z-30 gap-4 ${isDark
                     ? "bg-bg-primary-dark/90 border-border-dark"
                     : "bg-bg-primary-light/90 border-border-light"
                     }`}
             >
                 {viewMode === "exam" ? (
                     <>
-                        <div className="flex gap-3">
+                        <div className="flex gap-2 md:gap-3 w-full md:w-auto justify-between md:justify-start">
                             <button
                                 onClick={() => dispatch(clearResponse())}
                                 className={`
-                                        px-6 py-3 rounded-xl font-medium transition-all duration-200
+                                        flex-1 md:flex-none px-4 md:px-6 py-2 md:py-3 rounded-xl font-medium text-sm md:text-base transition-all duration-200
                                         ${isDark
-										? "bg-brand-primary-dark text-white hover:scale-105"
-										: "bg-brand-primary-light text-white hover:scale-105"
-									}
+                                        ? "bg-brand-primary-dark text-white hover:scale-105"
+                                        : "bg-brand-primary-light text-white hover:scale-105"
+                                    }
                                     `}
                             >
-                                Clear Response
+                                Clear
                             </button>
                             <button
                                 onClick={handleMarkForReviewAndNext}
                                 className={`
-                                        px-6 py-3 rounded-xl font-medium transition-all duration-200
+                                        flex-1 md:flex-none px-4 md:px-6 py-2 md:py-3 rounded-xl font-medium text-sm md:text-base transition-all duration-200
                                         ${isDark
-										? "bg-brand-primary-dark text-white hover:scale-105"
-										: "bg-brand-primary-light text-white hover:scale-105"
-									}
+                                        ? "bg-brand-primary-dark text-white hover:scale-105"
+                                        : "bg-brand-primary-light text-white hover:scale-105"
+                                    }
                                     `}
                             >
-                                Mark for Review & Next
+                                Mark for Review
                             </button>
                         </div>
-                        <div className="flex gap-3">
+                        <div className="flex gap-2 md:gap-3 w-full md:w-auto justify-between md:justify-end">
                             <button
                                 onClick={handleSaveAndNext}
-                                className="px-6 py-2 bg-blue-600 text-white rounded-lg"
+                                className={`
+                                        flex-1 md:flex-none px-4 md:px-6 py-2 md:py-3 rounded-xl font-medium text-sm md:text-base transition-all duration-200
+                                        ${isDark
+                                        ? "bg-brand-primary-dark text-white hover:scale-105"
+                                        : "bg-brand-primary-light text-white hover:scale-105"
+                                    }
+                                    `}
                             >
-                                Save & Next
+                                {isLastQuestion ? "Finish" : "Save & Next"}
                             </button>
                             <button
                                 onClick={handleFinishExam}
-                                className="px-6 py-2 bg-green-600 text-white rounded-lg"
+                                className="px-4 md:px-6 py-2 md:py-3 bg-green-600 text-white rounded-xl font-medium text-sm md:text-base hover:scale-105 transition-all duration-200"
                             >
                                 Submit
                             </button>
@@ -455,17 +482,17 @@ const DailyVAPage: React.FC = () => {
                         <button
                             onClick={() => dispatch(goToPreviousQuestion())}
                                 className={`px-6 py-2 border rounded-lg ${isDark
-                                    ? " text-white hover:scale-105"
-                                    : " text-white hover:scale-105"
-									}`}
+                                    ? " border-border-dark text-text-primary-dark hover:scale-105"
+                                    : " border-border-light text-text-primary-light hover:scale-105"
+                                    }`}
                         >
                             Previous
                         </button>
                         <button
                             onClick={() => dispatch(goToNextQuestion())}
                                 className={`px-6 py-2 border rounded-lg ${isDark
-                                    ? " text-white hover:scale-105"
-                                    : " text-white hover:scale-105"
+                                    ? " border-border-dark text-text-primary-dark hover:scale-105"
+                                    : " border-border-light text-text-primary-light hover:scale-105"
                                     }`}
                         >
                             Next

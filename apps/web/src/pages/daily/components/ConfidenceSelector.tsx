@@ -110,14 +110,14 @@ export const ConfidenceSelector: React.FC<ConfidenceSelectorProps> = ({
                             key={option.level}
                             onClick={() => {
                                 setConfidenceLevel(option.level);
-                                !disabled &&
-                                    currentQuestionId &&
+                                if (!disabled && currentQuestionId) {
                                     dispatch(
                                         updateConfidenceLevel({
                                             questionId: currentQuestionId,
                                             confidence_level: option.level,
                                         })
                                     );
+                                }
                             }}
                             className={getOptionStyles(option.level)}
                             disabled={disabled}

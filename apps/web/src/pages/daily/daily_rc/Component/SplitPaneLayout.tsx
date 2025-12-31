@@ -1,186 +1,199 @@
-import React, { useRef, useCallback } from "react";
+import React, { useRef, useCallback, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 interface SplitPaneLayoutProps {
-	isDark: boolean;
-	passage: any | null;
-	children: React.ReactNode;
-	showPassage: boolean;
-	isExamMode: boolean;
+    isDark: boolean;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    passage: any | null;
+    children: React.ReactNode;
+    showPassage: boolean;
+    isExamMode: boolean;
 }
 
 export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
-	isDark,
-	passage,
-	children,
-	showPassage,
-	isExamMode,
+    isDark,
+    passage,
+    children,
+    showPassage,
+    isExamMode,
 }) => {
-	const passageRef = useRef<HTMLDivElement>(null);
+    const passageRef = useRef<HTMLDivElement>(null);
+    const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
-	// Handle text selection for vocab tooltip (Solution mode only)
-	const handleTextSelection = useCallback(() => {
-		if (isExamMode) return;
+    useEffect(() => {
+        const handleResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
-		const selection = window.getSelection();
-		if (selection && selection.toString().trim()) {
-			// Show "Add to Vocab" tooltip
-			// This is a placeholder - actual implementation would show a tooltip
-			console.log("Selected text:", selection.toString());
-		}
-	}, [isExamMode]);
+    // Handle text selection for vocab tooltip (Solution mode only)
+    const handleTextSelection = useCallback(() => {
+        if (isExamMode) return;
 
-	return (
-		<div className="h-full flex">
-			{/* Left Pane - Passage */}
-			<motion.div
-				className={`
-                    h-full overflow-hidden flex flex-col
-                    ${showPassage ? "w-1/2" : "w-0"}
+        const selection = window.getSelection();
+        if (selection && selection.toString().trim()) {
+            // Show "Add to Vocab" tooltip
+            // This is a placeholder - actual implementation would show a tooltip
+            console.log("Selected text:", selection.toString());
+        }
+    }, [isExamMode]);
+
+    const isMobile = windowWidth < 768;
+
+    return (
+        <div className="h-full flex flex-col md:flex-row">
+            {/* Left Pane - Passage */}
+            <motion.div
+                className={`
+                    overflow-hidden flex flex-col border-b-2 md:border-b-0 md:border-r-2
+                    ${isDark ? "border-border-dark" : "border-border-light"}
                     transition-all duration-300 ease-in-out
                 `}
-				initial={{ width: "50%" }}
-				animate={{ width: showPassage ? "50%" : "0%" }}
-			>
-				<div
-					className={`
-                    h-full flex flex-col border-r-2
+                animate={{
+                    width: showPassage ? (isMobile ? "100%" : "50%") : "0%",
+                    height: showPassage ? (isMobile ? "50%" : "100%") : "0%",
+                }}
+            >
+                <div
+                    className={`
+                    h-full flex flex-col
                     ${isDark
-							? "bg-bg-secondary-dark border-border-dark"
-							: "bg-bg-secondary-light border-border-light"
-						}
+                            ? "bg-bg-secondary-dark"
+                            : "bg-bg-secondary-light"
+                        }
                 `}
-				>
-					{/* Passage Header */}
-					<div
-						className={`
+                >
+                    {/* Passage Header */}
+                    <div
+                        className={`
                         shrink-0 p-4 border-b
                         ${isDark ? "border-border-dark" : "border-border-light"}
                     `}
-					>
-						<div className="flex items-center justify-between">
-							<div>
-								<h2
-									className={`
+                    >
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h2
+                                    className={`
                                     font-serif font-semibold text-lg
                                     ${isDark
-											? "text-text-primary-dark"
-											: "text-text-primary-light"
-										}
+                                            ? "text-text-primary-dark"
+                                            : "text-text-primary-light"
+                                        }
                                 `}
-								>
-									{passage?.title || "Passage"}
-								</h2>
-								<p
-									className={`
+                                >
+                                    {passage?.title || "Passage"}
+                                </h2>
+                                <p
+                                    className={`
                                     text-xs mt-1
                                     ${isDark
-											? "text-text-muted-dark"
-											: "text-text-muted-light"
-										}
+                                            ? "text-text-muted-dark"
+                                            : "text-text-muted-light"
+                                        }
                                 `}
-								>
-									{passage?.genre && `${passage.genre} • `}
-									{passage?.content &&
-										`${passage.content.split(/\s+/).length} words`}
-								</p>
-							</div>
-							<span
-								className={`
+                                >
+                                    {passage?.genre && `${passage.genre} • `}
+                                    {passage?.content &&
+                                        `${passage.content.split(/\s+/).length} words`}
+                                </p>
+                            </div>
+                            <span
+                                className={`
                                 px-2 py-1 rounded text-xs font-medium uppercase
                                 ${isDark
-										? "bg-brand-primary-dark/30 text-brand-primary-dark"
-										: "bg-brand-primary-light/20 text-brand-primary-light"
-									}
+                                        ? "bg-brand-primary-dark/30 text-brand-primary-dark"
+                                        : "bg-brand-primary-light/20 text-brand-primary-light"
+                                    }
                             `}
-							>
-								{isExamMode ? "Exam Mode" : "Solution Mode"}
-							</span>
-						</div>
-					</div>
+                            >
+                                {isExamMode ? "Exam Mode" : "Solution Mode"}
+                            </span>
+                        </div>
+                    </div>
 
-					{/* Passage Content */}
-					<div
-						ref={passageRef}
-						className={`
+                    {/* Passage Content */}
+                    <div
+                        ref={passageRef}
+                        className={`
                             flex-1 overflow-y-auto p-6 prose max-w-none
                             ${isExamMode ? "select-none" : ""}
                             ${isDark
-								? "prose-invert prose-slate text-text-secondary-dark scrollbar-dark"
-								: "prose-slate text-text-secondary-light scrollbar-light"
-							}
+                                ? "prose-invert prose-slate text-text-secondary-dark scrollbar-dark"
+                                : "prose-slate text-text-secondary-light scrollbar-light"
+                            }
                         `}
-						onMouseUp={handleTextSelection}
-						onCopy={(e) => {
-							if (isExamMode) {
-								e.preventDefault();
-							}
-						}}
-					>
-						{passage?.content ? (
-							<div
-								className={`
+                        onMouseUp={handleTextSelection}
+                        onCopy={(e) => {
+                            if (isExamMode) {
+                                e.preventDefault();
+                            }
+                        }}
+                    >
+                        {passage?.content ? (
+                            <div
+                                className={`
                                     font-serif leading-loose text-lg
                                     ${isDark
-										? "text-text-secondary-dark"
-										: "text-text-secondary-light"
-									}
+                                        ? "text-text-secondary-dark"
+                                        : "text-text-secondary-light"
+                                    }
                                 `}
-								dangerouslySetInnerHTML={{ __html: passage.content }}
-							/>
-						) : (
-							<div
-								className={`
+                                dangerouslySetInnerHTML={{ __html: passage.content }}
+                            />
+                        ) : (
+                            <div
+                                className={`
                                 flex items-center justify-center h-full
                                 ${isDark
-										? "text-text-muted-dark"
-										: "text-text-muted-light"
-									}
+                                        ? "text-text-muted-dark"
+                                        : "text-text-muted-light"
+                                    }
                             `}
-							>
-								<p>No passage available</p>
-							</div>
-						)}
-					</div>
+                            >
+                                <p>No passage available</p>
+                            </div>
+                        )}
+                    </div>
 
-					{/* Copy Protection Notice (Exam Mode) */}
-					{isExamMode && (
-						<div
-							className={`
+                    {/* Copy Protection Notice (Exam Mode) */}
+                    {isExamMode && (
+                        <div
+                            className={`
                             shrink-0 px-4 py-2 text-center text-xs
                             ${isDark
-									? "bg-bg-tertiary-dark text-text-muted-dark"
-									: "bg-bg-tertiary-light text-text-muted-light"
-								}
+                                    ? "bg-bg-tertiary-dark text-text-muted-dark"
+                                    : "bg-bg-tertiary-light text-text-muted-light"
+                                }
                         `}
-						>
-							Text selection is disabled during the exam
-						</div>
-					)}
-				</div>
-			</motion.div>
+                        >
+                            Text selection is disabled during the exam
+                        </div>
+                    )}
+                </div>
+            </motion.div>
 
-			{/* Right Pane - Question */}
-			<motion.div
-				className={`
-                    h-full flex flex-col
-                    ${showPassage ? "w-1/2" : "w-full"}
+            {/* Right Pane - Question */}
+            <motion.div
+                className={`
+                    flex flex-col
                     transition-all duration-300 ease-in-out
                 `}
-				initial={{ width: "50%" }}
-				animate={{ width: showPassage ? "50%" : "100%" }}
-			>
-				<div
-					className={`
+                animate={{
+                    width: showPassage ? (isMobile ? "100%" : "50%") : "100%",
+                    height: showPassage ? (isMobile ? "50%" : "100%") : "100%",
+                }}
+            >
+                <div
+                    className={`
                     h-full flex flex-col
                     ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"}
                 `}
-				>
-					{children}
-				</div>
-			</motion.div>
-		</div>
-	);
+                >
+                    {children}
+                </div>
+            </motion.div>
+        </div>
+    );
 };
 
 export default SplitPaneLayout;

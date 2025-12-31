@@ -108,18 +108,32 @@ const buildDummySessions = (nowIso: string): PracticeSession[] => {
         sessions.push({
             id: makeUuid(2000 + i),
             user_id: USER_ID,
+            paper_id: makeUuid(999),
             session_type: i % 3 === 0 ? "timed_test" : "practice",
             mode: i % 2 === 0 ? "tutor" : "test",
             passage_ids: null,
             question_ids: null,
+            target_difficuly: "medium",
+            target_genres: [],
+            target_question_types: [],
             time_limit_seconds: i % 3 === 0 ? 30 * 60 : null,
             time_spent_seconds,
+            started_at: nowIso,
+            completed_at: nowIso,
+            paused_at: nowIso,
+            pause_duration_seconds: 0,
+            total_questions: 10,
+            correct_answers: 7,
+            current_question_index: 0,
+            is_group_session: false,
+            group_id: makeUuid(0),
             status: "completed",
             score_percentage: i % 3 === 0 ? 72 + (i % 4) * 4 : null,
             points_earned: 0,
             created_at: nowIso,
             updated_at: nowIso,
-        });
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any);
     }
 
     return sessions;
@@ -212,10 +226,13 @@ const buildDummyAttempts = (
             is_correct: isCorrect,
             time_spent_seconds: 35 + (i % 5) * 18,
             confidence_level: (i % 5) + 1,
+            marked_for_review: false,
             rationale_viewed: i % 3 === 0,
+            rationale_helpful: true,
             ai_feedback: null,
             created_at: nowIso,
-        };
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any;
     });
 };
 
@@ -249,7 +266,7 @@ const buildDummyLeaderboard = (nowIso: string): LeaderboardEntry[] => [
     },
 ];
 
-const formatQuestionTypeLabel = (t: Question["question_type"]) => {
+const formatQuestionTypeLabel = (t: string) => {
     switch (t) {
         case "vocab_in_context":
             return "Vocab in context";

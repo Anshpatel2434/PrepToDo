@@ -372,6 +372,7 @@ export const dailyPracticeApi = createApi({
                     }
 
                     // Step 2: Update session
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const updateData: any = {
                         time_spent_seconds,
                         status,
