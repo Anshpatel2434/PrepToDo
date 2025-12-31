@@ -197,7 +197,7 @@ const DailyVAPage: React.FC = () => {
                 rationale_viewed: false,
                 rationale_helpful: null,
                 ai_feedback: null,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
             })) as any;
 
             await Promise.all([
@@ -341,9 +341,8 @@ const DailyVAPage: React.FC = () => {
                         />
                     </div>
                     <span
-                        className={`text-sm ${
-                            isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
-                        }`}
+                        className={`text-sm ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                            }`}
                     >
                         {progress.answered}/{questions.length}
                     </span>
@@ -360,16 +359,18 @@ const DailyVAPage: React.FC = () => {
                 <motion.button
                     onClick={() => setShowPalette(!showPalette)}
                     className={`
-                                            absolute top-1/2 -translate-y-1/2 z-[60]
-                                            w-8 h-16 rounded-l-lg border border-r-0
-                                            transition-all duration-300 flex items-center justify-center
-                                            ${isDark
+        absolute top-1/2 -translate-y-1/2 z-60
+        w-8 h-16 rounded-l-lg border border-r-0
+        transition-all duration-300 flex items-center justify-center
+        ${isDark
                             ? "bg-bg-secondary-dark border-border-dark hover:bg-bg-tertiary-dark"
                             : "bg-bg-secondary-light border-border-light hover:bg-bg-tertiary-light"
                         }
-                                        `}
-                    animate={{ right: showPalette ? paletteWidth : 0 }}
-                    transition={{ type: "spring", damping: 20, stiffness: 300 }}
+    `}
+                    // Move the positional logic here for an instant jump
+                    style={{ right: showPalette ? paletteWidth : 0 }}
+
+                    // Keep these for the interaction feel
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                 >
@@ -419,7 +420,7 @@ const DailyVAPage: React.FC = () => {
 
             {/* Footer */}
             <footer
-                className={`shrink-0 min-h-[5rem] md:h-20 border-t flex flex-col md:flex-row items-center justify-between px-4 md:px-6 py-4 md:py-0 backdrop-blur-xl z-30 gap-4 ${isDark
+                className={`shrink-0 min-h-20 md:h-20 border-t flex flex-col md:flex-row items-center justify-between px-4 md:px-6 py-4 md:py-0 backdrop-blur-xl z-30 gap-4 ${isDark
                     ? "bg-bg-primary-dark/90 border-border-dark"
                     : "bg-bg-primary-light/90 border-border-light"
                     }`}
@@ -477,19 +478,19 @@ const DailyVAPage: React.FC = () => {
                     <div className="flex gap-4 w-full justify-center">
                         <button
                             onClick={() => dispatch(goToPreviousQuestion())}
-                                className={`px-6 py-2 border rounded-lg ${isDark
-                                    ? " border-border-dark text-text-primary-dark hover:scale-105"
-                                    : " border-border-light text-text-primary-light hover:scale-105"
-                                    }`}
+                            className={`px-6 py-2 border rounded-lg ${isDark
+                                ? " border-border-dark text-text-primary-dark hover:scale-105"
+                                : " border-border-light text-text-primary-light hover:scale-105"
+                                }`}
                         >
                             Previous
                         </button>
                         <button
                             onClick={() => dispatch(goToNextQuestion())}
-                                className={`px-6 py-2 border rounded-lg ${isDark
-                                    ? " border-border-dark text-text-primary-dark hover:scale-105"
-                                    : " border-border-light text-text-primary-light hover:scale-105"
-                                    }`}
+                            className={`px-6 py-2 border rounded-lg ${isDark
+                                ? " border-border-dark text-text-primary-dark hover:scale-105"
+                                : " border-border-light text-text-primary-light hover:scale-105"
+                                }`}
                         >
                             Next
                         </button>
