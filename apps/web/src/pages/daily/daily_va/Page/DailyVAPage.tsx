@@ -38,6 +38,7 @@ import {
     useSaveQuestionAttemptsMutation,
 } from "../../redux_usecase/dailyPracticeApi";
 import { MdChevronLeft, MdChevronRight } from "react-icons/md";
+import { DailyRCVAPageSkeleton } from "../../components/DailySkeleton";
 import { v4 as uuid4 } from "uuid";
 import { useExamNavigationGuard } from "../../navigation_hook/useExamNavigation";
 
@@ -45,6 +46,19 @@ const DailyVAPage: React.FC = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { isDark } = useTheme();
+
+    const [windowWidth, setWindowWidth] = React.useState(
+        typeof window !== "undefined" ? window.innerWidth : 1024
+    );
+
+    useEffect(() => {
+        const handleResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
+    const isMobile = windowWidth < 768;
+    const paletteWidth = isMobile ? 288 : 256;
 
     // 1. Data Fetching
     const { data: testData, isLoading: isTestDataLoading } =
@@ -289,11 +303,7 @@ const DailyVAPage: React.FC = () => {
     }, [attempts]);
 
     if (isLoading || !currentQuestion) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                Loading VA...
-            </div>
-        );
+        return <DailyRCVAPageSkeleton isRC={false} />;
     }
 
     // ... Render (Keep UI JSX similar to DailyRCPage but without SplitPane for passages) ...
@@ -316,7 +326,10 @@ const DailyVAPage: React.FC = () => {
                     className={`font-serif font-bold text-lg md:text-xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
                         }`}
                 >
-                    <span className="hidden sm:inline">Daily Practice: </span>VA
+                    <span className="hidden sm:inline">
+                        {testData?.examInfo.name || "Daily Practice"}:{" "}
+                    </span>
+                    VA
                 </h1>
                 <div className="flex items-center gap-2 md:gap-4">
                     <div className="w-20 md:w-32 h-2 rounded-full bg-gray-200 overflow-hidden">
@@ -347,29 +360,29 @@ const DailyVAPage: React.FC = () => {
                 <motion.button
                     onClick={() => setShowPalette(!showPalette)}
                     className={`
-                                            absolute right-${showPalette ? "64" : "0"
-                        } top-1/2 -translate-y-1/2 z-40
+                                            absolute top-1/2 -translate-y-1/2 z-[60]
                                             w-8 h-16 rounded-l-lg border border-r-0
-                                            transition-all duration-300 hidden md:flex
+                                            transition-all duration-300 flex items-center justify-center
                                             ${isDark
                             ? "bg-bg-secondary-dark border-border-dark hover:bg-bg-tertiary-dark"
                             : "bg-bg-secondary-light border-border-light hover:bg-bg-tertiary-light"
                         }
                                         `}
-                    style={{ right: showPalette ? "256px" : "0" }}
+                    animate={{ right: showPalette ? paletteWidth : 0 }}
+                    transition={{ type: "spring", damping: 20, stiffness: 300 }}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                 >
                     {showPalette ? (
                         <MdChevronRight
-                            className={`w-5 h-5 mx-auto ${isDark
+                            className={`w-5 h-5 ${isDark
                                 ? "text-text-secondary-dark"
                                 : "text-text-secondary-light"
                                 }`}
                         />
                     ) : (
                         <MdChevronLeft
-                            className={`w-5 h-5 mx-auto ${isDark
+                            className={`w-5 h-5 ${isDark
                                 ? "text-text-secondary-dark"
                                 : "text-text-secondary-light"
                                 }`}
@@ -393,13 +406,6 @@ const DailyVAPage: React.FC = () => {
                                 }
                             `}
                         >
-                            {/* Mobile Close Button */}
-                            <button 
-                                onClick={() => setShowPalette(false)}
-                                className="md:hidden absolute top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-800"
-                            >
-                                <MdChevronRight className="w-6 h-6" />
-                            </button>
                             <QuestionPalette
                                 questions={questions}
                                 attempts={attempts}
@@ -409,16 +415,6 @@ const DailyVAPage: React.FC = () => {
                         </motion.div>
                     )}
                 </AnimatePresence>
-
-                {/* Mobile Palette Toggle */}
-                {!showPalette && (
-                    <button
-                        onClick={() => setShowPalette(true)}
-                        className={`md:hidden absolute right-0 top-1/2 -translate-y-1/2 z-40 w-8 h-12 text-white rounded-l-lg flex items-center justify-center ${isDark ? "bg-brand-primary-dark" : "bg-brand-primary-light"}`}
-                    >
-                        <MdChevronLeft className="w-5 h-5" />
-                    </button>
-                )}
             </div>
 
             {/* Footer */}
