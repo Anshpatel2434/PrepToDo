@@ -83,11 +83,10 @@ export const ConfidenceSelector: React.FC<ConfidenceSelectorProps> = ({
             }
         }
 
-        return `${baseStyles} ${
-            isDark
+        return `${baseStyles} ${isDark
                 ? "bg-bg-tertiary-dark border-border-dark text-text-muted-dark"
                 : "bg-bg-tertiary-light border-border-light text-text-muted-light"
-        } hover:border-brand-primary-${isDark ? "dark" : "light"}`;
+            } hover:border-brand-primary-${isDark ? "dark" : "light"}`;
     };
 
     return (
@@ -95,11 +94,10 @@ export const ConfidenceSelector: React.FC<ConfidenceSelectorProps> = ({
             <label
                 className={`
                 text-xs font-medium uppercase tracking-wide
-                ${
-                                    isDark
-                                        ? "text-text-secondary-dark"
-                                        : "text-text-secondary-light"
-                                }
+                ${isDark
+                        ? "text-text-secondary-dark"
+                        : "text-text-secondary-light"
+                    }
             `}
             >
                 Confidence
@@ -138,11 +136,10 @@ export const ConfidenceSelector: React.FC<ConfidenceSelectorProps> = ({
                     animate={{ opacity: 1, y: 0 }}
                     className={`
                         text-xs mt-1
-                        ${
-                                                    isDark
-                                                        ? "text-text-muted-dark"
-                                                        : "text-text-muted-light"
-                                                }
+                        ${isDark
+                            ? "text-text-muted-dark"
+                            : "text-text-muted-light"
+                        }
                     `}
                 >
                     {confidenceLevel === 1 && "Not very sure about this answer"}

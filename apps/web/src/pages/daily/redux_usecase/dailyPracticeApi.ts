@@ -117,6 +117,8 @@ export const dailyPracticeApi = createApi({
 
                     console.log('[DailyPracticeApi] Fetched', questions.length, 'questions');
 
+                    console.log(questions)
+
                     return {
                         data: {
                             examInfo: examInfo[0],

@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../../../context/ThemeContext";
@@ -39,6 +39,8 @@ import {
     useSaveQuestionAttemptsMutation,
 } from "../../redux_usecase/dailyPracticeApi";
 import { MdChevronLeft, MdChevronRight } from "react-icons/md";
+import { v4 as uuid4 } from "uuid";
+import { useExamNavigationGuard } from "../../navigation_hook/useExamNavigation";
 
 const DailyVAPage: React.FC = () => {
     const dispatch = useDispatch();
@@ -65,6 +67,13 @@ const DailyVAPage: React.FC = () => {
     const session = useSelector(selectSession);
     const elapsedTime = useSelector(selectElapsedTime);
     const isLastQuestion = useSelector(selectIsLastQuestion);
+
+    //navigation restricitons
+    const [allowNavigation, setAllowNavigation] = useState(false);
+    const shouldBlock =
+        !allowNavigation && viewMode === "exam" && Object.keys(attempts).length > 0;
+
+    useExamNavigationGuard(shouldBlock);
 
     //Derived UI Data
     const questions = React.useMemo(
@@ -155,67 +164,6 @@ const DailyVAPage: React.FC = () => {
         };
     }, [dispatch]);
 
-    // 5. Navigation Confirmation
-    // useEffect(() => {
-    //     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-    //         if (viewMode === "exam" && Object.keys(attempts).length > 0) {
-    //             const confirmationMessage = "You have unsaved progress. Are you sure you want to leave?";
-    //             e.preventDefault();
-    //             e.returnValue = confirmationMessage;
-    //             return confirmationMessage;
-    //         }
-    //     };
-
-    //     const handlePopState = async () => {
-    //         if (viewMode === "exam" && Object.keys(attempts).length > 0) {
-    //             const shouldLeave = window.confirm("You have unsaved progress. Are you sure you want to leave?");
-    //             if (!shouldLeave) {
-    //                 window.history.pushState(null, "", window.location.pathname);
-    //                 return false;
-    //             }
-
-    //             // Save session and attempts before leaving
-    //             try {
-    //                 const attemptList = Object.values(attempts).map((a) => ({
-    //                     ...a,
-    //                     user_id: session.user_id,
-    //                     session_id: session.id,
-    //                     user_answer: a.user_answer || {},
-    //                     marked_for_review: a.marked_for_review || false,
-    //                     rationale_viewed: false,
-    //                     rationale_helpful: null,
-    //                     ai_feedback: null,
-    //                 })) as any;
-
-    //                 await Promise.all([
-    //                     saveSession({
-    //                         session_id: session.id,
-    //                         status: "paused",
-    //                         time_spent_seconds: elapsedTime,
-    //                         total_questions: questions.length,
-    //                         correct_answers: progress.correct,
-    //                         score_percentage: progress.percentage,
-    //                         current_question_index: currentQuestionIndex,
-    //                     }).unwrap(),
-    //                     attemptList.length > 0
-    //                         ? saveAttempts({ attempts: attemptList }).unwrap()
-    //                         : Promise.resolve(),
-    //                 ]);
-    //             } catch (e) {
-    //                 console.error("Failed to save session before leaving:", e);
-    //             }
-    //         }
-    //     };
-
-    //     window.addEventListener("beforeunload", handleBeforeUnload);
-    //     window.addEventListener("popstate", handlePopState);
-
-    //     return () => {
-    //         window.removeEventListener("beforeunload", handleBeforeUnload);
-    //         window.removeEventListener("popstate", handlePopState);
-    //     };
-    // }, [viewMode, attempts, session, elapsedTime, questions.length, progress, currentQuestionIndex, saveSession, saveAttempts]);
-
     // 5. Handlers (Identical logic to RC)
     const handleFinishExam = useCallback(async () => {
         if (!session.id) return;
@@ -228,6 +176,7 @@ const DailyVAPage: React.FC = () => {
             const attemptList = Object.values(attempts).map((a) => ({
                 ...a,
                 // Ensure strictly required fields for DB
+                id: a.id ? a.id : uuid4(),
                 user_id: session.user_id,
                 session_id: session.id,
                 user_answer: a.user_answer || {},
@@ -309,6 +258,36 @@ const DailyVAPage: React.FC = () => {
         }
     };
 
+    useEffect(() => {
+        const handler = (e: BeforeUnloadEvent) => {
+            if (viewMode !== "exam" || Object.keys(attempts).length === 0) return;
+
+            const payload = JSON.stringify({
+                session_id: session.id,
+                status: "paused",
+                time_spent_seconds: elapsedTime,
+                current_question_index: currentQuestionIndex,
+                attempts,
+            });
+
+            navigator.sendBeacon("/api/save-exam-progress", payload);
+
+            e.preventDefault();
+            e.returnValue = "";
+        };
+
+        window.addEventListener("beforeunload", handler);
+        return () => window.removeEventListener("beforeunload", handler);
+    }, [saveSession]);
+
+    //Just to check the updated attempts on each change if happenning or not
+    useEffect(() => {
+        console.log(
+            "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%changes in attempts%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+        );
+        console.log(attempts);
+    }, [attempts]);
+
     if (isLoading || !currentQuestion) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -320,25 +299,22 @@ const DailyVAPage: React.FC = () => {
     // ... Render (Keep UI JSX similar to DailyRCPage but without SplitPane for passages) ...
     return (
         <div
-            className={`min-h-screen ${
-                isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
-            }`}
+            className={`min-h-screen ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
+                }`}
         >
             <FloatingThemeToggle />
             <FloatingNavigation />
 
             {/* Header */}
             <header
-                className={`fixed top-0 inset-x-0 h-16 z-30 flex items-center justify-between px-6 border-b backdrop-blur-xl ${
-                    isDark
-                        ? "bg-bg-primary-dark/90 border-border-dark"
-                        : "bg-bg-primary-light/90 border-border-light"
-                }`}
+                className={`fixed top-0 inset-x-0 h-16 z-30 flex items-center justify-between px-6 border-b backdrop-blur-xl ${isDark
+                    ? "bg-bg-primary-dark/90 border-border-dark"
+                    : "bg-bg-primary-light/90 border-border-light"
+                    }`}
             >
                 <h1
-                    className={`font-serif font-bold text-xl ${
-                        isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                    }`}
+                    className={`font-serif font-bold text-xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                        }`}
                 >
                     Daily Practice: VA
                 </h1>
@@ -371,16 +347,14 @@ const DailyVAPage: React.FC = () => {
                 <motion.button
                     onClick={() => setShowPalette(!showPalette)}
                     className={`
-                                            absolute right-${
-                                                                                            showPalette ? "64" : "0"
-                                                                                        } top-1/2 -translate-y-1/2 z-40
+                                            absolute right-${showPalette ? "64" : "0"
+                        } top-1/2 -translate-y-1/2 z-40
                                             w-8 h-16 rounded-l-lg border border-r-0
                                             transition-all duration-300
-                                            ${
-                                                                                            isDark
-                                                                                                ? "bg-bg-secondary-dark border-border-dark hover:bg-bg-tertiary-dark"
-                                                                                                : "bg-bg-secondary-light border-border-light hover:bg-bg-tertiary-light"
-                                                                                        }
+                                            ${isDark
+                            ? "bg-bg-secondary-dark border-border-dark hover:bg-bg-tertiary-dark"
+                            : "bg-bg-secondary-light border-border-light hover:bg-bg-tertiary-light"
+                        }
                                         `}
                     style={{ right: showPalette ? "256px" : "0" }}
                     whileHover={{ scale: 1.05 }}
@@ -388,19 +362,17 @@ const DailyVAPage: React.FC = () => {
                 >
                     {showPalette ? (
                         <MdChevronRight
-                            className={`w-5 h-5 mx-auto ${
-                                isDark
-                                    ? "text-text-secondary-dark"
-                                    : "text-text-secondary-light"
-                            }`}
+                            className={`w-5 h-5 mx-auto ${isDark
+                                ? "text-text-secondary-dark"
+                                : "text-text-secondary-light"
+                                }`}
                         />
                     ) : (
                         <MdChevronLeft
-                            className={`w-5 h-5 mx-auto ${
-                                isDark
-                                    ? "text-text-secondary-dark"
-                                    : "text-text-secondary-light"
-                            }`}
+                            className={`w-5 h-5 mx-auto ${isDark
+                                ? "text-text-secondary-dark"
+                                : "text-text-secondary-light"
+                                }`}
                         />
                     )}
                 </motion.button>
@@ -412,11 +384,10 @@ const DailyVAPage: React.FC = () => {
                             initial={{ x: 300 }}
                             animate={{ x: 0 }}
                             exit={{ x: 300 }}
-                            className={`w-64 border-l overflow-y-auto ${
-                                isDark
-                                    ? "bg-bg-secondary-dark border-border-dark"
-                                    : "bg-bg-secondary-light border-border-light"
-                            }`}
+                            className={`w-64 border-l overflow-y-auto ${isDark
+                                ? "bg-bg-secondary-dark border-border-dark"
+                                : "bg-bg-secondary-light border-border-light"
+                                }`}
                         >
                             <QuestionPalette
                                 questions={questions}
@@ -431,24 +402,35 @@ const DailyVAPage: React.FC = () => {
 
             {/* Footer */}
             <footer
-                className={`fixed bottom-0 inset-x-0 h-20 border-t flex items-center justify-between px-6 backdrop-blur-xl z-30 ${
-                    isDark
-                        ? "bg-bg-primary-dark/90 border-border-dark"
-                        : "bg-bg-primary-light/90 border-border-light"
-                }`}
+                className={`fixed bottom-0 inset-x-0 h-20 border-t flex items-center justify-between px-6 backdrop-blur-xl z-30 ${isDark
+                    ? "bg-bg-primary-dark/90 border-border-dark"
+                    : "bg-bg-primary-light/90 border-border-light"
+                    }`}
             >
                 {viewMode === "exam" ? (
                     <>
                         <div className="flex gap-3">
                             <button
                                 onClick={() => dispatch(clearResponse())}
-                                className="px-6 py-2 rounded-lg border"
+                                className={`
+                                        px-6 py-3 rounded-xl font-medium transition-all duration-200
+                                        ${isDark
+										? "bg-brand-primary-dark text-white hover:scale-105"
+										: "bg-brand-primary-light text-white hover:scale-105"
+									}
+                                    `}
                             >
                                 Clear Response
                             </button>
                             <button
                                 onClick={handleMarkForReviewAndNext}
-                                className="px-6 py-2 rounded-lg border"
+                                className={`
+                                        px-6 py-3 rounded-xl font-medium transition-all duration-200
+                                        ${isDark
+										? "bg-brand-primary-dark text-white hover:scale-105"
+										: "bg-brand-primary-light text-white hover:scale-105"
+									}
+                                    `}
                             >
                                 Mark for Review & Next
                             </button>
@@ -472,13 +454,19 @@ const DailyVAPage: React.FC = () => {
                     <div className="flex gap-4 w-full justify-center">
                         <button
                             onClick={() => dispatch(goToPreviousQuestion())}
-                            className="px-6 py-2 border rounded-lg"
+                                className={`px-6 py-2 border rounded-lg ${isDark
+                                    ? " text-white hover:scale-105"
+                                    : " text-white hover:scale-105"
+									}`}
                         >
                             Previous
                         </button>
                         <button
                             onClick={() => dispatch(goToNextQuestion())}
-                            className="px-6 py-2 border rounded-lg"
+                                className={`px-6 py-2 border rounded-lg ${isDark
+                                    ? " text-white hover:scale-105"
+                                    : " text-white hover:scale-105"
+                                    }`}
                         >
                             Next
                         </button>

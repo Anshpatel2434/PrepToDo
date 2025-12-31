@@ -1,162 +1,18 @@
-import React, { useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../../context/ThemeContext";
 import { FloatingNavigation } from "../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
 import { MdMenuBook, MdSpellcheck } from "react-icons/md";
-import {
-	useLazyFetchDailyTestDataQuery,
-	useStartDailyRCSessionMutation,
-	useStartDailyVASessionMutation,
-	useLazyFetchExistingSessionDetailsQuery,
-} from "../redux_usecase/dailyPracticeApi";
-import { supabase } from "../../../services/apiClient";
-import type { Question } from "../../../types";
 
 const DailyPage: React.FC = () => {
 	const navigate = useNavigate();
 	const { isDark } = useTheme();
-	const [isStarting, setIsStarting] = useState(false);
-
-	const [fetchDailyData] = useLazyFetchDailyTestDataQuery();
-	const [startRCSession] = useStartDailyRCSessionMutation();
-	const [startVASession] = useStartDailyVASessionMutation();
-	const [fetchExistingSession] = useLazyFetchExistingSessionDetailsQuery();
 
 	const handleStartPractice = async (type: "rc" | "va") => {
 		console.log("[DailyPage] handleStartPractice called for type:", type);
-		setIsStarting(true);
-		try {
-			// Get current user
-			const {
-				data: { user },
-			} = await supabase.auth.getUser();
-			if (!user) {
-				console.error("[DailyPage] User not authenticated");
-				setIsStarting(false);
-				return;
-			}
-
-			console.log("[DailyPage] User authenticated:", user.id);
-
-			// Fetch daily test data
-			const { data: testData } = await fetchDailyData();
-			if (!testData) {
-				console.error("[DailyPage] Failed to fetch daily test data");
-				setIsStarting(false);
-				return;
-			}
-
-			console.log("[DailyPage] Test data fetched:", testData.examInfo.name);
-			console.log("[DailyPage] Total questions:", testData.questions.length);
-			console.log("[DailyPage] Total passages:", testData.passages.length);
-
-			// Check for existing session
-			const sessionType =
-				type === "rc" ? "daily_challenge_rc" : "daily_challenge_va";
-			console.log(
-				"[DailyPage] Checking for existing session of type:",
-				sessionType
-			);
-
-			const { data: existingSession, error: existingSessionError } =
-				await fetchExistingSession({
-					user_id: user.id,
-					paper_id: testData.examInfo.id,
-					session_type: sessionType,
-				});
-
-			if (existingSession && !existingSessionError) {
-				// Resume existing session
-				console.log(
-					"[DailyPage] Resuming existing session:",
-					existingSession.session.id
-				);
-				console.log(existingSession.session);
-				console.log(
-					"[DailyPage] Existing attempts:",
-					existingSession.attempts.length
-				);
-				navigate(type === "rc" ? "/daily/rc" : "/daily/va", {
-					state: {
-						session: existingSession.session,
-						testData,
-						existingAttempts: existingSession.attempts,
-					},
-				});
-				return;
-			}
-
-			console.log(
-				"[DailyPage] No existing session found, starting new session"
-			);
-
-			// Prepare passage and question IDs
-			let passageIds: string[] = [];
-			let questionIds: string[] = [];
-
-			if (type === "rc") {
-				// Filter RC questions and get associated passage IDs
-				const rcQuestions = testData.questions.filter(
-					(q: Question) =>
-						q.question_type === "rc_question" || q.passage_id !== null
-				);
-				questionIds = rcQuestions.map((q: Question) => q.id);
-
-				// Get unique passage IDs from RC questions
-				const passageIdSet = new Set<string>();
-				rcQuestions.forEach((q: Question) => {
-					if (q.passage_id) {
-						passageIdSet.add(q.passage_id);
-					}
-				});
-				passageIds = Array.from(passageIdSet);
-
-				console.log("[DailyPage] RC questions filtered:", questionIds.length);
-				console.log("[DailyPage] RC passages filtered:", passageIds.length);
-			} else {
-				// Filter VA questions (questions without passage_id)
-				const vaQuestions = testData.questions.filter(
-					(q: Question) =>
-						q.passage_id === null && q.question_type !== "rc_question"
-				);
-				questionIds = vaQuestions.map((q: Question) => q.id);
-
-				console.log("[DailyPage] VA questions filtered:", questionIds.length);
-			}
-
-			// Start appropriate session
-			if (type === "rc") {
-				console.log("[DailyPage] Starting new RC session");
-				const { data: session } = await startRCSession({
-					user_id: user.id,
-					paper_id: testData.examInfo.id,
-					passage_ids: passageIds,
-					question_ids: questionIds,
-				});
-				if (session) {
-					console.log("[DailyPage] RC session created:", session.id);
-					navigate("/daily/rc", { state: { session: session, testData } });
-				}
-			} else {
-				console.log("[DailyPage] Starting new VA session");
-				const { data: session } = await startVASession({
-					user_id: user.id,
-					paper_id: testData.examInfo.id,
-					passage_ids: passageIds,
-					question_ids: questionIds,
-				});
-				if (session) {
-					console.log("[DailyPage] VA session created:", session.id);
-					navigate("/daily/va", { state: { session: session, testData } });
-				}
-			}
-		} catch (error) {
-			console.error("[DailyPage] Error starting practice:", error);
-		} finally {
-			setIsStarting(false);
-		}
+		navigate(`/daily/${type}`);
 	};
 
 	const practiceOptions = [
@@ -237,32 +93,24 @@ const DailyPage: React.FC = () => {
 							<motion.button
 								key={option.id}
 								onClick={() => handleStartPractice(option.id as "rc" | "va")}
-								disabled={isStarting}
 								initial={{ opacity: 0, y: 20 }}
 								animate={{ opacity: 1, y: 0 }}
 								transition={{ delay: index * 0.1, duration: 0.5 }}
-								whileHover={!isStarting ? { scale: 1.02, y: -4 } : {}}
-								whileTap={!isStarting ? { scale: 0.98 } : {}}
 								className={`
                                     relative overflow-hidden p-8 rounded-2xl
-                                    border-2 transition-all duration-300
+                                    border-2
                                     text-left group
                                     ${
 																			isDark
 																				? "bg-bg-secondary-dark border-border-dark hover:border-brand-primary-dark"
 																				: "bg-bg-secondary-light border-border-light hover:border-brand-primary-light"
 																		}
-                                    ${
-																			isStarting
-																				? "opacity-50 cursor-not-allowed"
-																				: ""
-																		}
                                 `}
 							>
 								{/* Gradient Background */}
 								<div
 									className={`
-                                        absolute inset-0 bg-gradient-to-br ${option.gradient}
+                                        absolute inset-0 bg-linear-to-br ${option.gradient}
                                         opacity-0 group-hover:opacity-100 transition-opacity duration-300
                                     `}
 								/>
@@ -310,49 +158,26 @@ const DailyPage: React.FC = () => {
 
 									{/* Arrow indicator or Loading */}
 									<div className="mt-6 flex items-center gap-2">
-										{isStarting ? (
-											<div className="flex items-center gap-2">
-												<div
-													className={`w-4 h-4 rounded-full border-2 border-t-transparent animate-spin ${
-														isDark
-															? "border-brand-primary-dark"
-															: "border-brand-primary-light"
-													}`}
-												/>
-												<span
-													className={`text-sm font-medium ${
-														isDark
-															? "text-text-secondary-dark"
-															: "text-text-secondary-light"
-													}`}
-												>
-													Starting...
-												</span>
-											</div>
-										) : (
-											<>
-												<span
-													className={`text-sm font-medium ${
-														isDark
-															? "text-brand-primary-dark"
-															: "text-brand-primary-light"
-													}`}
-												>
-													Start Practice
-												</span>
-												<motion.span
-													className={`${
-														isDark
-															? "text-brand-primary-dark"
-															: "text-brand-primary-light"
-													}`}
-													animate={{ x: [0, 4, 0] }}
-													transition={{ repeat: Infinity, duration: 1.5 }}
-												>
-													→
-												</motion.span>
-											</>
-										)}
+										<span
+											className={`text-sm font-medium ${
+												isDark
+													? "text-brand-primary-dark"
+													: "text-brand-primary-light"
+											}`}
+										>
+											Start Practice
+										</span>
+										<motion.span
+											className={`${
+												isDark
+													? "text-brand-primary-dark"
+													: "text-brand-primary-light"
+											}`}
+											animate={{ x: [0, 4, 0] }}
+											transition={{ repeat: Infinity, duration: 1.5 }}
+										>
+											→
+										</motion.span>
 									</div>
 								</div>
 							</motion.button>

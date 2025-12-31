@@ -38,9 +38,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 
 			// Determine correctness immediately for the record
 			// (Note: For TITA, strictly matching string; for options, matching ID)
-			const isCorrect =
-				answerValue === question.correct_answer ||
-				answerValue === question.correct_answer?.correct_answer;
+			const isCorrect = answerValue === question.correct_answer?.correct_answer;
 
 			dispatch(
 				submitAnswer({
@@ -92,8 +90,8 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 						? "bg-brand-primary-dark/20 border-brand-primary-dark text-text-primary-dark ring-2 ring-brand-accent-light"
 						: "bg-brand-primary-light/10 border-brand-primary-light text-text-primary-light ring-2 ring-brand-accent-light"
 					: isDark
-					? "bg-bg-tertiary-dark border-border-dark hover:border-brand-primary-dark"
-					: "bg-bg-tertiary-light border-border-light hover:border-brand-primary-light"
+					? "bg-bg-tertiary-dark text-text-primary-dark border-border-dark hover:border-brand-primary-dark"
+					: "bg-bg-tertiary-light text-text-primary-light border-border-light hover:border-brand-primary-light"
 			}`;
 		}
 		// Solution Mode
@@ -112,8 +110,8 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 
 		return `w-full p-4 rounded-xl border-2 text-left opacity-50 ${
 			isDark
-				? "bg-bg-tertiary-dark border-border-dark"
-				: "bg-bg-tertiary-light border-border-light"
+			? "bg-bg-tertiary-dark text-text-primary-dark border-border-dark"
+			: "bg-bg-tertiary-light text-text-primary-light border-border-light"
 		}`;
 	};
 
@@ -136,8 +134,8 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 						{question.question_type.replace(/_/g, " ")}
 					</span>
 					<span
-						className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${
-							isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"
+						className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${question.difficulty === "easy" ? "bg-success/80" : question.difficulty === "medium" ? "bg-warning/80" : "bg-error/80"} ${
+							isDark ? "bg-bg-tertiary-dark text-text-primary-dark" : "bg-bg-tertiary-light text-text-primary-light"
 						}`}
 					>
 						{question.difficulty || "Medium"}
@@ -148,7 +146,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 				<motion.h3
 					initial={{ opacity: 0, y: 10 }}
 					animate={{ opacity: 1, y: 0 }}
-					className={`text-lg font-semibold leading-relaxed ${
+					className={`text-lg font-semibold ${
 						isDark ? "text-text-primary-dark" : "text-text-primary-light"
 					}`}
 				>
@@ -171,8 +169,8 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 									key={s.id}
 									className={`p-3 mb-2 rounded-lg border flex gap-3 ${
 										isDark
-											? "bg-bg-secondary-dark border-border-dark"
-											: "bg-bg-secondary-light border-border-light"
+											? "bg-bg-secondary-dark text-text-primary-dark border-border-dark"
+										: "bg-bg-secondary-light text-text-primary-light border-border-light"
 									}`}
 								>
 									<span className="font-mono font-bold opacity-50">{s.id}</span>
@@ -191,16 +189,19 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 								placeholder="Enter Sequence (e.g. 2143)"
 								className={`w-full p-4 rounded-xl border-2 text-center text-xl tracking-widest font-mono focus:outline-none focus:ring-2 focus:ring-brand-primary-light ${
 									isDark
-										? "bg-bg-tertiary-dark border-border-dark"
-										: "bg-bg-tertiary-light border-border-light"
+										? "bg-bg-tertiary-dark text-text-primary-dark border-border-dark"
+										: "bg-bg-tertiary-light text-text-primary-light border-border-light"
 								}`}
 							/>
 						) : (
-							<div className="p-4 rounded-xl border text-center font-mono text-lg">
+									<div className={`p-4 rounded-xl border text-center font-mono text-lg ${isDark
+											? " text-text-primary-dark "
+											: " text-text-primary-light "
+								} `}>
 								Your Answer:{" "}
 								<span
 									className={
-										question.correct_answer === userAnswer
+										question.correct_answer.correct_answer === userAnswer
 											? "text-success"
 											: "text-error"
 									}
@@ -209,7 +210,9 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 								</span>
 								<br />
 								Correct:{" "}
-								<span className="text-success">{question.correct_answer}</span>
+								<span className="text-success">
+									{question.correct_answer.correct_answer}
+								</span>
 							</div>
 						)}
 					</div>
@@ -249,8 +252,8 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 						animate={{ opacity: 1 }}
 						className={`mt-6 p-6 rounded-xl border ${
 							isDark
-								? "bg-bg-secondary-dark border-border-dark"
-								: "bg-bg-secondary-light border-border-light"
+								? "bg-bg-secondary-dark text-text-secondary-dark border-border-dark"
+							: "bg-bg-secondary-light text-text-secondary-light border-border-light"
 						}`}
 					>
 						<div className="flex justify-between items-center mb-4">
@@ -269,7 +272,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 						</p>
 					</motion.div>
 				)}
-				<div className="h-24" />
+				<div />
 			</div>
 		</div>
 	);

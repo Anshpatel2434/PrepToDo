@@ -45,11 +45,10 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
 				<div
 					className={`
                     h-full flex flex-col border-r-2
-                    ${
-											isDark
-												? "bg-bg-secondary-dark border-border-dark"
-												: "bg-bg-secondary-light border-border-light"
-										}
+                    ${isDark
+							? "bg-bg-secondary-dark border-border-dark"
+							: "bg-bg-secondary-light border-border-light"
+						}
                 `}
 				>
 					{/* Passage Header */}
@@ -64,11 +63,10 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
 								<h2
 									className={`
                                     font-serif font-semibold text-lg
-                                    ${
-																			isDark
-																				? "text-text-primary-dark"
-																				: "text-text-primary-light"
-																		}
+                                    ${isDark
+											? "text-text-primary-dark"
+											: "text-text-primary-light"
+										}
                                 `}
 								>
 									{passage?.title || "Passage"}
@@ -76,11 +74,10 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
 								<p
 									className={`
                                     text-xs mt-1
-                                    ${
-																			isDark
-																				? "text-text-muted-dark"
-																				: "text-text-muted-light"
-																		}
+                                    ${isDark
+											? "text-text-muted-dark"
+											: "text-text-muted-light"
+										}
                                 `}
 								>
 									{passage?.genre && `${passage.genre} • `}
@@ -91,11 +88,10 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
 							<span
 								className={`
                                 px-2 py-1 rounded text-xs font-medium uppercase
-                                ${
-																	isDark
-																		? "bg-brand-primary-dark/30 text-brand-primary-dark"
-																		: "bg-brand-primary-light/20 text-brand-primary-light"
-																}
+                                ${isDark
+										? "bg-brand-primary-dark/30 text-brand-primary-dark"
+										: "bg-brand-primary-light/20 text-brand-primary-light"
+									}
                             `}
 							>
 								{isExamMode ? "Exam Mode" : "Solution Mode"}
@@ -109,11 +105,10 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
 						className={`
                             flex-1 overflow-y-auto p-6 prose max-w-none
                             ${isExamMode ? "select-none" : ""}
-                            ${
-															isDark
-																? "prose-invert prose-slate text-text-secondary-dark scrollbar-dark"
-																: "prose-slate text-text-secondary-light scrollbar-light"
-														}
+                            ${isDark
+								? "prose-invert prose-slate text-text-secondary-dark scrollbar-dark"
+								: "prose-slate text-text-secondary-light scrollbar-light"
+							}
                         `}
 						onMouseUp={handleTextSelection}
 						onCopy={(e) => {
@@ -126,11 +121,10 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
 							<div
 								className={`
                                     font-serif leading-loose text-lg
-                                    ${
-																			isDark
-																				? "text-text-secondary-dark"
-																				: "text-text-secondary-light"
-																		}
+                                    ${isDark
+										? "text-text-secondary-dark"
+										: "text-text-secondary-light"
+									}
                                 `}
 								dangerouslySetInnerHTML={{ __html: passage.content }}
 							/>
@@ -138,11 +132,10 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
 							<div
 								className={`
                                 flex items-center justify-center h-full
-                                ${
-																	isDark
-																		? "text-text-muted-dark"
-																		: "text-text-muted-light"
-																}
+                                ${isDark
+										? "text-text-muted-dark"
+										: "text-text-muted-light"
+									}
                             `}
 							>
 								<p>No passage available</p>
@@ -155,11 +148,10 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
 						<div
 							className={`
                             shrink-0 px-4 py-2 text-center text-xs
-                            ${
-															isDark
-																? "bg-bg-tertiary-dark text-text-muted-dark"
-																: "bg-bg-tertiary-light text-text-muted-light"
-														}
+                            ${isDark
+									? "bg-bg-tertiary-dark text-text-muted-dark"
+									: "bg-bg-tertiary-light text-text-muted-light"
+								}
                         `}
 						>
 							Text selection is disabled during the exam

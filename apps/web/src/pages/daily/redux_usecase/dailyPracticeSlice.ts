@@ -401,7 +401,7 @@ export const selectProgressStats = createSelector(
             total,
             answered,
             correct,
-            percentage: total > 0 ? Math.round((answered / total) * 100) : 0,
+            percentage: total > 0 ? Math.round((correct / total) * 100) : 0,
         };
     }
 );
