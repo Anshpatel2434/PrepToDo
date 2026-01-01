@@ -117,7 +117,7 @@ export const QuestionSchema = z.object({
     ]),
     options: JSONSchema.optional(),
     jumbled_sentences : JSONSchema.optional(),
-    correct_answer: JSONSchema, //{"correct_answer" : "answer"}
+    correct_answer: JSONSchema, //{"answer" : "answer"}
     rationale: z.string(),
     difficulty: z.enum(["easy", "medium", "hard", "expert"]).nullable(),
     tags: z.array(z.string()).nullable(),

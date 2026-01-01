@@ -1,5 +1,7 @@
+import { fetchPassagesData } from "./retrieval/fetchPassagesData";
+import { fetchQuestionsData } from "./retrieval/fetchQuestionsData";
 import { generateEmbedding } from "./retrieval/generateEmbedding";
-import { searchTheoryEmbeddings } from "./retrieval/searchTheoryEmbeddings";
+import { searchPassageAndQuestionEmbeddings } from "./retrieval/searchPassageAndQuestionEmbeddings";
 
 
 export async function runDailyContent(genre: string) {
@@ -7,9 +9,7 @@ export async function runDailyContent(genre: string) {
 
     const embedding = await generateEmbedding(genre);
 
-    const matches = await searchTheoryEmbeddings(embedding, 5);
-    console.log("THESE WERE THE TOP 5 MATCHES AND THEIR IDS : ");
-    console.log(matches);
+    const matches = await searchPassageAndQuestionEmbeddings(embedding, 5);
     const passagesMatches = matches.passages;
     const questionsMatches = matches.questions;
 
@@ -20,7 +20,13 @@ export async function runDailyContent(genre: string) {
     //     primaryMatch.score
     // );
 
-    // const theoryChunk = await fetchTheoryChunk(primaryMatch.theory_id);
+    const passages = await fetchPassagesData(passagesMatches.map(match => match.passage_id));
+    const questions = await fetchQuestionsData(questionsMatches.map(match => match.question_id), passagesMatches.map(match => match.passage_id));
+
+    console.log("These are the passages : ")
+    console.log(passages)
+    console.log("These are the questions : ")
+    console.log(questions)
 
     // const graphRelations = await expandConceptGraph(theoryChunk.id);
 

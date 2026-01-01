@@ -1,6 +1,6 @@
 import { supabase } from "../../config/supabase";
 
-export async function searchTheoryEmbeddings(
+export async function searchPassageAndQuestionEmbeddings(
 	queryEmbedding: number[],
 	topK = 5
 ) {
@@ -22,7 +22,7 @@ export async function searchTheoryEmbeddings(
 
 	const { data:questionsData, error:questionsError } = await supabase.rpc("search_question_embeddings_by_type", {
 		query_embedding: queryEmbedding,
-		match_count: topK,
+		match_per_type: topK,
 	});
 
 	if (questionsError) {

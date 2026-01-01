@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { runConceptTeaching } from "./ai-orchestration/teaching-concept/runConceptTeaching";
+import { runDailyContent } from "./ai-orchestration/daily-content/runDailyContent";
 
 async function main() {
 	console.log("🧠 PrepToDo Services Booting...");
@@ -7,7 +7,7 @@ async function main() {
 	const concept =
 		"I think I struggle with understanding political passages, how do I solve that ? ";
 
-	// const explanation = await runConceptTeaching(concept);
+	await runDailyContent("History")
 
 	// console.log("\n📘 FINAL EXPLANATION:\n");
 	// console.log(explanation);

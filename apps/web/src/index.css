@@ -17,49 +17,47 @@
     --color-bg-secondary-dark: #1a1a1a;
     --color-bg-tertiary-dark: #2a2a2a;
 
-    /* ─────────────────────────────────────────────────────────────────────────
-     TEXT COLORS - Use as: text-text-primary-light, text-text-primary-dark
-     Research-Based: Never use pure black (#000000), maximize readability
+/* ─────────────────────────────────────────────────────────────────────────
+     TEXT COLORS - High readability Slate Blue
      ───────────────────────────────────────────────────────────────────────── */
-    --color-text-primary-light: #232d4b; /* Deep Charcoal - never use pure black */
-    --color-text-secondary-light: #58595b; /* Slate Gray */
+    --color-text-primary-light: #1d2a30; /* Deep slate blue */
+    --color-text-secondary-light: #415158;
     --color-text-muted-light: #6b7280;
 
-    --color-text-primary-dark: #f8fafc;
-    --color-text-secondary-dark: #e5e7eb;
-    --color-text-muted-dark: #d1d5db;
+    --color-text-primary-dark: #f2f4f5;
+    --color-text-secondary-dark: #e1e7ea;
+    --color-text-muted-dark: #94a3b8;
 
     /* ─────────────────────────────────────────────────────────────────────────
+     BRAND COLORS - Deep Teal (Trust) & Warm Amber (Achievement)
+     ───────────────────────────────────────────────────────────────────────── */
+    --color-brand-primary-light: #0d7377; /* Deep Teal - Focus & Trust */
+    --color-brand-primary-hover-light: #0a5c5f;
+    --color-brand-secondary-light: #14919b; /* Supporting Teal */
+    --color-brand-accent-light: #d4a039; /* Warm Amber Gold - Achievement */
+
+    --color-brand-primary-dark: #5bb5b8; /* Bright Teal for visibility */
+    --color-brand-primary-hover-dark: #7ec8ca;
+    --color-brand-secondary-dark: #45a0a5;
+    --color-brand-accent-dark: #e8b84a; /* Warm Amber Glow */
+
+    /* ─────────────────────────────────────────────────────────────────────────
+     SEMANTIC COLORS - Updated for PrepTodo System
+     ───────────────────────────────────────────────────────────────────────── */
+    --color-success: #28a745;
+    --color-warning: #ffc107;
+    --color-error: #dc3545;
+    --color-info: #17a2b8;
+    --color-gold-decoration: #ffc107; 
+    --color-gold-text: #d4a039;
+
+        /* ─────────────────────────────────────────────────────────────────────────
      BORDER COLORS - Use as: border-border-light, border-border-dark
      ───────────────────────────────────────────────────────────────────────── */
     --color-border-light: #d1d5db;
     --color-border-lighter: #e5e7eb;
     --color-border-dark: #4a5568;
     --color-border-darker: #718096;
-
-    /* ─────────────────────────────────────────────────────────────────────────
-     BRAND COLORS - Use as: bg-brand-primary-light, bg-brand-primary-dark
-     Ed-Tech Focus: Deep Indigo + Bronze Gold strategy - Professional, academic, trust-building
-     ───────────────────────────────────────────────────────────────────────── */
-    --color-brand-primary-light: #4f6b5f; /* Smoked Sage Ink */
-    --color-brand-primary-hover-light: #435c52;
-    --color-brand-secondary-light: #6f8b80; /* Quiet supporting sage */
-    --color-brand-accent-light: #a8832a; /* Aged brass gold (less shiny, more scholarly) */
-
-    --color-brand-primary-dark: #9fbfb2; /* Chalked sage glow */
-    --color-brand-primary-hover-dark: #b2cec3;
-    --color-brand-secondary-dark: #7f9f93;
-    --color-brand-accent-dark: #d6b45a; /* Soft lamp-gold */
-
-    /* ─────────────────────────────────────────────────────────────────────────
-     SEMANTIC COLORS - Use as: bg-success, text-error, etc.
-     ───────────────────────────────────────────────────────────────────────── */
-    --color-success: #10b981;
-    --color-warning: #f59e0b;
-    --color-error: #ef4444;
-    --color-info: #3b82f6;
-    --color-gold-decoration: #ffd700; /* Web Gold - DECORATION ONLY (stars, trophies, confetti) */
-    --color-gold-text: #b8860b; /* Bronze Gold - for text/icons */
 
     /* ─────────────────────────────────────────────────────────────────────────
      ANIMATIONS
