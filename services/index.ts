@@ -7,7 +7,7 @@ async function main() {
 	const concept =
 		"I think I struggle with understanding political passages, how do I solve that ? ";
 
-	await runDailyContent("History")
+	await runDailyContent()
 
 	// console.log("\n📘 FINAL EXPLANATION:\n");
 	// console.log(explanation);

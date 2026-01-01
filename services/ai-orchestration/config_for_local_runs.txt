@@ -1,0 +1,3 @@
+Always remove this from the package.json if you want to check and run the files locally:
+
+	"type": "module",

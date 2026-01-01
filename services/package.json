@@ -2,7 +2,6 @@
 	"name": "services",
 	"version": "1.0.0",
 	"description": "For backend handling",
-	"type": "module",
 	"main": "index.ts",
 	"scripts": {
 		"test": "npm run start",
@@ -16,8 +15,10 @@
 	"dependencies": {
 		"@supabase/supabase-js": "^2.89.0",
 		"dotenv": "^17.2.3",
+		"jsdom": "^27.4.0",
 		"openai": "^6.15.0",
-		"supabase": "^2.70.5"
+		"supabase": "^2.70.5",
+		"zod": "^4.3.4"
 	},
 	"devDependencies": {
 		"@types/node": "^25.0.3",
