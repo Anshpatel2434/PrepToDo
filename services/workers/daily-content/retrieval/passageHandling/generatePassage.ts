@@ -59,13 +59,13 @@ Only output the final passage.
 USER:
 Your task is to generate ONE NEW Reading Comprehension passage for daily practice.
 
-You are given TWO types of inputs:
+You are given THREE types of inputs:
 
 1) SEMANTIC IDEAS (abstracted, copyright-safe)
 2) AUTHORIAL PERSONA (STYLE ONLY)
 3) REFERENCE PASSAGES from previous year CAT papers (NO QUESTIONS)
 
-You must use BOTH, but follow the rules strictly.
+You must use ALL THREE, but follow the rules strictly.
 
 ---
 
@@ -137,9 +137,31 @@ ${referencePassages[4]}
 
 ---
 
+### CAT PASSAGE CHARACTERISTICS (INTERNAL KNOWLEDGE)
+
+CAT RC passages are typically sourced from:
+- Academic journals and textbooks (social sciences, humanities, behavioral economics, psychology, political science, philosophy, history, ecology)
+- Long-form magazines and essays (The Economist, Atlantic, New Yorker, Harper's, Prospect, Frontline)
+- Non-fiction books (popular and academic trade excerpts)
+- Newspapers and feature articles (in-depth features and reportage)
+- Technical and policy reports (think-tank briefs, white papers)
+
+PASSAGE CHARACTERISTICS:
+- Length: 500-1,000 words (400-800 is optimal)
+- Complexity: high lexical density, multiple clauses, low redundancy
+- Structure: layered argumentation (definitions, premises, evidence, objections, conclusions)
+- Viewpoint: expository or argumentative, presenting a thesis plus counter-arguments
+
+HOW PASSAGES ARE ADAPTED FOR CAT:
+- Edited for length without changing argument structure
+- Language tightened while retaining complexity and inference requirements
+- Cultural references neutralized to focus on reasoning, not background knowledge
+
+---
+
 ### GENERATION CONSTRAINTS (MANDATORY)
 
-- Word count: 450-600 words
+- Word count: 500-800 words (optimal range for CAT)
 - Paragraphs: 3 to 5
 - Tone: neutral, analytical, academic
 - No storytelling
@@ -194,8 +216,8 @@ You MUST reflect these traits using FORM, not just vocabulary.
 
 
 ### CRITICAL LENGTH CONSTRAINT:
-- You MUST produce at least 450 words.
-- If the passage is shorter than 450 words, it is INVALID.
+- You MUST produce at least 500 words.
+- If the passage is shorter than 500 words, it is INVALID.
 - If necessary, deepen arguments rather than summarizing.
 - Do NOT conclude early.
 
@@ -204,6 +226,7 @@ You MUST reflect these traits using FORM, not just vocabulary.
 ### PARAGRAPH DEPTH RULE:
 - Each paragraph must develop a distinct idea.
 - Avoid short or transitional paragraphs.
+- Each paragraph should have layered argumentation.
 
 ---
 
@@ -214,6 +237,7 @@ Ensure the passage contains:
 - At least 1 conceptual shift or contrast across paragraphs
 - At least 1 paragraph that invites inference rather than stating conclusions
 - Controlled ambiguity suitable for CAT-level questions
+- Examples, caveats, and qualifiers used appropriately
 
 ---
 
@@ -243,7 +267,7 @@ Do NOT include reasoning.
 Do NOT include bullet points.
 
 FINAL CHECK (DO NOT OUTPUT):
-Before responding, verify that the passage length is between 450 and 500 words.
+Before responding, verify that the passage length is between 500 and 800 words.
 If not, expand the analysis until it is.
 `
 
