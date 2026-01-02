@@ -9,6 +9,23 @@ import { searchPassageAndQuestionEmbeddings } from "./retrieval/searchPassageAnd
 import { getValidArticleWithText } from "./retrieval/articleHandling/getValidArticleWithText";
 import { authorial_persona, genreName, semantic_ideas } from "./retrieval/articleTestForTesting";
 import { finalizeCATPassage } from "./retrieval/passageHandling/finalizeCATPassage";
+import { generateRCQuestions } from "./retrieval/rcQuestionsHandling/generateRCQuestions";
+import { selectCorrectAnswers } from "./retrieval/rcQuestionsHandling/selectCorrectAnswers";
+import { fetchNodes } from "./graph/fetchNodes";
+import { tagQuestionsWithNodes } from "./retrieval/rcQuestionsHandling/tagQuestionsWithNodes";
+import { getQuestionGraphContext } from "./graph/createReasoningGraphContext";
+import { generateRationalesWithEdges } from "./retrieval/rcQuestionsHandling/generateRationaleWithEdges";
+
+function groupQuestionsWithPassages(passages, questions) {
+    // 1. Take only the first 3 passages
+    return passages.slice(0, 3).map(passage => {
+        return {
+            passage: passage,
+            // 2. Filter questions where the passage_id matches the current passage's id
+            questions: questions.filter(q => q.passage_id === passage.id)
+        };
+    });
+}
 
 
 export async function runDailyContent() {
@@ -62,20 +79,16 @@ export async function runDailyContent() {
     //     primaryMatch.score
     // );
 
-
-
     const passages = await fetchPassagesData(passagesMatches.map(match => match.passage_id));
     const questions = await fetchQuestionsData(questionsMatches.map(match => match.question_id), passagesMatches.map(match => match.passage_id));
 
     const passagesContent = passages.map(({ content }) => content)
-    console.log("only passages content")
-    console.log(passagesContent)
 
-    console.log("stringyfy of the semantics : ")
-    console.log(semantic_ideas)
+    // console.log("stringyfy of the semantics : ")
+    // console.log(semantic_ideas)
 
-    console.log("stringyfy of the authorial persona : ")
-    console.log(authorial_persona)
+    // console.log("stringyfy of the authorial persona : ")
+    // console.log(authorial_persona)
 
     const passageGenerated = await generatePassage({ semanticIdeas: semantic_ideas, authorialPersona: authorial_persona, referencePassages: passagesContent })
 
@@ -83,14 +96,38 @@ export async function runDailyContent() {
     //     semanticIdeas: text, referencePassages: passagesContent
     // })
 
-    console.log("this is the passage generated")
-    console.log(passageGenerated)
-
     const data = await finalizeCATPassage(passageGenerated);
 
     console.log("Improved final passage : ")
     console.log(data)
-    console.log(data["passage"])
+
+    const formattedData = groupQuestionsWithPassages(passages, questions);
+
+    let generatedQuestions = await generateRCQuestions({passageText : data["passageData"].content,referenceData:  formattedData, questionCount: 4})
+    console.log("hell these are the generated questions : ")
+    console.log(generatedQuestions)
+
+    let generatedQuestionsWithAnswers = await selectCorrectAnswers({passageText: data["passageData"].content, questions: generatedQuestions})
+    console.log("Hell these are the generated questions with the answers : ")
+    console.log(generatedQuestionsWithAnswers)
+
+    //fetch nodes 
+    const nodes = await fetchNodes()
+
+    //tagging question with nodes 
+    const questionTaggedWithNodes = await tagQuestionsWithNodes({passageText: data["passageData"].content, questions: generatedQuestionsWithAnswers, nodes: nodes})
+    console.log("hell these are the questionTaggedWithNodes for questions ")
+    console.log(questionTaggedWithNodes)
+
+    //getting edges info
+    const reasoningGraphContextForQuestions = await getQuestionGraphContext(questionTaggedWithNodes, nodes)
+    console.log("hell these are the reasoning graph context for questions ")
+    console.log(reasoningGraphContextForQuestions)
+
+    const finalQuestionsFormed = await generateRationalesWithEdges({passageText: data["passageData"].content, questions: generatedQuestionsWithAnswers, reasoningContexts: reasoningGraphContextForQuestions, referenceData: formattedData})
+
+    console.log("--------------------------------- AND THESE IS THE FINAL RESULT--------------------------------")
+    console.log(finalQuestionsFormed)
 
     // const graphRelations = await expandConceptGraph(theoryChunk.id);
 

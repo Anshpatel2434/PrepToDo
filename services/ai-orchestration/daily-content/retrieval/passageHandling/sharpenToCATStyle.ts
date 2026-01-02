@@ -1,4 +1,6 @@
 import OpenAI from "openai";
+import { zodResponseFormat } from "openai/helpers/zod";
+import { PassageSchema } from "../../schemas/types";
 
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini"; // stronger model for rewriting
@@ -33,10 +35,15 @@ STYLE ENFORCEMENT:
 ${passage}
 </Passage>
 
-Return ONLY the revised passage.
+Return the object by updating the following
+{
+    content: , <-- revised passage
+    difficulty: z.enum(["easy", "medium", "hard"]), <-- you have to derive
+}
+.
 `;
 
-    const completion = await client.chat.completions.create({
+    const completion = await client.chat.completions.parse({
         model: MODEL,
         temperature: 0.2,
         messages: [
@@ -50,9 +57,10 @@ Return ONLY the revised passage.
                 content: prompt,
             },
         ],
+        response_format: zodResponseFormat(PassageSchema, "revised_passage")
     });
 
-    const revised = completion.choices[0]?.message?.content?.trim();
+    const revised = completion.choices[0]?.message?.parsed;
     if (!revised) {
         throw new Error("Failed to sharpen passage");
     }
