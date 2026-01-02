@@ -1,4 +1,4 @@
-import { supabase } from "../../../ai-orchestration/config/supabase";
+import { supabase } from "../../../config/supabase";
 import { Edge, Node, QuestionNodeTag, ReasoningGraphContext } from "../schemas/types";
 
 export async function getQuestionGraphContext(

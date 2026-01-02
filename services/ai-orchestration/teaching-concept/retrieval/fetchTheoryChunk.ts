@@ -1,4 +1,4 @@
-import { supabase } from "../../config/supabase";
+import { supabase } from "../../../config/supabase";
 
 export async function fetchTheoryChunk(theoryId: string) {
 	console.log("📘 [Theory] Fetching theory chunk:", theoryId);

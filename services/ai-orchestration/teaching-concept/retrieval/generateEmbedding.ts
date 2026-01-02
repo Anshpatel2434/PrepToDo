@@ -1,4 +1,4 @@
-import { openai } from "../../config/openai";
+import { openai } from "../../../config/openai";
 
 export async function generateEmbedding(text: string) {
 	console.log("🧠 [Embedding] Generating query embedding");

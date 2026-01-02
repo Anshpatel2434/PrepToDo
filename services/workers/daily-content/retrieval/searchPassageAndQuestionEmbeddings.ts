@@ -1,4 +1,4 @@
-import { supabase } from "../../../ai-orchestration/config/supabase";
+import { supabase } from "../../../config/supabase";
 
 export async function searchPassageAndQuestionEmbeddings(
 	queryEmbedding: number[],

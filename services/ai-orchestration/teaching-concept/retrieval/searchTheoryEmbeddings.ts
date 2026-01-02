@@ -1,4 +1,4 @@
-import { supabase } from "../../config/supabase";
+import { supabase } from "../../../config/supabase";
 
 export async function searchTheoryEmbeddings(
 	queryEmbedding: number[],

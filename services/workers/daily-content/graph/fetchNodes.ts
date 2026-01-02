@@ -1,4 +1,4 @@
-import { supabase } from "../../../ai-orchestration/config/supabase";
+import { supabase } from "../../../config/supabase";
 
 /**
  * Fetches multiple passages from the 'passages' table based on an array of IDs.
