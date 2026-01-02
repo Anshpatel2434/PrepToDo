@@ -61,6 +61,10 @@ export async function getQuestionGraphContext(
 
         if (!primaryNode) {
             console.warn(`⚠️ [Graph] Primary Node ${tag.primary_node_id} not found`);
+            result[tag.question_id] = {
+                primary_node: primaryNode || { id: tag?.primary_node_id, label: "MISSING NODE", type: "ReasoningStep" } as Node,
+                edges: []
+            };
             return;
         }
 

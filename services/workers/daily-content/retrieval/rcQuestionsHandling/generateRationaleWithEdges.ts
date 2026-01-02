@@ -59,14 +59,14 @@ export async function generateRationalesWithEdges(params: {
 
     const updatedQuestions = [];
 
-    for (const [index, q] of questions.entries()) {
+    for (const q of questions) {
         const context = reasoningContexts[q.id];
         if (!context) {
             throw new Error(`Missing reasoning context for question ${q.id}`);
         }
 
         console.log(
-            `🧾 [Rationales] Q${index + 1}/${questions.length} | primary="${context.primary_node.label}" | edges=${context.edges.length}`
+            `🧾 [Rationales] Q${q.id} | primary="${context.primary_node.label}" | edges=${context.edges.length}`
         );
 
         const prompt = `SYSTEM:

@@ -273,28 +273,27 @@ IMPORTANT:
         throw new Error("Invalid RC question generation output");
     }
 
-    const now = new Date().toISOString();
+    // const now = new Date().toISOString();
 
-    let questions = parsed.questions.map((q) => ({
-        ...q,
-        passage_id: null,
-        question_type: "rc_question",
-        correct_answer: { answer: "" },
-        rationale: "",
-        tags: [],
-        jumbled_sentences: {
-            1: q.options.A,
-            2: q.options.B,
-            3: q.options.C,
-            4: q.options.D,
-        },
-        created_at: now,
-        updated_at: now,
-    }));
+    // let questions = parsed.questions.map((q) => ({
+    //     ...q,
+    //     passage_id: null,
+    //     correct_answer: { answer: "" },
+    //     rationale: "",
+    //     tags: [],
+    //     jumbled_sentences: {
+    //         1: q.options.A,
+    //         2: q.options.B,
+    //         3: q.options.C,
+    //         4: q.options.D,
+    //     },
+    //     created_at: now,
+    //     updated_at: now,
+    // }));
 
-    questions = ensureDifficultyVariety(questions, questionCount);
+    // questions = ensureDifficultyVariety(questions, questionCount);
 
-    console.log(`✅ [RC Questions] Generated ${questions.length} questions`);
+    console.log(`✅ [RC Questions] Generated ${parsed.questions.length} questions`);
 
-    return questions;
+    return parsed.questions;
 }
