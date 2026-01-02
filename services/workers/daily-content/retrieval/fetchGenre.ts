@@ -1,4 +1,4 @@
-import { supabase } from "../../config/supabase";
+import { supabase } from "../../../ai-orchestration/config/supabase";
 
 /**
  * Fetches a genre for today's daily content,

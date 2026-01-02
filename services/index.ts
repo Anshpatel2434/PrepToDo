@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { runDailyContent } from "./ai-orchestration/daily-content/runDailyContent";
+import { runDailyContent } from "./workers/daily-content/runDailyContent";
 
 async function main() {
 	console.log("🧠 PrepToDo Services Booting...");

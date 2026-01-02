@@ -1,5 +1,5 @@
 // saveArticle.ts
-import { supabase } from "../../../config/supabase";
+import { supabase } from "../../../../ai-orchestration/config/supabase";
 import { ArticleOutput } from "./searchWebForArticles";
 
 /**
