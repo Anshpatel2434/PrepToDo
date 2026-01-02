@@ -12,7 +12,7 @@ import { formatOutputForDB, validateOutputForDB, generateOutputReport } from "./
 import { Passage, Question, SemanticIdeas, AuthorialPersona } from "../../schemas/types";
 import { fetchPassagesData } from "../passageHandling/fetchPassagesData";
 import { fetchQuestionsData } from "../fetchQuestionsData";
-import { groupQuestionsWithPassages } from "../../rcQuestionsHandling/generateRCQuestions";
+import { groupQuestionsWithPassages } from "../rcQuestionsHandling/generateRCQuestions";
 
 interface RunVAQuestionsParams {
     semanticIdeas: SemanticIdeas;
@@ -23,9 +23,7 @@ interface RunVAQuestionsParams {
 }
 
 interface RunVAQuestionsResult {
-    exam: any;
-    passage: Passage;
-    questions: Question[];
+    vaQuestions: Question[];
 }
 
 /**
@@ -117,7 +115,6 @@ export async function runVAQuestions(params: RunVAQuestionsParams): Promise<RunV
         console.log(`   Generated ${vaQuestionsWithRationales.length} VA questions`);
 
         return {
-            passageData: data["passageData"],
             vaQuestions: vaQuestionsWithRationales,
         };
 

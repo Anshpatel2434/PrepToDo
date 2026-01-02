@@ -1,0 +1,380 @@
+{
+  "exam": {
+    "id": "b200c1db-46b8-483a-993c-2c501f97844f",
+    "name": "Daily Practice",
+    "year": 2026,
+    "exam_type": "CAT",
+    "slot": null,
+    "is_official": false,
+    "created_at": "2026-01-02T22:42:23.631Z"
+  },
+  "passage": {
+    "id": "1a2b3c4d-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
+    "title": null,
+    "content": "The intersection of computation and art engenders a complex dialogue about creativity, aesthetics, and the role of algorithms in shaping human expression. While proponents argue that computational tools enhance artistic capabilities, this perspective often overlooks the nuanced implications of algorithmic influence on creativity. The evolution of chess serves as a compelling case study; the integration of machine intelligence has not only transformed gameplay but has also redefined the creative space within which human players operate. This collaboration between humans and machines, while innovative, raises critical questions about the nature of creativity itself—whether it is an inherently human trait or a process that can be replicated by algorithms.\n\nThe assertion that computation enhances creativity is, at best, a simplification; it presupposes that the tools we employ do not alter the very fabric of artistic expression. Algorithms, by their nature, filter and categorize information, shaping our aesthetic judgments and cultural consumption in ways that are often imperceptible. This filtering mechanism can lead to a homogenization of artistic output, where the unexpected—an essential component of surprise in art—is systematically diminished. The tension between the predictability of algorithmic outputs and the unpredictability of human creativity is a critical point of contention; while algorithms can generate works that mimic human creativity, they often lack the capacity to evoke genuine surprise—a uniquely human trait that remains elusive to computational processes.\n\nMoreover, the concept of the \"extended mind\" posits that our cognitive processes are not confined to our biological makeup but are influenced by external tools and technologies. This theory invites a reconsideration of how we perceive artistic value and creativity in an age dominated by computational tools. If our understanding of art is mediated through algorithms, then the very essence of what constitutes artistic merit becomes problematic. The implications of this shift are profound; as algorithms increasingly dictate the parameters of artistic expression, the question arises: are we witnessing a democratization of creativity, or are we, instead, surrendering our agency to the very tools designed to augment it?\n\nThe relationship between surprise and aesthetics further complicates this discourse. While algorithms excel in generating predictable outcomes based on historical data, they struggle to replicate the serendipitous moments that often characterize human creativity. This limitation suggests that while computational tools can assist in the creative process, they cannot fully supplant the human capacity for innovation. The notion that creativity can be distilled into a set of algorithmic processes is, therefore, a tenuous assumption that warrants scrutiny; it implies a reductionist view of creativity that fails to account for the emotional and experiential dimensions that inform artistic practice.\n\nAs we navigate this evolving landscape, it is essential to critically assess the long-term effects of computational aesthetics on cultural values. The integration of technology in art is not merely a trend; it represents a fundamental shift in how we engage with and understand artistic expression. This shift raises important questions about authenticity and originality in a world where algorithms can produce works indistinguishable from those created by human hands. The potential for computational tools to democratize art is tempered by the risk of diluting its intrinsic value, as the line between human and machine-generated art becomes increasingly blurred.\n\nThe future of aesthetics is likely to be shaped by a deeper understanding of computational influences; while the collaboration between humans and machines holds promise for expanding creative horizons, it also necessitates a cautious approach to the implications of algorithmic influence. The challenge lies in balancing the benefits of computational tools with the preservation of the unique qualities that define human creativity. As we continue to explore this intersection, we must remain vigilant about the assumptions we hold regarding the nature of creativity and the role of technology in shaping our artistic landscapes. The unresolved tension between human agency and algorithmic influence invites further inquiry into the evolving definitions of art and aesthetics in the digital age.",
+    "word_count": 754,
+    "genre": "Academic",
+    "difficulty": "hard",
+    "source": null,
+    "paper_id": "b200c1db-46b8-483a-993c-2c501f97844f",
+    "is_daily_pick": true,
+    "is_featured": false,
+    "is_archived": false,
+    "created_at": "2026-01-02T22:42:23.631Z",
+    "updated_at": "2026-01-02T22:42:23.631Z"
+  },
+  "questions": [
+    {
+      "id": "1d5e8c6e-5e7b-4b8b-bc5b-3f3c4e5b4c45",
+      "passage_id": "1a2b3c4d-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
+      "question_text": "Which of the following can be inferred about the relationship between algorithms and human creativity as discussed in the passage?",
+      "question_type": "rc_question",
+      "options": {
+        "A": "Algorithms enhance human creativity by providing new tools for artistic expression.",
+        "B": "The influence of algorithms on creativity may lead to a diminished capacity for genuine human surprise.",
+        "C": "Human creativity is entirely distinct from algorithmic processes and cannot be influenced by them.",
+        "D": "The collaboration between humans and algorithms results in a complete transformation of artistic practices."
+      },
+      "jumbled_sentences": {
+        "1": "Algorithms enhance human creativity by providing new tools for artistic expression.",
+        "2": "The influence of algorithms on creativity may lead to a diminished capacity for genuine human surprise.",
+        "3": "Human creativity is entirely distinct from algorithmic processes and cannot be influenced by them.",
+        "4": "The collaboration between humans and algorithms results in a complete transformation of artistic practices.",
+        "5": "None of the above."
+      },
+      "correct_answer": {
+        "answer": "B"
+      },
+      "rationale": "The correct answer is B. The passage discusses how algorithms filter and categorize information, which can lead to a homogenization of artistic output and diminish the element of surprise that is essential to human creativity. This suggests that while algorithms can assist in the creative process, they may limit the capacity for genuine human surprise, which is a critical aspect of creativity.\n\nOption A is tempting as it implies that algorithms enhance creativity by providing new tools. However, the passage argues that the influence of algorithms can lead to a reduction in the unpredictability and surprise that characterize human creativity, indicating that the enhancement is not straightforward. The passage emphasizes the nuanced implications of algorithmic influence rather than a simple enhancement.\n\nOption C suggests that human creativity is entirely distinct from algorithmic processes and cannot be influenced by them. This contradicts the passage's assertion that our cognitive processes are influenced by external tools and technologies, including algorithms. The text highlights the interplay between human creativity and computational tools, making this option inaccurate.\n\nOption D claims that the collaboration between humans and algorithms results in a complete transformation of artistic practices. While the passage acknowledges that this collaboration is innovative, it does not assert that it leads to a complete transformation. Instead, it raises questions about the implications of algorithmic influence on creativity, indicating a more complex relationship.\n\nIn summary, while options A, C, and D present tempting interpretations, they misrepresent the nuanced relationship between algorithms and human creativity as articulated in the passage.",
+      "difficulty": "hard",
+      "tags": [
+        "Make inferences from text",
+        "Identifying the Writer's Intent",
+        "Identifying the Purpose of a Paragraph",
+        "Maintaining Coherence in Writing",
+        "Drawing Inferences from Context",
+        "Understanding Implicit Messages",
+        "Identifying Key Ideas",
+        "Elimination of Irrelevant Options",
+        "Recognizing Common Logical Errors",
+        "Recognizing Logical Gaps",
+        "Maintaining Logical Flow in Arguments",
+        "Types of Inferential Questions",
+        "Analyzing Tone to Understand Author's Perspective",
+        "Mandatory Sentence Pairs",
+        "Structure of Logical Reasoning Questions",
+        "Identifying the Main Argument"
+      ],
+      "created_at": "2025-12-25T09:52:19.584462+00:00",
+      "updated_at": "2026-01-02T22:41:45.933Z"
+    },
+    {
+      "id": "2e3f4b5c-6e7b-4c8b-bc6b-4f5e6c7b8d6e",
+      "passage_id": "1a2b3c4d-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
+      "question_text": "What is the author's tone regarding the integration of algorithms in artistic expression?",
+      "question_type": "rc_question",
+      "options": {
+        "A": "Optimistic about the potential for algorithms to enhance creativity.",
+        "B": "Skeptical about the implications of algorithms on artistic authenticity.",
+        "C": "Neutral, presenting both sides of the argument without bias.",
+        "D": "Pessimistic about the future of creativity in an algorithm-driven world."
+      },
+      "jumbled_sentences": {
+        "1": "Optimistic about the potential for algorithms to enhance creativity.",
+        "2": "Skeptical about the implications of algorithms on artistic authenticity.",
+        "3": "Neutral, presenting both sides of the argument without bias.",
+        "4": "Pessimistic about the future of creativity in an algorithm-driven world.",
+        "5": "None of the above."
+      },
+      "correct_answer": {
+        "answer": "B"
+      },
+      "rationale": "The author's tone regarding the integration of algorithms in artistic expression is skeptical about the implications of algorithms on artistic authenticity. This is evident throughout the passage, where the author raises concerns about how algorithms influence creativity, suggesting that while they may enhance certain aspects of artistic production, they also risk homogenizing artistic output and diluting the intrinsic value of art.\n\nOption A is tempting as it suggests an optimistic view of algorithms enhancing creativity. However, the passage emphasizes the limitations of algorithms, particularly their inability to replicate the unpredictability and surprise that characterize human creativity. This skepticism undermines the notion of unqualified enhancement, making A an incorrect choice.\n\nOption C presents a neutral stance, claiming the author presents both sides without bias. Yet, the passage clearly articulates concerns about the impact of algorithms on artistic authenticity and the potential loss of human agency, indicating a discernible skepticism rather than neutrality. This bias against the uncritical acceptance of algorithmic influence disqualifies C.\n\nOption D suggests a pessimistic outlook on creativity in an algorithm-driven world. While the author does express caution regarding the implications of computational tools, the tone is more focused on questioning and critically assessing these influences rather than outright pessimism. Thus, D does not accurately capture the author's nuanced perspective.\n\nIn summary, the correct answer is B, as it accurately reflects the author's critical stance on the implications of algorithms for artistic authenticity, while the other options either misinterpret the tone or oversimplify the author's arguments.",
+      "difficulty": "medium",
+      "tags": [
+        "Identify contradictions",
+        "Identifying Logical Continuation",
+        "Identifying the Writer's Intent",
+        "Maintaining Coherence in Writing",
+        "Drawing Logical Conclusions",
+        "Understanding Implicit Messages",
+        "Elimination of Irrelevant Options",
+        "Identifying Key Ideas",
+        "Recognizing Common Logical Errors",
+        "Recognizing Logical Gaps",
+        "Negation Scores Over Affirmation",
+        "Types of Inferential Questions",
+        "Analyzing Tone to Understand Author's Perspective",
+        "Mandatory Sentence Pairs",
+        "Structure of Logical Reasoning Questions",
+        "Identifying the Main Argument"
+      ],
+      "created_at": "2025-12-25T09:52:19.584462+00:00",
+      "updated_at": "2026-01-02T22:41:51.246Z"
+    },
+    {
+      "id": "3f4b5c6d-7e8b-4c9b-bd7b-5e6f7c8d9e7f",
+      "passage_id": "1a2b3c4d-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
+      "question_text": "According to the passage, what is one potential consequence of algorithmic influence on artistic output?",
+      "question_type": "rc_question",
+      "options": {
+        "A": "Increased diversity in artistic styles and expressions.",
+        "B": "A homogenization of artistic output leading to less surprise.",
+        "C": "A complete elimination of human creativity in art.",
+        "D": "An enhancement of emotional depth in artistic works."
+      },
+      "jumbled_sentences": {
+        "1": "Increased diversity in artistic styles and expressions.",
+        "2": "A homogenization of artistic output leading to less surprise.",
+        "3": "A complete elimination of human creativity in art.",
+        "4": "An enhancement of emotional depth in artistic works.",
+        "5": "None of the above."
+      },
+      "correct_answer": {
+        "answer": "B"
+      },
+      "rationale": "The correct answer is B. The passage discusses how algorithmic influence can lead to a homogenization of artistic output, diminishing the element of surprise that is essential to creativity. It states that algorithms filter and categorize information, which can result in predictable artistic expressions that lack the unexpected qualities typically associated with human creativity.\n\nOption A is tempting because it suggests a positive outcome of algorithmic influence. However, the passage emphasizes that algorithms often lead to a reduction in diversity and surprise in artistic output, contradicting the idea of increased diversity. \n\nOption C implies that human creativity is completely eliminated by algorithms, which is an extreme interpretation. The passage acknowledges that while algorithms can assist in the creative process, they cannot fully replace human creativity, thus blocking this option.\n\nOption D suggests that algorithmic influence enhances emotional depth in artistic works. This is misleading, as the passage indicates that while algorithms can generate art, they often lack the emotional and experiential dimensions that characterize human creativity. \n\nIn summary, while options A, C, and D present appealing ideas, they do not align with the passage's argument regarding the consequences of algorithmic influence, making B the only valid choice.",
+      "difficulty": "easy",
+      "tags": [
+        "Analyze context for implications",
+        "Identifying the Writer's Intent",
+        "Identifying the Purpose of a Paragraph",
+        "Maintaining Coherence in Writing",
+        "Understanding Implicit Messages",
+        "Identifying Key Elements",
+        "Identifying Key Ideas",
+        "Elimination of Irrelevant Options",
+        "Recognizing Logical Gaps",
+        "Recognizing Common Logical Errors",
+        "Maintaining Logical Flow in Arguments",
+        "Types of Inferential Questions",
+        "Analyzing Tone to Understand Author's Perspective",
+        "Mandatory Sentence Pairs",
+        "Structure of Logical Reasoning Questions",
+        "Identifying the Main Argument"
+      ],
+      "created_at": "2025-12-25T09:52:19.584462+00:00",
+      "updated_at": "2026-01-02T22:41:55.847Z"
+    },
+    {
+      "id": "4f5c6d7e-8f9b-4d0b-be8b-6f7c8d9e0f8e",
+      "passage_id": "1a2b3c4d-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
+      "question_text": "What is the main implication of the author's argument regarding computational tools in art?",
+      "question_type": "rc_question",
+      "options": {
+        "A": "Computational tools will ultimately replace human creativity in artistic expression.",
+        "B": "The integration of technology in art represents a fundamental shift in artistic engagement.",
+        "C": "Algorithms enhance the emotional depth of artistic works significantly.",
+        "D": "Artistic expression will remain unchanged despite technological advancements."
+      },
+      "jumbled_sentences": {
+        "1": "Computational tools will ultimately replace human creativity in artistic expression.",
+        "2": "The integration of technology in art represents a fundamental shift in artistic engagement.",
+        "3": "Algorithms enhance the emotional depth of artistic works significantly.",
+        "4": "Artistic expression will remain unchanged despite technological advancements.",
+        "5": "None of the above."
+      },
+      "correct_answer": {
+        "answer": "B"
+      },
+      "rationale": "The correct option is B, as it encapsulates the author's argument that the integration of technology in art signifies a significant transformation in how artistic expression is engaged with and understood. The passage discusses the profound implications of computational tools on creativity, suggesting that they alter the very fabric of artistic expression and challenge traditional notions of authenticity and originality.\n\nOption A is tempting because it suggests a dramatic outcome of computational tools replacing human creativity. However, the passage emphasizes that while algorithms can assist in the creative process, they cannot fully replicate the human capacity for innovation. This notion is clearly articulated in the discussion about the limitations of algorithms in generating surprise, which is a uniquely human trait.\n\nOption C might seem appealing as it implies that algorithms enhance emotional depth in art. However, the passage argues that while algorithms can generate outputs that mimic human creativity, they often lack the emotional and experiential dimensions that inform artistic practice. This misinterpretation of the role of algorithms in enhancing emotional depth is countered by the author's assertion that computational tools may dilute intrinsic artistic value.\n\nOption D is easily dismissed as it contradicts the passage's central theme. The author explicitly states that the integration of technology represents a fundamental shift in artistic engagement, which directly opposes the claim that artistic expression will remain unchanged. \n\nThus, the only option that accurately reflects the main implication of the author's argument is B.",
+      "difficulty": "medium",
+      "tags": [
+        "Evaluate evidence and counterarguments",
+        "Identifying the Writer's Intent",
+        "Identifying Logical Continuation",
+        "Maintaining Coherence in Writing",
+        "Drawing Logical Conclusions",
+        "Understanding Implicit Messages",
+        "Strategies for Strengthening or Weakening Conclusions",
+        "Elimination of Irrelevant Options",
+        "Recognizing Common Logical Errors",
+        "Recognizing Logical Gaps",
+        "Maintaining Logical Flow in Arguments",
+        "Types of Inferential Questions",
+        "Analyzing Tone to Understand Author's Perspective",
+        "Mandatory Sentence Pairs",
+        "Structure of Logical Reasoning Questions",
+        "Identifying the Main Argument"
+      ],
+      "created_at": "2025-12-25T09:52:19.584462+00:00",
+      "updated_at": "2026-01-02T22:42:01.126Z"
+    },
+    {
+      "id": "1e4c1f2e-7b7a-4b5b-bd8e-0b9c8b5d3e8e",
+      "passage_id": null,
+      "question_text": "The integration of computation into artistic practices has transformed the landscape of aesthetics, suggesting that rather than diminishing creativity, algorithms enhance it by facilitating new forms of collaboration between humans and machines. However, this raises critical questions about the nature of surprise in art, a uniquely human trait that algorithms struggle to replicate. Furthermore, the influence of algorithms on our aesthetic judgments indicates a shift in how we engage with and appreciate art. \n\nWhich of the following best summarizes the above paragraph?",
+      "question_type": "para_summary",
+      "options": {
+        "A": "Computation diminishes human creativity in art by replacing traditional methods with algorithms.",
+        "B": "Algorithms enhance artistic creativity by fostering collaboration between humans and machines, while also influencing aesthetic judgments.",
+        "C": "The role of surprise in art is being overshadowed by algorithmic predictability, leading to a decline in artistic value.",
+        "D": "Artistic expression is becoming irrelevant due to the rise of computational tools that dictate aesthetic standards."
+      },
+      "jumbled_sentences": {
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": ""
+      },
+      "correct_answer": {
+        "answer": "B"
+      },
+      "rationale": "The correct option is B because it accurately encapsulates the main ideas presented in the passage. It highlights how algorithms enhance artistic creativity through collaboration between humans and machines, while also acknowledging the influence of algorithms on aesthetic judgments. This dual focus reflects the complexity of the relationship between computation and creativity as discussed in the passage.\n\nOption A can be eliminated as it misrepresents the author's intent. It suggests that computation diminishes creativity, which contradicts the passage's assertion that algorithms enhance creativity by facilitating new collaborations. This misinterpretation overlooks the positive role of algorithms in the artistic process.\n\nOption C is also incorrect because it implies that the role of surprise in art is being overshadowed by algorithmic predictability, which is not supported by the passage. The text discusses the challenge of replicating surprise in art but does not claim that this leads to a decline in artistic value. Instead, it emphasizes the transformative potential of algorithms in artistic practices.\n\nOption D can be dismissed as it exaggerates the negative impact of computational tools, suggesting that artistic expression is becoming irrelevant. The passage does not support this extreme viewpoint; rather, it presents a more nuanced discussion about the evolving relationship between art and technology.",
+      "difficulty": "medium",
+      "tags": [
+        "Summarize content",
+        "Identifying the Writer's Intent",
+        "Identifying the Purpose of a Paragraph",
+        "Maintaining Coherence in Writing",
+        "Identifying Key Elements",
+        "Understanding Implicit Messages",
+        "Identifying Key Ideas",
+        "Reading Comprehension Strategy",
+        "Recognizing Common Logical Errors",
+        "Recognizing Logical Gaps",
+        "Maintaining Logical Flow in Arguments",
+        "Types of Questions in Reading Comprehension",
+        "Analyzing Tone to Understand Author's Perspective",
+        "Mandatory Sentence Pairs",
+        "Structure of Logical Reasoning Questions",
+        "Identifying the Main Argument"
+      ],
+      "created_at": "2026-01-02T22:40:27.499Z",
+      "updated_at": "2026-01-02T22:42:06.768Z"
+    },
+    {
+      "id": "1a2b3c4d-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
+      "passage_id": null,
+      "question_text": "The integration of computational tools in artistic practices has sparked a debate about the nature of creativity. While some argue that algorithms enhance artistic expression by providing new avenues for exploration, others contend that they may limit the spontaneity and surprise that characterize human creativity. This tension raises important questions about the role of technology in shaping aesthetic experiences. ___(1)___\n\nWhich of the following best completes the paragraph?",
+      "question_type": "para_completion",
+      "options": {
+        "A": "Ultimately, the relationship between human creativity and algorithmic processes remains complex and multifaceted.",
+        "B": "In contrast, many artists believe that technology should be entirely excluded from the creative process.",
+        "C": "Therefore, it is essential to recognize that algorithms can never replicate the depth of human emotion in art.",
+        "D": "Consequently, the future of art may depend on finding a balance between human intuition and machine efficiency."
+      },
+      "jumbled_sentences": {
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": ""
+      },
+      "correct_answer": {
+        "answer": "A"
+      },
+      "rationale": "The correct option, A, effectively encapsulates the complexity of the relationship between human creativity and algorithmic processes, aligning well with the preceding discussion about the dual perspectives on technology in artistic practices. It acknowledges the multifaceted nature of this relationship, which is essential given the tension highlighted in the paragraph regarding the enhancement versus limitation of creativity by algorithms.\n\nOption B is tempting because it presents a contrasting viewpoint; however, it misrepresents the overall argument by suggesting an extreme position that technology should be entirely excluded from art. This does not align with the nuanced debate established in the paragraph, which acknowledges both the benefits and drawbacks of computational tools in creativity.\n\nOption C also appears plausible as it critiques the ability of algorithms to replicate human emotion. However, it incorrectly narrows the discussion to a singular aspect of creativity, ignoring the broader implications of the relationship between technology and artistic expression. This option fails to maintain the logical flow of the paragraph, which is focused on the integration of technology rather than a definitive claim about its limitations.\n\nOption D, while relevant, suggests a future-oriented conclusion that implies a resolution to the tension discussed. This option does not fit as seamlessly into the existing narrative, which is more focused on presenting the current debate rather than proposing a solution or balance. \n\nThus, A stands out as the most coherent and comprehensive completion of the paragraph, while the other options either misinterpret the argument or shift the focus away from the central discussion.",
+      "difficulty": "medium",
+      "tags": [
+        "Evaluate evidence supporting claims",
+        "Identifying the Writer's Intent",
+        "Identifying the Purpose of a Paragraph",
+        "Maintaining Coherence in Writing",
+        "Drawing Logical Conclusions",
+        "Identifying Key Elements",
+        "Strategies for Strengthening or Weakening Conclusions",
+        "Elimination of Irrelevant Options",
+        "Recognizing Common Logical Errors",
+        "Recognizing Logical Gaps",
+        "Maintaining Logical Flow in Arguments",
+        "Types of Inferential Questions",
+        "Analyzing Tone to Understand Author's Perspective",
+        "Mandatory Sentence Pairs",
+        "Structure of Logical Reasoning Questions",
+        "Verifiable Information"
+      ],
+      "created_at": "2026-01-02T22:40:35.596Z",
+      "updated_at": "2026-01-02T22:42:13.171Z"
+    },
+    {
+      "id": "f3d6c4a7-1c4b-4a9b-bb6e-0b3f2d3f5c2e",
+      "passage_id": null,
+      "question_text": "The four sentences given below, when properly sequenced, form a coherent paragraph. Each sentence is labelled with a letter. Choose the most logical order of the sentences from the options given.",
+      "question_type": "para_jumble",
+      "options": {
+        "A": "2413",
+        "B": "1234",
+        "C": "3142",
+        "D": "4321"
+      },
+      "jumbled_sentences": {
+        "1": "The integration of computational tools in art raises questions about authenticity and originality.",
+        "2": "Surprise remains a uniquely human trait that algorithms cannot fully replicate.",
+        "3": "While algorithms shape our understanding and appreciation of art, they often lack the capacity for genuine creativity.",
+        "4": "Consequently, the collaboration between humans and machines can lead to new aesthetic experiences.",
+        "5": "However, this relationship also challenges our traditional notions of artistic value."
+      },
+      "correct_answer": {
+        "answer": "14325"
+      },
+      "rationale": "The correct sequence of sentences is 1-4-3-2-5. The first sentence introduces the theme of the integration of computational tools in art, highlighting the concerns regarding authenticity and originality. This sets the stage for the subsequent discussion. The fourth sentence follows logically, suggesting that this integration can lead to new aesthetic experiences, which aligns with the initial concern. The third sentence then elaborates on the limitations of algorithms in replicating genuine creativity, reinforcing the idea of a unique human trait. The second sentence emphasizes the distinctiveness of human surprise, which algorithms cannot replicate, further supporting the argument about human creativity. Finally, the fifth sentence acknowledges the challenges posed to traditional notions of artistic value, providing a conclusion that encapsulates the discussion.\n\nOption A (2413) is tempting as it begins with a statement about algorithms shaping our understanding of art, which seems relevant. However, it misplaces the foundational idea of authenticity and originality, leading to a disjointed flow. \n\nOption B (1234) is also misleading because it presents the integration of computational tools and the subsequent aesthetic experiences without addressing the critical aspect of creativity and authenticity first, resulting in a lack of coherence in the argument.\n\nThe remaining options do not align with the logical progression established in the correct sequence, as they either disrupt the flow or fail to connect the ideas effectively.",
+      "difficulty": "medium",
+      "tags": [
+        "Evaluate evidence supporting claims",
+        "Identifying the Writer's Intent",
+        "Identifying the Purpose of a Paragraph",
+        "Maintaining Coherence in Writing",
+        "Drawing Logical Conclusions",
+        "Identifying Key Elements",
+        "Strategies for Strengthening or Weakening Conclusions",
+        "Elimination of Irrelevant Options",
+        "Recognizing Common Logical Errors",
+        "Recognizing Logical Gaps",
+        "Maintaining Logical Flow in Arguments",
+        "Types of Inferential Questions",
+        "Analyzing Tone to Understand Author's Perspective",
+        "Mandatory Sentence Pairs",
+        "Structure of Logical Reasoning Questions",
+        "Verifiable Information"
+      ],
+      "created_at": "2026-01-02T22:40:44.805Z",
+      "updated_at": "2026-01-02T22:42:18.655Z"
+    },
+    {
+      "id": "1a2b3c4d-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
+      "passage_id": null,
+      "question_text": "Five jumbled sentences related to the impact of computation on art are given below. Four of them can be put together to form a coherent paragraph. Identify the odd one out:",
+      "question_type": "odd_one_out",
+      "options": {
+        "A": "The integration of computational tools in art raises questions about authenticity and originality.",
+        "B": "Algorithms influence our aesthetic judgments and cultural consumption.",
+        "C": "Computation enhances rather than diminishes creativity in art forms.",
+        "D": "The collaboration between humans and machines in chess has redefined the game's creative space."
+      },
+      "jumbled_sentences": {
+        "1": "Computation enhances rather than diminishes creativity in art forms.",
+        "2": "Algorithms influence our aesthetic judgments and cultural consumption.",
+        "3": "The collaboration between humans and machines in chess has redefined the game's creative space.",
+        "4": "The integration of computational tools in art raises questions about authenticity and originality.",
+        "5": "Surprise remains a uniquely human trait that algorithms cannot fully replicate."
+      },
+      "correct_answer": {
+        "answer": "A"
+      },
+      "rationale": "The correct answer is A. This option discusses the questions of authenticity and originality in art due to computational tools, which diverges from the central theme of how computation enhances creativity and influences aesthetic judgments. The other options focus on the positive impacts of computation on creativity and collaboration in art, making A the odd one out.\n\nOption B is tempting as it addresses how algorithms shape our aesthetic judgments and cultural consumption, which aligns with the overall theme of computation's influence on art. However, it remains focused on the broader implications of algorithms rather than questioning authenticity, which is a more specific concern.\n\nOption C also fits well within the context, as it asserts that computation enhances creativity, reinforcing the idea that technology can be a tool for artistic expression rather than a hindrance. This aligns with the positive framing of computation's role in art.\n\nOption D, while initially seeming unrelated, discusses the collaboration between humans and machines in chess, which can be interpreted as a metaphor for the interaction between technology and creativity in art. However, it still connects back to the theme of redefining creative spaces through computational collaboration.\n\nThus, while A presents a relevant concern, it does not align with the overarching narrative of enhancement and collaboration found in the other options, leading to its identification as the odd one out.",
+      "difficulty": "medium",
+      "tags": [
+        "Evaluate evidence supporting claims",
+        "Identifying the Writer's Intent",
+        "Identifying the Purpose of a Paragraph",
+        "Maintaining Coherence in Writing",
+        "Drawing Logical Conclusions",
+        "Identifying Key Elements",
+        "Strategies for Strengthening or Weakening Conclusions",
+        "Elimination of Irrelevant Options",
+        "Recognizing Common Logical Errors",
+        "Recognizing Logical Gaps",
+        "Maintaining Logical Flow in Arguments",
+        "Types of Inferential Questions",
+        "Analyzing Tone to Understand Author's Perspective",
+        "Mandatory Sentence Pairs",
+        "Structure of Logical Reasoning Questions",
+        "Verifiable Information"
+      ],
+      "created_at": "2026-01-02T22:40:58.845Z",
+      "updated_at": "2026-01-02T22:42:23.630Z"
+    }
+  ]
+}

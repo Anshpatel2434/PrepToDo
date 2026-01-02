@@ -3,7 +3,6 @@ import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import { Question, QuestionSchema, Passage, SemanticIdeas, AuthorialPersona } from "../../schemas/types";
-import { generateOddOneOutQuestions } from "./generateOddOneOutQuestions";
 
 // Simple UUID generator to avoid additional dependencies
 function generateUUID(): string {
@@ -148,6 +147,7 @@ export async function generateVAQuestions(params: GenerateVAQuestionsParams) {
         }
 
         console.log(`✅ [VA Questions] Total VA questions generated: ${allQuestions.length}`);
+        console.log(allQuestions)
 
         return allQuestions;
     } catch (error) {
@@ -194,10 +194,10 @@ QUESTIONS:
 ${rd.questions.slice(0, 2).map((q, j) => `
 Q${j + 1}: ${q.question_text}
 Options:
-A) ${q.options.A}
-B) ${q.options.B}
-C) ${q.options.C}
-D) ${q.options.D}
+A) ${q.options["A"]}
+B) ${q.options["B"]}
+C) ${q.options["C"]}
+D) ${q.options["D"]}
 
 Correct: ${q.correct_answer.answer}
 
@@ -358,10 +358,10 @@ QUESTIONS:
 ${rd.questions.slice(0, 2).map((q, j) => `
 Q${j + 1}: ${q.question_text}
 Options:
-A) ${q.options.A}
-B) ${q.options.B}
-C) ${q.options.C}
-D) ${q.options.D}
+A) ${q.options["A"]}
+B) ${q.options["B"]}
+C) ${q.options["C"]}
+D) ${q.options["D"]}
 
 Correct: ${q.correct_answer.answer}
 
@@ -516,8 +516,6 @@ Your task is to generate CAT-style para-jumble questions.
 
 You are given REFERENCE MATERIAL from actual CAT papers (PYQs):
 ${referenceData.slice(0, 3).map((rd, i) => `
-PASSAGE ${i + 1}:
-${rd.passage.content}
 
 QUESTIONS:
 ${rd.questions.slice(0, 2).map((q, j) => `
@@ -680,17 +678,12 @@ Your task is to generate CAT-style odd-one-out questions.
 
 You are given REFERENCE MATERIAL from actual CAT papers (PYQs):
 ${referenceData.slice(0, 3).map((rd, i) => `
-PASSAGE ${i + 1}:
-${rd.passage.content}
 
 QUESTIONS:
 ${rd.questions.slice(0, 2).map((q, j) => `
 Q${j + 1}: ${q.question_text}
-Options:
-A) ${q.options.A}
-B) ${q.options.B}
-C) ${q.options.C}
-D) ${q.options.D}
+Jumbled Sentences:
+${JSON.stringify(q.jumbled_sentences, null, 2)}
 
 Correct: ${q.correct_answer.answer}
 

@@ -11,15 +11,7 @@ function generateUUID(): string {
 }
 
 interface FormatOutputParams {
-    passageData: {
-        id: string;
-        content: string;
-        title: string | null;
-        word_count: number;
-        genre: string;
-        difficulty: "easy" | "medium" | "hard";
-        source: string | null;
-    };
+    passageData: Passage;
     rcQuestions: Question[];
     vaQuestions: Question[];
 }

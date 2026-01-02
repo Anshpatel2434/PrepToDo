@@ -1,4 +1,3 @@
-// runDailyContent.ts
 import { extractSemanticIdeasAndPersona } from "./retrieval/passageHandling/extractSemanticIdeas";
 import { fetchGenreForToday } from "./retrieval/fetchGenre";
 import { fetchPassagesData } from "./retrieval/passageHandling/fetchPassagesData";
@@ -15,180 +14,180 @@ import { fetchNodes } from "./graph/fetchNodes";
 import { tagQuestionsWithNodes } from "./retrieval/rcQuestionsHandling/tagQuestionsWithNodes";
 import { getQuestionGraphContext } from "./graph/createReasoningGraphContext";
 import { generateRationalesWithEdges } from "./retrieval/rcQuestionsHandling/generateRationaleWithEdges";
-import { runCompleteDailyContent } from "./retrieval/vaQuestionsHandling/runVAQuestions";
+
+// VA specific imports
+import { generateVAQuestions } from "./retrieval/vaQuestionsHandling/generateVAQuestions";
+import { selectVAAnswers } from "./retrieval/vaQuestionsHandling/selectVAAnswers";
+import { tagVAQuestionsWithNodes } from "./retrieval/vaQuestionsHandling/tagVAQuestionsWithNodes";
+import { generateVARationalesWithEdges } from "./retrieval/vaQuestionsHandling/generateVARationales";
+import { formatOutputForDB, generateOutputReport, validateOutputForDB } from "./retrieval/vaQuestionsHandling/formatOutputForDB";
 
 /**
  * Main workflow for generating daily CAT practice content.
- *
- * Workflow Steps:
- * 1. Select genre
- * 2. Fetch valid article with text
- * 3. Save article to database
- * 4. Extract semantic ideas and authorial persona
- * 5. Generate embedding for genre/topic
- * 6. Retrieve similar passages and questions via vector search
- * 7. Generate CAT-style passage using semantic ideas and PYQ references
- * 8. Evaluate and sharpen passage to CAT standards
- * 9. Generate RC questions using PYQ patterns for guidance
- * 10. Select correct answers for each question
- * 11. Tag each question with primary reasoning node from graph
- * 12. Build reasoning graph context (nodes + edges) for each question
- * 13. Generate elimination-driven rationales using graph structure
- * 14. Format output for database upload (Exam, Passage, Questions)
+ * Merged RC + VA workflows with graph-driven rationales.
  */
-
 export async function runDailyContent() {
-    console.log("🚀 [START] Daily Content Generation start ");
+    console.log("🚀 [START] Daily Content Generation sequence initiated");
 
     try {
-        // Step 1: Select genre
-        console.log("\n🎯 [Step 1/14] Selecting genre");
+        // --- PHASE 1: PREPARATION & RETRIEVAL ---
+        console.log("\n🎯 [Step 1/15] Selecting genre");
         const genre = await fetchGenreForToday();
-        console.log(`   Selected genre: ${genre.name}`);
 
-        // Step 2: Fetch valid article with text
-        console.log("\n📄 [Step 2/14] Fetching valid article with text");
+        console.log("\n📄 [Step 2/15] Fetching valid article with text");
         const { articleMeta, articleText } = await getValidArticleWithText(genre.name);
-        console.log(`   Article title: ${articleMeta.title}`);
-        console.log(`   Article length: ${articleText.length} characters`);
 
-        // Step 3: Save article to database
-        console.log("\n💾 [Step 3/14] Saving article to database");
+        console.log("\n💾 [Step 3/15] Saving article to database");
         await saveArticleToDB(articleMeta);
-        console.log("   Article saved successfully");
 
-        // Step 4: Extract semantic ideas and authorial persona
-        console.log("\n🧠 [Step 4/14] Extracting semantic ideas and authorial persona");
+        console.log("\n🧠 [Step 4/15] Extracting semantic ideas and persona");
         const { semantic_ideas, authorial_persona } = await extractSemanticIdeasAndPersona(articleText, genre.name);
-        console.log(`   Semantic ideas extracted successfully`);
-        console.log(`   Authorial persona extracted successfully`);
 
-        // Step 5: Generate embedding for genre/topic
-        console.log("\n🧠 [Step 5/14] Generating embedding for genre/topic");
+        console.log("\n🧠 [Step 5/15] Generating embedding and fetching PYQ references");
         const embedding = await generateEmbedding(genre.name);
-        console.log("   Embedding generated successfully");
-
-        // Step 6: Retrieve similar passages and questions via vector search
-        console.log("\n🔎 [Step 6/14] Vector search for similar passages and questions");
         const matches = await searchPassageAndQuestionEmbeddings(embedding, 5);
-        const passagesMatches = matches.passages;
-        const questionsMatches = matches.questions;
-        console.log(`   Found ${passagesMatches.length} passages`);
-        console.log(`   Found ${questionsMatches.length} questions`);
 
-        // Step 7: Generate CAT-style passage using semantic ideas and PYQ references
-        console.log("\n✍️ [Step 7/14] Generating new CAT-style passage");
-        const passageGenerated = await generatePassage({
+        // Fetch full data for matches (from old workflow logic)
+        const passages = await fetchPassagesData(matches.passages.map(m => m.passage_id));
+        const questions = await fetchQuestionsData(
+            matches.questions.map(m => m.question_id),
+            matches.passages.map(m => m.passage_id)
+        );
+        const passagesContent = passages.map(({ content }) => content);
+
+        // Format reference data for RC (Questions linked to specific passages)
+        const referenceDataRC = passages.slice(0, 3).map(p => ({
+            passage: p,
+            questions: questions.filter(q => q.passage_id === p.id)
+        }));
+
+        // Format reference data for VA (Standalone questions/PYQs)
+        const referenceDataVA = passages.slice(0, 3).map(p => ({
+            passage: p,
+            questions: questions.filter(q => q.passage_id === null || q.passage_id === undefined)
+        }));
+
+        // --- PHASE 2: PASSAGE GENERATION ---
+        console.log("\n✍️ [Step 6/15] Generating and sharpening CAT-style passage");
+        const draftPassage = await generatePassage({
             semanticIdeas: semantic_ideas,
             authorialPersona: authorial_persona,
-            referencePassages: passagesMatches.map(p => p.content),
+            referencePassages: passagesContent,
         });
-        console.log("   Passage generated successfully");
+        const finalizedData = await finalizeCATPassage(draftPassage);
+        const passageText = finalizedData["passageData"].content;
 
-        // Step 8: Evaluate and sharpen passage to CAT standards
-        console.log("\n🛠️ [Step 8/14] Finalizing passage (evaluate + sharpen)");
-        const data = await finalizeCATPassage(passageGenerated);
-        console.log("   Passage finalized successfully");
-
-        // Step 9: Generate RC questions using PYQ patterns for guidance
-        console.log("\n❓ [Step 9/14] Generating RC questions from PYQ patterns");
-        const referenceData = passagesMatches.slice(0, 3).map(passage => {
-            passage: passage,
-            questions: questionsMatches.filter(q => q.passage_id === passage.id),
-        });
-
+        // --- PHASE 3: RC QUESTIONS ---
+        console.log("\n❓ [Step 7/15] Generating RC questions");
         const rcQuestions = await generateRCQuestions({
-            passageText: data["passageData"].content,
-            referenceData: referenceData,
+            passageText,
+            referenceData: referenceDataRC,
             questionCount: 4,
         });
-        console.log(`   Generated ${rcQuestions.length} RC questions`);
 
-        // Step 10: Select correct answers for each question
-        console.log("\n✅ [Step 10/14] Selecting correct answers");
+        console.log("\n✅ [Step 8/15] Selecting correct answers for RC");
         const rcQuestionsWithAnswers = await selectCorrectAnswers({
-            passageText: data["passageData"].content,
+            passageText,
             questions: rcQuestions,
         });
-        console.log("   Correct answers selected for RC questions");
 
-        // Step 11: Tag each question with primary reasoning node from graph
-        console.log("\n🏷️ [Step 11/14] Fetching graph + tagging + assembling reasoning context (RC questions)");
+        // --- PHASE 4: VA QUESTIONS ---
+        console.log("\n🔮 [Step 9/15] Generating VA questions (Summary, Completion, Jumbles)");
+        const vaQuestions = await generateVAQuestions({
+            semanticIdeas: semantic_ideas,
+            authorialPersona: authorial_persona,
+            referenceData: referenceDataVA,
+            passageText,
+        });
+
+        console.log("\n✅ [Step 10/15] Selecting correct answers for VA");
+        const vaQuestionsWithAnswers = await selectVAAnswers({
+            questions: vaQuestions,
+        });
+
+        // --- PHASE 5: GRAPH & RATIONALES ---
+        console.log("\n🏷️ [Step 11/15] Fetching reasoning graph nodes");
         const nodes = await fetchNodes();
 
-        const rcQuestionsTaggedWithNodes = await tagQuestionsWithNodes({
-            passageText: data["passageData"].content,
+        console.log("\n🕸️ [Step 12/15] Tagging questions and building graph context");
+        const rcTagged = await tagQuestionsWithNodes({ passageText, questions: rcQuestionsWithAnswers, nodes });
+        const vaTagged = await tagVAQuestionsWithNodes({ questions: vaQuestionsWithAnswers, nodes });
+
+        const rcContext = await getQuestionGraphContext(rcTagged, nodes);
+        console.log("--------------this is the rcContext-------------")
+        console.log(rcContext)
+        const vaContext = await getQuestionGraphContext(vaTagged, nodes);
+        console.log("--------------this is the vaContext-------------")
+        console.log(vaContext)
+
+        console.log("\n🧾 [Step 13/15] Generating rationales for RC");
+        const rcQuestionsFinal = await generateRationalesWithEdges({
+            passageText,
             questions: rcQuestionsWithAnswers,
-            nodes: nodes,
-        });
-        console.log("   RC questions tagged with nodes");
-
-        // Step 12: Build reasoning graph context (nodes + edges) for RC questions
-        console.log("\n🕸️ [Step 12/14] Building reasoning graph context for RC questions");
-        const reasoningGraphContextForRCQuestions = await getQuestionGraphContext(
-            rcQuestionsTaggedWithNodes,
-            nodes
-        );
-        console.log("   Reasoning graph context built for RC questions");
-
-        // Step 13: Generate elimination-driven rationales using graph structure (RC questions)
-        console.log("\n🧾 [Step 13/14] Generating rationales (graph-driven elimination) for RC questions");
-        const rcQuestionsWithRationales = await generateRationalesWithEdges({
-            passageText: data["passageData"].content,
-            questions: rcQuestionsTaggedWithNodes,
-            reasoningContexts: reasoningGraphContextForRCQuestions,
-            referenceData: referenceData,
-        });
-        console.log("   Rationales generated for RC questions");
-
-        // Step 14: Generate VA questions (NEW)
-        console.log("\n🔮 [Step 14/14] Generating VA questions (para_summary, para_completion, para_jumble, odd_one_out)");
-        const vaQuestions = await runCompleteDailyContent({
-            semanticIdeas: semantic_ideas,
-            authorialPersona: authorial_persona,
-            genre: genre.name,
-            passagesMatches,
-            questionsMatches,
-        });
-        console.log(`   Generated ${vaQuestions.length} VA questions`);
-
-        // Combine RC and VA questions
-        const allQuestions = [...rcQuestionsWithRationales, ...vaQuestions];
-
-        // Format output for database upload
-        console.log("\n📋 [Step 14/14] Formatting output for database upload");
-        const { exam, passage, questions } = await runCompleteDailyContent({
-            semanticIdeas: semantic_ideas,
-            authorialPersona: authorial_persona,
-            genre: genre.name,
-            passagesMatches,
-            questionsMatches,
+            reasoningContexts: rcContext,
+            referenceData: referenceDataRC,
         });
 
-        console.log("\n✅ [COMPLETE] Daily Content Generation finished");
-        console.log("=".repeat(80));
-        console.log("\n📊 SUMMARY:");
-        console.log("-".repeat(40));
-        console.log(`   Exam: ${exam.name} (${exam.year})`);
-        console.log(`   Passage: ${passage.word_count} words, ${passage.genre}`);
-        console.log(`   Questions: ${questions.length} total`);
+        console.log("\n🧾 [Step 14/15] Generating rationales for VA");
+        const vaQuestionsFinal = await generateVARationalesWithEdges({
+            questions: vaQuestionsWithAnswers,
+            reasoningContexts: vaContext,
+            referenceData: referenceDataVA,
+        });
 
-        // Count by type
-        const questionCounts = questions.reduce((acc, q) => {
-            acc[q.question_type] = (acc[q.question_type] || 0) + 1;
-            return acc;
-        }, {} as Record<string, number>);
+        // --- PHASE 6: FINALIZATION ---
+        console.log("\n📋 [Step 15/15] Formatting output for database upload");
+        const output = formatOutputForDB({
+            passageData: finalizedData["passageData"],
+            rcQuestions: rcQuestionsFinal,
+            vaQuestions: vaQuestionsFinal,
+        });
+
+        // Validate output
+        // if (!validateOutputForDB(output)) {
+        //     throw new Error("Output validation failed");
+        // }
+
+        // Generate and print report
+        const report = generateOutputReport(output);
+        console.log(report);
 
         console.log("\nBreakdown:");
-        Object.entries(questionCounts).forEach(([type, count]) => {
-            console.log(`   ${type}: ${count}`);
-        });
 
-        return allQuestions;
+        // Save to file for review
+        const fs = require('fs');
+        const outputPath = './justReadingOutput.json';
+        fs.writeFileSync(outputPath, JSON.stringify(output, null, 2));
+        console.log(`\n💾 Output saved to: ${outputPath}`);
+
+        console.log("\n✅ [COMPLETE] Daily Content Generation finished successfully");
+        printSummaryReport(output);
+
+        return output;
 
     } catch (error) {
         console.error("\n❌ [ERROR] Daily Content Generation failed:");
         console.error(error);
         throw error;
     }
+}
+
+/**
+ * Helper to print the final generation report
+ */
+function printSummaryReport(output: any) {
+    console.log("=".repeat(50));
+    console.log(`PASSAGE: ${output.passage.title} (${output.passage.word_count} words)`);
+    console.log(`TOTAL QUESTIONS: ${output.questions.length}`);
+
+    const counts = output.questions.reduce((acc: Record<string, number>, q: any) => {
+        acc[q.question_type] = (acc[q.question_type] || 0) + 1;
+        return acc;
+    }, {});
+
+    console.log("BREAKDOWN:");
+    Object.entries(counts).forEach(([type, count]) => {
+        console.log(` - ${type}: ${count}`);
+    });
+    console.log("=".repeat(50));
 }

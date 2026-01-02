@@ -68,7 +68,7 @@ const JumbledSentencesSchema = z.object({
 
 export const QuestionSchema = z.object({
     id: UUIDSchema,
-    passage_id: UUIDSchema.nullable(),
+    passage_id: UUIDSchema,
     question_text: z.string(),
     question_type: z.enum([
         "rc_question",
@@ -84,13 +84,13 @@ export const QuestionSchema = z.object({
         "vocab_in_context",
         "odd_one_out",
     ]),
-    options: OptionsSchema.optional(),
-    jumbled_sentences: JumbledSentencesSchema.optional(),
+    options: OptionsSchema,
+    jumbled_sentences: JumbledSentencesSchema,
     correct_answer: z.object({
         answer: z.string()
     }), //{"answer" : "answer"}
     rationale: z.string(),
-    difficulty: z.enum(["easy", "medium", "hard", "expert"]).nullable(),
+    difficulty: z.enum(["easy", "medium", "hard", "expert"]),
     tags: z.array(z.string()), // Use empty array [] instead of nullable
     created_at: TimestampSchema,
     updated_at: TimestampSchema,
@@ -135,3 +135,44 @@ export type Edge = {
     target_node_id: string;
     relationship: string;
 };
+
+export const SemanticIdeasSchema = z.object({
+    core_topic: z.string(),
+    subtopics: z.array(z.string()).min(2),
+    key_arguments: z.array(z.string()).min(3),
+    implicit_assumptions: z.array(z.string()).min(1),
+    areas_of_ambiguity: z.array(z.string()).min(1),
+    // Additional fields for VA questions
+    sentence_ideas: z.array(z.string()).min(5).describe("Key sentence-level ideas that can form the basis of para_jumble, para_summary, para_completion questions"),
+    conceptual_pairs: z.array(z.object({
+        idea_a: z.string(),
+        idea_b: z.string(),
+        relationship: z.string()
+    })).min(3).describe("Pairs of related ideas for odd_one_out questions"),
+    logical_transitions: z.array(z.string()).min(3).describe("Logical connectors and transitions used in the text"),
+});
+
+export const AuthorialPersonaSchema = z.object({
+    stance_type: z.enum([
+        "critical",
+        "revisionist",
+        "skeptical",
+        "corrective",
+        "warning-driven",
+    ]),
+    evaluative_intensity: z.enum(["low", "medium", "high"]),
+    typical_moves: z.array(z.string()).min(2),
+    syntactic_traits: z.array(z.string()).min(2),
+    closure_style: z.enum(["open-ended", "cautionary", "unresolved"]),
+});
+
+export const SemanticExtractionOutputSchema = z.object({
+    semantic_ideas: SemanticIdeasSchema,
+    authorial_persona: AuthorialPersonaSchema,
+});
+
+export type SemanticIdeas = z.infer<typeof SemanticIdeasSchema>;
+export type AuthorialPersona = z.infer<typeof AuthorialPersonaSchema>;
+export type SemanticExtractionOutput = z.infer<
+    typeof SemanticExtractionOutputSchema
+>;

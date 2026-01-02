@@ -25,7 +25,8 @@ export type ArticleOutput = z.infer<typeof ArticleSchema>;
 const MODEL = "gpt-4o-mini-search-preview";
 
 export async function searchWebForArticle(
-    genre: string
+    genre: string,
+    exclude: string[]
 ): Promise<ArticleOutput> {
     // STEP 1: Fetch existing URLs
     const existingUrls = await getExistingArticleUrls();
@@ -37,7 +38,6 @@ for CAT Reading Comprehension practice.
 STRICT SOURCE ALLOWLIST:
 - aeon.co
 - psyche.co
-- jstor.org
 - smithsonianmag.com
 - technologyreview.com
 
@@ -47,6 +47,7 @@ ANY of the URLs listed below.
 
 EXCLUDED URLs:
 ${existingUrls.map((url) => `- ${url}`).join("\n")}
+${exclude.map((url) => `- ${url}`).join("\n")}
 
 STRICT CONTENT RULES:
 - Idea-driven, analytical writing only
