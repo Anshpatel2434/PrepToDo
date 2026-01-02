@@ -109,7 +109,7 @@ ${rq.question_text}
 
 ${rq.question_type === "para_jumble" ? `Jumbled Sentences:\n${JSON.stringify(rq.jumbled_sentences, null, 2)}` : `Options:\n${JSON.stringify(rq.options, null, 2)}`}
 
-Correct Answer: ${rq.correct_answer.answer}
+Correct Answer: ${rq.correct_answer}
 
 Rationale:
 ${rq.rationale}
@@ -130,15 +130,15 @@ Jumbled Sentences:
 ${JSON.stringify(q.jumbled_sentences, null, 2)}
 
 OPTIONS:
-${Object.entries(q.options).map(([key, value]) => `${key}) ${value}`).join("\n")}
+${q.options ? Object.entries(q.options).map(([key, value]) => `${key}) ${value}`).join("\n") : "None"}
 
-CORRECT ANSWER: ${q.correct_answer.answer}`
+CORRECT ANSWER: ${q.correct_answer}`
     : `QUESTION: ${q.question_text}
 
 OPTIONS:
-${Object.entries(q.options).map(([key, value]) => `${key}) ${value}`).join("\n")}
+${q.options ? Object.entries(q.options).map(([key, value]) => `${key}) ${value}`).join("\n") : "None"}
 
-CORRECT ANSWER: ${q.correct_answer.answer}`
+CORRECT ANSWER: ${q.correct_answer}`
 }
 
 ---

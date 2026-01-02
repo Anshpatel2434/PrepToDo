@@ -105,7 +105,7 @@ ${rq.question_text}
 Options:
 ${JSON.stringify(rq.options, null, 2)}
 
-Correct Answer: ${rq.correct_answer.answer}
+Correct Answer: ${rq.correct_answer}
 
 Rationale:
 ${rq.rationale}
@@ -129,7 +129,7 @@ ${rq.question_text}
 Options:
 ${JSON.stringify(rq.options, null, 2)}
 
-Correct Answer: ${rq.correct_answer.answer}
+Correct Answer: ${rq.correct_answer}
 
 Rationale:
 ${rq.rationale}
@@ -153,7 +153,7 @@ ${rq.question_text}
 Options:
 ${JSON.stringify(rq.options, null, 2)}
 
-Correct Answer: ${rq.correct_answer.answer}
+Correct Answer: ${rq.correct_answer}
 
 Rationale:
 ${rq.rationale}
@@ -176,7 +176,7 @@ ${Object.entries(q.options)
     .map(([key, value]) => `${key}) ${value}`)
     .join("\n")}
 
-CORRECT ANSWER: ${q.correct_answer.answer}
+CORRECT ANSWER: ${q.correct_answer}
 
 ---
 

@@ -73,6 +73,15 @@ function ensureDifficultyVariety(questions: Question[], questionCount: number): 
     return questions;
 }
 
+// Simple UUID generator
+function generateUUID(): string {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
 export async function generateRCQuestions(params: {
     passageText: string;
     referenceData: ReferenceDataSchema[];
@@ -241,8 +250,8 @@ Return STRICT JSON only in this format:
       "question_text": "<text>",
       "question_type": "rc_question",
       "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
-      "jumbled_sentences": { "1": "...", "2": "...", "3": "...", "4": "..." },
-      "correct_answer": { "answer": "" },
+      "jumbled_sentences": null,
+      "correct_answer": "",
       "rationale": "",
       "difficulty": "easy|medium|hard",
       "tags": [],
@@ -253,7 +262,7 @@ Return STRICT JSON only in this format:
 }
 
 IMPORTANT:
-- Leave correct_answer.answer empty
+- Leave correct_answer empty
 - Leave rationale empty
 - Generate EXACTLY ${questionCount} questions
 - No additional text or commentary
@@ -308,5 +317,11 @@ IMPORTANT:
 
     console.log(`✅ [RC Questions] Generated ${parsed.questions.length} questions`);
 
-    return parsed.questions;
+    const now = new Date().toISOString();
+    return parsed.questions.map(q => ({
+        ...q,
+        id: generateUUID(),
+        created_at: now,
+        updated_at: now
+    }));
 }

@@ -39,7 +39,10 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 
             // Determine correctness immediately for the record
             // (Note: For TITA, strictly matching string; for options, matching ID)
-            const isCorrect = answerValue === question.correct_answer?.answer;
+            const correctAnswer = typeof question.correct_answer === 'string' 
+                ? question.correct_answer 
+                : question.correct_answer?.answer;
+            const isCorrect = answerValue === correctAnswer;
 
             dispatch(
                 submitAnswer({
@@ -203,7 +206,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                                 Your Answer:{" "}
                                 <span
                                     className={
-                                        question.correct_answer.answer === userAnswer
+                                        (typeof question.correct_answer === 'string' ? question.correct_answer : question.correct_answer?.answer) === userAnswer
                                             ? "text-success"
                                             : "text-error"
                                     }
@@ -213,7 +216,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                                 <br />
                                 Correct:{" "}
                                 <span className="text-success">
-                                    {question.correct_answer.answer}
+                                    {typeof question.correct_answer === 'string' ? question.correct_answer : question.correct_answer?.answer}
                                 </span>
                             </div>
                         )}
