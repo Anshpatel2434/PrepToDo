@@ -58,7 +58,7 @@ export function formatOutputForDB(params: FormatOutputParams): {
             genre: passageData.genre,
             difficulty: passageData.difficulty,
             source: passageData.source,
-            paper_id: null,
+            paper_id: exam.id, // Link passage to exam
             is_daily_pick: true,
             is_featured: false,
             is_archived: false,

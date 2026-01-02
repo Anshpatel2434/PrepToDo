@@ -1,3 +1,4 @@
+// types.ts
 import {z} from "zod"
 
 export const UUIDSchema = z.string().uuid();
@@ -20,7 +21,7 @@ export const ExamSchema = z.object({
     created_at: TimestampSchema
 })
 
-export type Exam = z.infer<typeof ExamSchema>
+export type Exam = z.infer<typeof ExamSchema>;
 
 /* =========================================================
    📄 Passages
@@ -56,12 +57,13 @@ const OptionsSchema = z.object({
     D: z.string(),
 });
 
-// 1. Define a concrete Options schema instead of a generic JSONSchema
+// 1. Define a concrete Jumbled Sentences schema instead of a generic JSONSchema
 const JumbledSentencesSchema = z.object({
     1: z.string(),
     2: z.string(),
     3: z.string(),
     4: z.string(),
+    5: z.string(),
 });
 
 export const QuestionSchema = z.object({
@@ -82,8 +84,8 @@ export const QuestionSchema = z.object({
         "vocab_in_context",
         "odd_one_out",
     ]),
-    options: OptionsSchema,
-    jumbled_sentences: JumbledSentencesSchema,
+    options: OptionsSchema.optional(),
+    jumbled_sentences: JumbledSentencesSchema.optional(),
     correct_answer: z.object({
         answer: z.string()
     }), //{"answer" : "answer"}
