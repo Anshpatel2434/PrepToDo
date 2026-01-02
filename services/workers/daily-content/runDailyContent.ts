@@ -42,7 +42,42 @@ function groupQuestionsWithPassages(passages, questions) {
 
 
 export async function runDailyContent() {
-    console.log("🚀 [START] Daily Content Generation");
+
+    console.log("🚀 [START] Daily Content Generation start ");	
+ 	
+    // // 1. Select genre	
+    // const genre = await fetchGenreForToday();	
+ 	
+    // let { articleMeta, articleText } =	
+    //     await getValidArticleWithText(genre.name);	
+ 	
+    // // 4. Save artile to database	
+    // await saveArticleToDB(articleMeta)	
+ 	
+    // console.log('This is the article text and its length is : ', (articleText: string) => {	
+    //     // Trim leading/trailing spaces and split by one or more whitespace characters	
+    //     const words = articleText.trim().split(/\s+/);	
+ 	
+    //     // Filter out any empty strings that might result from extra spaces	
+    //     const filteredWords = words.filter(word => word.length > 0);	
+ 	
+    //     return filteredWords.length;	
+    // })	
+    // console.log(articleText.slice(0, 500))	
+ 	
+    // // 4. Extract semantic ideas	
+    // const {	
+    //     semantic_ideas,	
+    //     authorial_persona,	
+    // } = await extractSemanticIdeasAndPersona(articleText, genre.name);	
+ 	
+    // console.log("semantic ideas ")	
+    // console.log(semantic_ideas)	
+ 	
+    // console.log("authorial_persona")	
+    // console.log(authorial_persona)	
+ 	
+    // articleText = null
 
     const embedding = await generateEmbedding(genreName);
 
@@ -75,5 +110,5 @@ export async function runDailyContent() {
 
     console.log("✅ [COMPLETE] Daily Content Generation finished");
 
-    return finalQuestionsFormed;
+    console.log(finalQuestionsFormed);
 }
