@@ -13,6 +13,14 @@ export const SemanticIdeasSchema = z.object({
     key_arguments: z.array(z.string()).min(3),
     implicit_assumptions: z.array(z.string()).min(1),
     areas_of_ambiguity: z.array(z.string()).min(1),
+    // Additional fields for VA questions
+    sentence_ideas: z.array(z.string()).min(5).describe("Key sentence-level ideas that can form the basis of para_jumble, para_summary, para_completion questions"),
+    conceptual_pairs: z.array(z.object({
+        idea_a: z.string(),
+        idea_b: z.string(),
+        relationship: z.string()
+    })).min(3).describe("Pairs of related ideas for odd_one_out questions"),
+    logical_transitions: z.array(z.string()).min(3).describe("Logical connectors and transitions used in the text"),
 });
 
 export const AuthorialPersonaSchema = z.object({
@@ -69,7 +77,7 @@ export async function extractSemanticIdeasAndPersona(
     const prompt = `
 You are an extraction engine for exam content creation.
 
-THIS TASK HAS TWO DISTINCT PARTS.
+THIS TASK HAS THREE DISTINCT PARTS.
 DO NOT MIX THEM.
 
 --------------------------------------------------
@@ -98,7 +106,31 @@ Extract:
 5. Areas of ambiguity or debate
 
 --------------------------------------------------
-PART 2: AUTHORIAL PERSONA (STYLE META-DATA)
+PART 2: SENTENCE-LEVEL IDEAS (FOR VA QUESTIONS)
+--------------------------------------------------
+
+These ideas will be used to generate:
+- Para jumble questions (ordering of sentences)
+- Para summary questions (identifying the best summary)
+- Para completion questions (completing a sentence/paragraph)
+- Odd one out questions (identifying the sentence that doesn't belong)
+
+Extract:
+1. sentence_ideas: 5-10 distinct, self-contained sentence-level ideas from the text
+   - Each should be a complete, standalone thought
+   - They should represent key logical steps or arguments
+   - Avoid preserving exact wording
+
+2. conceptual_pairs: 3-5 pairs of related ideas
+   - For each pair: idea_a, idea_b, relationship (how they connect)
+   - These will be used for odd_one_out questions
+
+3. logical_transitions: 3-5 key logical connectors used
+   - Examples: "however", "therefore", "consequently", "in contrast"
+   - These help identify sentence order and paragraph structure
+
+--------------------------------------------------
+PART 3: AUTHORIAL PERSONA (STYLE META-DATA)
 --------------------------------------------------
 
 This is NOT about content.

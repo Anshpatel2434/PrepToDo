@@ -16,6 +16,8 @@ import { tagQuestionsWithNodes } from "./retrieval/rcQuestionsHandling/tagQuesti
 import { getQuestionGraphContext } from "./graph/createReasoningGraphContext";
 import { generateRationalesWithEdges } from "./retrieval/rcQuestionsHandling/generateRationaleWithEdges";
 
+import { groupQuestionsWithPassages } from "./retrieval/rcQuestionsHandling/generateRCQuestions";
+
 /**
  * Main workflow for generating daily CAT practice content.
  *
@@ -30,16 +32,6 @@ import { generateRationalesWithEdges } from "./retrieval/rcQuestionsHandling/gen
  * 8. Build reasoning graph context (nodes + edges) for each question
  * 9. Generate elimination-driven rationales using graph structure
  */
-
-function groupQuestionsWithPassages(passages, questions) {
-    return passages.slice(0, 3).map(passage => {
-        return {
-            passage: passage,
-            questions: questions.filter(q => q.passage_id === passage.id)
-        };
-    });
-}
-
 
 export async function runDailyContent() {
 

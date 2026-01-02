@@ -7,6 +7,19 @@ const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
 /**
+ * Groups questions with their associated passages for use as reference data.
+ * This is exported for use in VA question generation.
+ */
+export function groupQuestionsWithPassages(passages, questions) {
+    return passages.slice(0, 3).map(passage => {
+        return {
+            passage: passage,
+            questions: questions.filter(q => q.passage_id === passage.id)
+        };
+    });
+}
+
+/**
  * Generates CAT-style RC questions using reference PYQs for pattern learning.
  *
  * Recent tweaks:
