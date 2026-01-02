@@ -43,6 +43,8 @@ export async function selectCorrectAnswers(params: {
 }) {
     const { passageText, questions } = params;
 
+    console.log(`🧠 [Answer Key] Selecting correct answers for ${questions.length} questions`);
+
     const prompt = `SYSTEM:
 You are a strict CAT answer key verifier.
 You select the correct option.
@@ -92,6 +94,8 @@ Return STRICT JSON array with objects:
 
 `;
 
+    console.log("⏳ [Answer Key] Waiting for LLM response (answer key)");
+
     const completion = await client.chat.completions.parse({
         model: MODEL,
         temperature: 0.0, // very important
@@ -118,6 +122,8 @@ Return STRICT JSON array with objects:
         throw new Error("Answer key generation failed or incomplete");
     }
 
+    console.log("✅ [Answer Key] Answer key received");
+
     /* =========================================
        Merge back into questions
        ========================================= */
@@ -131,6 +137,8 @@ Return STRICT JSON array with objects:
         correct_answer: answerMap.get(q.id),
         updated_at: new Date().toISOString(),
     }));
+
+    console.log("✅ [Answer Key] Answers merged into question objects");
 
     return updatedQuestions;
 }

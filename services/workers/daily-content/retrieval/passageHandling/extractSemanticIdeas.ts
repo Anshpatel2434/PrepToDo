@@ -64,6 +64,8 @@ export async function extractSemanticIdeasAndPersona(
     articleText: string,
     genre: string
 ): Promise<SemanticExtractionOutput> {
+    console.log(`🧠 [Semantic Extract] Extracting semantic ideas + persona (genre=${genre})`);
+
     const prompt = `
 You are an extraction engine for exam content creation.
 
@@ -128,6 +130,8 @@ ${articleText}
 Return STRICT JSON only in the required schema.
 `;
 
+    console.log("⏳ [Semantic Extract] Waiting for LLM response (extraction)");
+
     const completion = await client.chat.completions.parse({
         model: MODEL,
         temperature: 0.1,
@@ -153,6 +157,8 @@ Return STRICT JSON only in the required schema.
     if (!parsed) {
         throw new Error("Failed to extract semantic ideas and authorial persona");
     }
+
+    console.log("✅ [Semantic Extract] Extraction complete");
 
     return parsed;
 }

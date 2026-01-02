@@ -5,51 +5,46 @@ const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
 /**
- * Generates CAT-style rationales using reasoning graphs for structured elimination.
+ * Generates CAT-style rationales using reasoning graphs as a hidden rubric.
  *
- * This function addresses the core issue in previous implementations:
- * - The LLM was not forced to use edges - it treated them as context, not instructions
- * - Rationales followed a repetitive pattern: explain correct → pick one wrong → stop
- * - PYQ rationales were shown but their structure wasn't emulated
- *
- * Key improvements in the new prompt:
- *
- * 1. MANDATORY EDGE-DRIVEN ELIMINATION:
- *    - Edges are now binding instructions, not optional context
- *    - Each edge relationship must map to an actual incorrect option
- *    - The LLM is forced to traverse the reasoning graph systematically
- *
- * 2. STRUCTURED ELIMINATION (not answer justification):
- *    - PART 1: Explains why correct option is correct
- *    - PART 2: MUST eliminate at least 2 options using edge relationships
- *    - PART 3: Brief mention of remaining options
- *
- * 3. REASONING PATTERN TEMPLATES:
- *    - Specific templates for different reasoning steps
- *    - e.g., "Capture central thesis" → eliminate too narrow, too broad, etc.
- *    - Ensures variety in elimination logic across questions
- *
- * 4. MENTORING PERSPECTIVE:
- *    - Anticipates common student mistakes
- *    - Shows the reasoning error that leads to each wrong option
- *    - Helps students learn, not just provides answers
- *    - Models CAT reasoning methodology
- *
- * 5. VALIDATION CHECKLIST:
- *    - Ensures all requirements are met before output
- *    - Checks for proper edge usage, elimination depth, tone, precision
- *
- * The prompt uses advanced prompt engineering techniques:
- * - Chain-of-thought for internal reasoning
- * - Few-shot learning from PYQ rationales
- * - Step-by-step structured output
- * - Persona-based writing (CAT expert mentor)
- * - Explicit constraints and validation
+ * Design goals:
+ * - Force graph-driven elimination (edges/nodes must guide which wrong options get explained)
+ * - Avoid leaking prompt scaffolding (no "PART 1", no relationship labels like "requires →")
+ * - Keep the output style flexible so the model can emulate PYQ rationale variety
  */
 
 interface ReferenceDataSchema {
-    passage : Passage;
+    passage: Passage;
     questions: Question[];
+}
+
+function sanitizeRationale(raw: string): string {
+    let cleaned = raw;
+
+    // Remove common scaffold headings if they slip into output
+    cleaned = cleaned.replace(/^#{2,}\s*PART\s*\d+\s*:\s*.*$/gim, "");
+    cleaned = cleaned.replace(/^#{2,}\s*PART\s*\d+\s*.*$/gim, "");
+    cleaned = cleaned.replace(
+        /^#{2,}\s*(?:MANDATORY RATIONALE STRUCTURE|SYSTEMATIC ELIMINATION|BRIEF MENTION OF REMAINING OPTIONS|CORRECT OPTION EXPLANATION)\s*.*$/gim,
+        ""
+    );
+
+    // Remove edge-relationship / node-label scaffolding patterns (keep the explanation that follows)
+    cleaned = cleaned.replace(
+        /^\s*\d+\.?\s*\*\*(?:Requires|Applies|Validates|Misleads_into|Eliminates|Contradicts|Optimizes|Step_of|Supports)\*\*\s*→\s*\*\*?[^:]+\*\*?:\s*/gim,
+        ""
+    );
+
+    // Remove inline relationship arrow tokens if present
+    cleaned = cleaned.replace(
+        /\b(?:Requires|Applies|Validates|Misleads_into|Eliminates|Contradicts|Optimizes|Step_of|Supports)\b\s*→\s*/g,
+        ""
+    );
+
+    // Trim excessive blank lines introduced by heading removal
+    cleaned = cleaned.replace(/\n{3,}/g, "\n\n");
+
+    return cleaned.trim();
 }
 
 export async function generateRationalesWithEdges(params: {
@@ -60,65 +55,63 @@ export async function generateRationalesWithEdges(params: {
 }) {
     const { passageText, questions, reasoningContexts, referenceData } = params;
 
+    console.log(`🧾 [Rationales] Generating rationales for ${questions.length} questions`);
+
     const updatedQuestions = [];
 
-    for (const q of questions) {
+    for (const [index, q] of questions.entries()) {
         const context = reasoningContexts[q.id];
         if (!context) {
             throw new Error(`Missing reasoning context for question ${q.id}`);
         }
 
+        console.log(
+            `🧾 [Rationales] Q${index + 1}/${questions.length} | primary="${context.primary_node.label}" | edges=${context.edges.length}`
+        );
+
         const prompt = `SYSTEM:
-You are a CAT VARC expert explaining reasoning to a student.
-You understand how students think - where they go wrong, what they miss, what they assume incorrectly.
+You are a CAT VARC expert mentor.
+You teach the elimination process and the thinking errors behind tempting wrong options.
 
-YOUR PERSONA:
-- You are a mentor, not an answer key
-- You anticipate and address common student mistakes
-- You explain the reasoning path that leads to the correct answer
-- You help students recognize their own thinking errors
-- Your tone is analytical, precise, and focused on reasoning patterns
-
-CRITICAL MINDSET:
-- You are NOT justifying the correct answer
-- You are demonstrating the elimination process
-- You are showing how to think, not what to think
-- Every explanation must model CAT reasoning methodology
+IMPORTANT STYLE RULE:
+- Use the reasoning graph as a hidden rubric to choose which wrong options to tackle.
+- Do NOT expose the graph.
+- Do NOT reproduce labels like "requires →" / "applies →" / node names in the output.
+- Do NOT use fixed section headers like "PART 1" / "PART 2". The writing must feel like PYQ rationales.
 
 ---
 
 USER:
-Your task is to write a CAT-style rationale that explains the reasoning process.
+Write a CAT-style rationale for the TARGET QUESTION.
 
-You are given REFERENCE MATERIAL from actual CAT papers:
-- Three past CAT passages with their questions and rationales
-
-IMPORTANT: Study these to understand:
-- How CAT rationales are structured
-- How elimination is presented
-- How reasoning steps are explained
-- The academic tone and precision level
+You are given REFERENCE MATERIAL from actual CAT papers.
+Study it to match the usual level of precision, tone, and concision.
 
 ---
 
-## REFERENCE MATERIAL (Study These Patterns)
+## REFERENCE MATERIAL (Observe Patterns)
 
 PASSAGE 1 + QUESTIONS + RATIONALES:
 ${referenceData[0].passage.content}
 
 Questions with Rationales:
-${referenceData[0].questions.slice(0, 4).map((q, i) => `
+${referenceData[0].questions
+    .slice(0, 4)
+    .map(
+        (rq, i) => `
 Question ${i + 1}:
-${q.question_text}
+${rq.question_text}
 
 Options:
-${JSON.stringify(q.options, null, 2)}
+${JSON.stringify(rq.options, null, 2)}
 
-Correct Answer: ${q.correct_answer.answer}
+Correct Answer: ${rq.correct_answer.answer}
 
 Rationale:
-${q.rationale}
-`).join('\n---\n')}
+${rq.rationale}
+`
+    )
+    .join("\n---\n")}
 
 ---
 
@@ -126,18 +119,23 @@ PASSAGE 2 + QUESTIONS + RATIONALES:
 ${referenceData[1].passage.content}
 
 Questions with Rationales:
-${referenceData[1].questions.slice(0, 4).map((q, i) => `
+${referenceData[1].questions
+    .slice(0, 4)
+    .map(
+        (rq, i) => `
 Question ${i + 1}:
-${q.question_text}
+${rq.question_text}
 
 Options:
-${JSON.stringify(q.options, null, 2)}
+${JSON.stringify(rq.options, null, 2)}
 
-Correct Answer: ${q.correct_answer.answer}
+Correct Answer: ${rq.correct_answer.answer}
 
 Rationale:
-${q.rationale}
-`).join('\n---\n')}
+${rq.rationale}
+`
+    )
+    .join("\n---\n")}
 
 ---
 
@@ -145,18 +143,23 @@ PASSAGE 3 + QUESTIONS + RATIONALES:
 ${referenceData[2].passage.content}
 
 Questions with Rationales:
-${referenceData[2].questions.slice(0, 4).map((q, i) => `
+${referenceData[2].questions
+    .slice(0, 4)
+    .map(
+        (rq, i) => `
 Question ${i + 1}:
-${q.question_text}
+${rq.question_text}
 
 Options:
-${JSON.stringify(q.options, null, 2)}
+${JSON.stringify(rq.options, null, 2)}
 
-Correct Answer: ${q.correct_answer.answer}
+Correct Answer: ${rq.correct_answer.answer}
 
 Rationale:
-${q.rationale}
-`).join('\n---\n')}
+${rq.rationale}
+`
+    )
+    .join("\n---\n")}
 
 ---
 
@@ -170,165 +173,53 @@ ${q.question_text}
 
 OPTIONS:
 ${Object.entries(q.options)
-  .map(([key, value]) => `${key}) ${value}`)
-  .join('\n')}
+    .map(([key, value]) => `${key}) ${value}`)
+    .join("\n")}
 
 CORRECT ANSWER: ${q.correct_answer.answer}
 
 ---
 
-## REASONING STRUCTURE (MANDATORY INSTRUCTIONS)
+## REASONING GRAPH (Hidden Rubric — Do Not Mention or Quote)
 
-You are given a reasoning graph that maps the thinking process.
+Primary reasoning step:
+- ${context.primary_node.label}
 
-PRIMARY REASONING STEP: ${context.primary_node.label}
-
-REASONING PATH (You MUST follow this structure):
+Elimination cues (use at least TWO of these to eliminate TWO different wrong options):
 ${context.edges
-  .map((e, i) => `${i + 1}. [${e.relationship}] → ${e.target_node.label} [${e.target_node.type}]`)
-  .join('\n')}
+    .map(
+        (e, i) =>
+            `${i + 1}. relationship="${e.relationship}", cue="${e.target_node.label}"`
+    )
+    .join("\n")}
 
 ---
 
-## MANDATORY RATIONALE STRUCTURE
+## OUTPUT REQUIREMENTS (Must Follow)
 
-Your rationale MUST follow this exact elimination-driven structure:
+1) Explain briefly why the correct option is correct, anchored to the passage.
+2) Eliminate at least TWO wrong options in a way that is clearly guided by the elimination cues above.
+   - For each eliminated option: state the option letter, why it tempts, what it gets wrong, and where the passage blocks it.
+3) Briefly dismiss any remaining option(s) without over-explaining.
 
-### PART 1: CORRECT OPTION EXPLANATION
-- Start by explaining why option ${q.correct_answer.answer} is correct
-- Map this to the PRIMARY reasoning step: ${context.primary_node.label}
-- Show the logical steps that lead to this option
-- Reference the relevant part(s) of the passage
-- Be precise and specific
+Hard constraints:
+- Do NOT include the cue list, relationship words, node labels, or any prompt meta-language.
+- Do NOT use fixed section headers such as "PART 1" / "SYSTEMATIC ELIMINATION".
+- Keep the tone academic and exam-oriented.
+- Keep the structure flexible (2–6 short paragraphs OR compact bullets), similar to PYQs.
 
-### PART 2: SYSTEMATIC ELIMINATION (MANDATORY)
+Output ONLY the rationale text.`;
 
-You MUST explain why AT LEAST 2 incorrect options are wrong, and you MUST use the reasoning graph to guide this:
-
-For EACH incorrect option you explain:
-${context.edges.map((e, i) => `
-${i + 1}. Use reasoning: "${e.relationship}" → "${e.target_node.label}"
-   - Identify which option this reasoning applies to
-   - Explain how this option falls into the trap
-   - Show the specific reasoning error a student would make
-   - Reference the part of the passage that exposes this error`).join('\n')}
-
-IMPORTANT:
-- Do NOT randomly pick options - follow the reasoning graph
-- Each edge relationship must map to an actual incorrect option
-- Explain the thinking error that would lead a student to that option
-- Show how the passage actually contradicts or fails to support it
-
-### PART 3: BRIEF MENTION OF REMAINING OPTIONS
-- Briefly explain why the remaining option(s) are incorrect
-- Do NOT go into as much detail as the mapped eliminations
-- Just provide a quick dismissal
-
----
-
-## REASONING PATTERN TEMPLATES (Use These)
-
-Depending on the PRIMARY reasoning step, use the appropriate template:
-
-IF PRIMARY IS "Capture central thesis":
-- Correct option: Identifies the position the passage actually advances
-- Eliminate options: Too narrow, too broad, missing the evaluative stance, assuming unstated claims
-
-IF PRIMARY IS "Identify contradictions":
-- Correct option: Shows what the passage explicitly contradicts
-- Eliminate options: What the passage supports, what the passage leaves open, oversimplifications
-
-IF PRIMARY IS "Evaluate supporting details":
-- Correct option: Matches the specific evidence precisely
-- Eliminate options: Generalizations, distortions, unsupported extensions, opposite claims
-
-IF PRIMARY IS "Inference":
-- Correct option: Derives what must be true based on the passage
-- Eliminate options: Literal restatements, extreme interpretations, irrelevant connections, contradictory claims
-
-IF PRIMARY IS "Tone / purpose":
-- Correct option: Captures the evaluative stance or intent
-- Eliminate options: Opposite stance, neutral description, extreme version, irrelevant purpose
-
----
-
-## WRITING GUIDELINES
-
-1. TONE:
-- Academic, analytical, precise
-- Mentor-like - anticipating and addressing student mistakes
-- No first-person pronouns (I, my, we)
-- No conversational filler
-- Direct and focused
-
-2. PRECISION:
-- Quote or paraphrase the exact part of the passage
-- Be specific about what makes each option correct or incorrect
-- Avoid vague language like "because it says so"
-- Show, don't just tell
-
-3. REASONING FOCUS:
-- Focus on the logical process, not just the outcome
-- Explain the step-by-step thinking that leads to the answer
-- Address why a wrong option might seem attractive
-- Model CAT-style reasoning methodology
-
-4. STRUCTURE:
-- Use clear paragraph breaks
-- Each paragraph should make one clear point
-- Logical flow from correct answer → eliminations
-- End with a brief summary if helpful
-
-5. MENTORING APPROACH:
-- Anticipate common student mistakes
-- Explain the reasoning trap clearly
-- Help students recognize their own thinking patterns
-- Show the disciplined reasoning that CAT requires
-
----
-
-## MENTORING PERSPECTIVE (CRITICAL)
-
-Write as if you're teaching a student who:
-- Has read the passage carefully
-- Has some understanding but makes reasoning errors
-- Falls for common traps
-- Needs to learn systematic elimination
-
-Your rationale should help them:
-- Recognize where they went wrong
-- Understand the correct reasoning path
-- Learn the CAT methodology
-- Avoid similar mistakes in future
-
----
-
-## FINAL VALIDATION CHECKLIST
-
-Before outputting, verify:
-
-✓ Explains why correct option is correct (not just states it)
-✓ Uses the PRIMARY reasoning step to guide explanation
-✓ Systematically eliminates AT LEAST 2 incorrect options
-✓ Maps eliminations to the reasoning graph edges
-✓ Shows the reasoning error for each eliminated option
-✓ Mentions remaining options briefly
-✓ Academic tone, no first-person pronouns
-✓ Precise references to passage text
-✓ Models CAT reasoning methodology
-✓ Helps student learn, not just provides answer
-
----
-
-OUTPUT: Write the rationale following the structure above.`;
+        console.log(`⏳ [Rationales] Waiting for LLM response for question ${q.id}`);
 
         const completion = await client.chat.completions.create({
             model: MODEL,
-            temperature: 0.2,
+            temperature: 0.25,
             messages: [
                 {
                     role: "system",
-                    content: "You are a CAT VARC expert mentor. You write elimination-driven rationales that teach reasoning, not just provide answers.",
+                    content:
+                        "You are a CAT VARC expert mentor. You write rationales that teach elimination without exposing internal rubrics.",
                 },
                 {
                     role: "user",
@@ -337,21 +228,27 @@ OUTPUT: Write the rationale following the structure above.`;
             ],
         });
 
-        const rationale = completion.choices[0]?.message?.content?.trim();
-        if (!rationale) {
+        const rawRationale = completion.choices[0]?.message?.content?.trim();
+        if (!rawRationale) {
             throw new Error("Failed to generate rationale");
         }
+
+        const rationale = sanitizeRationale(rawRationale);
+
+        console.log(`✅ [Rationales] Rationale generated for question ${q.id}`);
 
         updatedQuestions.push({
             ...q,
             rationale,
             tags: [
                 context.primary_node.label,
-                ...context.edges.map(e => e.target_node.label),
+                ...context.edges.map((e) => e.target_node.label),
             ],
             updated_at: new Date().toISOString(),
         });
     }
+
+    console.log("✅ [Rationales] All rationales generated");
 
     return updatedQuestions;
 }

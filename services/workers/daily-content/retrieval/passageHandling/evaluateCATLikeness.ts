@@ -31,6 +31,8 @@ const MODEL = "gpt-4o-mini"; // cheap & sufficient
 export async function evaluateCATLikeness(
     passage: string
 ): Promise<CATEvaluation> {
+    console.log("🔍 [CAT Eval] Evaluating CAT likeness");
+
     const prompt = `
 You are a CAT VARC examiner.
 
@@ -71,6 +73,8 @@ ${passage}
 Return STRICT JSON only.
 `;
 
+    console.log("⏳ [CAT Eval] Waiting for LLM response (evaluation)");
+
     const completion = await client.chat.completions.parse({
         model: MODEL,
         temperature: 0.1,
@@ -92,6 +96,10 @@ Return STRICT JSON only.
     if (!parsed) {
         throw new Error("Failed to evaluate CAT likeness");
     }
+
+    console.log(
+        `✅ [CAT Eval] Done | score=${parsed.overall_score} | verdict=${parsed.verdict}`
+    );
 
     return parsed;
 }

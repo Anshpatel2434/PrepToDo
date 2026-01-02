@@ -5,6 +5,8 @@ import { supabase } from "../../../config/supabase";
  * @param questionsIds - An array of 5 strings (IDs)
  */
 export async function fetchNodes() {
+    console.log("🧠 [Nodes] Fetching reasoning graph nodes from DB");
+
     const { data, error } = await supabase
         .from('graph_nodes')
         .select('*')

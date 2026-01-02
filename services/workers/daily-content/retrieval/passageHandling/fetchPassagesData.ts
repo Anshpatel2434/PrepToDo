@@ -5,6 +5,8 @@ import { supabase } from "../../../../config/supabase";
  * @param passageIds - An array of strings (IDs)
  */
 export async function fetchPassagesData(passageIds: string[]) {
+    console.log(`📄 [Passages] Fetching ${passageIds.length} passages from DB`);
+
     const { data, error } = await supabase
         .from("passages")
         .select("*")

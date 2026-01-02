@@ -33,6 +33,8 @@ export async function generatePassage(params: {
 }) {
     const { semanticIdeas, authorialPersona, referencePassages } = params;
 
+    console.log(`✍️ [Passage Gen] Starting passage generation (referencePassages=${referencePassages.length})`);
+
     if (referencePassages.length !== 5) {
         throw new Error(
             `generatePassage expects exactly 5 reference passages, received ${referencePassages.length}`
@@ -254,6 +256,8 @@ If not, expand the analysis until it is.
     //     .replace("{{PASSAGE_4_TEXT}}", referencePassages[3])
     //     .replace("{{PASSAGE_5_TEXT}}", referencePassages[4]);
 
+    console.log("⏳ [Passage Gen] Waiting for LLM response (draft passage)");
+
     const completion = await client.chat.completions.create({
         model: MODEL,
         temperature: 0.2, // low creativity, high control
@@ -274,6 +278,8 @@ If not, expand the analysis until it is.
     if (!passage) {
         throw new Error("Failed to generate passage from LLM");
     }
+
+    console.log(`✅ [Passage Gen] Passage generated (length=${passage.length} chars)`);
 
     return passage;
 }

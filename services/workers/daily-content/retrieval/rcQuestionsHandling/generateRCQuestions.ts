@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
-import {z} from "zod"
+import { z } from "zod";
 import { Passage, Question, QuestionSchema } from "../../schemas/types";
 
 const client = new OpenAI();
@@ -9,40 +9,67 @@ const MODEL = "gpt-4o-mini";
 /**
  * Generates CAT-style RC questions using reference PYQs for pattern learning.
  *
- * The prompt is designed to:
- * 1. Force the LLM to analyze PYQ patterns before generating
- * 2. Provide detailed guidance on question construction principles
- * 3. Specify trap construction techniques learned from actual CAT papers
- * 4. Enforce proper inference depth and language calibration
- * 5. Require validation checks before output
- *
- * Key improvements over previous version:
- * - Internal reasoning step (analyzing references) is explicitly required
- * - Specific question type distribution is mandated
- * - Detailed trap construction patterns are provided
- * - Validation checklist ensures quality control
- * - Temperature increased slightly to allow more creative trap construction
+ * Recent tweaks:
+ * - Adds an explicit CAT-RC taxonomy (broad understanding / inference / data-based) as an additional anchor
+ * - Forces realistic difficulty variation (to avoid everything defaulting to "medium")
+ * - Adds clearer progress logging, including "waiting for LLM" markers
  */
 
 interface ReferenceDataSchema {
-    passage : Passage;
+    passage: Passage;
     questions: Question[];
 }
 
 const ResponseSchema = z.object({
-    questions : z.array(QuestionSchema)
-})
+    questions: z.array(QuestionSchema),
+});
+
+type Difficulty = "easy" | "medium" | "hard";
+
+function getDefaultDifficultyTargets(questionCount: number): Difficulty[] {
+    if (questionCount <= 0) return [];
+    if (questionCount === 1) return ["medium"];
+    if (questionCount === 2) return ["easy", "hard"];
+    if (questionCount === 3) return ["easy", "medium", "hard"];
+
+    // For the standard 4-question set:
+    // 1) inference = harder
+    // 2) tone/purpose = medium
+    // 3) detail-based = easier
+    // 4) main idea/implication = medium
+    const targets: Difficulty[] = ["hard", "medium", "easy"];
+    while (targets.length < questionCount) targets.push("medium");
+    return targets;
+}
+
+function ensureDifficultyVariety(questions: Question[], questionCount: number): Question[] {
+    const present = questions
+        .map((q) => q.difficulty)
+        .filter((d): d is Exclude<Question["difficulty"], null> => d !== null);
+
+    const unique = new Set(present);
+
+    if (present.length === 0 || unique.size <= 1) {
+        const targets = getDefaultDifficultyTargets(questionCount);
+        return questions.map((q, i) => ({
+            ...q,
+            difficulty: targets[i] ?? "medium",
+        }));
+    }
+
+    return questions;
+}
 
 export async function generateRCQuestions(params: {
     passageText: string;
     referenceData: ReferenceDataSchema[];
     questionCount: number;
 }) {
-    const {
-        passageText,
-        referenceData,
-        questionCount,
-    } = params;
+    const { passageText, referenceData, questionCount } = params;
+
+    console.log(`🧩 [RC Questions] Starting generation (${questionCount} questions)`);
+
+    const difficultyTargets = getDefaultDifficultyTargets(questionCount);
 
     const prompt = `SYSTEM:
 You are a CAT VARC examiner with 15+ years of experience.
@@ -50,9 +77,8 @@ You design questions that test reasoning, not comprehension.
 You construct traps that expose weak thinking patterns.
 
 CRITICAL MINDSET:
-- You are NOT creating comprehension questions
-- You are creating reasoning questions
-- Every question must involve inference, not restatement
+- You are NOT creating simple comprehension questions
+- You are creating reasoning questions that demand inference/synthesis
 - Every option must be deliberately designed to test a specific reasoning weakness
 
 ---
@@ -60,21 +86,47 @@ CRITICAL MINDSET:
 USER:
 Your task is to generate CAT-style RC questions for the NEW passage.
 
-You are given REFERENCE MATERIAL from actual CAT papers:
+You are given REFERENCE MATERIAL from actual CAT papers (PYQs):
 - Three past CAT passages with their questions
 
-IMPORTANT: These references are your training data.
+These references are your training data.
 You must ANALYZE them to understand:
-1. How CAT questions are framed
-2. How traps are constructed
-3. How inference depth is calibrated
-4. How options are worded to avoid obvious clues
+1) How CAT questions are framed
+2) How traps are constructed
+3) How inference depth is calibrated
+4) How options are worded to avoid obvious clues
 
 ---
 
-## STEP 1: ANALYZE REFERENCE MATERIAL (Internal Reasoning - Do Not Output)
+## ADDITIONAL ANCHOR: CAT RC QUESTION TAXONOMY (Study + Compare to PYQs)
 
-Before generating any questions, study the reference material carefully:
+CAT RC questions commonly fall into these buckets:
+
+A) Broad understanding (answers not directly stated; requires passage-level grasp)
+- Central idea / Main purpose
+- Purpose of a paragraph / sentence
+- Tone of the author/entity
+- Suitable title
+- Source / author profession ("the author is most likely...")
+
+B) Inference / suggestion (evidence exists, but answer is not directly stated)
+- What can be inferred / implied?
+- What is suggested / assumed?
+- Relationship between X and Y
+- Analogy to the argument/issue in the passage
+
+C) Information/data-based (answer is in the passage, but may need careful interpretation)
+- The author is likely to agree with all EXCEPT
+- Reason why something is ineffective
+- A specific factual/argument-detail check (not a verbatim scan)
+
+RULE:
+- Use this taxonomy to generate question stems that are CAT-realistic.
+- Validate each question against BOTH (i) the PYQ references and (ii) the taxonomy above.
+
+---
+
+## STEP 1: ANALYZE REFERENCE MATERIAL (Internal Reasoning — Do Not Output)
 
 PASSAGE 1 + QUESTIONS:
 ${referenceData[0].passage.content}
@@ -92,11 +144,11 @@ Questions:
 ${JSON.stringify(referenceData[2].questions.slice(0, 4), null, 2)}
 
 ANALYSIS FOCUS:
-- Question wording patterns (how are they phrased?)
-- Option construction (what makes each option distinct?)
-- Trap types (what errors do incorrect options contain?)
-- Inference depth (how much reasoning is required?)
-- Language complexity (academic vs. accessible)
+- Question wording patterns
+- Option construction patterns
+- Trap types used in distractors
+- Inference depth
+- Language calibration
 
 ---
 
@@ -109,140 +161,92 @@ ${passageText}
 
 ### GENERATION REQUIREMENTS
 
-Generate EXACTLY ${questionCount} questions with this distribution:
+Generate EXACTLY ${questionCount} questions in this order:
 
-1. INFERENCE QUESTION (1 question)
-- Tests ability to derive unstated conclusions
-- Correct option requires multiple-step reasoning
-- Distractors: literal restatements, extreme interpretations, irrelevant inferences
+1) INFERENCE / SUGGESTION (1)
+- Derive an unstated conclusion OR relationship OR assumption (taxonomy bucket B)
+- Correct option requires multi-step reasoning
 
-2. TONE OR PURPOSE QUESTION (1 question)
-- Tone: Tests understanding of author's stance/attitude
-- Purpose: Tests understanding of what the passage is trying to achieve
-- Distractors: opposite tone, extreme stance, too specific purpose
+2) TONE / PURPOSE (1)
+- Either tone OR purpose (taxonomy bucket A)
+- Distractors: opposite tone, too neutral, too extreme, wrong target (author vs. a group in passage)
 
-3. DETAIL-BASED QUESTION (1 question)
-- Tests precise understanding of specific claims
-- NOT a simple "locate and repeat" question
-- Must require interpretation, not matching
-- Distractors: similar-sounding but wrong, distorted details, unsupported claims
+3) INFORMATION/DETAIL (1)
+- Evidence in the passage but requires careful interpretation (taxonomy bucket C)
+- Avoid verbatim lifting; require understanding of what a line/claim implies
 
-4. IMPLICATION / MAIN IDEA QUESTION (1 question)
-- Tests grasp of broader implications or central argument
-- Must require synthesis, not identification
-- Distractors: too narrow, too broad, contradictory, missing the point
+4) MAIN IDEA / IMPLICATION / TITLE-LIKE (1)
+- Passage-level synthesis (taxonomy bucket A)
+- Can be framed as central idea, main purpose, implication, suitable title, or author-likely-to-be
+
+---
+
+### DIFFICULTY ASSIGNMENT (MANDATORY)
+
+Assign a realistic difficulty level to each question: easy | medium | hard.
+Use these guidelines:
+- easy: answerable via localized evidence + simple interpretation; distractors are less subtle
+- medium: needs synthesis within a paragraph or across two parts; distractors are plausible
+- hard: multi-paragraph inference / subtle stance calibration / close distractors
+
+To avoid uniform difficulty, target this set-level distribution:
+${difficultyTargets.map((d, i) => `- Q${i + 1}: ${d}`).join("\n")}
 
 ---
 
 ### QUESTION CONSTRUCTION PRINCIPLES
 
-For EVERY question, follow these rules derived from your analysis:
-
-1. QUESTION PHRASING:
+1) QUESTION PHRASING:
 - Use precise, academic language
-- Avoid giving away clues in the question
-- Frame questions that require reasoning, not recall
-- Use indirect phrasing (e.g., "Which of the following is best supported by the passage?" not "What does the passage say?")
+- Avoid clues in the stem
+- Prefer indirect phrasing ("best supported", "most strongly implied")
 
-2. OPTION DESIGN:
-- Each of the 4 options (A, B, C, D) must be plausibly attractive
-- Ensure no two options are semantically identical
-- Make the correct answer the second-most attractive (students should gravitate to a distractor)
+2) OPTION DESIGN:
+- All 4 options (A–D) must be plausibly attractive
+- No two options should be semantically identical
 - Vary distractor types across options:
-  * Literal trap: sounds right but misses the point
-  * Extreme trap: goes beyond what passage supports
-  * Narrow trap: true but too specific
-  * Opposite trap: contradicts the passage
+  * literal trap (sounds like a paraphrase but misses nuance)
+  * extreme trap (over-extends)
+  * narrow/broad trap (partial match)
+  * opposite trap (contradicts while borrowing vocabulary)
+  * irrelevant-but-plausible trap (general truth, wrong for this passage)
 
-3. LANGUAGE CALIBRATION:
-- Match the abstraction level of reference questions
-- Use appropriate academic vocabulary (not too simple, not unnecessarily complex)
-- Avoid absolute words ("always", "never", "must") unless the passage explicitly supports them
-- Use qualifying language ("tends to", "suggests", "implies") where appropriate
-
-4. INFERENCE DEPTH:
-- Each question should require 2-3 logical steps
-- The path from passage to correct answer should not be obvious
-- The wrong answer should be reached by common reasoning errors
-
----
-
-### SPECIFIC TRAP CONSTRUCTION (Learned from PYQs)
-
-Design your distractors using these patterns:
-
-TYPE 1: LITERAL INTERPRETATION TRAP
-- Looks like a direct quote or paraphrase
-- But misses the subtle nuance or qualification
-- Attracts students who scan instead of reason
-
-TYPE 2: EXTENSION BEYOND PASSAGE TRAP
-- Claims something that could be true based on passage
-- But the passage never actually supports it
-- Attracts students who "fill in the gaps" too liberally
-
-TYPE 3: OPPOSITE INTERPRETATION TRAP
-- Contradicts the passage's actual stance
-- But uses familiar passage vocabulary
-- Attracts students who misread or misunderstand
-
-TYPE 4: TOO NARROW OR TOO BROAD TRAP
-- Captures part of the truth but not the full picture
-- Attracts students who latch onto partial matches
-
-TYPE 5: IRRELEVANT BUT PLAUSIBLE TRAP
-- Sounds reasonable in general
-- But not related to what the question is asking
-- Attracts students who lose track of the question
-
-Each distractor should correspond to a different trap type.
-
----
-
-### FINAL VALIDATION CHECKLIST
-
-Before outputting each question, verify:
-
-✓ Question cannot be answered by scanning alone
-✓ All 4 options are semantically distinct
-✓ No option is an obvious giveaway (too simple or too extreme)
-✓ Correct answer requires inference or synthesis
-✓ Each wrong option corresponds to a common reasoning error
-✓ Language complexity matches reference questions
-✓ Tone matches CAT question style (direct, precise, academic)
+3) INFERENCE DEPTH:
+- Each question should require at least 2 logical steps
+- Wrong options should be reachable by common CAT-style reasoning errors
 
 ---
 
 ### OUTPUT FORMAT
 
-Return STRICT JSON array with questions following this schema:
-
+Return STRICT JSON only in this format:
 {
   "questions": [
     {
       "id": "<UUID>",
-      "question_text": "<question text>",
+      "passage_id": null,
+      "question_text": "<text>",
       "question_type": "rc_question",
-      "options": {
-        "A": "<option text>",
-        "B": "<option text>",
-        "C": "<option text>",
-        "D": "<option text>"
-      },
+      "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
+      "jumbled_sentences": { "1": "...", "2": "...", "3": "...", "4": "..." },
       "correct_answer": { "answer": "" },
       "rationale": "",
       "difficulty": "easy|medium|hard",
-      "tags": []
+      "tags": [],
+      "created_at": "<ISO timestamp>",
+      "updated_at": "<ISO timestamp>"
     }
   ]
 }
 
 IMPORTANT:
-- Leave correct_answer.answer empty (you do NOT select answers)
-- Leave rationale empty (you do NOT write explanations)
+- Leave correct_answer.answer empty
+- Leave rationale empty
 - Generate EXACTLY ${questionCount} questions
 - No additional text or commentary
 `;
+
+    console.log("⏳ [RC Questions] Waiting for LLM to generate questions");
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
@@ -250,18 +254,18 @@ IMPORTANT:
         messages: [
             {
                 role: "system",
-                content: "You are a CAT VARC examiner. You design reasoning questions with carefully constructed traps. You do not solve questions or provide explanations.",
+                content:
+                    "You are a CAT VARC examiner. You design reasoning questions with carefully constructed traps. You do not solve questions or provide explanations.",
             },
             {
                 role: "user",
                 content: prompt,
             },
         ],
-        response_format: zodResponseFormat(
-            ResponseSchema,
-            "rc_questions"
-        ),
+        response_format: zodResponseFormat(ResponseSchema, "rc_questions"),
     });
+
+    console.log("✅ [RC Questions] LLM response received");
 
     const parsed = completion.choices[0].message.parsed;
 
@@ -269,5 +273,28 @@ IMPORTANT:
         throw new Error("Invalid RC question generation output");
     }
 
-    return parsed.questions;
+    const now = new Date().toISOString();
+
+    let questions = parsed.questions.map((q) => ({
+        ...q,
+        passage_id: null,
+        question_type: "rc_question",
+        correct_answer: { answer: "" },
+        rationale: "",
+        tags: [],
+        jumbled_sentences: {
+            1: q.options.A,
+            2: q.options.B,
+            3: q.options.C,
+            4: q.options.D,
+        },
+        created_at: now,
+        updated_at: now,
+    }));
+
+    questions = ensureDifficultyVariety(questions, questionCount);
+
+    console.log(`✅ [RC Questions] Generated ${questions.length} questions`);
+
+    return questions;
 }
