@@ -2,14 +2,28 @@ import OpenAI from "openai";
 import { AuthorialPersona, SemanticIdeas } from "./extractSemanticIdeas";
 
 const client = new OpenAI();
-
-// Choose a strong reasoning model (as discussed earlier)
 const MODEL = "gpt-4o-mini";
 
 /**
- * Generates a CAT-style RC passage using:
- * - semantic ideas (primary content)
- * - reference passages (style & difficulty anchors only)
+ * Generates a CAT-style RC passage using semantic ideas and reference passages.
+ *
+ * Inputs:
+ * - semanticIdeas: Abstracted content ideas representing what the passage should discuss
+ * - authorialPersona: Style guide extracted from source text (not content)
+ * - referencePassages: 5 actual CAT passages for style calibration only
+ *
+ * Key design principles:
+ * - Semantic ideas provide the content structure
+ * - Authorial persona provides the writing style
+ * - Reference passages provide CAT-style anchors (not content to copy)
+ * - Anti-overfitting: passage must be distinguishable as new content
+ *
+ * The prompt enforces CAT characteristics:
+ * - 450-600 words, 3-5 paragraphs
+ * - Argumentative spine with position advancement
+ * - Authorial voice: evaluative, not neutral
+ * - Syntactic friction: semicolons, em-dashes, qualifying clauses
+ * - No neat conclusions, leave conceptual tension unresolved
  */
 export async function generatePassage(params: {
     // semanticIdeas: SemanticIdeas;
@@ -259,13 +273,6 @@ If not, expand the analysis until it is.
 
     if (!passage) {
         throw new Error("Failed to generate passage from LLM");
-    }
-
-    // Optional safety check (recommended)
-    if (passage.length < 2000) {
-        console.warn(
-            "⚠️ Generated passage seems shorter than expected. Review manually."
-        );
     }
 
     return passage;

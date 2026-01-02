@@ -1,39 +1,33 @@
 import { supabase } from "../../../config/supabase";
 
 export async function searchPassageAndQuestionEmbeddings(
-	queryEmbedding: number[],
-	topK = 5
+    queryEmbedding: number[],
+    topK = 5
 ) {
-	console.log("📐 [Vector Search] Querying passages embeddings");
+    const { data: passageData, error: passageError } = await supabase.rpc("search_passage_embeddings", {
+        query_embedding: queryEmbedding,
+        match_count: topK,
+    });
 
-	const { data: passageData, error: passageError } = await supabase.rpc("search_passage_embeddings", {
-		query_embedding: queryEmbedding,
-		match_count: topK,
-	});
+    if (passageError) {
+        console.error("❌ [Vector Search] Failed for passages:", passageError);
+        throw passageError;
+    }
 
-	if (passageError) {
-		console.error("❌ [Vector Search] Failed for passages:", passageError);
-		throw passageError;
-	}
+    const { data: questionsData, error: questionsError } = await supabase.rpc("search_question_embeddings_by_type", {
+        query_embedding: queryEmbedding,
+        match_per_type: topK,
+    });
 
-	console.log(`✅ [Vector Search] Retrieved ${passageData.length} candidates for passages`);
+    if (questionsError) {
+        console.error("❌ [Vector Search] Failed for questions:", questionsError);
+        throw questionsError;
+    }
 
-	console.log("📐 [Vector Search] Querying questions embeddings");
+    console.log(`✅ [Vector Search] Retrieved ${passageData.length} passages, ${questionsData.length} questions`);
 
-	const { data: questionsData, error: questionsError } = await supabase.rpc("search_question_embeddings_by_type", {
-		query_embedding: queryEmbedding,
-		match_per_type: topK,
-	});
-
-	if (questionsError) {
-		console.error("❌ [Vector Search] Failed for questions:", questionsError);
-		throw questionsError;
-	}
-
-	console.log(`✅ [Vector Search] Retrieved ${questionsData.length} candidates for questions`);
-
-	return {
-		passages: passageData,
-		questions: questionsData
-	};
+    return {
+        passages: passageData,
+        questions: questionsData
+    };
 }

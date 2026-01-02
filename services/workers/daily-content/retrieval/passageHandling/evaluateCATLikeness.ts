@@ -92,8 +92,6 @@ Return STRICT JSON only.
     if (!parsed) {
         throw new Error("Failed to evaluate CAT likeness");
     }
-    console.log("Previous cat likeness : ")
-    console.log(parsed)
 
     return parsed;
 }

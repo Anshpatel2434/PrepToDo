@@ -5,6 +5,19 @@ import { zodResponseFormat } from "openai/helpers/zod";
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
+/**
+ * Selects the correct answer for each question using the passage.
+ *
+ * This is a deterministic pass with temperature=0 to ensure consistency.
+ * The LLM acts as a strict answer key verifier, not an explainer.
+ *
+ * Key aspects:
+ * - Low temperature (0.0) for consistent results
+ * - No explanations or justifications required
+ * - Only selects the correct option letter (A/B/C/D)
+ * - Handles ambiguous questions by choosing the best alignment with author's intent
+ */
+
 /* =========================================
    Schema: Only what we expect back
    ========================================= */
