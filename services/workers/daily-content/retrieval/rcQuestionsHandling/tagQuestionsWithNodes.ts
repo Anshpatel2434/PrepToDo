@@ -6,6 +6,20 @@ import z from "zod";
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
+/**
+ * Tags each question with the primary reasoning node from the reasoning graph.
+ *
+ * This function identifies the cognitive skill(s) required to correctly answer
+ * each question by matching it against the ReasoningStep nodes in the graph.
+ *
+ * For each question:
+ * - Selects ONE primary reasoning step (required)
+ * - Optionally selects up to TWO secondary reasoning steps (optional)
+ *
+ * The primary node is then used to fetch outgoing edges in the reasoning graph,
+ * which are used to structure the elimination in the rationale generation phase.
+ */
+
 const ResponseSchema = z.object({
     questionsTagged : QuestionNodeTagArraySchema
 })
@@ -17,9 +31,7 @@ export async function tagQuestionsWithNodes(params: {
 }) {
     const { passageText, questions, nodes } = params;
 
-    const filteredNodes = nodes.filter((node) => node.type === "ReasoningStep")
-    console.log("these are the filtred nodes ")
-    console.log(JSON.stringify(filteredNodes, null, 2))
+    const filteredNodes = nodes.filter((node) => node.type === "ReasoningStep");
 
     const prompt = `
 You are a CAT diagnostic engine.

@@ -1,12 +1,12 @@
 import { supabase } from "../../../config/supabase";
 
 /**
- * Fetches multiple passages from the 'passages' table based on an array of IDs.
- * @param questionsIds - An array of 5 strings (IDs)
+ * Fetches questions by their IDs or by passage IDs.
+ * This allows fetching both specific questions and all questions from specific passages.
+ * @param questionsIds - Array of question IDs to fetch directly
+ * @param passageIds - Array of passage IDs to fetch all associated questions
  */
 export async function fetchQuestionsData(questionsIds: string[], passageIds: string[]) {
-    console.log("📘 [Questions] Fetching multiple IDs:", questionsIds);
-
     const { data, error } = await supabase
         .from('questions')
         .select('*')
