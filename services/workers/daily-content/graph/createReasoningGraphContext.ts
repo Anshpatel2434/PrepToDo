@@ -21,12 +21,18 @@ export async function getQuestionGraphContext(
     nodes: Node[]
 ): Promise<Record<string, ReasoningGraphContext>> {
 
+    console.log(
+        `🧩 [Graph] Building reasoning context (questions=${questionTags.length}, nodes=${nodes.length})`
+    );
+
     const primaryNodeIds = questionTags.map(q => q.primary_node_id);
 
     if (primaryNodeIds.length === 0) {
         console.warn("⚠️ [Graph] No primary_node_ids found in questionTags.");
         return {};
     }
+
+    console.log(`🧩 [Graph] Fetching outgoing edges for ${primaryNodeIds.length} primary nodes`);
 
     const { data: graphEdges, error } = await supabase
         .from('graph_edges')

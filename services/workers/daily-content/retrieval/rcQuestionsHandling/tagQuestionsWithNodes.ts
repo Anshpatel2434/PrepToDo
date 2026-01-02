@@ -31,6 +31,10 @@ export async function tagQuestionsWithNodes(params: {
 }) {
     const { passageText, questions, nodes } = params;
 
+    console.log(
+        `🏷️ [Node Tagging] Tagging ${questions.length} questions (nodes available=${nodes.length})`
+    );
+
     const filteredNodes = nodes.filter((node) => node.type === "ReasoningStep");
 
     const prompt = `
@@ -72,6 +76,8 @@ ${JSON.stringify(
 Return STRICT JSON only.
 `;
 
+    console.log("⏳ [Node Tagging] Waiting for LLM response (node tags)");
+
     const completion = await client.chat.completions.parse({
         model: MODEL,
         temperature: 0.1,
@@ -96,6 +102,8 @@ Return STRICT JSON only.
     if (!parsed) {
         throw new Error("Node tagging failed");
     }
+
+    console.log(`✅ [Node Tagging] Tags generated for ${parsed.questionsTagged.length} questions`);
 
     return parsed.questionsTagged;
 }

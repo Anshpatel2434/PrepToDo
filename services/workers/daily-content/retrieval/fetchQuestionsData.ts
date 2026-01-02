@@ -7,6 +7,10 @@ import { supabase } from "../../../config/supabase";
  * @param passageIds - Array of passage IDs to fetch all associated questions
  */
 export async function fetchQuestionsData(questionsIds: string[], passageIds: string[]) {
+    console.log(
+        `❓ [Questions] Fetching questions from DB (questionIds=${questionsIds.length}, passageIds=${passageIds.length})`
+    );
+
     const { data, error } = await supabase
         .from('questions')
         .select('*')

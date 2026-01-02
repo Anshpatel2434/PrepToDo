@@ -11,6 +11,8 @@ export async function sharpenToCATStyle(params: {
 }) {
     const { passage, deficiencies } = params;
 
+    console.log(`🛠️ [Passage Sharpen] Sharpening passage (deficiencies=${deficiencies.length})`);
+
     const prompt = `
 You are revising a passage to meet CAT Reading Comprehension standards.
 
@@ -43,6 +45,8 @@ Return the object by updating the following
 .
 `;
 
+    console.log("⏳ [Passage Sharpen] Waiting for LLM response (rewrite)");
+
     const completion = await client.chat.completions.parse({
         model: MODEL,
         temperature: 0.2,
@@ -64,6 +68,8 @@ Return the object by updating the following
     if (!revised) {
         throw new Error("Failed to sharpen passage");
     }
+
+    console.log(`✅ [Passage Sharpen] Passage revised | difficulty=${revised.difficulty}`);
 
     return revised;
 }

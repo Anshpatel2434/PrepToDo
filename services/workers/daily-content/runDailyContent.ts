@@ -43,72 +43,115 @@ function groupQuestionsWithPassages(passages, questions) {
 
 export async function runDailyContent() {
 
-    console.log("🚀 [START] Daily Content Generation start ");	
- 	
-    // // 1. Select genre	
-    // const genre = await fetchGenreForToday();	
- 	
-    // let { articleMeta, articleText } =	
-    //     await getValidArticleWithText(genre.name);	
- 	
-    // // 4. Save artile to database	
-    // await saveArticleToDB(articleMeta)	
- 	
-    // console.log('This is the article text and its length is : ', (articleText: string) => {	
-    //     // Trim leading/trailing spaces and split by one or more whitespace characters	
-    //     const words = articleText.trim().split(/\s+/);	
- 	
-    //     // Filter out any empty strings that might result from extra spaces	
-    //     const filteredWords = words.filter(word => word.length > 0);	
- 	
-    //     return filteredWords.length;	
-    // })	
-    // console.log(articleText.slice(0, 500))	
- 	
-    // // 4. Extract semantic ideas	
-    // const {	
-    //     semantic_ideas,	
-    //     authorial_persona,	
-    // } = await extractSemanticIdeasAndPersona(articleText, genre.name);	
- 	
-    // console.log("semantic ideas ")	
-    // console.log(semantic_ideas)	
- 	
-    // console.log("authorial_persona")	
-    // console.log(authorial_persona)	
- 	
+    console.log("🚀 [START] Daily Content Generation start ");    
+     
+    // // 1. Select genre    
+    // const genre = await fetchGenreForToday();    
+     
+    // let { articleMeta, articleText } =    
+    //     await getValidArticleWithText(genre.name);    
+     
+    // // 4. Save artile to database    
+    // await saveArticleToDB(articleMeta)    
+     
+    // console.log('This is the article text and its length is : ', (articleText: string) => {    
+    //     // Trim leading/trailing spaces and split by one or more whitespace characters    
+    //     const words = articleText.trim().split(/\s+/);    
+     
+    //     // Filter out any empty strings that might result from extra spaces    
+    //     const filteredWords = words.filter(word => word.length > 0);    
+     
+    //     return filteredWords.length;    
+    // })    
+    // console.log(articleText.slice(0, 500))    
+     
+    // // 4. Extract semantic ideas    
+    // const {    
+    //     semantic_ideas,    
+    //     authorial_persona,    
+    // } = await extractSemanticIdeasAndPersona(articleText, genre.name);    
+     
+    // console.log("semantic ideas ")    
+    // console.log(semantic_ideas)    
+     
+    // console.log("authorial_persona")    
+    // console.log(authorial_persona)    
+     
     // articleText = null
 
+    console.log("🧠 [DailyContent] Step 1/9: Generating embedding for today's genre/topic");
     const embedding = await generateEmbedding(genreName);
 
+    console.log("🔎 [DailyContent] Step 2/9: Vector search for similar passages + questions");
     const matches = await searchPassageAndQuestionEmbeddings(embedding, 5);
     const passagesMatches = matches.passages;
     const questionsMatches = matches.questions;
 
-    const passages = await fetchPassagesData(passagesMatches.map(match => match.passage_id));
-    const questions = await fetchQuestionsData(questionsMatches.map(match => match.question_id), passagesMatches.map(match => match.passage_id));
+    console.log(
+        `📄 [DailyContent] Step 3/9: Fetching reference content (passages=${passagesMatches.length}, questions=${questionsMatches.length})`
+    );
+    const passages = await fetchPassagesData(
+        passagesMatches.map((match) => match.passage_id)
+    );
+    const questions = await fetchQuestionsData(
+        questionsMatches.map((match) => match.question_id),
+        passagesMatches.map((match) => match.passage_id)
+    );
 
     const passagesContent = passages.map(({ content }) => content);
 
-    const passageGenerated = await generatePassage({ semanticIdeas: semantic_ideas, authorialPersona: authorial_persona, referencePassages: passagesContent });
+    console.log("✍️ [DailyContent] Step 4/9: Generating new CAT-style passage");
+    const passageGenerated = await generatePassage({
+        semanticIdeas: semantic_ideas,
+        authorialPersona: authorial_persona,
+        referencePassages: passagesContent,
+    });
 
+    console.log("🛠️ [DailyContent] Step 5/9: Finalizing passage (evaluate + sharpen)");
     const data = await finalizeCATPassage(passageGenerated);
 
     const formattedData = groupQuestionsWithPassages(passages, questions);
 
-    let generatedQuestions = await generateRCQuestions({passageText : data["passageData"].content, referenceData: formattedData, questionCount: 4});
+    console.log("❓ [DailyContent] Step 6/9: Generating RC questions from PYQ patterns");
+    let generatedQuestions = await generateRCQuestions({
+        passageText: data["passageData"].content,
+        referenceData: formattedData,
+        questionCount: 4,
+    });
 
-    let generatedQuestionsWithAnswers = await selectCorrectAnswers({passageText: data["passageData"].content, questions: generatedQuestions});
+    console.log("✅ [DailyContent] Step 7/9: Selecting correct answers");
+    let generatedQuestionsWithAnswers = await selectCorrectAnswers({
+        passageText: data["passageData"].content,
+        questions: generatedQuestions,
+    });
 
+    console.log("🧠 [DailyContent] Step 8/9: Fetching graph + tagging + assembling reasoning context");
     const nodes = await fetchNodes();
 
-    const questionTaggedWithNodes = await tagQuestionsWithNodes({passageText: data["passageData"].content, questions: generatedQuestionsWithAnswers, nodes: nodes});
+    const questionTaggedWithNodes = await tagQuestionsWithNodes({
+        passageText: data["passageData"].content,
+        questions: generatedQuestionsWithAnswers,
+        nodes: nodes,
+    });
 
-    const reasoningGraphContextForQuestions = await getQuestionGraphContext(questionTaggedWithNodes, nodes);
+    const reasoningGraphContextForQuestions = await getQuestionGraphContext(
+        questionTaggedWithNodes,
+        nodes
+    );
 
-    const finalQuestionsFormed = await generateRationalesWithEdges({passageText: data["passageData"].content, questions: generatedQuestionsWithAnswers, reasoningContexts: reasoningGraphContextForQuestions, referenceData: formattedData});
+    console.log("🧾 [DailyContent] Step 9/9: Generating rationales (graph-driven elimination)");
+    const finalQuestionsFormed = await generateRationalesWithEdges({
+        passageText: data["passageData"].content,
+        questions: generatedQuestionsWithAnswers,
+        reasoningContexts: reasoningGraphContextForQuestions,
+        referenceData: formattedData,
+    });
 
-    console.log("✅ [COMPLETE] Daily Content Generation finished");
+    console.log(
+        `✅ [COMPLETE] Daily Content Generation finished | questions=${finalQuestionsFormed.length}`
+    );
 
     console.log(finalQuestionsFormed);
+
+    return finalQuestionsFormed;
 }
