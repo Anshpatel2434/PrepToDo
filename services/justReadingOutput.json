@@ -1,39 +1,39 @@
 {
   "exam": {
-    "id": "1d4b7295-f110-4f8f-8991-4a1fcff2380f",
+    "id": "192fc1f6-7931-4d63-ab3b-5be8ef6fbdfc",
     "name": "Daily Practice",
     "year": 2026,
     "exam_type": "CAT",
     "slot": null,
     "is_official": false,
-    "created_at": "2026-01-03T08:12:35.847Z"
+    "created_at": "2026-01-03T10:08:20.002Z"
   },
   "passage": {
-    "id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+    "id": "1a2b3c4d-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
     "title": null,
-    "content": "Urban traffic congestion has emerged as a critical challenge for cities worldwide; among the myriad of proposed solutions, congestion pricing stands out, yet it demands rigorous scrutiny. This approach—charging vehicles for road use during peak hours—claims to alleviate congestion and enhance urban mobility. However, the economic implications of such pricing mechanisms are far from straightforward; they raise pressing equity concerns while potentially generating revenue for public transport systems.\n\nProponents of congestion pricing assert its efficacy in reducing traffic congestion and improving travel times. By imposing fees on road usage, cities aim to incentivize commuters to alter their travel patterns—shifting to public transport or traveling during off-peak hours. This behavioral shift, rooted in behavioral economics, suggests that financial disincentives can foster more rational travel decisions among commuters. Yet, the assumption that all commuters will uniformly respond to these financial signals is fundamentally flawed; it disregards the diverse socioeconomic backgrounds of road users and their varying capacities to absorb such costs.\n\nMoreover, while congestion pricing can indeed generate substantial revenue for public transport and infrastructure improvements, one must critically examine who bears the brunt of these charges. Equity concerns loom large, particularly as wealthier individuals can more easily evade congestion charges—by altering their travel times or opting for alternative routes. This dynamic raises profound questions about the fairness of such pricing schemes; in cities where lower-income commuters lack viable alternatives to driving during peak hours, the potential for congestion pricing to exacerbate existing inequalities is alarming. It risks creating a two-tiered system where access to mobility hinges on one’s financial means.\n\nIn addition to equity issues, the long-term effects of congestion pricing on urban gentrification introduce another layer of complexity. As congestion pricing becomes a tool for urban planners, it may inadvertently contribute to the displacement of lower-income residents. The revenue generated from congestion charges could lead to enhanced infrastructure and amenities in certain neighborhoods, thereby inflating property values and attracting wealthier residents. This phenomenon, often termed “green gentrification,” presents a significant challenge for policymakers, who must navigate the delicate balance between improved urban infrastructure and the potential for social displacement.\n\nFurthermore, the relationship between congestion pricing and public transport funding is fraught with ambiguity. While it is evident that congestion pricing can provide a much-needed financial boost to public transport systems, the effectiveness of this funding in addressing broader urban mobility issues remains tenuous. If the revenue generated is not allocated efficiently or transparently, it may fail to translate into tangible improvements in public transport services. This raises critical questions about the governance structures overseeing fund allocation and the extent to which they prioritize the needs of all commuters, particularly those from marginalized communities.\n\nThe varying public perceptions of equity in congestion pricing across different cities further complicate the discourse surrounding this policy. In some urban contexts, robust public support for congestion pricing emerges, driven by perceived benefits of reduced congestion and improved air quality. Conversely, other cities may encounter significant pushback from residents who perceive such measures as punitive or exclusionary. This divergence in public sentiment underscores the necessity of engaging with local communities in the design and implementation of congestion pricing schemes; without meaningful public engagement, the risk of alienating key stakeholders escalates, potentially undermining the policy’s effectiveness.\n\nIn summary, congestion pricing presents a promising yet contentious solution to urban traffic issues; its implementation must be approached with caution. The interplay between economic benefits, equity concerns, and long-term implications for urban development necessitates a careful and critical examination. As cities grapple with the complexities of congestion pricing, policymakers must remain vigilant to the potential unintended consequences of such measures, ensuring that the pursuit of efficient urban mobility does not come at the expense of social equity. The challenge lies not only in designing effective pricing mechanisms but also in fostering an inclusive dialogue that addresses the diverse needs of urban populations.",
-    "word_count": 706,
-    "genre": "Analytical",
+    "content": "The intricate relationship between science and philosophy has long been a contentious battleground, particularly regarding the criteria that delineate scientific inquiry from pseudoscience. Central to this discourse is the notion of falsifiability, a principle famously championed by philosopher Karl Popper. Falsifiability asserts that for a theory to be deemed scientific, it must be testable and, crucially, capable of being proven false; this criterion serves as a litmus test for distinguishing genuine scientific theories from those devoid of empirical grounding. However, the application of falsifiability as a universal standard raises profound questions about its adequacy in addressing the complexities of contemporary scientific theories, particularly in fields such as theoretical physics.\n\nString theory, for instance, has garnered considerable attention and criticism for its apparent lack of empirical testability. Proponents argue that it offers a unifying framework for understanding the fundamental forces of nature; yet, its critics contend that without the ability to make verifiable predictions, it straddles the precarious line between science and pseudoscience. This situation exemplifies the ongoing demarcation problem—an issue that remains as relevant today as it was in the early 20th century. The challenge lies not merely in defining what constitutes science but also in recognizing the philosophical implications of scientific theories that may not conform to traditional standards of testability.\n\nMoreover, historical perspectives on science reveal a pattern of evolving criteria for what is deemed acceptable within scientific discourse. The demarcation problem has not only shaped the philosophy of science but has also influenced public perception of scientific legitimacy. The dismissal of certain theories as pseudoscientific often reflects broader societal biases rather than an objective assessment of their scientific merit. This raises a critical question: to what extent should philosophical inquiry inform our understanding of scientific practices? The relationship between science and philosophy is often fraught with tension; yet, it is precisely this friction that can foster a more nuanced appreciation of scientific endeavors.\n\nIn contemporary debates, the collaboration between philosophers and scientists is increasingly recognized as vital for addressing complex societal issues. The reductionist approach that characterizes much of modern science can obscure the broader implications of scientific findings. Philosophers of science argue that engaging with the ethical and societal dimensions of scientific inquiry is essential for fostering responsible scientific practices. This perspective challenges the prevailing assumption that scientific inquiry can be conducted in isolation from philosophical considerations; instead, it posits that philosophical insights are necessary for navigating the ethical dilemmas that arise in fields such as biotechnology, environmental science, and artificial intelligence.\n\nHowever, the integration of philosophical inquiry into scientific discourse is not without its challenges. The tendency among some scientists to dismiss philosophical contributions as irrelevant or overly abstract can hinder productive dialogue. This dismissal is problematic; it overlooks the potential for philosophical frameworks to illuminate the underlying assumptions that inform scientific theories. The critique of string theory's empirical shortcomings is not merely a technical issue but also a philosophical one, inviting reflection on the nature of scientific explanation and the criteria we use to evaluate scientific theories. The failure to engage with these philosophical dimensions can lead to a superficial understanding of scientific practices, ultimately undermining the integrity of scientific inquiry.\n\nFurthermore, the evolving nature of scientific theories complicates the application of falsifiability as a rigid criterion. Scientific knowledge is not static; it is subject to revision and reinterpretation as new evidence emerges. This dynamism raises critical questions about the effectiveness of falsifiability as a universal standard. While it may serve as a useful guideline for certain theories, its applicability to all scientific domains is tenuous at best. The insistence on strict adherence to falsifiability may inadvertently stifle innovative theoretical developments that do not conform to traditional empirical standards. Thus, the challenge remains: how can we reconcile the need for rigorous scientific standards with the recognition that some of the most profound scientific insights may not be readily testable?",
+    "word_count": 682,
+    "genre": "Science Philosophy",
     "difficulty": "hard",
     "source": null,
-    "paper_id": "1d4b7295-f110-4f8f-8991-4a1fcff2380f",
+    "paper_id": "192fc1f6-7931-4d63-ab3b-5be8ef6fbdfc",
     "is_daily_pick": true,
     "is_featured": false,
     "is_archived": false,
-    "created_at": "2026-01-03T08:12:35.847Z",
-    "updated_at": "2026-01-03T08:12:35.847Z"
+    "created_at": "2026-01-03T10:08:20.002Z",
+    "updated_at": "2026-01-03T10:08:20.002Z"
   },
   "questions": [
     {
-      "id": "df001306-8809-40e1-987a-2fa74e4ae62a",
-      "passage_id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
-      "question_text": "It can be inferred from the passage that the author believes congestion pricing may inadvertently lead to which of the following outcomes?",
+      "id": "6c6b93ab-7989-4e54-8dd5-4f522bbc0576",
+      "passage_id": "1a2b3c4d-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
+      "question_text": "The passage implies that the ongoing debate regarding the demarcation problem suggests a relationship between scientific inquiry and societal biases. Which of the following conclusions can be drawn from this implication?",
       "question_type": "rc_question",
       "options": {
-        "A": "An increase in public transport usage among all socioeconomic groups.",
-        "B": "A widening gap in mobility access between wealthier and lower-income individuals.",
-        "C": "A reduction in overall traffic congestion without any negative consequences.",
-        "D": "A uniform response from all commuters to financial disincentives."
+        "A": "Scientific theories are often evaluated based on their empirical merit rather than societal acceptance.",
+        "B": "The criteria for scientific legitimacy are influenced by cultural perceptions and biases.",
+        "C": "Philosophical inquiry has no impact on the public perception of scientific theories.",
+        "D": "The demarcation problem is solely a technical issue without societal implications."
       },
       "jumbled_sentences": {
         "1": "",
@@ -45,63 +45,19 @@
       "correct_answer": {
         "answer": "B"
       },
-      "rationale": "The correct answer is B. The passage discusses how congestion pricing may exacerbate existing inequalities, particularly affecting lower-income individuals who lack viable alternatives to driving during peak hours. This suggests that the implementation of congestion pricing could lead to a widening gap in mobility access between wealthier and lower-income individuals, as wealthier commuters can more easily adapt to the charges.\n\nOption A is eliminated because it implies that congestion pricing will increase public transport usage among all socioeconomic groups. The passage indicates that while congestion pricing aims to incentivize shifts to public transport, it does not guarantee that all groups will respond uniformly due to differing socioeconomic circumstances. This misinterpretation overlooks the nuanced discussion of equity concerns presented in the text.\n\nOption C is tempting as it suggests a positive outcome of congestion pricing without negative consequences. However, the passage explicitly warns about the potential unintended consequences of such measures, including exacerbating social inequities and the risk of gentrification. This directly contradicts the notion that congestion pricing would reduce congestion without any drawbacks.\n\nOption D is dismissed as it assumes a uniform response from all commuters to financial disincentives. The passage critiques this assumption, highlighting that different socioeconomic backgrounds lead to varied capacities to absorb costs, thus undermining the idea of a uniform response. \n\nIn summary, the passage emphasizes the complexities and potential negative outcomes of congestion pricing, particularly regarding equity, making option B the most accurate inference.",
+      "rationale": "The correct answer is B. The passage discusses how the criteria for scientific legitimacy can be influenced by societal biases, particularly when it states that the dismissal of certain theories as pseudoscientific often reflects broader societal biases rather than an objective assessment of their scientific merit. This implies that cultural perceptions play a significant role in how scientific theories are evaluated.\n\nOption A is tempting because it suggests that scientific theories are evaluated based on empirical merit. However, the passage indicates that societal biases can overshadow empirical evaluations, particularly in the context of the demarcation problem. This is evident in the line discussing how the dismissal of theories often reflects societal biases, which contradicts the idea that evaluations are purely based on empirical merit.\n\nOption C claims that philosophical inquiry has no impact on public perception of scientific theories. This contradicts the passage's assertion that philosophical insights are necessary for navigating ethical dilemmas in scientific inquiry, suggesting that philosophy does indeed influence public perception.\n\nOption D states that the demarcation problem is solely a technical issue without societal implications. This is incorrect as the passage explicitly connects the demarcation problem to societal biases, highlighting that it is not merely a technical issue but one that involves broader societal considerations.\n\nThus, the only option that aligns with the passage's implications is B, while the other options misinterpret or overlook the relationship between scientific inquiry and societal biases.",
       "difficulty": "hard",
       "tags": [
-        "Differentiate between main ideas and supporting details",
-        "Identifying the Purpose of a Paragraph",
+        "Identify causal relationships",
+        "Identifying Logical Continuation",
         "Identifying the Writer's Intent",
         "Maintaining Coherence in Writing",
-        "Identifying Key Elements",
+        "Drawing Logical Conclusions",
         "Understanding Implicit Messages",
+        "Strategies for Strengthening or Weakening Conclusions",
         "Identifying Key Ideas",
-        "Reading Comprehension Strategy",
         "Recognizing Common Logical Errors",
         "Recognizing Logical Gaps",
-        "Maintaining Logical Flow in Arguments",
-        "Types of Questions in Reading Comprehension",
-        "Analyzing Tone to Understand Author's Perspective",
-        "Mandatory Sentence Pairs",
-        "Structure of Logical Reasoning Questions",
-        "Identifying the Main Argument"
-      ],
-      "created_at": "2026-01-03T08:10:42.243Z",
-      "updated_at": "2026-01-03T08:11:58.288Z"
-    },
-    {
-      "id": "b03ced8a-69fc-4cbe-b0aa-31f3fd003431",
-      "passage_id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
-      "question_text": "What is the tone of the author when discussing the implications of congestion pricing on urban equity?",
-      "question_type": "rc_question",
-      "options": {
-        "A": "Optimistic about the potential benefits for all urban residents.",
-        "B": "Cautious regarding the fairness and effectiveness of the pricing strategy.",
-        "C": "Indifferent to the socioeconomic disparities it may create.",
-        "D": "Supportive of congestion pricing as a necessary urban policy."
-      },
-      "jumbled_sentences": {
-        "1": "",
-        "2": "",
-        "3": "",
-        "4": "",
-        "5": ""
-      },
-      "correct_answer": {
-        "answer": "B"
-      },
-      "rationale": "The correct option is B, as the author expresses a cautious tone regarding the fairness and effectiveness of congestion pricing. Throughout the passage, the author highlights various equity concerns and potential negative implications of congestion pricing, such as exacerbating socioeconomic disparities and contributing to urban gentrification. This critical examination indicates a careful approach rather than an optimistic or supportive stance.\n\nOption A is eliminated because it suggests an optimistic view of congestion pricing's benefits for all urban residents. However, the passage emphasizes the potential inequities and negative consequences, indicating that the author does not hold an unqualified optimistic perspective.\n\nOption C is also eliminated as it implies indifference to the socioeconomic disparities created by congestion pricing. The author explicitly addresses these disparities and raises concerns about fairness, which contradicts the notion of indifference.\n\nOption D, while it may seem supportive of congestion pricing, does not accurately capture the author's tone. The author discusses the need for caution and critical examination rather than outright support for congestion pricing as a necessary policy.\n\nThus, the remaining options do not align with the author's nuanced perspective, reinforcing that B is the most accurate representation of the author's tone.",
-      "difficulty": "medium",
-      "tags": [
-        "Analyze cultural impact",
-        "Identifying the Writer's Intent",
-        "Maintaining Coherence in Writing",
-        "Identifying Logical Continuation",
-        "Understanding Implicit Messages",
-        "Identifying Key Elements",
-        "Identifying Key Ideas",
-        "Comparison of Answer Choices",
-        "Recognizing Common Logical Errors",
-        "Assessing Distortion in Options",
         "Clarity and Specificity in Relationships",
         "Types of Inferential Questions",
         "Analyzing Tone to Understand Author's Perspective",
@@ -109,19 +65,140 @@
         "Structure of Logical Reasoning Questions",
         "Identifying the Main Argument"
       ],
-      "created_at": "2026-01-03T08:10:42.243Z",
-      "updated_at": "2026-01-03T08:12:02.723Z"
+      "created_at": "2026-01-03T10:06:08.699Z",
+      "updated_at": "2026-01-03T10:07:23.594Z",
+      "paper_id": "192fc1f6-7931-4d63-ab3b-5be8ef6fbdfc"
     },
     {
-      "id": "27001271-939e-49f8-95dc-863ca6beff6f",
-      "passage_id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
-      "question_text": "According to the passage, which of the following is a potential negative outcome of congestion pricing?",
+      "id": "5427aa1f-06a9-497f-b827-03eab7263094",
+      "passage_id": "1a2b3c4d-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
+      "question_text": "What is the author's tone towards the relationship between science and philosophy as presented in the passage?",
       "question_type": "rc_question",
       "options": {
-        "A": "Increased traffic congestion during off-peak hours.",
-        "B": "Enhanced public transport services for all commuters.",
-        "C": "Displacement of lower-income residents due to rising property values.",
-        "D": "Uniform travel behavior changes among all socioeconomic groups."
+        "A": "Skeptical of the relevance of philosophy to scientific discourse.",
+        "B": "Optimistic about the potential for collaboration between science and philosophy.",
+        "C": "Indifferent to the philosophical implications of scientific inquiry.",
+        "D": "Critical of the scientific community's dismissal of philosophical contributions."
+      },
+      "jumbled_sentences": {
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": ""
+      },
+      "correct_answer": {
+        "answer": "B"
+      },
+      "rationale": "The correct option is B, as the author expresses an optimistic view about the potential for collaboration between science and philosophy. This is evident in the passage where it states that \"the collaboration between philosophers and scientists is increasingly recognized as vital for addressing complex societal issues.\" The author emphasizes that engaging with ethical and societal dimensions is essential for fostering responsible scientific practices, indicating a positive outlook on the relationship between the two fields.\n\nOption A can be eliminated because it suggests skepticism about the relevance of philosophy, which contradicts the author's acknowledgment of the importance of philosophical insights in navigating ethical dilemmas in scientific inquiry. The passage explicitly states that dismissing philosophical contributions is problematic, highlighting the need for dialogue rather than skepticism.\n\nOption C is also incorrect as it implies indifference towards the philosophical implications of scientific inquiry. The author clearly articulates the significance of philosophical frameworks in understanding scientific practices, particularly in addressing the limitations of theories like string theory. The passage does not reflect indifference but rather an active engagement with the philosophical dimensions of science.\n\nOption D, while it points to a critique of the scientific community, does not capture the overall tone of optimism conveyed in the passage. The author focuses more on the potential for collaboration and the necessity of integrating philosophical inquiry rather than solely criticizing the dismissal of philosophy by scientists. Thus, it does not align with the author's primary message.\n\nIn summary, the passage supports the idea that collaboration between science and philosophy is beneficial, making option B the most accurate reflection of the author's tone.",
+      "difficulty": "medium",
+      "tags": [
+        "Identify contradictions",
+        "Identifying Logical Continuation",
+        "Identifying the Writer's Intent",
+        "Maintaining Coherence in Writing",
+        "Drawing Logical Conclusions",
+        "Understanding Implicit Messages",
+        "Elimination of Irrelevant Options",
+        "Identifying Key Ideas",
+        "Recognizing Common Logical Errors",
+        "Recognizing Logical Gaps",
+        "Negation Scores Over Affirmation",
+        "Types of Inferential Questions",
+        "Analyzing Tone to Understand Author's Perspective",
+        "Mandatory Sentence Pairs",
+        "Structure of Logical Reasoning Questions",
+        "Identifying the Main Argument"
+      ],
+      "created_at": "2026-01-03T10:06:08.699Z",
+      "updated_at": "2026-01-03T10:07:33.141Z",
+      "paper_id": "192fc1f6-7931-4d63-ab3b-5be8ef6fbdfc"
+    },
+    {
+      "id": "95f10dea-ea26-48a9-a9d5-c2024908620d",
+      "passage_id": "1a2b3c4d-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
+      "question_text": "According to the passage, which of the following statements accurately reflects the challenges posed by the application of falsifiability?",
+      "question_type": "rc_question",
+      "options": {
+        "A": "Falsifiability is universally applicable to all scientific theories.",
+        "B": "Some scientific theories may lack empirical testability yet still offer valuable insights.",
+        "C": "The concept of falsifiability is irrelevant to contemporary scientific discussions.",
+        "D": "Falsifiability has been universally accepted as the sole criterion for scientific legitimacy."
+      },
+      "jumbled_sentences": {
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": ""
+      },
+      "correct_answer": {
+        "answer": "B"
+      },
+      "rationale": "The correct option is B, as it accurately reflects the passage's discussion on the limitations of falsifiability. The passage highlights that while falsifiability is a useful guideline for distinguishing scientific theories, some theories, like string theory, may lack empirical testability yet still provide valuable insights into fundamental aspects of nature. This is evident in the statement: \"its critics contend that without the ability to make verifiable predictions, it straddles the precarious line between science and pseudoscience,\" indicating that the absence of testability does not negate the potential significance of such theories.\n\nOption A can be eliminated because it incorrectly asserts that falsifiability is universally applicable to all scientific theories. The passage explicitly questions the adequacy of falsifiability as a rigid criterion, particularly in the context of contemporary scientific theories, stating, \"the insistence on strict adherence to falsifiability may inadvertently stifle innovative theoretical developments.\"\n\nOption C is misleading as it suggests that falsifiability is irrelevant to contemporary scientific discussions. However, the passage discusses falsifiability as a central concept in the demarcation problem, indicating its ongoing relevance. The author emphasizes that the challenges posed by applying falsifiability raise critical questions about its effectiveness, which contradicts the notion of irrelevance.\n\nThe remaining option, D, is also incorrect as it implies that falsifiability is universally accepted as the sole criterion for scientific legitimacy. The passage argues against this notion by highlighting the complexities and evolving nature of scientific theories, suggesting that strict adherence to falsifiability may not be appropriate for all domains of science.",
+      "difficulty": "easy",
+      "tags": [
+        "Analyze context for implications",
+        "Identifying the Writer's Intent",
+        "Identifying the Purpose of a Paragraph",
+        "Maintaining Coherence in Writing",
+        "Understanding Implicit Messages",
+        "Identifying Key Elements",
+        "Identifying Key Ideas",
+        "Elimination of Irrelevant Options",
+        "Recognizing Logical Gaps",
+        "Recognizing Common Logical Errors",
+        "Maintaining Logical Flow in Arguments",
+        "Types of Inferential Questions",
+        "Analyzing Tone to Understand Author's Perspective",
+        "Mandatory Sentence Pairs",
+        "Structure of Logical Reasoning Questions",
+        "Identifying the Main Argument"
+      ],
+      "created_at": "2026-01-03T10:06:08.699Z",
+      "updated_at": "2026-01-03T10:07:44.324Z",
+      "paper_id": "192fc1f6-7931-4d63-ab3b-5be8ef6fbdfc"
+    },
+    {
+      "id": "5bd6ebed-c5e2-4662-a5a8-034ffeef13f3",
+      "passage_id": "1a2b3c4d-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
+      "question_text": "What is the primary purpose of the passage?",
+      "question_type": "rc_question",
+      "options": {
+        "A": "To argue that philosophy should be excluded from scientific discourse.",
+        "B": "To explore the complex interplay between science and philosophy in shaping scientific inquiry.",
+        "C": "To advocate for strict adherence to falsifiability in all scientific theories.",
+        "D": "To dismiss the relevance of string theory in contemporary scientific discussions."
+      },
+      "jumbled_sentences": {
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": ""
+      },
+      "correct_answer": {
+        "answer": "B"
+      },
+      "rationale": "The primary purpose of the passage is to explore the complex interplay between science and philosophy in shaping scientific inquiry. This is evident as the passage discusses how philosophical insights are essential for understanding and evaluating scientific practices, particularly in the context of contemporary debates around theories like string theory and the criteria of falsifiability.\n\nOption A can be eliminated because it suggests that philosophy should be excluded from scientific discourse. This contradicts the passage's emphasis on the importance of philosophical inquiry in addressing ethical dilemmas and enhancing scientific practices. The passage states, “Philosophers of science argue that engaging with the ethical and societal dimensions of scientific inquiry is essential,” which clearly supports the inclusion of philosophy.\n\nOption C is tempting as it highlights the concept of falsifiability, but it misrepresents the passage's stance. The author critiques the rigid application of falsifiability and suggests that it may not be suitable for all scientific theories. The passage notes, “The insistence on strict adherence to falsifiability may inadvertently stifle innovative theoretical developments,” indicating that the author does not advocate for strict adherence to this criterion.\n\nOption D is also incorrect as it dismisses the relevance of string theory, which the passage does not do. Instead, it discusses string theory as a significant example in the context of the demarcation problem and the challenges of scientific inquiry. The passage acknowledges its importance by stating, “Proponents argue that it offers a unifying framework for understanding the fundamental forces of nature.”\n\nThus, the correct answer is B, as it accurately reflects the passage's focus on the intricate relationship between science and philosophy.",
+      "difficulty": "medium",
+      "tags": [
+        "MISSING NODE"
+      ],
+      "created_at": "2026-01-03T10:06:08.699Z",
+      "updated_at": "2026-01-03T10:07:56.071Z",
+      "paper_id": "192fc1f6-7931-4d63-ab3b-5be8ef6fbdfc"
+    },
+    {
+      "id": "bd206803-3486-4471-ac20-e23b86653a59",
+      "passage_id": null,
+      "question_text": "The passage given below is followed by four alternate summaries. Choose the option that best captures the essence of the passage. \n\nFalsifiability is often heralded as a crucial criterion for distinguishing scientific theories from pseudoscience. Critics argue that certain theories, such as string theory, lack empirical testability, which raises questions about their scientific legitimacy. This ongoing debate highlights the necessity of philosophical insights in understanding scientific practices and the demarcation problem, suggesting that collaboration between philosophers and scientists is essential for addressing broader societal issues.",
+      "question_type": "para_summary",
+      "options": {
+        "A": "Falsifiability is the only criterion needed to determine scientific legitimacy.",
+        "B": "String theory is widely accepted as a valid scientific theory despite its lack of testability.",
+        "C": "Philosophical insights are vital for understanding the complexities of scientific theories and practices.",
+        "D": "The relationship between science and philosophy is irrelevant to contemporary scientific debates."
       },
       "jumbled_sentences": {
         "1": "",
@@ -133,12 +210,12 @@
       "correct_answer": {
         "answer": "C"
       },
-      "rationale": "The correct answer is C. The passage discusses how congestion pricing could lead to the displacement of lower-income residents due to rising property values, a phenomenon referred to as \"green gentrification.\" This outcome highlights the potential negative social implications of implementing congestion pricing, as it may inadvertently benefit wealthier individuals while marginalizing those with fewer resources.\n\nOption A is eliminated because it suggests that congestion pricing would increase traffic congestion during off-peak hours. The passage indicates that the goal of congestion pricing is to reduce traffic congestion by incentivizing commuters to change their travel patterns, not to exacerbate it.\n\nOption B is also incorrect. While the passage acknowledges that congestion pricing can generate revenue for public transport, it does not guarantee enhanced services for all commuters. The effectiveness of this funding is questioned, particularly regarding whether it will address the needs of marginalized communities, thus contradicting the notion that all commuters would benefit equally.\n\nOption D is misleading as it implies that all socioeconomic groups will uniformly change their travel behavior in response to congestion pricing. The passage explicitly states that the assumption of uniform response is flawed, as it overlooks the diverse socioeconomic backgrounds of road users and their varying capacities to absorb costs.",
-      "difficulty": "easy",
+      "rationale": "The correct option is C because it accurately reflects the passage's emphasis on the importance of philosophical insights in understanding scientific theories and practices. The passage discusses the debate surrounding falsifiability and highlights the need for collaboration between philosophers and scientists to address broader societal issues, indicating that philosophical perspectives are essential for a deeper comprehension of scientific legitimacy.\n\nOption A can be eliminated because it suggests that falsifiability is the only criterion for scientific legitimacy. This misrepresents the passage, which discusses the complexities of scientific theories and acknowledges the ongoing debate about their testability, rather than reducing the discussion to a single criterion.\n\nOption B is tempting as it implies that string theory is accepted despite its lack of testability. However, the passage does not state that string theory is widely accepted; instead, it raises questions about its scientific legitimacy due to its empirical testability issues. This misinterpretation overlooks the critical stance taken in the passage regarding the status of such theories.\n\nOption D can be dismissed as it contradicts the passage's assertion that the relationship between science and philosophy is relevant, especially in the context of the demarcation problem and the necessity for philosophical insights in scientific practices. Thus, it fails to capture the essence of the passage.",
+      "difficulty": "medium",
       "tags": [
-        "Differentiate between main ideas and supporting details",
-        "Identifying the Purpose of a Paragraph",
+        "Summarize content",
         "Identifying the Writer's Intent",
+        "Identifying the Purpose of a Paragraph",
         "Maintaining Coherence in Writing",
         "Identifying Key Elements",
         "Understanding Implicit Messages",
@@ -153,101 +230,14 @@
         "Structure of Logical Reasoning Questions",
         "Identifying the Main Argument"
       ],
-      "created_at": "2026-01-03T08:10:42.243Z",
-      "updated_at": "2026-01-03T08:12:09.383Z"
+      "created_at": "2026-01-03T10:06:12.636Z",
+      "updated_at": "2026-01-03T10:08:02.160Z",
+      "paper_id": "192fc1f6-7931-4d63-ab3b-5be8ef6fbdfc"
     },
     {
-      "id": "bbba73c4-d2ae-4efd-8d18-eda0fbc161c6",
-      "passage_id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
-      "question_text": "What is the primary concern the author raises regarding congestion pricing as a solution to urban traffic issues?",
-      "question_type": "rc_question",
-      "options": {
-        "A": "It may lead to improved air quality across all urban areas.",
-        "B": "It risks exacerbating existing social inequalities among commuters.",
-        "C": "It will inevitably reduce traffic congestion in all cities.",
-        "D": "It is universally supported by urban residents for its benefits."
-      },
-      "jumbled_sentences": {
-        "1": "",
-        "2": "",
-        "3": "",
-        "4": "",
-        "5": ""
-      },
-      "correct_answer": {
-        "answer": "B"
-      },
-      "rationale": "The primary concern raised by the author regarding congestion pricing is its potential to exacerbate existing social inequalities among commuters. The passage highlights that while congestion pricing aims to alleviate traffic congestion and improve urban mobility, it may disproportionately impact lower-income individuals who lack viable alternatives to driving during peak hours. This inequity is a central theme throughout the passage, emphasizing the need for careful consideration of the socioeconomic implications of such pricing mechanisms.\n\nOption A is eliminated because, while improved air quality is mentioned as a potential benefit of congestion pricing, the passage does not assert that this will occur across all urban areas. The focus is primarily on the equity concerns and the socioeconomic impacts rather than universal environmental benefits.\n\nOption C is also incorrect as it suggests that congestion pricing will inevitably reduce traffic congestion in all cities. The passage critiques the assumption that all commuters will respond uniformly to financial incentives, indicating that this is a flawed perspective. The author points out the complexity of commuter behavior and the varied responses based on socioeconomic backgrounds, which undermines the certainty implied in this option.\n\nOption D is dismissed as it inaccurately portrays public sentiment. The passage notes that while some cities may support congestion pricing due to perceived benefits, others face significant pushback from residents who view the measures as punitive. This divergence in public opinion indicates that support is not universal, further reinforcing the author's emphasis on the need for community engagement in policy design.",
-      "difficulty": "medium",
-      "tags": [
-        "Differentiate between main ideas and supporting details",
-        "Identifying the Purpose of a Paragraph",
-        "Identifying the Writer's Intent",
-        "Maintaining Coherence in Writing",
-        "Identifying Key Elements",
-        "Understanding Implicit Messages",
-        "Identifying Key Ideas",
-        "Reading Comprehension Strategy",
-        "Recognizing Common Logical Errors",
-        "Recognizing Logical Gaps",
-        "Maintaining Logical Flow in Arguments",
-        "Types of Questions in Reading Comprehension",
-        "Analyzing Tone to Understand Author's Perspective",
-        "Mandatory Sentence Pairs",
-        "Structure of Logical Reasoning Questions",
-        "Identifying the Main Argument"
-      ],
-      "created_at": "2026-01-03T08:10:42.243Z",
-      "updated_at": "2026-01-03T08:12:15.053Z"
-    },
-    {
-      "id": "7dbb1053-f365-4430-9263-c01bea2b34e6",
-      "passage_id": "2caa4f03-cec8-48c7-9145-24f95a3401ce",
-      "question_text": "The passage given below is followed by four alternate summaries. Choose the option that best captures the essence of the passage. \n\nCongestion pricing is a strategic approach aimed at alleviating urban traffic congestion by imposing fees on road usage during peak hours. This method not only aims to improve traffic flow but also generates revenue that can be reinvested into public transportation systems. However, the implementation of such pricing raises significant equity concerns, as it may disproportionately affect low-income commuters who cannot easily adjust their travel patterns. Successful examples from cities like London and Singapore demonstrate the potential benefits of congestion pricing, yet they also highlight the need for careful consideration of its social implications.",
-      "question_type": "para_summary",
-      "options": {
-        "A": "Congestion pricing effectively reduces traffic congestion and funds public transport, but raises equity concerns for low-income commuters.",
-        "B": "Congestion pricing is a controversial method that has been rejected in most cities due to its negative impact on low-income individuals.",
-        "C": "Cities that implement congestion pricing see immediate improvements in traffic flow, regardless of the socioeconomic status of commuters.",
-        "D": "The primary goal of congestion pricing is to generate revenue for urban development, with little regard for its social consequences."
-      },
-      "jumbled_sentences": {
-        "1": "",
-        "2": "",
-        "3": "",
-        "4": "",
-        "5": ""
-      },
-      "correct_answer": {
-        "answer": "A"
-      },
-      "rationale": "The correct option is A, as it accurately encapsulates the essence of the passage. It highlights that congestion pricing aims to reduce traffic congestion and fund public transport while acknowledging the equity concerns it raises for low-income commuters. This dual focus on both the benefits and the social implications aligns well with the passage's content.\n\nOption B is incorrect because it suggests that congestion pricing has been widely rejected due to its negative impacts on low-income individuals. The passage does not state that congestion pricing has been rejected; rather, it discusses successful implementations in cities like London and Singapore, indicating that it has been adopted with consideration of its implications.\n\nOption C misrepresents the passage by claiming that cities implementing congestion pricing see immediate improvements in traffic flow regardless of commuters' socioeconomic status. The passage does not assert that the benefits are uniform across all socioeconomic groups, instead emphasizing the potential negative impact on low-income commuters.\n\nOption D inaccurately states that the primary goal of congestion pricing is to generate revenue for urban development, downplaying the importance of improving traffic flow and the social implications discussed in the passage. The passage clearly presents both traffic improvement and revenue generation as key aspects of congestion pricing, making this option misleading. \n\nThus, A remains the only option that effectively captures the multifaceted nature of congestion pricing as described in the passage.",
-      "difficulty": "medium",
-      "tags": [
-        "Evaluate thematic consistency",
-        "Identifying the Writer's Intent",
-        "Maintaining Coherence in Writing",
-        "Identifying Logical Continuation",
-        "Understanding Implicit Messages",
-        "Identifying Key Elements",
-        "Identifying Key Ideas",
-        "Elimination of Irrelevant Options",
-        "Recognizing Common Logical Errors",
-        "Recognizing Logical Gaps",
-        "Maintaining Logical Flow in Arguments",
-        "Types of Inferential Questions",
-        "Analyzing Tone to Understand Author's Perspective",
-        "Mandatory Sentence Pairs",
-        "Correct Sentence Structure",
-        "Identifying the Main Argument"
-      ],
-      "created_at": "2026-01-03T08:10:45.711Z",
-      "updated_at": "2026-01-03T08:12:21.122Z"
-    },
-    {
-      "id": "4ab077b1-8ed8-430b-bb7f-037cd20257fc",
-      "passage_id": "9b7b94fd-51f1-4ada-95b9-2dc163a52288",
-      "question_text": "There is a sentence that is missing in the paragraph below. Look at the paragraph and decide in which blank (option 1, 2, 3, or 4) the following sentence would best fit.\nSentence: While congestion pricing can alleviate urban traffic, it raises significant equity concerns that must be addressed to ensure fair implementation.\nParagraph: ___(1)___. Congestion pricing can effectively reduce traffic congestion and improve travel times. ___(2)___. The implementation of congestion pricing can generate revenue for public transport and infrastructure. ___(3)___. However, successful examples of congestion pricing exist in cities like London, Singapore, and Stockholm. ___(4)___. Addressing these concerns is crucial for gaining public support and ensuring that the benefits of congestion pricing are equitably distributed.",
+      "id": "c93f0566-6af3-4c64-84d8-af90fdf2e6b0",
+      "passage_id": null,
+      "question_text": "There is a sentence that is missing in the paragraph below. Look at the paragraph and decide in which blank (option 1, 2, 3, or 4) the following sentence would best fit.\nSentence: Falsifiability is a key criterion for distinguishing scientific theories from pseudoscience.\nParagraph: The relationship between science and philosophy has long been contentious. Philosophers argue that a clear demarcation between science and pseudoscience is essential for the integrity of scientific inquiry. ___(1)___. This distinction is not merely academic; it has profound implications for how we understand scientific progress. ___(2)___. In this context, the role of falsifiability emerges as a crucial factor in evaluating scientific claims. ___(3)___. Without a robust criterion for what constitutes science, we risk blurring the lines that define rational discourse. ___(4)___.",
       "question_type": "para_completion",
       "options": {
         "A": "Option 1",
@@ -263,34 +253,35 @@
         "5": ""
       },
       "correct_answer": {
-        "answer": "D"
+        "answer": "A"
       },
-      "rationale": "The sentence fits best in Blank 4 because it directly addresses the equity concerns associated with congestion pricing, which is a critical aspect of the discussion. The preceding sentences outline the benefits of congestion pricing, such as reducing traffic congestion and generating revenue, but they do not acknowledge the potential drawbacks. By placing the sentence in Blank 4, it effectively concludes the paragraph by emphasizing the importance of addressing equity issues to ensure that the advantages of congestion pricing are fairly distributed and to garner public support.\n\nOption A is tempting as it appears to introduce the topic of congestion pricing. However, it fails to connect with the subsequent sentences that focus on the benefits of congestion pricing. The paragraph already begins with a clear statement about its effectiveness, making this option irrelevant.\n\nOption B might seem plausible since it discusses the revenue generation aspect of congestion pricing. Yet, it does not address the equity concerns mentioned in the target sentence. The focus here is on the positive outcomes of congestion pricing, which makes it less suitable for the context of equity issues that need to be highlighted.\n\nThe remaining option, C, is not selected because it simply states that successful examples exist, which does not relate to the equity concerns that are crucial for the overall argument. Thus, D is the most appropriate choice, as it encapsulates the need for equity considerations in the implementation of congestion pricing.",
+      "rationale": "The correct option is A because it introduces the concept of falsifiability as essential for distinguishing scientific theories from pseudoscience. This fits seamlessly into the paragraph, which discusses the importance of demarcating science from pseudoscience, thereby establishing a clear context for the subsequent discussion on scientific claims.\n\nOption B can be eliminated because it suggests that the implications of the distinction are discussed, which is already established in the previous sentence. This option does not introduce new information relevant to the flow of the paragraph, making it redundant.\n\nOption C is also a tempting choice as it relates to the role of falsifiability. However, it misplaces the focus by suggesting that the paragraph is primarily about evaluating scientific claims rather than establishing the foundational criteria for distinguishing science from pseudoscience. This option disrupts the logical progression of the argument.\n\nOption D remains but does not fit as well as A, as it would be more appropriate after discussing the implications of the distinction rather than introducing the key criterion itself. Thus, A is the most coherent choice, directly addressing the paragraph's main argument about the necessity of falsifiability in scientific discourse.",
       "difficulty": "medium",
       "tags": [
-        "Evaluate thematic consistency",
+        "Identify main idea",
         "Identifying the Writer's Intent",
+        "Identifying the Purpose of a Paragraph",
         "Maintaining Coherence in Writing",
-        "Identifying Logical Continuation",
-        "Understanding Implicit Messages",
         "Identifying Key Elements",
+        "Understanding Implicit Messages",
         "Identifying Key Ideas",
         "Elimination of Irrelevant Options",
         "Recognizing Common Logical Errors",
         "Recognizing Logical Gaps",
         "Maintaining Logical Flow in Arguments",
-        "Types of Inferential Questions",
+        "Types of Questions in Reading Comprehension",
         "Analyzing Tone to Understand Author's Perspective",
         "Mandatory Sentence Pairs",
-        "Correct Sentence Structure",
+        "Structure of Logical Reasoning Questions",
         "Identifying the Main Argument"
       ],
-      "created_at": "2026-01-03T08:10:45.711Z",
-      "updated_at": "2026-01-03T08:12:26.459Z"
+      "created_at": "2026-01-03T10:06:12.636Z",
+      "updated_at": "2026-01-03T10:08:07.566Z",
+      "paper_id": "192fc1f6-7931-4d63-ab3b-5be8ef6fbdfc"
     },
     {
-      "id": "47b1f90d-238e-4305-a4d7-aca86bd7747b",
-      "passage_id": "f224539a-fcba-4c47-82df-c9288b3b241b",
+      "id": "42321b89-612b-4697-8028-4ccb8a0aa952",
+      "passage_id": null,
       "question_text": "The four sentences (labelled 1, 2, 3 and 4) below, when properly sequenced would yield a coherent paragraph. Decide on the proper sequencing of the order of the sentences and key in the sequence of the four numbers as your answer: ",
       "question_type": "para_jumble",
       "options": {
@@ -300,25 +291,25 @@
         "D": ""
       },
       "jumbled_sentences": {
-        "1": "While congestion pricing can generate significant revenue for public transport, it also raises equity concerns that must be addressed.",
-        "2": "Cities like London and Singapore have successfully implemented congestion pricing, showcasing its potential benefits.",
-        "3": "However, the long-term effects of such pricing on urban gentrification remain ambiguous and warrant further study.",
-        "4": "Therefore, a careful balance must be struck between generating funds and ensuring that lower-income commuters are not disproportionately affected.",
+        "1": "Philosophers of science argue that the demarcation problem is crucial for distinguishing valid scientific theories from pseudoscience.",
+        "2": "In contrast, many contemporary physicists often overlook these philosophical insights, focusing solely on empirical data.",
+        "3": "This ongoing debate highlights the tension between scientific practice and philosophical inquiry.",
+        "4": "Therefore, collaboration between scientists and philosophers could enhance our understanding of complex scientific concepts.",
         "5": ""
       },
       "correct_answer": {
-        "answer": "2143"
+        "answer": "1324"
       },
-      "rationale": "The correct sequence of sentences is 2143. Sentence 2 introduces the topic by mentioning successful implementations of congestion pricing in cities like London and Singapore, setting a positive context. Sentence 1 follows logically, discussing the revenue generation aspect while also highlighting the equity concerns that arise from such pricing. This leads to Sentence 4, which emphasizes the need to balance these concerns, ensuring that lower-income commuters are not adversely affected. Finally, Sentence 3 addresses the ambiguity surrounding the long-term effects on urban gentrification, suggesting that further study is necessary, thus providing a thoughtful conclusion to the discussion.\n\nOption A can be eliminated because it likely disrupts the flow of ideas. It may suggest an unrelated point or misinterpret the relationship between revenue generation and equity concerns, which are central to the discussion. \n\nOption C also fails to maintain coherence. It may introduce an irrelevant aspect or overlook the critical balance between generating funds and addressing equity, which is essential for a well-rounded argument. \n\nThe remaining options do not provide a coherent sequence that captures the essence of the discussion on congestion pricing, making them less suitable.",
+      "rationale": "The correct sequence is 1324. The first sentence introduces the demarcation problem, establishing the focus on distinguishing valid scientific theories from pseudoscience. This sets the stage for the discussion of the tension between scientific practice and philosophical inquiry, which is articulated in the third sentence. The second sentence highlights how contemporary physicists often overlook philosophical insights, emphasizing the ongoing debate. Finally, the fourth sentence suggests that collaboration between scientists and philosophers could enhance understanding, providing a constructive resolution to the tension presented earlier.\n\nOption A can be dismissed because it might suggest a different focus that does not align with the introduction of the demarcation problem. It could mislead by implying that the main concern is solely about empirical data without acknowledging the philosophical context. This overlooks the critical relationship between scientific practice and philosophy.\n\nOption B is also incorrect as it may imply a conclusion without addressing the initial premise about the demarcation problem. It tempts by suggesting a resolution but fails to connect logically with the preceding sentences, disrupting the flow of ideas. \n\nThe remaining options do not present a coherent sequence or logical progression of thought, making them unsuitable. The correct order effectively captures the relationship between philosophy and science, leading to a well-rounded understanding of the topic.",
       "difficulty": "medium",
       "tags": [
-        "Evaluate thematic consistency",
+        "Evaluate evidence supporting claims",
         "Identifying the Writer's Intent",
+        "Identifying the Purpose of a Paragraph",
         "Maintaining Coherence in Writing",
-        "Identifying Logical Continuation",
-        "Understanding Implicit Messages",
+        "Drawing Logical Conclusions",
         "Identifying Key Elements",
-        "Identifying Key Ideas",
+        "Strategies for Strengthening or Weakening Conclusions",
         "Elimination of Irrelevant Options",
         "Recognizing Common Logical Errors",
         "Recognizing Logical Gaps",
@@ -326,15 +317,16 @@
         "Types of Inferential Questions",
         "Analyzing Tone to Understand Author's Perspective",
         "Mandatory Sentence Pairs",
-        "Correct Sentence Structure",
-        "Identifying the Main Argument"
+        "Structure of Logical Reasoning Questions",
+        "Verifiable Information"
       ],
-      "created_at": "2026-01-03T08:10:45.711Z",
-      "updated_at": "2026-01-03T08:12:31.850Z"
+      "created_at": "2026-01-03T10:06:12.636Z",
+      "updated_at": "2026-01-03T10:08:14.353Z",
+      "paper_id": "192fc1f6-7931-4d63-ab3b-5be8ef6fbdfc"
     },
     {
-      "id": "a96a39b2-4080-41c4-b4e6-85d7e5506bb7",
-      "passage_id": "5bf32677-163a-4b39-927c-480f73b416f2",
+      "id": "e2953f40-f9e6-42a2-a985-38056de76d19",
+      "passage_id": null,
       "question_text": "Five jumbled up sentences, related to a topic, are given below. Four of them can be put together to form a coherent paragraph. Identify the odd one out and key in the number of the sentence as your answer: ",
       "question_type": "odd_one_out",
       "options": {
@@ -344,25 +336,25 @@
         "D": ""
       },
       "jumbled_sentences": {
-        "1": "Congestion pricing has been shown to effectively reduce traffic congestion in urban areas.",
-        "2": "Cities implementing congestion pricing often see improvements in public transport funding.",
-        "3": "Behavioral economics suggests that charging for road use can lead to more rational travel decisions.",
-        "4": "However, the implementation of congestion pricing raises significant equity concerns for low-income commuters.",
-        "5": "Congestion pricing is a controversial topic that often leads to heated debates among urban planners."
+        "1": "Falsifiability is a key criterion for distinguishing scientific theories from pseudoscience.",
+        "2": "Philosophers of science argue that understanding the demarcation problem is crucial for contemporary physics.",
+        "3": "String theory is often criticized for its lack of empirical testability.",
+        "4": "The relationship between science and philosophy is often contentious but necessary for progress.",
+        "5": "Many scientists believe that philosophy is irrelevant to the practice of science."
       },
       "correct_answer": {
         "answer": "5"
       },
-      "rationale": "The correct answer is option 5. This sentence introduces a concept that diverges from the main theme of the other sentences, which collectively focus on a specific aspect of the topic. While the other sentences build upon each other to create a coherent narrative, option 5 does not align with the established context, making it the odd one out.\n\nOption 1 is tempting because it appears to relate to the overarching theme. However, it fails to connect logically with the subsequent sentences, which focus on a more nuanced aspect of the topic. This lack of continuity indicates that it does not fit as seamlessly into the paragraph as the others.\n\nOption 3 also seems relevant at first glance, as it discusses a related idea. Yet, it introduces a different angle that does not contribute to the flow of the argument being constructed by the other sentences. This disconnect suggests that it does not maintain the coherence necessary for a unified paragraph.\n\nThe remaining options, 2 and 4, effectively support the central theme and logically connect with each other, thereby reinforcing the main argument.",
+      "rationale": "The correct answer is option 5. This sentence does not align with the main theme of the other sentences, which focus on a specific topic and its implications. While the other sentences contribute to a coherent discussion, option 5 introduces an unrelated idea, disrupting the flow and coherence necessary for a unified paragraph.\n\nOption A is tempting because it appears to relate to the main topic, but it actually diverges from the central argument. It introduces a concept that, while relevant, does not directly support the main discussion, making it less cohesive with the other sentences.\n\nOption B also seems relevant at first glance, as it discusses a related aspect of the topic. However, it fails to connect logically with the other sentences, which build upon a specific argument. This lack of direct relevance to the main idea weakens its position in the paragraph.\n\nThe remaining options, C and D, maintain a logical progression and coherence with the primary theme, making them integral to the overall discussion. Thus, they do not qualify as odd sentences.",
       "difficulty": "medium",
       "tags": [
-        "Evaluate thematic consistency",
+        "Evaluate evidence supporting claims",
         "Identifying the Writer's Intent",
+        "Identifying the Purpose of a Paragraph",
         "Maintaining Coherence in Writing",
-        "Identifying Logical Continuation",
-        "Understanding Implicit Messages",
+        "Drawing Logical Conclusions",
         "Identifying Key Elements",
-        "Identifying Key Ideas",
+        "Strategies for Strengthening or Weakening Conclusions",
         "Elimination of Irrelevant Options",
         "Recognizing Common Logical Errors",
         "Recognizing Logical Gaps",
@@ -370,11 +362,18 @@
         "Types of Inferential Questions",
         "Analyzing Tone to Understand Author's Perspective",
         "Mandatory Sentence Pairs",
-        "Correct Sentence Structure",
-        "Identifying the Main Argument"
+        "Structure of Logical Reasoning Questions",
+        "Verifiable Information"
       ],
-      "created_at": "2026-01-03T08:10:45.711Z",
-      "updated_at": "2026-01-03T08:12:35.846Z"
+      "created_at": "2026-01-03T10:06:12.636Z",
+      "updated_at": "2026-01-03T10:08:20.000Z",
+      "paper_id": "192fc1f6-7931-4d63-ab3b-5be8ef6fbdfc"
     }
-  ]
+  ],
+  "genreData": {
+    "id": "36462b67-9228-4e88-88a5-67c698496266",
+    "name": "Science Philosophy",
+    "description": "Philosophical foundations of scientific inquiry",
+    "cooldown_days": 3
+  }
 }
