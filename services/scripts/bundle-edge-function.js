@@ -12,156 +12,134 @@ const rootDir = resolve(servicesDir, ".."); // services -> root
 
 // Map of npm packages to Deno CDN URLs
 const PACKAGE_MAP = {
-	"@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2",
-	openai: "https://esm.sh/openai@4",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2",
+    openai: "https://esm.sh/openai@4",
 };
 
 function convertImportsToDeno(code) {
-	let converted = code;
+    let converted = code;
 
-	// Replace package imports with CDN URLs
-	for (const [pkg, url] of Object.entries(PACKAGE_MAP)) {
-		// Match: from "@supabase/supabase-js"
-		const fromRegex = new RegExp(
-			`from\\s+["']${pkg.replace(/\//g, "\\/")}["']`,
-			"g"
-		);
-		converted = converted.replace(fromRegex, `from "${url}"`);
+    // Replace package imports with CDN URLs
+    for (const [pkg, url] of Object.entries(PACKAGE_MAP)) {
+        // Match: from "@supabase/supabase-js"
+        const fromRegex = new RegExp(
+            `from\\s+["']${pkg.replace(/\//g, "\\/")}["']`,
+            "g"
+        );
+        converted = converted.replace(fromRegex, `from "${url}"`);
 
-		// Match: import "@supabase/supabase-js"
-		const importRegex = new RegExp(
-			`import\\s+["']${pkg.replace(/\//g, "\\/")}["']`,
-			"g"
-		);
-		converted = converted.replace(importRegex, `import "${url}"`);
+        // Match: import "@supabase/supabase-js"
+        const importRegex = new RegExp(
+            `import\\s+["']${pkg.replace(/\//g, "\\/")}["']`,
+            "g"
+        );
+        converted = converted.replace(importRegex, `import "${url}"`);
 
-		// Match: import * as X from "@supabase/supabase-js"
-		const importStarRegex = new RegExp(
-			`import\\s+\\*\\s+as\\s+\\w+\\s+from\\s+["']${pkg.replace(
-				/\//g,
-				"\\/"
-			)}["']`,
-			"g"
-		);
-		converted = converted.replace(importStarRegex, (match) => {
-			return match
-				.replace(`"${pkg}"`, `"${url}"`)
-				.replace(`'${pkg}'`, `"${url}"`);
-		});
-	}
+        // Match: import * as X from "@supabase/supabase-js"
+        const importStarRegex = new RegExp(
+            `import\\s+\\*\\s+as\\s+\\w+\\s+from\\s+["']${pkg.replace(
+                /\//g,
+                "\\/"
+            )}["']`,
+            "g"
+        );
+        converted = converted.replace(importStarRegex, (match) => {
+            return match
+                .replace(`"${pkg}"`, `"${url}"`)
+                .replace(`'${pkg}'`, `"${url}"`);
+        });
+    }
 
-	return converted;
+    return converted;
 }
 
 async function bundleFunction() {
-	try {
-		console.log("🔨 Bundling teach-concept function...");
-		console.log("📂 Services dir:", servicesDir);
-		console.log("📂 Root dir:", rootDir);
-		console.log("");
+    try {
+        console.log("🔨 Bundling daily-content function...");
+        console.log("📂 Services dir:", servicesDir);
+        console.log("📂 Root dir:", rootDir);
+        console.log("");
 
-		const entryPoint = resolve(
-			servicesDir,
-			"workers/daily-content/runDailyContent.ts"
-		);
-		console.log("📍 Entry point:", entryPoint);
-		console.log("");
+        const entryPoint = resolve(
+            servicesDir,
+            "workers/daily-content/runDailyContent.ts"
+        );
+        console.log("📍 Entry point:", entryPoint);
+        console.log("");
 
-		// Check if file exists
-		if (!existsSync(entryPoint)) {
-			throw new Error(`Entry point not found: ${entryPoint}`);
-		}
+        // Bundle the services code
+        console.log("📦 Running esbuild...");
+        const result = await build({
+            entryPoints: [entryPoint],
+            bundle: true,
+            platform: "neutral",
+            format: "esm",
+            target: "es2020",
+            write: false,
+            minify: false,
+            sourcemap: false,
+            mainFields: ["module", "main"],
+            resolveExtensions: [".ts", ".js", ".json"],
+            loader: {
+                ".ts": "ts",
+                ".js": "js",
+            },
+            logLevel: "warning",
+        });
 
-		// Check subdirectories
-		// const subdirs = ["assembly", "config", "graph", "retrieval", "synthesis"];
-		// console.log("🔍 Checking subdirectories...");
-		// for (const dir of subdirs) {
-		// 	const dirPath = resolve(
-		// 		servicesDir,
-		// 		"workers/daily-content",
-		// 		dir
-		// 	);
-		// 	if (existsSync(dirPath)) {
-		// 		console.log("  ✅", dir);
-		// 	} else {
-		// 		console.log("  ⚠️", dir, "(not found)");
-		// 	}
-		// }
-		// console.log("");
+        // Get the bundled code
+        let bundledCode = result.outputFiles[0].text;
 
-		// Bundle the services code
-		console.log("📦 Running esbuild...");
-		const result = await build({
-			entryPoints: [entryPoint],
-			bundle: true,
-			platform: "neutral",
-			format: "esm",
-			target: "es2020",
-			write: false,
-			minify: false,
-			sourcemap: false,
-			mainFields: ["module", "main"],
-			resolveExtensions: [".ts", ".js", ".json"],
-			loader: {
-				".ts": "ts",
-				".js": "js",
-			},
-			logLevel: "warning",
-		});
+        // Convert npm imports to Deno CDN URLs
+        console.log("🔄 Converting imports to Deno-compatible format...");
+        bundledCode = convertImportsToDeno(bundledCode);
 
-		// Get the bundled code
-		let bundledCode = result.outputFiles[0].text;
-
-		// Convert npm imports to Deno CDN URLs
-		console.log("🔄 Converting imports to Deno-compatible format...");
-		bundledCode = convertImportsToDeno(bundledCode);
-
-		// Add header
-		const denoHeader = `// Auto-generated bundle for Deno Edge Runtime
+        // Add header
+        const denoHeader = `// Auto-generated bundle for Deno Edge Runtime
 // Generated: ${new Date().toISOString()}
 // DO NOT EDIT - This file is auto-generated by: npm run bundle:edge
 
 `;
 
-		bundledCode = denoHeader + bundledCode;
+        bundledCode = denoHeader + bundledCode;
 
-		// Ensure output directory exists
-		const outputDir = resolve(rootDir, "supabase/functions/teach-concept");
-		if (!existsSync(outputDir)) {
-			mkdirSync(outputDir, { recursive: true });
-		}
+        // Ensure output directory exists
+        const outputDir = resolve(rootDir, "supabase/functions/daily-content");
+        if (!existsSync(outputDir)) {
+            mkdirSync(outputDir, { recursive: true });
+        }
 
-		// Write to edge function folder
-		const outputPath = resolve(outputDir, "bundled.ts");
-		writeFileSync(outputPath, bundledCode, "utf-8");
+        // Write to edge function folder
+        const outputPath = resolve(outputDir, "bundled.ts");
+        writeFileSync(outputPath, bundledCode, "utf-8");
 
-		console.log("✅ Bundle created:", outputPath);
-		console.log("📦 Size:", (bundledCode.length / 1024).toFixed(2), "KB");
-		console.log("");
+        console.log("✅ Bundle created:", outputPath);
+        console.log("📦 Size:", (bundledCode.length / 1024).toFixed(2), "KB");
+        console.log("");
 
-		// Count imports
-		const importMatches =
-			bundledCode.match(/from ["']https:\/\/esm\.sh\//g) || [];
-		console.log("📚 External dependencies:", importMatches.length);
+        // Count imports
+        const importMatches =
+            bundledCode.match(/from ["']https:\/\/esm\.sh\//g) || [];
+        console.log("📚 External dependencies:", importMatches.length);
 
-		console.log("");
-		console.log("Deploy with:");
-		console.log("  cd .. && supabase functions deploy teach-concept");
-	} catch (err) {
-		console.error("❌ Bundle failed:", err.message);
-		if (err.errors && err.errors.length > 0) {
-			console.error("\nBuild errors:");
-			err.errors.forEach((e) => {
-				console.error(`  ${e.text}`);
-				if (e.location) {
-					console.error(
-						`    at ${e.location.file}:${e.location.line}:${e.location.column}`
-					);
-				}
-			});
-		}
-		process.exit(1);
-	}
+        console.log("");
+        console.log("Deploy with:");
+        console.log("  cd .. && supabase functions deploy daily-content");
+    } catch (err) {
+        console.error("❌ Bundle failed:", err.message);
+        if (err.errors && err.errors.length > 0) {
+            console.error("\nBuild errors:");
+            err.errors.forEach((e) => {
+                console.error(`  ${e.text}`);
+                if (e.location) {
+                    console.error(
+                        `    at ${e.location.file}:${e.location.line}:${e.location.column}`
+                    );
+                }
+            });
+        }
+        process.exit(1);
+    }
 }
 
 bundleFunction();
