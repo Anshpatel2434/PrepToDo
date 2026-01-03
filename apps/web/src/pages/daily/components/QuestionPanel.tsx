@@ -149,7 +149,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                 <motion.h3
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`text-lg font-semibold ${
+                    className={`text-lg font-semibold whitespace-pre-line ${
                         isDark ? "text-text-primary-dark" : "text-text-primary-light"
                     }`}
                 >
@@ -177,7 +177,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                                     }`}
                                 >
                                     <span className="font-mono font-bold opacity-50">{s.id}</span>
-                                    <span>{s.text}</span>
+                                    <span className="whitespace-pre-line">{s.text}</span>
                                 </div>
                             ))}
                         </div>
@@ -235,7 +235,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                                     <span className="font-mono font-bold opacity-70">
                                         {opt.id}
                                     </span>
-                                    <span className="flex-1">{opt.text}</span>
+                                    <span className="flex-1 whitespace-pre-line">{opt.text}</span>
                                 </div>
                             </motion.button>
                         ))}
@@ -266,7 +266,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                                 isDark={isDark}
                             />
                         </div>
-                        <p className="leading-relaxed opacity-90">
+                        <p className="leading-relaxed opacity-90 whitespace-pre-line">
                             {
                                 solutionViewType === "personalized"
                                     ? question.rationale

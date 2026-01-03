@@ -132,7 +132,7 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
                         {passage?.content ? (
                             <div
                                 className={`
-                                    font-serif leading-loose text-lg
+                                    font-serif leading-loose text-lg whitespace-pre-line
                                     ${isDark
                                         ? "text-text-secondary-dark"
                                         : "text-text-secondary-light"

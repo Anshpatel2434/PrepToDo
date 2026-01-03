@@ -6,10 +6,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     MdHome,
     MdGridView,
-    MdQuiz,
+    MdSchool,
     MdInsertChart,
     MdInfo,
-    MdContactSupport,
+    MdMailOutline,
+    MdToday,
     MdMenu,
     MdPerson,
 } from "react-icons/md";
@@ -38,6 +39,13 @@ const navigationItems: NavigationItem[] = [
         description: "Go to homepage",
     },
     {
+        id: "daily",
+        label: "Daily",
+        icon: <MdToday className="text-lg" />,
+        path: "/daily",
+        description: "Daily RC & VA practice",
+    },
+    {
         id: "features",
         label: "Features",
         icon: <MdGridView className="text-lg" />,
@@ -47,7 +55,7 @@ const navigationItems: NavigationItem[] = [
     {
         id: "practice",
         label: "Practice",
-        icon: <MdQuiz className="text-lg" />,
+        icon: <MdSchool className="text-lg" />,
         path: "/practice",
         description: "Start practicing",
     },
@@ -68,7 +76,7 @@ const navigationItems: NavigationItem[] = [
     {
         id: "contact",
         label: "Contact",
-        icon: <MdContactSupport className="text-lg" />,
+        icon: <MdMailOutline className="text-lg" />,
         path: "/contact",
         description: "Get in touch",
     },
@@ -396,8 +404,8 @@ export const FloatingNavigation: React.FC = () => {
                                             w-10 h-10 rounded-xl flex items-center justify-center
                                             ${
                                                                                             isDark
-                                                                                                ? "bg-bg-tertiary-dark/50 text-text-muted-dark group-hover:text-text-primary-dark group-hover:bg-bg-tertiary-dark/80"
-                                                                                                : "bg-bg-tertiary-light/50 text-text-muted-light group-hover:text-text-primary-light group-hover:bg-bg-tertiary-light/80"
+                                                                                                ? "bg-bg-tertiary-dark/50 text-brand-primary-dark group-hover:bg-bg-tertiary-dark/80"
+                                                                                                : "bg-bg-tertiary-light/50 text-brand-primary-light group-hover:bg-bg-tertiary-light/80"
                                                                                         }
                                             
                                         `}
@@ -528,8 +536,8 @@ export const FloatingNavigation: React.FC = () => {
                                     className={`
                                         ${
                                                                                     isDark
-                                                                                        ? "text-text-muted-dark group-hover:text-text-primary-dark"
-                                                                                        : "text-text-muted-light group-hover:text-text-primary-light"
+                                                                                        ? "text-brand-primary-dark"
+                                                                                        : "text-brand-primary-light"
                                                                                 }
                                         group-hover:scale-110
                                     `}
