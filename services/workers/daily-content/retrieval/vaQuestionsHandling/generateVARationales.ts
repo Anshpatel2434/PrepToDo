@@ -130,13 +130,13 @@ Jumbled Sentences:
 ${JSON.stringify(q.jumbled_sentences, null, 2)}
 
 OPTIONS:
-${Object.entries(q.options).map(([key, value]) => `${key}) ${value}`).join("\n")}
+${q.options ? Object.entries(q.options).map(([key, value]) => `${key}) ${value}`).join("\n") : "None"}
 
 CORRECT ANSWER: ${q.correct_answer.answer}`
     : `QUESTION: ${q.question_text}
 
 OPTIONS:
-${Object.entries(q.options).map(([key, value]) => `${key}) ${value}`).join("\n")}
+${q.options ? Object.entries(q.options).map(([key, value]) => `${key}) ${value}`).join("\n") : "None"}
 
 CORRECT ANSWER: ${q.correct_answer.answer}`
 }

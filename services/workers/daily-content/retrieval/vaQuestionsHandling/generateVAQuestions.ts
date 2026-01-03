@@ -147,9 +147,18 @@ export async function generateVAQuestions(params: GenerateVAQuestionsParams) {
         }
 
         console.log(`✅ [VA Questions] Total VA questions generated: ${allQuestions.length}`);
-        console.log(allQuestions)
+        
+        // Final pass to ensure all questions have fresh UUIDs
+        const finalQuestions = allQuestions.map(q => ({
+            ...q,
+            id: generateUUID(),
+            passage_id: generateUUID(), // New UUID to avoid linking to any real passage
+            created_at: now,
+            updated_at: now
+        }));
 
-        return allQuestions;
+        console.log("✅ [VA Questions] Finalized VA questions with fresh IDs");
+        return finalQuestions;
     } catch (error) {
         console.error("❌ [VA Questions] Error in generateVAQuestions:", error);
         throw error;
@@ -260,11 +269,11 @@ Return STRICT JSON only in this format:
   "questions": [
     {
       "id": "<UUID>",
-      "passage_id": null,
-      "question_text": "<paragraph to summarize>\\n\\nWhich of the following best summarizes the above paragraph?",
+      "passage_id": "<UUID>",
+      "question_text": "The passage given below is followed by four alternate summaries. Choose the option that best captures the essence of the passage. \\n\\n<paragraph derived from semantic ideas>",
       "question_type": "para_summary",
       "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
-      "jumbled_sentences": { "1": "", "2": "", "3": "", "4": "" },
+      "jumbled_sentences": { "1": "", "2": "", "3": "", "4": "", "5": "" },
       "correct_answer": { "answer": "" },
       "rationale": "",
       "difficulty": "easy|medium|hard",
@@ -395,26 +404,25 @@ ${JSON.stringify(authorialPersona, null, 2)}
 
 Generate 1 para-completion question based on the semantic ideas and authorial persona.
 
-The question should:
-- Present a paragraph (3-5 sentences) with the last sentence incomplete
-- The paragraph should establish an argument that logically points to a conclusion
-- The blank should be at the end, asking for the logical conclusion/continuation
+The question should follow this exact format:
+1. "Sentence": A single sentence that has been removed from a paragraph.
+2. "Paragraph": A paragraph (4-5 sentences) where the sentence was removed from, with 4 possible blanks marked as ___(1)___, ___(2)___, ___(3)___, and ___(4)___.
+
+The question text should be:
+"There is a sentence that is missing in the paragraph below. Look at the paragraph and decide in which blank (option 1, 2, 3, or 4) the following sentence would best fit.\nSentence: [The missing sentence]\nParagraph: [The paragraph with blanks]"
 
 ---
 
 ## OPTION DESIGN RULES
 
-Correct option (logical completion):
-- Naturally follows from the preceding text
-- Completes the argument or introduces the next logical point
-- Matches the authorial persona and tone
-- Uses logical transitions from the semantic ideas
+Correct option:
+- The blank where the sentence fits most logically based on coherence and flow.
 
-Distractors (wrong options):
-- Contradicts: goes against the argument already established
-- Irrelevant: introduces a new, unrelated point
-- Too specific: narrows the scope inappropriately
-- Too general: becomes vague and loses the argument's specificity
+Options:
+- A: Option 1
+- B: Option 2
+- C: Option 3
+- D: Option 4
 
 ---
 
@@ -425,11 +433,11 @@ Return STRICT JSON only in this format:
   "questions": [
     {
       "id": "<UUID>",
-      "passage_id": null,
-      "question_text": "<paragraph with incomplete last sentence>\\n\\nWhich of the following best completes the paragraph?",
+      "passage_id": "<UUID>",
+      "question_text": "There is a sentence that is missing in the paragraph below. Look at the paragraph and decide in which blank (option 1, 2, 3, or 4) the following sentence would best fit.\\nSentence: <sentence>\\nParagraph: <paragraph with blanks ___(1)___, ___(2)___, ___(3)___, ___(4)___>",
       "question_type": "para_completion",
-      "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
-      "jumbled_sentences": { "1": "", "2": "", "3": "", "4": "" },
+      "options": { "A": "Option 1", "B": "Option 2", "C": "Option 3", "D": "Option 4" },
+      "jumbled_sentences": { "1": "", "2": "", "3": "", "4": "", "5": "" },
       "correct_answer": { "answer": "" },
       "rationale": "",
       "difficulty": "easy|medium|hard",
@@ -580,15 +588,16 @@ Return STRICT JSON only in this format:
   "questions": [
     {
       "id": "<UUID>",
-      "passage_id": null,
-      "question_text": "The four sentences given below, when properly sequenced, form a coherent paragraph. Each sentence is labelled with a letter. Choose the most logical order of the sentences from the options given.",
+      "passage_id": "<UUID>",
+      "question_text": "The four sentences (labelled 1, 2, 3 and 4) below, when properly sequenced would yield a coherent paragraph. Decide on the proper sequencing of the order of the sentences and key in the sequence of the four numbers as your answer: ",
       "question_type": "para_jumble",
-      "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
+      "options": { "A": "", "B": "", "C": "", "D": "" },
       "jumbled_sentences": {
         "1": "<sentence for position 1>",
         "2": "<sentence for position 2>",
         "3": "<sentence for position 3>",
-        "4": "<sentence for position 4>"
+        "4": "<sentence for position 4>",
+        "5": ""
       },
       "correct_answer": { "answer": "" },
       "rationale": "",
@@ -601,8 +610,8 @@ Return STRICT JSON only in this format:
 }
 
 IMPORTANT:
-- Fill jumbled_sentences with the 4 sentences in ANY order
-- options.A, B, C, D should represent 4 possible orderings (e.g., "1234", "2134", "1324", "1243")
+- Fill jumbled_sentences with the 4 sentences in keys 1-4, leave key 5 as empty string
+- Leave options as empty strings for keys A-D
 - Leave correct_answer.answer empty
 - Leave rationale empty
 - Generate EXACTLY 1 question
@@ -750,55 +759,17 @@ Return STRICT JSON only in this format:
   "questions": [
     {
       "id": "<UUID>",
-      "passage_id": null,
-      "question_text": "Five jumbled up sentences, related to a topic, are given below. Four of them can be put together to form a coherent paragraph. Identify the odd one out and key in the number of the sentence as your answer:",
+      "passage_id": "<UUID>",
+      "question_text": "Five jumbled up sentences, related to a topic, are given below. Four of them can be put together to form a coherent paragraph. Identify the odd one out and key in the number of the sentence as your answer: ",
       "question_type": "odd_one_out",
-      "options": null,
+      "options": { "A": "", "B": "", "C": "", "D": "" },
       "jumbled_sentences": {
-        "1": "<sentence>",
-        "2": "<sentence>",
-        "3": "<sentence>",
-        "4": "<sentence>",
-        "5": "<sentence>"
+        "1": "<sentence 1>",
+        "2": "<sentence 2>",
+        "3": "<sentence 3>",
+        "4": "<sentence 4>",
+        "5": "<sentence 5>"
       },
-      "correct_answer": { "answer": "<1|2|3|4|5>" },
-      "rationale": "",
-      "difficulty": "easy|medium|hard",
-      "tags": [],
-      "created_at": "<ISO timestamp>",
-      "updated_at": "<ISO timestamp>"
-    }
-  ]
-}
-
-IMPORTANT:
-- Fill jumbled_sentences with 5 sentences in ANY order (4 similar + 1 odd one out)
-- options should be null
-- correct_answer.answer should be the number of the odd sentence (1, 2, 3, 4, or 5)
-- Leave rationale empty
-- Generate EXACTLY 1 question
-- No additional text or commentary the semantic ideas
-
-Odd one out (correct answer):
-- Should seem similar at first glance
-- Should have a subtle but meaningful difference
-- The difference should be identifiable through careful analysis
-- Could differ in: stance, assumption, logical direction, or conclusion
-
----
-
-## OUTPUT FORMAT
-
-Return STRICT JSON only in this format:
-{
-  "questions": [
-    {
-      "id": "<UUID>",
-      "passage_id": null,
-      "question_text": "Four sentences are given below. Three of them share a common theme/logic. Identify the sentence that is the odd one out.",
-      "question_type": "odd_one_out",
-      "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
-      "jumbled_sentences": { "1": "", "2": "", "3": "", "4": "" },
       "correct_answer": { "answer": "" },
       "rationale": "",
       "difficulty": "easy|medium|hard",
@@ -810,6 +781,8 @@ Return STRICT JSON only in this format:
 }
 
 IMPORTANT:
+- Fill jumbled_sentences with 5 sentences in ANY order (4 that form a paragraph + 1 odd one out)
+- Leave options as empty strings for keys A-D
 - Leave correct_answer.answer empty
 - Leave rationale empty
 - Generate EXACTLY 1 question
