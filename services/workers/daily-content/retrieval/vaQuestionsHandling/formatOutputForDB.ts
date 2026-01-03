@@ -66,6 +66,7 @@ export function formatOutputForDB(params: FormatOutputParams): {
         // Add RC questions (tag to passage)
         const rcQuestionsWithPassage = rcQuestions.map(q => ({
             ...q,
+            id: generateUUID(),
             passage_id: passageData.id,
             paper_id: exam.id
         }));
@@ -74,7 +75,8 @@ export function formatOutputForDB(params: FormatOutputParams): {
         // Add VA questions (no passage, different question types)
         const vaQuestionsNoPassage = vaQuestions.map(q => ({
             ...q,
-            passage_id: "", 
+            id: generateUUID(),
+            passage_id: null, 
             paper_id: exam.id
         }));
         allQuestions.push(...vaQuestionsNoPassage);

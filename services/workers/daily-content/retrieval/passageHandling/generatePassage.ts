@@ -147,7 +147,7 @@ CAT RC passages are typically sourced from:
 - Technical and policy reports (think-tank briefs, white papers)
 
 PASSAGE CHARACTERISTICS:
-- Length: 500-1,000 words (400-800 is optimal)
+- Length: 500-800 words
 - Complexity: high lexical density, multiple clauses, low redundancy
 - Structure: layered argumentation (definitions, premises, evidence, objections, conclusions)
 - Viewpoint: expository or argumentative, presenting a thesis plus counter-arguments
@@ -207,7 +207,7 @@ Closure Style: ${authorialPersona.closure_style}
 
 You MUST reflect these traits using FORM, not just vocabulary.
 
-## STYLE ENFORCEMENT RULES:
+## STYLE ENFORCEMENT RULES AND MANDATORY REQUIREMENT:
 - Use at least 2 semicolons (;) in the passage
 - Use at least 2 em-dashes (—) to introduce evaluative contrast
 - Use quotation marks at least once to distance or problematize a term

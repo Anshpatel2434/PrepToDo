@@ -156,16 +156,16 @@ export async function runDailyContent() {
         const report = generateOutputReport(output);
         console.log(report);
 
-        // console.log("\nBreakdown:");
+        console.log("\nBreakdown:");
 
-        // // Save to file for review
-        // const fs = require('fs');
-        // const outputPath = './justReadingOutput.json';
-        // fs.writeFileSync(outputPath, JSON.stringify(output, null, 2));
-        // console.log(`\n💾 Output saved to: ${outputPath}`);
+        // Save to file for review
+        const fs = require('fs');
+        const outputPath = './justReadingOutput.json';
+        fs.writeFileSync(outputPath, JSON.stringify(output, null, 2));
+        console.log(`\n💾 Output saved to: ${outputPath}`);
 
-        // console.log("\n✅ [COMPLETE] Daily Content Generation finished successfully");
-        // printSummaryReport(output);
+        console.log("\n✅ [COMPLETE] Daily Content Generation finished successfully");
+        printSummaryReport(output);
 
         return output;
 
