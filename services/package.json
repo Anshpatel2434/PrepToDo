@@ -1,29 +1,29 @@
 {
-	"name": "services",
-	"version": "1.0.0",
-	"description": "For backend handling",
-	"main": "index.ts",
-	"scripts": {
-		"test": "npm run start",
-		"start": "ts-node index.ts",
-		"bundle:edge": "node scripts/bundle-edge-function.js",
-		"deploy:edge": "npm run bundle:edge && supabase functions deploy teach-concept",
-		"dev:edge": "npm run bundle:edge && supabase functions serve teach-concept"
-	},
-	"author": "",
-	"license": "ISC",
-	"dependencies": {
-		"@supabase/supabase-js": "^2.89.0",
-		"dotenv": "^17.2.3",
-		"jsdom": "^27.4.0",
-		"openai": "^6.15.0",
-		"supabase": "^2.70.5",
-		"zod": "^4.3.4"
-	},
-	"devDependencies": {
-		"@types/node": "^25.0.3",
-		"esbuild": "^0.19.12",
-		"ts-node": "^10.9.2",
-		"typescript": "^5.9.3"
-	}
+    "name": "services",
+    "version": "1.0.0",
+    "description": "For backend handling",
+    "type" : "module",
+    "main": "index.ts",
+    "scripts": {
+        "test": "npm run start",
+        "start": "ts-node index.ts",
+        "bundle:edge": "node scripts/bundle-edge-function.js",
+        "deploy:edge": "npm run bundle:edge && supabase functions deploy daily-content",
+        "dev:edge": "npm run bundle:edge && supabase functions serve daily-content"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@supabase/supabase-js": "^2.89.0",
+        "dotenv": "^17.2.3",
+        "openai": "^6.15.0",
+        "supabase": "^2.70.5",
+        "zod": "^4.3.4"
+    },
+    "devDependencies": {
+        "@types/node": "^25.0.3",
+        "esbuild": "^0.19.12",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.9.3"
+    }
 }
