@@ -201,6 +201,7 @@ ${context.edges
 2) Eliminate at least TWO wrong options in a way that is clearly guided by the elimination cues above.
    - For each eliminated option: state the option letter, why it tempts, what it gets wrong, and where the passage blocks it.
 3) Briefly dismiss any remaining option(s) without over-explaining.
+4) Use simple words and specifically highlight the part of the passage which solves the questions
 
 Hard constraints:
 - Do NOT include the cue list, relationship words, node labels, or any prompt meta-language.

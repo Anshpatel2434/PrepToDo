@@ -1,215 +1,39 @@
 {
   "exam": {
-    "id": "b200c1db-46b8-483a-993c-2c501f97844f",
+    "id": "1d4b7295-f110-4f8f-8991-4a1fcff2380f",
     "name": "Daily Practice",
     "year": 2026,
     "exam_type": "CAT",
     "slot": null,
     "is_official": false,
-    "created_at": "2026-01-02T22:42:23.631Z"
+    "created_at": "2026-01-03T08:12:35.847Z"
   },
   "passage": {
-    "id": "1a2b3c4d-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
+    "id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
     "title": null,
-    "content": "The intersection of computation and art engenders a complex dialogue about creativity, aesthetics, and the role of algorithms in shaping human expression. While proponents argue that computational tools enhance artistic capabilities, this perspective often overlooks the nuanced implications of algorithmic influence on creativity. The evolution of chess serves as a compelling case study; the integration of machine intelligence has not only transformed gameplay but has also redefined the creative space within which human players operate. This collaboration between humans and machines, while innovative, raises critical questions about the nature of creativity itself—whether it is an inherently human trait or a process that can be replicated by algorithms.\n\nThe assertion that computation enhances creativity is, at best, a simplification; it presupposes that the tools we employ do not alter the very fabric of artistic expression. Algorithms, by their nature, filter and categorize information, shaping our aesthetic judgments and cultural consumption in ways that are often imperceptible. This filtering mechanism can lead to a homogenization of artistic output, where the unexpected—an essential component of surprise in art—is systematically diminished. The tension between the predictability of algorithmic outputs and the unpredictability of human creativity is a critical point of contention; while algorithms can generate works that mimic human creativity, they often lack the capacity to evoke genuine surprise—a uniquely human trait that remains elusive to computational processes.\n\nMoreover, the concept of the \"extended mind\" posits that our cognitive processes are not confined to our biological makeup but are influenced by external tools and technologies. This theory invites a reconsideration of how we perceive artistic value and creativity in an age dominated by computational tools. If our understanding of art is mediated through algorithms, then the very essence of what constitutes artistic merit becomes problematic. The implications of this shift are profound; as algorithms increasingly dictate the parameters of artistic expression, the question arises: are we witnessing a democratization of creativity, or are we, instead, surrendering our agency to the very tools designed to augment it?\n\nThe relationship between surprise and aesthetics further complicates this discourse. While algorithms excel in generating predictable outcomes based on historical data, they struggle to replicate the serendipitous moments that often characterize human creativity. This limitation suggests that while computational tools can assist in the creative process, they cannot fully supplant the human capacity for innovation. The notion that creativity can be distilled into a set of algorithmic processes is, therefore, a tenuous assumption that warrants scrutiny; it implies a reductionist view of creativity that fails to account for the emotional and experiential dimensions that inform artistic practice.\n\nAs we navigate this evolving landscape, it is essential to critically assess the long-term effects of computational aesthetics on cultural values. The integration of technology in art is not merely a trend; it represents a fundamental shift in how we engage with and understand artistic expression. This shift raises important questions about authenticity and originality in a world where algorithms can produce works indistinguishable from those created by human hands. The potential for computational tools to democratize art is tempered by the risk of diluting its intrinsic value, as the line between human and machine-generated art becomes increasingly blurred.\n\nThe future of aesthetics is likely to be shaped by a deeper understanding of computational influences; while the collaboration between humans and machines holds promise for expanding creative horizons, it also necessitates a cautious approach to the implications of algorithmic influence. The challenge lies in balancing the benefits of computational tools with the preservation of the unique qualities that define human creativity. As we continue to explore this intersection, we must remain vigilant about the assumptions we hold regarding the nature of creativity and the role of technology in shaping our artistic landscapes. The unresolved tension between human agency and algorithmic influence invites further inquiry into the evolving definitions of art and aesthetics in the digital age.",
-    "word_count": 754,
-    "genre": "Academic",
+    "content": "Urban traffic congestion has emerged as a critical challenge for cities worldwide; among the myriad of proposed solutions, congestion pricing stands out, yet it demands rigorous scrutiny. This approach—charging vehicles for road use during peak hours—claims to alleviate congestion and enhance urban mobility. However, the economic implications of such pricing mechanisms are far from straightforward; they raise pressing equity concerns while potentially generating revenue for public transport systems.\n\nProponents of congestion pricing assert its efficacy in reducing traffic congestion and improving travel times. By imposing fees on road usage, cities aim to incentivize commuters to alter their travel patterns—shifting to public transport or traveling during off-peak hours. This behavioral shift, rooted in behavioral economics, suggests that financial disincentives can foster more rational travel decisions among commuters. Yet, the assumption that all commuters will uniformly respond to these financial signals is fundamentally flawed; it disregards the diverse socioeconomic backgrounds of road users and their varying capacities to absorb such costs.\n\nMoreover, while congestion pricing can indeed generate substantial revenue for public transport and infrastructure improvements, one must critically examine who bears the brunt of these charges. Equity concerns loom large, particularly as wealthier individuals can more easily evade congestion charges—by altering their travel times or opting for alternative routes. This dynamic raises profound questions about the fairness of such pricing schemes; in cities where lower-income commuters lack viable alternatives to driving during peak hours, the potential for congestion pricing to exacerbate existing inequalities is alarming. It risks creating a two-tiered system where access to mobility hinges on one’s financial means.\n\nIn addition to equity issues, the long-term effects of congestion pricing on urban gentrification introduce another layer of complexity. As congestion pricing becomes a tool for urban planners, it may inadvertently contribute to the displacement of lower-income residents. The revenue generated from congestion charges could lead to enhanced infrastructure and amenities in certain neighborhoods, thereby inflating property values and attracting wealthier residents. This phenomenon, often termed “green gentrification,” presents a significant challenge for policymakers, who must navigate the delicate balance between improved urban infrastructure and the potential for social displacement.\n\nFurthermore, the relationship between congestion pricing and public transport funding is fraught with ambiguity. While it is evident that congestion pricing can provide a much-needed financial boost to public transport systems, the effectiveness of this funding in addressing broader urban mobility issues remains tenuous. If the revenue generated is not allocated efficiently or transparently, it may fail to translate into tangible improvements in public transport services. This raises critical questions about the governance structures overseeing fund allocation and the extent to which they prioritize the needs of all commuters, particularly those from marginalized communities.\n\nThe varying public perceptions of equity in congestion pricing across different cities further complicate the discourse surrounding this policy. In some urban contexts, robust public support for congestion pricing emerges, driven by perceived benefits of reduced congestion and improved air quality. Conversely, other cities may encounter significant pushback from residents who perceive such measures as punitive or exclusionary. This divergence in public sentiment underscores the necessity of engaging with local communities in the design and implementation of congestion pricing schemes; without meaningful public engagement, the risk of alienating key stakeholders escalates, potentially undermining the policy’s effectiveness.\n\nIn summary, congestion pricing presents a promising yet contentious solution to urban traffic issues; its implementation must be approached with caution. The interplay between economic benefits, equity concerns, and long-term implications for urban development necessitates a careful and critical examination. As cities grapple with the complexities of congestion pricing, policymakers must remain vigilant to the potential unintended consequences of such measures, ensuring that the pursuit of efficient urban mobility does not come at the expense of social equity. The challenge lies not only in designing effective pricing mechanisms but also in fostering an inclusive dialogue that addresses the diverse needs of urban populations.",
+    "word_count": 706,
+    "genre": "Analytical",
     "difficulty": "hard",
     "source": null,
-    "paper_id": "b200c1db-46b8-483a-993c-2c501f97844f",
+    "paper_id": "1d4b7295-f110-4f8f-8991-4a1fcff2380f",
     "is_daily_pick": true,
     "is_featured": false,
     "is_archived": false,
-    "created_at": "2026-01-02T22:42:23.631Z",
-    "updated_at": "2026-01-02T22:42:23.631Z"
+    "created_at": "2026-01-03T08:12:35.847Z",
+    "updated_at": "2026-01-03T08:12:35.847Z"
   },
   "questions": [
     {
-      "id": "1d5e8c6e-5e7b-4b8b-bc5b-3f3c4e5b4c45",
-      "passage_id": "1a2b3c4d-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
-      "question_text": "Which of the following can be inferred about the relationship between algorithms and human creativity as discussed in the passage?",
+      "id": "df001306-8809-40e1-987a-2fa74e4ae62a",
+      "passage_id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+      "question_text": "It can be inferred from the passage that the author believes congestion pricing may inadvertently lead to which of the following outcomes?",
       "question_type": "rc_question",
       "options": {
-        "A": "Algorithms enhance human creativity by providing new tools for artistic expression.",
-        "B": "The influence of algorithms on creativity may lead to a diminished capacity for genuine human surprise.",
-        "C": "Human creativity is entirely distinct from algorithmic processes and cannot be influenced by them.",
-        "D": "The collaboration between humans and algorithms results in a complete transformation of artistic practices."
-      },
-      "jumbled_sentences": {
-        "1": "Algorithms enhance human creativity by providing new tools for artistic expression.",
-        "2": "The influence of algorithms on creativity may lead to a diminished capacity for genuine human surprise.",
-        "3": "Human creativity is entirely distinct from algorithmic processes and cannot be influenced by them.",
-        "4": "The collaboration between humans and algorithms results in a complete transformation of artistic practices.",
-        "5": "None of the above."
-      },
-      "correct_answer": {
-        "answer": "B"
-      },
-      "rationale": "The correct answer is B. The passage discusses how algorithms filter and categorize information, which can lead to a homogenization of artistic output and diminish the element of surprise that is essential to human creativity. This suggests that while algorithms can assist in the creative process, they may limit the capacity for genuine human surprise, which is a critical aspect of creativity.\n\nOption A is tempting as it implies that algorithms enhance creativity by providing new tools. However, the passage argues that the influence of algorithms can lead to a reduction in the unpredictability and surprise that characterize human creativity, indicating that the enhancement is not straightforward. The passage emphasizes the nuanced implications of algorithmic influence rather than a simple enhancement.\n\nOption C suggests that human creativity is entirely distinct from algorithmic processes and cannot be influenced by them. This contradicts the passage's assertion that our cognitive processes are influenced by external tools and technologies, including algorithms. The text highlights the interplay between human creativity and computational tools, making this option inaccurate.\n\nOption D claims that the collaboration between humans and algorithms results in a complete transformation of artistic practices. While the passage acknowledges that this collaboration is innovative, it does not assert that it leads to a complete transformation. Instead, it raises questions about the implications of algorithmic influence on creativity, indicating a more complex relationship.\n\nIn summary, while options A, C, and D present tempting interpretations, they misrepresent the nuanced relationship between algorithms and human creativity as articulated in the passage.",
-      "difficulty": "hard",
-      "tags": [
-        "Make inferences from text",
-        "Identifying the Writer's Intent",
-        "Identifying the Purpose of a Paragraph",
-        "Maintaining Coherence in Writing",
-        "Drawing Inferences from Context",
-        "Understanding Implicit Messages",
-        "Identifying Key Ideas",
-        "Elimination of Irrelevant Options",
-        "Recognizing Common Logical Errors",
-        "Recognizing Logical Gaps",
-        "Maintaining Logical Flow in Arguments",
-        "Types of Inferential Questions",
-        "Analyzing Tone to Understand Author's Perspective",
-        "Mandatory Sentence Pairs",
-        "Structure of Logical Reasoning Questions",
-        "Identifying the Main Argument"
-      ],
-      "created_at": "2025-12-25T09:52:19.584462+00:00",
-      "updated_at": "2026-01-02T22:41:45.933Z"
-    },
-    {
-      "id": "2e3f4b5c-6e7b-4c8b-bc6b-4f5e6c7b8d6e",
-      "passage_id": "1a2b3c4d-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
-      "question_text": "What is the author's tone regarding the integration of algorithms in artistic expression?",
-      "question_type": "rc_question",
-      "options": {
-        "A": "Optimistic about the potential for algorithms to enhance creativity.",
-        "B": "Skeptical about the implications of algorithms on artistic authenticity.",
-        "C": "Neutral, presenting both sides of the argument without bias.",
-        "D": "Pessimistic about the future of creativity in an algorithm-driven world."
-      },
-      "jumbled_sentences": {
-        "1": "Optimistic about the potential for algorithms to enhance creativity.",
-        "2": "Skeptical about the implications of algorithms on artistic authenticity.",
-        "3": "Neutral, presenting both sides of the argument without bias.",
-        "4": "Pessimistic about the future of creativity in an algorithm-driven world.",
-        "5": "None of the above."
-      },
-      "correct_answer": {
-        "answer": "B"
-      },
-      "rationale": "The author's tone regarding the integration of algorithms in artistic expression is skeptical about the implications of algorithms on artistic authenticity. This is evident throughout the passage, where the author raises concerns about how algorithms influence creativity, suggesting that while they may enhance certain aspects of artistic production, they also risk homogenizing artistic output and diluting the intrinsic value of art.\n\nOption A is tempting as it suggests an optimistic view of algorithms enhancing creativity. However, the passage emphasizes the limitations of algorithms, particularly their inability to replicate the unpredictability and surprise that characterize human creativity. This skepticism undermines the notion of unqualified enhancement, making A an incorrect choice.\n\nOption C presents a neutral stance, claiming the author presents both sides without bias. Yet, the passage clearly articulates concerns about the impact of algorithms on artistic authenticity and the potential loss of human agency, indicating a discernible skepticism rather than neutrality. This bias against the uncritical acceptance of algorithmic influence disqualifies C.\n\nOption D suggests a pessimistic outlook on creativity in an algorithm-driven world. While the author does express caution regarding the implications of computational tools, the tone is more focused on questioning and critically assessing these influences rather than outright pessimism. Thus, D does not accurately capture the author's nuanced perspective.\n\nIn summary, the correct answer is B, as it accurately reflects the author's critical stance on the implications of algorithms for artistic authenticity, while the other options either misinterpret the tone or oversimplify the author's arguments.",
-      "difficulty": "medium",
-      "tags": [
-        "Identify contradictions",
-        "Identifying Logical Continuation",
-        "Identifying the Writer's Intent",
-        "Maintaining Coherence in Writing",
-        "Drawing Logical Conclusions",
-        "Understanding Implicit Messages",
-        "Elimination of Irrelevant Options",
-        "Identifying Key Ideas",
-        "Recognizing Common Logical Errors",
-        "Recognizing Logical Gaps",
-        "Negation Scores Over Affirmation",
-        "Types of Inferential Questions",
-        "Analyzing Tone to Understand Author's Perspective",
-        "Mandatory Sentence Pairs",
-        "Structure of Logical Reasoning Questions",
-        "Identifying the Main Argument"
-      ],
-      "created_at": "2025-12-25T09:52:19.584462+00:00",
-      "updated_at": "2026-01-02T22:41:51.246Z"
-    },
-    {
-      "id": "3f4b5c6d-7e8b-4c9b-bd7b-5e6f7c8d9e7f",
-      "passage_id": "1a2b3c4d-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
-      "question_text": "According to the passage, what is one potential consequence of algorithmic influence on artistic output?",
-      "question_type": "rc_question",
-      "options": {
-        "A": "Increased diversity in artistic styles and expressions.",
-        "B": "A homogenization of artistic output leading to less surprise.",
-        "C": "A complete elimination of human creativity in art.",
-        "D": "An enhancement of emotional depth in artistic works."
-      },
-      "jumbled_sentences": {
-        "1": "Increased diversity in artistic styles and expressions.",
-        "2": "A homogenization of artistic output leading to less surprise.",
-        "3": "A complete elimination of human creativity in art.",
-        "4": "An enhancement of emotional depth in artistic works.",
-        "5": "None of the above."
-      },
-      "correct_answer": {
-        "answer": "B"
-      },
-      "rationale": "The correct answer is B. The passage discusses how algorithmic influence can lead to a homogenization of artistic output, diminishing the element of surprise that is essential to creativity. It states that algorithms filter and categorize information, which can result in predictable artistic expressions that lack the unexpected qualities typically associated with human creativity.\n\nOption A is tempting because it suggests a positive outcome of algorithmic influence. However, the passage emphasizes that algorithms often lead to a reduction in diversity and surprise in artistic output, contradicting the idea of increased diversity. \n\nOption C implies that human creativity is completely eliminated by algorithms, which is an extreme interpretation. The passage acknowledges that while algorithms can assist in the creative process, they cannot fully replace human creativity, thus blocking this option.\n\nOption D suggests that algorithmic influence enhances emotional depth in artistic works. This is misleading, as the passage indicates that while algorithms can generate art, they often lack the emotional and experiential dimensions that characterize human creativity. \n\nIn summary, while options A, C, and D present appealing ideas, they do not align with the passage's argument regarding the consequences of algorithmic influence, making B the only valid choice.",
-      "difficulty": "easy",
-      "tags": [
-        "Analyze context for implications",
-        "Identifying the Writer's Intent",
-        "Identifying the Purpose of a Paragraph",
-        "Maintaining Coherence in Writing",
-        "Understanding Implicit Messages",
-        "Identifying Key Elements",
-        "Identifying Key Ideas",
-        "Elimination of Irrelevant Options",
-        "Recognizing Logical Gaps",
-        "Recognizing Common Logical Errors",
-        "Maintaining Logical Flow in Arguments",
-        "Types of Inferential Questions",
-        "Analyzing Tone to Understand Author's Perspective",
-        "Mandatory Sentence Pairs",
-        "Structure of Logical Reasoning Questions",
-        "Identifying the Main Argument"
-      ],
-      "created_at": "2025-12-25T09:52:19.584462+00:00",
-      "updated_at": "2026-01-02T22:41:55.847Z"
-    },
-    {
-      "id": "4f5c6d7e-8f9b-4d0b-be8b-6f7c8d9e0f8e",
-      "passage_id": "1a2b3c4d-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
-      "question_text": "What is the main implication of the author's argument regarding computational tools in art?",
-      "question_type": "rc_question",
-      "options": {
-        "A": "Computational tools will ultimately replace human creativity in artistic expression.",
-        "B": "The integration of technology in art represents a fundamental shift in artistic engagement.",
-        "C": "Algorithms enhance the emotional depth of artistic works significantly.",
-        "D": "Artistic expression will remain unchanged despite technological advancements."
-      },
-      "jumbled_sentences": {
-        "1": "Computational tools will ultimately replace human creativity in artistic expression.",
-        "2": "The integration of technology in art represents a fundamental shift in artistic engagement.",
-        "3": "Algorithms enhance the emotional depth of artistic works significantly.",
-        "4": "Artistic expression will remain unchanged despite technological advancements.",
-        "5": "None of the above."
-      },
-      "correct_answer": {
-        "answer": "B"
-      },
-      "rationale": "The correct option is B, as it encapsulates the author's argument that the integration of technology in art signifies a significant transformation in how artistic expression is engaged with and understood. The passage discusses the profound implications of computational tools on creativity, suggesting that they alter the very fabric of artistic expression and challenge traditional notions of authenticity and originality.\n\nOption A is tempting because it suggests a dramatic outcome of computational tools replacing human creativity. However, the passage emphasizes that while algorithms can assist in the creative process, they cannot fully replicate the human capacity for innovation. This notion is clearly articulated in the discussion about the limitations of algorithms in generating surprise, which is a uniquely human trait.\n\nOption C might seem appealing as it implies that algorithms enhance emotional depth in art. However, the passage argues that while algorithms can generate outputs that mimic human creativity, they often lack the emotional and experiential dimensions that inform artistic practice. This misinterpretation of the role of algorithms in enhancing emotional depth is countered by the author's assertion that computational tools may dilute intrinsic artistic value.\n\nOption D is easily dismissed as it contradicts the passage's central theme. The author explicitly states that the integration of technology represents a fundamental shift in artistic engagement, which directly opposes the claim that artistic expression will remain unchanged. \n\nThus, the only option that accurately reflects the main implication of the author's argument is B.",
-      "difficulty": "medium",
-      "tags": [
-        "Evaluate evidence and counterarguments",
-        "Identifying the Writer's Intent",
-        "Identifying Logical Continuation",
-        "Maintaining Coherence in Writing",
-        "Drawing Logical Conclusions",
-        "Understanding Implicit Messages",
-        "Strategies for Strengthening or Weakening Conclusions",
-        "Elimination of Irrelevant Options",
-        "Recognizing Common Logical Errors",
-        "Recognizing Logical Gaps",
-        "Maintaining Logical Flow in Arguments",
-        "Types of Inferential Questions",
-        "Analyzing Tone to Understand Author's Perspective",
-        "Mandatory Sentence Pairs",
-        "Structure of Logical Reasoning Questions",
-        "Identifying the Main Argument"
-      ],
-      "created_at": "2025-12-25T09:52:19.584462+00:00",
-      "updated_at": "2026-01-02T22:42:01.126Z"
-    },
-    {
-      "id": "1e4c1f2e-7b7a-4b5b-bd8e-0b9c8b5d3e8e",
-      "passage_id": null,
-      "question_text": "The integration of computation into artistic practices has transformed the landscape of aesthetics, suggesting that rather than diminishing creativity, algorithms enhance it by facilitating new forms of collaboration between humans and machines. However, this raises critical questions about the nature of surprise in art, a uniquely human trait that algorithms struggle to replicate. Furthermore, the influence of algorithms on our aesthetic judgments indicates a shift in how we engage with and appreciate art. \n\nWhich of the following best summarizes the above paragraph?",
-      "question_type": "para_summary",
-      "options": {
-        "A": "Computation diminishes human creativity in art by replacing traditional methods with algorithms.",
-        "B": "Algorithms enhance artistic creativity by fostering collaboration between humans and machines, while also influencing aesthetic judgments.",
-        "C": "The role of surprise in art is being overshadowed by algorithmic predictability, leading to a decline in artistic value.",
-        "D": "Artistic expression is becoming irrelevant due to the rise of computational tools that dictate aesthetic standards."
+        "A": "An increase in public transport usage among all socioeconomic groups.",
+        "B": "A widening gap in mobility access between wealthier and lower-income individuals.",
+        "C": "A reduction in overall traffic congestion without any negative consequences.",
+        "D": "A uniform response from all commuters to financial disincentives."
       },
       "jumbled_sentences": {
         "1": "",
@@ -221,12 +45,12 @@
       "correct_answer": {
         "answer": "B"
       },
-      "rationale": "The correct option is B because it accurately encapsulates the main ideas presented in the passage. It highlights how algorithms enhance artistic creativity through collaboration between humans and machines, while also acknowledging the influence of algorithms on aesthetic judgments. This dual focus reflects the complexity of the relationship between computation and creativity as discussed in the passage.\n\nOption A can be eliminated as it misrepresents the author's intent. It suggests that computation diminishes creativity, which contradicts the passage's assertion that algorithms enhance creativity by facilitating new collaborations. This misinterpretation overlooks the positive role of algorithms in the artistic process.\n\nOption C is also incorrect because it implies that the role of surprise in art is being overshadowed by algorithmic predictability, which is not supported by the passage. The text discusses the challenge of replicating surprise in art but does not claim that this leads to a decline in artistic value. Instead, it emphasizes the transformative potential of algorithms in artistic practices.\n\nOption D can be dismissed as it exaggerates the negative impact of computational tools, suggesting that artistic expression is becoming irrelevant. The passage does not support this extreme viewpoint; rather, it presents a more nuanced discussion about the evolving relationship between art and technology.",
-      "difficulty": "medium",
+      "rationale": "The correct answer is B. The passage discusses how congestion pricing may exacerbate existing inequalities, particularly affecting lower-income individuals who lack viable alternatives to driving during peak hours. This suggests that the implementation of congestion pricing could lead to a widening gap in mobility access between wealthier and lower-income individuals, as wealthier commuters can more easily adapt to the charges.\n\nOption A is eliminated because it implies that congestion pricing will increase public transport usage among all socioeconomic groups. The passage indicates that while congestion pricing aims to incentivize shifts to public transport, it does not guarantee that all groups will respond uniformly due to differing socioeconomic circumstances. This misinterpretation overlooks the nuanced discussion of equity concerns presented in the text.\n\nOption C is tempting as it suggests a positive outcome of congestion pricing without negative consequences. However, the passage explicitly warns about the potential unintended consequences of such measures, including exacerbating social inequities and the risk of gentrification. This directly contradicts the notion that congestion pricing would reduce congestion without any drawbacks.\n\nOption D is dismissed as it assumes a uniform response from all commuters to financial disincentives. The passage critiques this assumption, highlighting that different socioeconomic backgrounds lead to varied capacities to absorb costs, thus undermining the idea of a uniform response. \n\nIn summary, the passage emphasizes the complexities and potential negative outcomes of congestion pricing, particularly regarding equity, making option B the most accurate inference.",
+      "difficulty": "hard",
       "tags": [
-        "Summarize content",
-        "Identifying the Writer's Intent",
+        "Differentiate between main ideas and supporting details",
         "Identifying the Purpose of a Paragraph",
+        "Identifying the Writer's Intent",
         "Maintaining Coherence in Writing",
         "Identifying Key Elements",
         "Understanding Implicit Messages",
@@ -241,19 +65,151 @@
         "Structure of Logical Reasoning Questions",
         "Identifying the Main Argument"
       ],
-      "created_at": "2026-01-02T22:40:27.499Z",
-      "updated_at": "2026-01-02T22:42:06.768Z"
+      "created_at": "2026-01-03T08:10:42.243Z",
+      "updated_at": "2026-01-03T08:11:58.288Z"
     },
     {
-      "id": "1a2b3c4d-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
-      "passage_id": null,
-      "question_text": "The integration of computational tools in artistic practices has sparked a debate about the nature of creativity. While some argue that algorithms enhance artistic expression by providing new avenues for exploration, others contend that they may limit the spontaneity and surprise that characterize human creativity. This tension raises important questions about the role of technology in shaping aesthetic experiences. ___(1)___\n\nWhich of the following best completes the paragraph?",
-      "question_type": "para_completion",
+      "id": "b03ced8a-69fc-4cbe-b0aa-31f3fd003431",
+      "passage_id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+      "question_text": "What is the tone of the author when discussing the implications of congestion pricing on urban equity?",
+      "question_type": "rc_question",
       "options": {
-        "A": "Ultimately, the relationship between human creativity and algorithmic processes remains complex and multifaceted.",
-        "B": "In contrast, many artists believe that technology should be entirely excluded from the creative process.",
-        "C": "Therefore, it is essential to recognize that algorithms can never replicate the depth of human emotion in art.",
-        "D": "Consequently, the future of art may depend on finding a balance between human intuition and machine efficiency."
+        "A": "Optimistic about the potential benefits for all urban residents.",
+        "B": "Cautious regarding the fairness and effectiveness of the pricing strategy.",
+        "C": "Indifferent to the socioeconomic disparities it may create.",
+        "D": "Supportive of congestion pricing as a necessary urban policy."
+      },
+      "jumbled_sentences": {
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": ""
+      },
+      "correct_answer": {
+        "answer": "B"
+      },
+      "rationale": "The correct option is B, as the author expresses a cautious tone regarding the fairness and effectiveness of congestion pricing. Throughout the passage, the author highlights various equity concerns and potential negative implications of congestion pricing, such as exacerbating socioeconomic disparities and contributing to urban gentrification. This critical examination indicates a careful approach rather than an optimistic or supportive stance.\n\nOption A is eliminated because it suggests an optimistic view of congestion pricing's benefits for all urban residents. However, the passage emphasizes the potential inequities and negative consequences, indicating that the author does not hold an unqualified optimistic perspective.\n\nOption C is also eliminated as it implies indifference to the socioeconomic disparities created by congestion pricing. The author explicitly addresses these disparities and raises concerns about fairness, which contradicts the notion of indifference.\n\nOption D, while it may seem supportive of congestion pricing, does not accurately capture the author's tone. The author discusses the need for caution and critical examination rather than outright support for congestion pricing as a necessary policy.\n\nThus, the remaining options do not align with the author's nuanced perspective, reinforcing that B is the most accurate representation of the author's tone.",
+      "difficulty": "medium",
+      "tags": [
+        "Analyze cultural impact",
+        "Identifying the Writer's Intent",
+        "Maintaining Coherence in Writing",
+        "Identifying Logical Continuation",
+        "Understanding Implicit Messages",
+        "Identifying Key Elements",
+        "Identifying Key Ideas",
+        "Comparison of Answer Choices",
+        "Recognizing Common Logical Errors",
+        "Assessing Distortion in Options",
+        "Clarity and Specificity in Relationships",
+        "Types of Inferential Questions",
+        "Analyzing Tone to Understand Author's Perspective",
+        "Mandatory Sentence Pairs",
+        "Structure of Logical Reasoning Questions",
+        "Identifying the Main Argument"
+      ],
+      "created_at": "2026-01-03T08:10:42.243Z",
+      "updated_at": "2026-01-03T08:12:02.723Z"
+    },
+    {
+      "id": "27001271-939e-49f8-95dc-863ca6beff6f",
+      "passage_id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+      "question_text": "According to the passage, which of the following is a potential negative outcome of congestion pricing?",
+      "question_type": "rc_question",
+      "options": {
+        "A": "Increased traffic congestion during off-peak hours.",
+        "B": "Enhanced public transport services for all commuters.",
+        "C": "Displacement of lower-income residents due to rising property values.",
+        "D": "Uniform travel behavior changes among all socioeconomic groups."
+      },
+      "jumbled_sentences": {
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": ""
+      },
+      "correct_answer": {
+        "answer": "C"
+      },
+      "rationale": "The correct answer is C. The passage discusses how congestion pricing could lead to the displacement of lower-income residents due to rising property values, a phenomenon referred to as \"green gentrification.\" This outcome highlights the potential negative social implications of implementing congestion pricing, as it may inadvertently benefit wealthier individuals while marginalizing those with fewer resources.\n\nOption A is eliminated because it suggests that congestion pricing would increase traffic congestion during off-peak hours. The passage indicates that the goal of congestion pricing is to reduce traffic congestion by incentivizing commuters to change their travel patterns, not to exacerbate it.\n\nOption B is also incorrect. While the passage acknowledges that congestion pricing can generate revenue for public transport, it does not guarantee enhanced services for all commuters. The effectiveness of this funding is questioned, particularly regarding whether it will address the needs of marginalized communities, thus contradicting the notion that all commuters would benefit equally.\n\nOption D is misleading as it implies that all socioeconomic groups will uniformly change their travel behavior in response to congestion pricing. The passage explicitly states that the assumption of uniform response is flawed, as it overlooks the diverse socioeconomic backgrounds of road users and their varying capacities to absorb costs.",
+      "difficulty": "easy",
+      "tags": [
+        "Differentiate between main ideas and supporting details",
+        "Identifying the Purpose of a Paragraph",
+        "Identifying the Writer's Intent",
+        "Maintaining Coherence in Writing",
+        "Identifying Key Elements",
+        "Understanding Implicit Messages",
+        "Identifying Key Ideas",
+        "Reading Comprehension Strategy",
+        "Recognizing Common Logical Errors",
+        "Recognizing Logical Gaps",
+        "Maintaining Logical Flow in Arguments",
+        "Types of Questions in Reading Comprehension",
+        "Analyzing Tone to Understand Author's Perspective",
+        "Mandatory Sentence Pairs",
+        "Structure of Logical Reasoning Questions",
+        "Identifying the Main Argument"
+      ],
+      "created_at": "2026-01-03T08:10:42.243Z",
+      "updated_at": "2026-01-03T08:12:09.383Z"
+    },
+    {
+      "id": "bbba73c4-d2ae-4efd-8d18-eda0fbc161c6",
+      "passage_id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+      "question_text": "What is the primary concern the author raises regarding congestion pricing as a solution to urban traffic issues?",
+      "question_type": "rc_question",
+      "options": {
+        "A": "It may lead to improved air quality across all urban areas.",
+        "B": "It risks exacerbating existing social inequalities among commuters.",
+        "C": "It will inevitably reduce traffic congestion in all cities.",
+        "D": "It is universally supported by urban residents for its benefits."
+      },
+      "jumbled_sentences": {
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": ""
+      },
+      "correct_answer": {
+        "answer": "B"
+      },
+      "rationale": "The primary concern raised by the author regarding congestion pricing is its potential to exacerbate existing social inequalities among commuters. The passage highlights that while congestion pricing aims to alleviate traffic congestion and improve urban mobility, it may disproportionately impact lower-income individuals who lack viable alternatives to driving during peak hours. This inequity is a central theme throughout the passage, emphasizing the need for careful consideration of the socioeconomic implications of such pricing mechanisms.\n\nOption A is eliminated because, while improved air quality is mentioned as a potential benefit of congestion pricing, the passage does not assert that this will occur across all urban areas. The focus is primarily on the equity concerns and the socioeconomic impacts rather than universal environmental benefits.\n\nOption C is also incorrect as it suggests that congestion pricing will inevitably reduce traffic congestion in all cities. The passage critiques the assumption that all commuters will respond uniformly to financial incentives, indicating that this is a flawed perspective. The author points out the complexity of commuter behavior and the varied responses based on socioeconomic backgrounds, which undermines the certainty implied in this option.\n\nOption D is dismissed as it inaccurately portrays public sentiment. The passage notes that while some cities may support congestion pricing due to perceived benefits, others face significant pushback from residents who view the measures as punitive. This divergence in public opinion indicates that support is not universal, further reinforcing the author's emphasis on the need for community engagement in policy design.",
+      "difficulty": "medium",
+      "tags": [
+        "Differentiate between main ideas and supporting details",
+        "Identifying the Purpose of a Paragraph",
+        "Identifying the Writer's Intent",
+        "Maintaining Coherence in Writing",
+        "Identifying Key Elements",
+        "Understanding Implicit Messages",
+        "Identifying Key Ideas",
+        "Reading Comprehension Strategy",
+        "Recognizing Common Logical Errors",
+        "Recognizing Logical Gaps",
+        "Maintaining Logical Flow in Arguments",
+        "Types of Questions in Reading Comprehension",
+        "Analyzing Tone to Understand Author's Perspective",
+        "Mandatory Sentence Pairs",
+        "Structure of Logical Reasoning Questions",
+        "Identifying the Main Argument"
+      ],
+      "created_at": "2026-01-03T08:10:42.243Z",
+      "updated_at": "2026-01-03T08:12:15.053Z"
+    },
+    {
+      "id": "7dbb1053-f365-4430-9263-c01bea2b34e6",
+      "passage_id": "2caa4f03-cec8-48c7-9145-24f95a3401ce",
+      "question_text": "The passage given below is followed by four alternate summaries. Choose the option that best captures the essence of the passage. \n\nCongestion pricing is a strategic approach aimed at alleviating urban traffic congestion by imposing fees on road usage during peak hours. This method not only aims to improve traffic flow but also generates revenue that can be reinvested into public transportation systems. However, the implementation of such pricing raises significant equity concerns, as it may disproportionately affect low-income commuters who cannot easily adjust their travel patterns. Successful examples from cities like London and Singapore demonstrate the potential benefits of congestion pricing, yet they also highlight the need for careful consideration of its social implications.",
+      "question_type": "para_summary",
+      "options": {
+        "A": "Congestion pricing effectively reduces traffic congestion and funds public transport, but raises equity concerns for low-income commuters.",
+        "B": "Congestion pricing is a controversial method that has been rejected in most cities due to its negative impact on low-income individuals.",
+        "C": "Cities that implement congestion pricing see immediate improvements in traffic flow, regardless of the socioeconomic status of commuters.",
+        "D": "The primary goal of congestion pricing is to generate revenue for urban development, with little regard for its social consequences."
       },
       "jumbled_sentences": {
         "1": "",
@@ -265,16 +221,16 @@
       "correct_answer": {
         "answer": "A"
       },
-      "rationale": "The correct option, A, effectively encapsulates the complexity of the relationship between human creativity and algorithmic processes, aligning well with the preceding discussion about the dual perspectives on technology in artistic practices. It acknowledges the multifaceted nature of this relationship, which is essential given the tension highlighted in the paragraph regarding the enhancement versus limitation of creativity by algorithms.\n\nOption B is tempting because it presents a contrasting viewpoint; however, it misrepresents the overall argument by suggesting an extreme position that technology should be entirely excluded from art. This does not align with the nuanced debate established in the paragraph, which acknowledges both the benefits and drawbacks of computational tools in creativity.\n\nOption C also appears plausible as it critiques the ability of algorithms to replicate human emotion. However, it incorrectly narrows the discussion to a singular aspect of creativity, ignoring the broader implications of the relationship between technology and artistic expression. This option fails to maintain the logical flow of the paragraph, which is focused on the integration of technology rather than a definitive claim about its limitations.\n\nOption D, while relevant, suggests a future-oriented conclusion that implies a resolution to the tension discussed. This option does not fit as seamlessly into the existing narrative, which is more focused on presenting the current debate rather than proposing a solution or balance. \n\nThus, A stands out as the most coherent and comprehensive completion of the paragraph, while the other options either misinterpret the argument or shift the focus away from the central discussion.",
+      "rationale": "The correct option is A, as it accurately encapsulates the essence of the passage. It highlights that congestion pricing aims to reduce traffic congestion and fund public transport while acknowledging the equity concerns it raises for low-income commuters. This dual focus on both the benefits and the social implications aligns well with the passage's content.\n\nOption B is incorrect because it suggests that congestion pricing has been widely rejected due to its negative impacts on low-income individuals. The passage does not state that congestion pricing has been rejected; rather, it discusses successful implementations in cities like London and Singapore, indicating that it has been adopted with consideration of its implications.\n\nOption C misrepresents the passage by claiming that cities implementing congestion pricing see immediate improvements in traffic flow regardless of commuters' socioeconomic status. The passage does not assert that the benefits are uniform across all socioeconomic groups, instead emphasizing the potential negative impact on low-income commuters.\n\nOption D inaccurately states that the primary goal of congestion pricing is to generate revenue for urban development, downplaying the importance of improving traffic flow and the social implications discussed in the passage. The passage clearly presents both traffic improvement and revenue generation as key aspects of congestion pricing, making this option misleading. \n\nThus, A remains the only option that effectively captures the multifaceted nature of congestion pricing as described in the passage.",
       "difficulty": "medium",
       "tags": [
-        "Evaluate evidence supporting claims",
+        "Evaluate thematic consistency",
         "Identifying the Writer's Intent",
-        "Identifying the Purpose of a Paragraph",
         "Maintaining Coherence in Writing",
-        "Drawing Logical Conclusions",
+        "Identifying Logical Continuation",
+        "Understanding Implicit Messages",
         "Identifying Key Elements",
-        "Strategies for Strengthening or Weakening Conclusions",
+        "Identifying Key Ideas",
         "Elimination of Irrelevant Options",
         "Recognizing Common Logical Errors",
         "Recognizing Logical Gaps",
@@ -282,43 +238,87 @@
         "Types of Inferential Questions",
         "Analyzing Tone to Understand Author's Perspective",
         "Mandatory Sentence Pairs",
-        "Structure of Logical Reasoning Questions",
-        "Verifiable Information"
+        "Correct Sentence Structure",
+        "Identifying the Main Argument"
       ],
-      "created_at": "2026-01-02T22:40:35.596Z",
-      "updated_at": "2026-01-02T22:42:13.171Z"
+      "created_at": "2026-01-03T08:10:45.711Z",
+      "updated_at": "2026-01-03T08:12:21.122Z"
     },
     {
-      "id": "f3d6c4a7-1c4b-4a9b-bb6e-0b3f2d3f5c2e",
-      "passage_id": null,
-      "question_text": "The four sentences given below, when properly sequenced, form a coherent paragraph. Each sentence is labelled with a letter. Choose the most logical order of the sentences from the options given.",
+      "id": "4ab077b1-8ed8-430b-bb7f-037cd20257fc",
+      "passage_id": "9b7b94fd-51f1-4ada-95b9-2dc163a52288",
+      "question_text": "There is a sentence that is missing in the paragraph below. Look at the paragraph and decide in which blank (option 1, 2, 3, or 4) the following sentence would best fit.\nSentence: While congestion pricing can alleviate urban traffic, it raises significant equity concerns that must be addressed to ensure fair implementation.\nParagraph: ___(1)___. Congestion pricing can effectively reduce traffic congestion and improve travel times. ___(2)___. The implementation of congestion pricing can generate revenue for public transport and infrastructure. ___(3)___. However, successful examples of congestion pricing exist in cities like London, Singapore, and Stockholm. ___(4)___. Addressing these concerns is crucial for gaining public support and ensuring that the benefits of congestion pricing are equitably distributed.",
+      "question_type": "para_completion",
+      "options": {
+        "A": "Option 1",
+        "B": "Option 2",
+        "C": "Option 3",
+        "D": "Option 4"
+      },
+      "jumbled_sentences": {
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": ""
+      },
+      "correct_answer": {
+        "answer": "D"
+      },
+      "rationale": "The sentence fits best in Blank 4 because it directly addresses the equity concerns associated with congestion pricing, which is a critical aspect of the discussion. The preceding sentences outline the benefits of congestion pricing, such as reducing traffic congestion and generating revenue, but they do not acknowledge the potential drawbacks. By placing the sentence in Blank 4, it effectively concludes the paragraph by emphasizing the importance of addressing equity issues to ensure that the advantages of congestion pricing are fairly distributed and to garner public support.\n\nOption A is tempting as it appears to introduce the topic of congestion pricing. However, it fails to connect with the subsequent sentences that focus on the benefits of congestion pricing. The paragraph already begins with a clear statement about its effectiveness, making this option irrelevant.\n\nOption B might seem plausible since it discusses the revenue generation aspect of congestion pricing. Yet, it does not address the equity concerns mentioned in the target sentence. The focus here is on the positive outcomes of congestion pricing, which makes it less suitable for the context of equity issues that need to be highlighted.\n\nThe remaining option, C, is not selected because it simply states that successful examples exist, which does not relate to the equity concerns that are crucial for the overall argument. Thus, D is the most appropriate choice, as it encapsulates the need for equity considerations in the implementation of congestion pricing.",
+      "difficulty": "medium",
+      "tags": [
+        "Evaluate thematic consistency",
+        "Identifying the Writer's Intent",
+        "Maintaining Coherence in Writing",
+        "Identifying Logical Continuation",
+        "Understanding Implicit Messages",
+        "Identifying Key Elements",
+        "Identifying Key Ideas",
+        "Elimination of Irrelevant Options",
+        "Recognizing Common Logical Errors",
+        "Recognizing Logical Gaps",
+        "Maintaining Logical Flow in Arguments",
+        "Types of Inferential Questions",
+        "Analyzing Tone to Understand Author's Perspective",
+        "Mandatory Sentence Pairs",
+        "Correct Sentence Structure",
+        "Identifying the Main Argument"
+      ],
+      "created_at": "2026-01-03T08:10:45.711Z",
+      "updated_at": "2026-01-03T08:12:26.459Z"
+    },
+    {
+      "id": "47b1f90d-238e-4305-a4d7-aca86bd7747b",
+      "passage_id": "f224539a-fcba-4c47-82df-c9288b3b241b",
+      "question_text": "The four sentences (labelled 1, 2, 3 and 4) below, when properly sequenced would yield a coherent paragraph. Decide on the proper sequencing of the order of the sentences and key in the sequence of the four numbers as your answer: ",
       "question_type": "para_jumble",
       "options": {
-        "A": "2413",
-        "B": "1234",
-        "C": "3142",
-        "D": "4321"
+        "A": "",
+        "B": "",
+        "C": "",
+        "D": ""
       },
       "jumbled_sentences": {
-        "1": "The integration of computational tools in art raises questions about authenticity and originality.",
-        "2": "Surprise remains a uniquely human trait that algorithms cannot fully replicate.",
-        "3": "While algorithms shape our understanding and appreciation of art, they often lack the capacity for genuine creativity.",
-        "4": "Consequently, the collaboration between humans and machines can lead to new aesthetic experiences.",
-        "5": "However, this relationship also challenges our traditional notions of artistic value."
+        "1": "While congestion pricing can generate significant revenue for public transport, it also raises equity concerns that must be addressed.",
+        "2": "Cities like London and Singapore have successfully implemented congestion pricing, showcasing its potential benefits.",
+        "3": "However, the long-term effects of such pricing on urban gentrification remain ambiguous and warrant further study.",
+        "4": "Therefore, a careful balance must be struck between generating funds and ensuring that lower-income commuters are not disproportionately affected.",
+        "5": ""
       },
       "correct_answer": {
-        "answer": "14325"
+        "answer": "2143"
       },
-      "rationale": "The correct sequence of sentences is 1-4-3-2-5. The first sentence introduces the theme of the integration of computational tools in art, highlighting the concerns regarding authenticity and originality. This sets the stage for the subsequent discussion. The fourth sentence follows logically, suggesting that this integration can lead to new aesthetic experiences, which aligns with the initial concern. The third sentence then elaborates on the limitations of algorithms in replicating genuine creativity, reinforcing the idea of a unique human trait. The second sentence emphasizes the distinctiveness of human surprise, which algorithms cannot replicate, further supporting the argument about human creativity. Finally, the fifth sentence acknowledges the challenges posed to traditional notions of artistic value, providing a conclusion that encapsulates the discussion.\n\nOption A (2413) is tempting as it begins with a statement about algorithms shaping our understanding of art, which seems relevant. However, it misplaces the foundational idea of authenticity and originality, leading to a disjointed flow. \n\nOption B (1234) is also misleading because it presents the integration of computational tools and the subsequent aesthetic experiences without addressing the critical aspect of creativity and authenticity first, resulting in a lack of coherence in the argument.\n\nThe remaining options do not align with the logical progression established in the correct sequence, as they either disrupt the flow or fail to connect the ideas effectively.",
+      "rationale": "The correct sequence of sentences is 2143. Sentence 2 introduces the topic by mentioning successful implementations of congestion pricing in cities like London and Singapore, setting a positive context. Sentence 1 follows logically, discussing the revenue generation aspect while also highlighting the equity concerns that arise from such pricing. This leads to Sentence 4, which emphasizes the need to balance these concerns, ensuring that lower-income commuters are not adversely affected. Finally, Sentence 3 addresses the ambiguity surrounding the long-term effects on urban gentrification, suggesting that further study is necessary, thus providing a thoughtful conclusion to the discussion.\n\nOption A can be eliminated because it likely disrupts the flow of ideas. It may suggest an unrelated point or misinterpret the relationship between revenue generation and equity concerns, which are central to the discussion. \n\nOption C also fails to maintain coherence. It may introduce an irrelevant aspect or overlook the critical balance between generating funds and addressing equity, which is essential for a well-rounded argument. \n\nThe remaining options do not provide a coherent sequence that captures the essence of the discussion on congestion pricing, making them less suitable.",
       "difficulty": "medium",
       "tags": [
-        "Evaluate evidence supporting claims",
+        "Evaluate thematic consistency",
         "Identifying the Writer's Intent",
-        "Identifying the Purpose of a Paragraph",
         "Maintaining Coherence in Writing",
-        "Drawing Logical Conclusions",
+        "Identifying Logical Continuation",
+        "Understanding Implicit Messages",
         "Identifying Key Elements",
-        "Strategies for Strengthening or Weakening Conclusions",
+        "Identifying Key Ideas",
         "Elimination of Irrelevant Options",
         "Recognizing Common Logical Errors",
         "Recognizing Logical Gaps",
@@ -326,43 +326,43 @@
         "Types of Inferential Questions",
         "Analyzing Tone to Understand Author's Perspective",
         "Mandatory Sentence Pairs",
-        "Structure of Logical Reasoning Questions",
-        "Verifiable Information"
+        "Correct Sentence Structure",
+        "Identifying the Main Argument"
       ],
-      "created_at": "2026-01-02T22:40:44.805Z",
-      "updated_at": "2026-01-02T22:42:18.655Z"
+      "created_at": "2026-01-03T08:10:45.711Z",
+      "updated_at": "2026-01-03T08:12:31.850Z"
     },
     {
-      "id": "1a2b3c4d-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
-      "passage_id": null,
-      "question_text": "Five jumbled sentences related to the impact of computation on art are given below. Four of them can be put together to form a coherent paragraph. Identify the odd one out:",
+      "id": "a96a39b2-4080-41c4-b4e6-85d7e5506bb7",
+      "passage_id": "5bf32677-163a-4b39-927c-480f73b416f2",
+      "question_text": "Five jumbled up sentences, related to a topic, are given below. Four of them can be put together to form a coherent paragraph. Identify the odd one out and key in the number of the sentence as your answer: ",
       "question_type": "odd_one_out",
       "options": {
-        "A": "The integration of computational tools in art raises questions about authenticity and originality.",
-        "B": "Algorithms influence our aesthetic judgments and cultural consumption.",
-        "C": "Computation enhances rather than diminishes creativity in art forms.",
-        "D": "The collaboration between humans and machines in chess has redefined the game's creative space."
+        "A": "",
+        "B": "",
+        "C": "",
+        "D": ""
       },
       "jumbled_sentences": {
-        "1": "Computation enhances rather than diminishes creativity in art forms.",
-        "2": "Algorithms influence our aesthetic judgments and cultural consumption.",
-        "3": "The collaboration between humans and machines in chess has redefined the game's creative space.",
-        "4": "The integration of computational tools in art raises questions about authenticity and originality.",
-        "5": "Surprise remains a uniquely human trait that algorithms cannot fully replicate."
+        "1": "Congestion pricing has been shown to effectively reduce traffic congestion in urban areas.",
+        "2": "Cities implementing congestion pricing often see improvements in public transport funding.",
+        "3": "Behavioral economics suggests that charging for road use can lead to more rational travel decisions.",
+        "4": "However, the implementation of congestion pricing raises significant equity concerns for low-income commuters.",
+        "5": "Congestion pricing is a controversial topic that often leads to heated debates among urban planners."
       },
       "correct_answer": {
-        "answer": "A"
+        "answer": "5"
       },
-      "rationale": "The correct answer is A. This option discusses the questions of authenticity and originality in art due to computational tools, which diverges from the central theme of how computation enhances creativity and influences aesthetic judgments. The other options focus on the positive impacts of computation on creativity and collaboration in art, making A the odd one out.\n\nOption B is tempting as it addresses how algorithms shape our aesthetic judgments and cultural consumption, which aligns with the overall theme of computation's influence on art. However, it remains focused on the broader implications of algorithms rather than questioning authenticity, which is a more specific concern.\n\nOption C also fits well within the context, as it asserts that computation enhances creativity, reinforcing the idea that technology can be a tool for artistic expression rather than a hindrance. This aligns with the positive framing of computation's role in art.\n\nOption D, while initially seeming unrelated, discusses the collaboration between humans and machines in chess, which can be interpreted as a metaphor for the interaction between technology and creativity in art. However, it still connects back to the theme of redefining creative spaces through computational collaboration.\n\nThus, while A presents a relevant concern, it does not align with the overarching narrative of enhancement and collaboration found in the other options, leading to its identification as the odd one out.",
+      "rationale": "The correct answer is option 5. This sentence introduces a concept that diverges from the main theme of the other sentences, which collectively focus on a specific aspect of the topic. While the other sentences build upon each other to create a coherent narrative, option 5 does not align with the established context, making it the odd one out.\n\nOption 1 is tempting because it appears to relate to the overarching theme. However, it fails to connect logically with the subsequent sentences, which focus on a more nuanced aspect of the topic. This lack of continuity indicates that it does not fit as seamlessly into the paragraph as the others.\n\nOption 3 also seems relevant at first glance, as it discusses a related idea. Yet, it introduces a different angle that does not contribute to the flow of the argument being constructed by the other sentences. This disconnect suggests that it does not maintain the coherence necessary for a unified paragraph.\n\nThe remaining options, 2 and 4, effectively support the central theme and logically connect with each other, thereby reinforcing the main argument.",
       "difficulty": "medium",
       "tags": [
-        "Evaluate evidence supporting claims",
+        "Evaluate thematic consistency",
         "Identifying the Writer's Intent",
-        "Identifying the Purpose of a Paragraph",
         "Maintaining Coherence in Writing",
-        "Drawing Logical Conclusions",
+        "Identifying Logical Continuation",
+        "Understanding Implicit Messages",
         "Identifying Key Elements",
-        "Strategies for Strengthening or Weakening Conclusions",
+        "Identifying Key Ideas",
         "Elimination of Irrelevant Options",
         "Recognizing Common Logical Errors",
         "Recognizing Logical Gaps",
@@ -370,11 +370,11 @@
         "Types of Inferential Questions",
         "Analyzing Tone to Understand Author's Perspective",
         "Mandatory Sentence Pairs",
-        "Structure of Logical Reasoning Questions",
-        "Verifiable Information"
+        "Correct Sentence Structure",
+        "Identifying the Main Argument"
       ],
-      "created_at": "2026-01-02T22:40:58.845Z",
-      "updated_at": "2026-01-02T22:42:23.630Z"
+      "created_at": "2026-01-03T08:10:45.711Z",
+      "updated_at": "2026-01-03T08:12:35.846Z"
     }
   ]
 }

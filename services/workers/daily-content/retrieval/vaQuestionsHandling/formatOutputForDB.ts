@@ -14,6 +14,7 @@ interface FormatOutputParams {
     passageData: Passage;
     rcQuestions: Question[];
     vaQuestions: Question[];
+    genreData: any
 }
 
 /**
@@ -24,9 +25,10 @@ export function formatOutputForDB(params: FormatOutputParams): {
     exam: Exam;
     passage: Passage;
     questions: Question[];
+    genreData: any
 } {
     try {
-        const { passageData, rcQuestions, vaQuestions } = params;
+        const { passageData, rcQuestions, vaQuestions, genreData } = params;
         const now = new Date().toISOString();
         const currentYear = new Date().getFullYear();
 
@@ -47,7 +49,7 @@ export function formatOutputForDB(params: FormatOutputParams): {
             title: passageData.title,
             content: passageData.content,
             word_count: passageData.word_count,
-            genre: passageData.genre,
+            genre: genreData.name,
             difficulty: passageData.difficulty,
             source: passageData.source,
             paper_id: exam.id, // Link passage to exam
@@ -65,13 +67,15 @@ export function formatOutputForDB(params: FormatOutputParams): {
         const rcQuestionsWithPassage = rcQuestions.map(q => ({
             ...q,
             passage_id: passageData.id,
+            paper_id: exam.id
         }));
         allQuestions.push(...rcQuestionsWithPassage);
 
         // Add VA questions (no passage, different question types)
         const vaQuestionsNoPassage = vaQuestions.map(q => ({
             ...q,
-            passage_id: generateUUID(), // Assign unique UUID to satisfy non-nullable schema
+            passage_id: "", 
+            paper_id: exam.id
         }));
         allQuestions.push(...vaQuestionsNoPassage);
 
@@ -84,6 +88,7 @@ export function formatOutputForDB(params: FormatOutputParams): {
             exam,
             passage,
             questions: allQuestions,
+            genreData
         };
     } catch (error) {
         console.error("❌ [Output Formatter] Error formatting output:", error);

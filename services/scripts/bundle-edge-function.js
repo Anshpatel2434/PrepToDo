@@ -62,7 +62,7 @@ async function bundleFunction() {
 
 		const entryPoint = resolve(
 			servicesDir,
-			"ai-orchestration/teaching-concept/runConceptTeaching.ts"
+			"workers/daily-content/runDailyContent.ts"
 		);
 		console.log("📍 Entry point:", entryPoint);
 		console.log("");
@@ -73,21 +73,21 @@ async function bundleFunction() {
 		}
 
 		// Check subdirectories
-		const subdirs = ["assembly", "config", "graph", "retrieval", "synthesis"];
-		console.log("🔍 Checking subdirectories...");
-		for (const dir of subdirs) {
-			const dirPath = resolve(
-				servicesDir,
-				"ai-orchestration/teaching-concept",
-				dir
-			);
-			if (existsSync(dirPath)) {
-				console.log("  ✅", dir);
-			} else {
-				console.log("  ⚠️", dir, "(not found)");
-			}
-		}
-		console.log("");
+		// const subdirs = ["assembly", "config", "graph", "retrieval", "synthesis"];
+		// console.log("🔍 Checking subdirectories...");
+		// for (const dir of subdirs) {
+		// 	const dirPath = resolve(
+		// 		servicesDir,
+		// 		"workers/daily-content",
+		// 		dir
+		// 	);
+		// 	if (existsSync(dirPath)) {
+		// 		console.log("  ✅", dir);
+		// 	} else {
+		// 		console.log("  ⚠️", dir, "(not found)");
+		// 	}
+		// }
+		// console.log("");
 
 		// Bundle the services code
 		console.log("📦 Running esbuild...");

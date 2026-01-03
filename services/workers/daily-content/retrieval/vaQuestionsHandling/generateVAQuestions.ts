@@ -152,7 +152,7 @@ export async function generateVAQuestions(params: GenerateVAQuestionsParams) {
         const finalQuestions = allQuestions.map(q => ({
             ...q,
             id: generateUUID(),
-            passage_id: generateUUID(), // New UUID to avoid linking to any real passage
+            passage_id: "", // New UUID to avoid linking to any real passage
             created_at: now,
             updated_at: now
         }));
@@ -269,7 +269,7 @@ Return STRICT JSON only in this format:
   "questions": [
     {
       "id": "<UUID>",
-      "passage_id": "<UUID>",
+      "passage_id": "",
       "question_text": "The passage given below is followed by four alternate summaries. Choose the option that best captures the essence of the passage. \\n\\n<paragraph derived from semantic ideas>",
       "question_type": "para_summary",
       "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
@@ -433,7 +433,7 @@ Return STRICT JSON only in this format:
   "questions": [
     {
       "id": "<UUID>",
-      "passage_id": "<UUID>",
+      "passage_id": "",
       "question_text": "There is a sentence that is missing in the paragraph below. Look at the paragraph and decide in which blank (option 1, 2, 3, or 4) the following sentence would best fit.\\nSentence: <sentence>\\nParagraph: <paragraph with blanks ___(1)___, ___(2)___, ___(3)___, ___(4)___>",
       "question_type": "para_completion",
       "options": { "A": "Option 1", "B": "Option 2", "C": "Option 3", "D": "Option 4" },
@@ -588,7 +588,7 @@ Return STRICT JSON only in this format:
   "questions": [
     {
       "id": "<UUID>",
-      "passage_id": "<UUID>",
+      "passage_id": "",
       "question_text": "The four sentences (labelled 1, 2, 3 and 4) below, when properly sequenced would yield a coherent paragraph. Decide on the proper sequencing of the order of the sentences and key in the sequence of the four numbers as your answer: ",
       "question_type": "para_jumble",
       "options": { "A": "", "B": "", "C": "", "D": "" },
@@ -597,7 +597,7 @@ Return STRICT JSON only in this format:
         "2": "<sentence for position 2>",
         "3": "<sentence for position 3>",
         "4": "<sentence for position 4>",
-        "5": ""
+        "5": "no 5th sentence for para jumble"
       },
       "correct_answer": { "answer": "" },
       "rationale": "",
@@ -759,7 +759,7 @@ Return STRICT JSON only in this format:
   "questions": [
     {
       "id": "<UUID>",
-      "passage_id": "<UUID>",
+      "passage_id": "",
       "question_text": "Five jumbled up sentences, related to a topic, are given below. Four of them can be put together to form a coherent paragraph. Identify the odd one out and key in the number of the sentence as your answer: ",
       "question_type": "odd_one_out",
       "options": { "A": "", "B": "", "C": "", "D": "" },

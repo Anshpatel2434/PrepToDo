@@ -4,7 +4,6 @@ import { fetchPassagesData } from "./retrieval/passageHandling/fetchPassagesData
 import { fetchQuestionsData } from "./retrieval/fetchQuestionsData";
 import { generateEmbedding } from "./retrieval/generateEmbedding";
 import { generatePassage } from "./retrieval/passageHandling/generatePassage";
-import { saveArticleToDB } from "./retrieval/articleHandling/saveArticle";
 import { searchPassageAndQuestionEmbeddings } from "./retrieval/searchPassageAndQuestionEmbeddings";
 import { getValidArticleWithText } from "./retrieval/articleHandling/getValidArticleWithText";
 import { finalizeCATPassage } from "./retrieval/passageHandling/finalizeCATPassage";
@@ -20,7 +19,8 @@ import { generateVAQuestions } from "./retrieval/vaQuestionsHandling/generateVAQ
 import { selectVAAnswers } from "./retrieval/vaQuestionsHandling/selectVAAnswers";
 import { tagVAQuestionsWithNodes } from "./retrieval/vaQuestionsHandling/tagVAQuestionsWithNodes";
 import { generateVARationalesWithEdges } from "./retrieval/vaQuestionsHandling/generateVARationales";
-import { formatOutputForDB, generateOutputReport, validateOutputForDB } from "./retrieval/vaQuestionsHandling/formatOutputForDB";
+import { formatOutputForDB, generateOutputReport } from "./retrieval/vaQuestionsHandling/formatOutputForDB";
+import { saveAllDataToDB } from "./retrieval/saveAllDataToDB";
 
 /**
  * Main workflow for generating daily CAT practice content.
@@ -34,11 +34,9 @@ export async function runDailyContent() {
         console.log("\n🎯 [Step 1/15] Selecting genre");
         const genre = await fetchGenreForToday();
 
-        console.log("\n📄 [Step 2/15] Fetching valid article with text");
+        console.log("\n📄 [Step 2,3/15] Fetching valid article with text and saving to database");
         const { articleMeta, articleText } = await getValidArticleWithText(genre.name);
 
-        console.log("\n💾 [Step 3/15] Saving article to database");
-        await saveArticleToDB(articleMeta);
 
         console.log("\n🧠 [Step 4/15] Extracting semantic ideas and persona");
         const { semantic_ideas, authorial_persona } = await extractSemanticIdeasAndPersona(articleText, genre.name);
@@ -114,11 +112,8 @@ export async function runDailyContent() {
         const vaTagged = await tagVAQuestionsWithNodes({ questions: vaQuestionsWithAnswers, nodes });
 
         const rcContext = await getQuestionGraphContext(rcTagged, nodes);
-        console.log("--------------this is the rcContext-------------")
-        console.log(rcContext)
         const vaContext = await getQuestionGraphContext(vaTagged, nodes);
         console.log("--------------this is the vaContext-------------")
-        console.log(vaContext)
 
         console.log("\n🧾 [Step 13/15] Generating rationales for RC");
         const rcQuestionsFinal = await generateRationalesWithEdges({
@@ -136,11 +131,12 @@ export async function runDailyContent() {
         });
 
         // --- PHASE 6: FINALIZATION ---
-        console.log("\n📋 [Step 15/15] Formatting output for database upload");
+        console.log("\n📋 [Step 15/16] Formatting output for database upload");
         const output = formatOutputForDB({
             passageData: finalizedData["passageData"],
             rcQuestions: rcQuestionsFinal,
             vaQuestions: vaQuestionsFinal,
+            genreData: genre
         });
 
         // Validate output
@@ -148,20 +144,28 @@ export async function runDailyContent() {
         //     throw new Error("Output validation failed");
         // }
 
+        // --- PHASE 6: FINALIZATION ---
+        console.log("\n📋 [Step 16/16] Uploading to database");
+        await saveAllDataToDB({
+            examData: output.exam,
+            passageData: output.passage,
+            questionsData : output.questions
+        });
+
         // Generate and print report
         const report = generateOutputReport(output);
         console.log(report);
 
-        console.log("\nBreakdown:");
+        // console.log("\nBreakdown:");
 
-        // Save to file for review
-        const fs = require('fs');
-        const outputPath = './justReadingOutput.json';
-        fs.writeFileSync(outputPath, JSON.stringify(output, null, 2));
-        console.log(`\n💾 Output saved to: ${outputPath}`);
+        // // Save to file for review
+        // const fs = require('fs');
+        // const outputPath = './justReadingOutput.json';
+        // fs.writeFileSync(outputPath, JSON.stringify(output, null, 2));
+        // console.log(`\n💾 Output saved to: ${outputPath}`);
 
-        console.log("\n✅ [COMPLETE] Daily Content Generation finished successfully");
-        printSummaryReport(output);
+        // console.log("\n✅ [COMPLETE] Daily Content Generation finished successfully");
+        // printSummaryReport(output);
 
         return output;
 

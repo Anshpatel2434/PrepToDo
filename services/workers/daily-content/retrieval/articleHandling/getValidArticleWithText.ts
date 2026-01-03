@@ -35,7 +35,7 @@ export async function getValidArticleWithText(
             const articleText = await fetchArticleText(currentUrl);
 
             // 3. Persist metadata ONLY after successful fetch
-            await saveArticleToDB(articleMeta);
+            await saveArticleToDB(articleMeta, genre);
 
             console.log("✅ [Article Fetch] Success");
 
