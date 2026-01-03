@@ -133,24 +133,18 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
         [allAttempts, questions.length]
     );
 
-    const solutionStats = React.useMemo(() => {
-        let correct = 0;
-        let incorrect = 0;
-        let unattempted = 0;
-        let marked = 0;
+    const gridRows = React.useMemo(
+        () => Math.max(1, Math.ceil(questions.length / 5)),
+        [questions.length]
+    );
 
-        for (const q of questions) {
-            const a = allAttempts[q.id];
-            if (a?.marked_for_review) marked++;
-
-            const status = getSolutionStatus(q, a);
-            if (status === "correct") correct++;
-            else if (status === "incorrect") incorrect++;
-            else unattempted++;
-        }
-
-        return { correct, incorrect, unattempted, marked };
-    }, [allAttempts, getSolutionStatus, questions]);
+    const gridSizing = React.useMemo(() => {
+        const buttonPx = 40; // 2.5rem
+        const gapPx = 8; // gap-2
+        const verticalPaddingPx = 32; // p-4 top + bottom
+        const heightPx = gridRows * buttonPx + Math.max(0, gridRows - 1) * gapPx;
+        return { buttonPx, gapPx, verticalPaddingPx, heightPx };
+    }, [gridRows]);
 
     const timeStats = React.useMemo(() => {
         const times = Object.values(allAttempts)
@@ -169,17 +163,8 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
     const currentUserAnswer = getUserAnswer(currentAttempt);
     const currentCorrectAnswer = currentQuestion ? getCorrectAnswer(currentQuestion) : "";
 
-    const isCurrentMarked = Boolean(currentAttempt?.marked_for_review);
     const isCurrentAnswered =
         currentUserAnswer != null && String(currentUserAnswer).length > 0;
-
-    const currentIsCorrect =
-        viewMode === "solution" &&
-        currentQuestion &&
-        isCurrentAnswered &&
-        (typeof currentAttempt?.is_correct === "boolean"
-            ? currentAttempt.is_correct
-            : String(currentUserAnswer) === currentCorrectAnswer);
 
     return (
         <motion.div
@@ -269,71 +254,40 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
                         </div>
                     </>
                 ) : (
-                    <>
-                        <div className="flex items-center justify-between text-xs">
-                            <span
-                                className={
-                                    isDark
-                                        ? "text-text-secondary-dark"
-                                        : "text-text-secondary-light"
-                                }
-                            >
-                                Correct
-                            </span>
-                            <span className="font-medium text-success">
-                                {solutionStats.correct}
-                            </span>
+                    <div
+                        className={`space-y-2 text-xs ${
+                            isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                        }`}
+                    >
+                        <div className="flex items-center gap-2">
+                            <span className="inline-block w-3 h-3 rounded-full bg-success" />
+                            <span>Correct</span>
                         </div>
-                        <div className="flex items-center justify-between text-xs">
-                            <span
-                                className={
-                                    isDark
-                                        ? "text-text-secondary-dark"
-                                        : "text-text-secondary-light"
-                                }
-                            >
-                                Incorrect
-                            </span>
-                            <span className="font-medium text-error">
-                                {solutionStats.incorrect}
-                            </span>
+                        <div className="flex items-center gap-2">
+                            <span className="inline-block w-3 h-3 rounded-full bg-error" />
+                            <span>Incorrect</span>
                         </div>
-                        <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
                             <span
-                                className={
-                                    isDark
-                                        ? "text-text-secondary-dark"
-                                        : "text-text-secondary-light"
-                                }
-                            >
-                                Unattempted
-                            </span>
-                            <span
-                                className={`font-medium ${
-                                    isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                                className={`inline-block w-3 h-3 rounded-full ${
+                                    isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"
                                 }`}
-                            >
-                                {solutionStats.unattempted}
-                            </span>
+                            />
+                            <span>Unattempted</span>
                         </div>
-                        <div className="flex items-center justify-between text-xs">
-                            <span
-                                className={
-                                    isDark
-                                        ? "text-text-secondary-dark"
-                                        : "text-text-secondary-light"
-                                }
-                            >
-                                Marked
-                            </span>
-                            <span className="font-medium text-info">{solutionStats.marked}</span>
+                        <div className="flex items-center gap-2">
+                            <MdFlag className="opacity-80" size={14} />
+                            <span>Marked for review</span>
                         </div>
-                    </>
+                    </div>
                 )}
             </div>
 
             {/* Grid */}
-            <div className="flex-1 overflow-y-auto p-4">
+            <div
+                className="p-4 shrink-0"
+                style={{ height: gridSizing.heightPx + gridSizing.verticalPaddingPx }}
+            >
                 <div className="grid grid-cols-5 gap-2">
                     {questions.map((q, i) => {
                         const attempt = getAttemptForQuestion(q.id);
@@ -351,13 +305,13 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
                                 key={q.id}
                                 onClick={() => dispatch(setCurrentQuestionIndex(i))}
                                 className={`
-                                    relative aspect-square flex items-center justify-center rounded-full font-medium text-sm border-2
+                                    relative w-10 h-10 flex items-center justify-center rounded-full font-medium text-sm border-2
                                     ${getStatusColor(status)}
                                     ${
                                         currentIndex === i
                                             ? isDark
-                                                ? "ring-1 ring-brand-primary-dark/35 shadow-sm"
-                                                : "ring-1 ring-brand-primary-light/30 shadow-sm"
+                                                ? "ring-2 ring-brand-primary-dark/60 shadow-md"
+                                                : "ring-2 ring-brand-primary-light/60 shadow-md"
                                             : ""
                                     }
                                 `}
@@ -372,8 +326,8 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
                                     <span
                                         className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center shadow border ${
                                             isDark
-                                                ? "bg-bg-primary-dark text-success border-success/40"
-                                                : "bg-bg-primary-light text-success border-success/30"
+                                                ? "bg-bg-primary-dark text-info border-info/40"
+                                                : "bg-bg-primary-light text-info border-info/30"
                                         }`}
                                         title="Marked + answered"
                                     >
@@ -400,133 +354,92 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
                 </div>
             </div>
 
-            {/* Info */}
-            <div
-                className={`shrink-0 p-4 border-t space-y-2 ${
-                    isDark ? "border-border-dark" : "border-border-light"
-                }`}
-            >
+            {viewMode === "solution" && (
                 <div
-                    className={`text-xs font-semibold uppercase tracking-wide ${
-                        isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                    className={`shrink-0 p-4 border-t space-y-2 ${
+                        isDark ? "border-border-dark" : "border-border-light"
                     }`}
                 >
-                    Question Info
-                </div>
-
-                {currentQuestion ? (
                     <div
-                        className={`text-xs space-y-1 ${
-                            isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                        className={`text-xs font-semibold uppercase tracking-wide ${
+                            isDark ? "text-text-primary-dark" : "text-text-primary-light"
                         }`}
                     >
-                        <div className="flex items-center justify-between gap-3">
-                            <span className="opacity-70">Current</span>
-                            <span className="font-medium">#{currentIndex + 1}</span>
-                        </div>
-                        <div className="flex items-center justify-between gap-3">
-                            <span className="opacity-70">Type</span>
-                            <span className="font-medium">
-                                {currentQuestion.question_type.replace(/_/g, " ")}
-                            </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-3">
-                            <span className="opacity-70">Difficulty</span>
-                            <span className="font-medium">
-                                {currentQuestion.difficulty || "-"}
-                            </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-3">
-                            <span className="opacity-70">Marked</span>
-                            <span className="font-medium">{isCurrentMarked ? "Yes" : "No"}</span>
-                        </div>
-                        <div className="flex items-center justify-between gap-3">
-                            <span className="opacity-70">Your time</span>
-                            <span className="font-medium">
-                                {formatTime(currentAttempt?.time_spent_seconds)}
-                            </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-3">
-                            <span className="opacity-70">Avg time</span>
-                            <span className="font-medium">
-                                {timeStats.attemptedCount > 0
-                                    ? formatTime(timeStats.avgSeconds)
-                                    : "-"}
-                            </span>
-                        </div>
-                        {typeof currentAttempt?.confidence_level === "number" && (
+                        Attempt Info
+                    </div>
+
+                    {currentQuestion ? (
+                        <div
+                            className={`text-xs space-y-1 ${
+                                isDark
+                                    ? "text-text-secondary-dark"
+                                    : "text-text-secondary-light"
+                            }`}
+                        >
                             <div className="flex items-center justify-between gap-3">
-                                <span className="opacity-70">Confidence</span>
-                                <span className="font-medium">{currentAttempt.confidence_level}</span>
+                                <span className="opacity-70">Type</span>
+                                <span className="font-medium">
+                                    {currentQuestion.question_type.replace(/_/g, " ")}
+                                </span>
                             </div>
-                        )}
-
-                        {viewMode === "solution" && (
-                            <>
+                            <div className="flex items-center justify-between gap-3">
+                                <span className="opacity-70">Difficulty</span>
+                                <span className="font-medium">
+                                    {currentQuestion.difficulty || "-"}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                                <span className="opacity-70">Your answer</span>
+                                <span className="font-medium">
+                                    {isCurrentAnswered ? String(currentUserAnswer) : "-"}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                                <span className="opacity-70">Correct answer</span>
+                                <span className="font-medium text-success">
+                                    {currentCorrectAnswer || "-"}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                                <span className="opacity-70">Your time</span>
+                                <span className="font-medium">
+                                    {formatTime(currentAttempt?.time_spent_seconds)}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                                <span className="opacity-70">Avg time</span>
+                                <span className="font-medium">
+                                    {timeStats.attemptedCount > 0
+                                        ? formatTime(timeStats.avgSeconds)
+                                        : "-"}
+                                </span>
+                            </div>
+                            {typeof currentAttempt?.confidence_level === "number" && (
                                 <div className="flex items-center justify-between gap-3">
-                                    <span className="opacity-70">Your answer</span>
+                                    <span className="opacity-70">Confidence</span>
                                     <span className="font-medium">
-                                        {isCurrentAnswered ? String(currentUserAnswer) : "-"}
+                                        {currentAttempt.confidence_level}
                                     </span>
                                 </div>
-                                <div className="flex items-center justify-between gap-3">
-                                    <span className="opacity-70">Result</span>
-                                    <span
-                                        className={`font-medium ${
-                                            isCurrentAnswered
-                                                ? currentIsCorrect
-                                                    ? "text-success"
-                                                    : "text-error"
-                                                : isDark
-                                                    ? "text-text-muted-dark"
-                                                    : "text-text-muted-light"
-                                        }`}
-                                    >
-                                        {isCurrentAnswered
-                                            ? currentIsCorrect
-                                                ? "Correct"
-                                                : "Incorrect"
-                                            : "Unattempted"}
-                                    </span>
-                                </div>
-                            </>
-                        )}
-
-                        {Array.isArray(currentQuestion.tags) && currentQuestion.tags.length > 0 && (
-                            <div className="pt-1">
-                                <div className="opacity-70 mb-1">Tags</div>
-                                <div className="flex flex-wrap gap-1">
-                                    {currentQuestion.tags.slice(0, 6).map((t) => (
-                                        <span
-                                            key={t}
-                                            className={
-                                                isDark
-                                                    ? "px-2 py-0.5 rounded-full bg-bg-tertiary-dark text-text-secondary-dark"
-                                                    : "px-2 py-0.5 rounded-full bg-bg-tertiary-light text-text-secondary-light"
-                                            }
-                                        >
-                                            {t}
-                                        </span>
-                                    ))}
-                                </div>
+                            )}
+                            <div className="pt-2 flex items-center justify-between gap-3">
+                                <span className="opacity-70">Session time</span>
+                                <span className="font-medium">
+                                    {formatTime(elapsedTimeSeconds)}
+                                </span>
                             </div>
-                        )}
-
-                        <div className="pt-2 flex items-center justify-between gap-3">
-                            <span className="opacity-70">Session time</span>
-                            <span className="font-medium">{formatTime(elapsedTimeSeconds)}</span>
                         </div>
-                    </div>
-                ) : (
-                    <div
-                        className={`text-xs ${
-                            isDark ? "text-text-muted-dark" : "text-text-muted-light"
-                        }`}
-                    >
-                        No question selected.
-                    </div>
-                )}
-            </div>
+                    ) : (
+                        <div
+                            className={`text-xs ${
+                                isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                            }`}
+                        >
+                            No question selected.
+                        </div>
+                    )}
+                </div>
+            )}
         </motion.div>
     );
 };

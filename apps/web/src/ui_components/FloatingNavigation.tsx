@@ -26,6 +26,8 @@ interface NavigationItem {
     id: string;
     label: string;
     icon: React.ReactNode;
+    iconColorLight: string;
+    iconColorDark: string;
     path: string;
     description: string;
 }
@@ -35,6 +37,8 @@ const navigationItems: NavigationItem[] = [
         id: "home",
         label: "Home",
         icon: <MdHome className="text-lg" />,
+        iconColorLight: "text-blue-600",
+        iconColorDark: "text-blue-400",
         path: "/",
         description: "Go to homepage",
     },
@@ -42,6 +46,8 @@ const navigationItems: NavigationItem[] = [
         id: "daily",
         label: "Daily",
         icon: <MdToday className="text-lg" />,
+        iconColorLight: "text-amber-600",
+        iconColorDark: "text-amber-400",
         path: "/daily",
         description: "Daily RC & VA practice",
     },
@@ -49,6 +55,8 @@ const navigationItems: NavigationItem[] = [
         id: "features",
         label: "Features",
         icon: <MdGridView className="text-lg" />,
+        iconColorLight: "text-violet-600",
+        iconColorDark: "text-violet-400",
         path: "/features",
         description: "Explore platform features",
     },
@@ -56,6 +64,8 @@ const navigationItems: NavigationItem[] = [
         id: "practice",
         label: "Practice",
         icon: <MdSchool className="text-lg" />,
+        iconColorLight: "text-emerald-600",
+        iconColorDark: "text-emerald-400",
         path: "/practice",
         description: "Start practicing",
     },
@@ -63,6 +73,8 @@ const navigationItems: NavigationItem[] = [
         id: "dashboard",
         label: "Dashboard",
         icon: <MdInsertChart className="text-lg" />,
+        iconColorLight: "text-cyan-600",
+        iconColorDark: "text-cyan-400",
         path: "/dashboard",
         description: "Your study overview",
     },
@@ -70,6 +82,8 @@ const navigationItems: NavigationItem[] = [
         id: "about",
         label: "About",
         icon: <MdInfo className="text-lg" />,
+        iconColorLight: "text-slate-600",
+        iconColorDark: "text-slate-300",
         path: "/about",
         description: "Learn about us",
     },
@@ -77,6 +91,8 @@ const navigationItems: NavigationItem[] = [
         id: "contact",
         label: "Contact",
         icon: <MdMailOutline className="text-lg" />,
+        iconColorLight: "text-rose-600",
+        iconColorDark: "text-rose-400",
         path: "/contact",
         description: "Get in touch",
     },
@@ -224,7 +240,7 @@ export const FloatingNavigation: React.FC = () => {
                 initial="hidden"
                 animate={isOpen ? "visible" : "hidden"}
             >
-                <div className="p-6 h-full flex flex-col">
+                <div className="p-6 h-full flex flex-col overflow-y-auto">
                     {/* Logo Section */}
                     <div className="mb-8">
                         <div className="flex items-center gap-3">
@@ -404,14 +420,20 @@ export const FloatingNavigation: React.FC = () => {
                                             w-10 h-10 rounded-xl flex items-center justify-center
                                             ${
                                                                                             isDark
-                                                                                                ? "bg-bg-tertiary-dark/50 text-brand-primary-dark group-hover:bg-bg-tertiary-dark/80"
-                                                                                                : "bg-bg-tertiary-light/50 text-brand-primary-light group-hover:bg-bg-tertiary-light/80"
+                                                                                                ? "bg-bg-tertiary-dark/50 group-hover:bg-bg-tertiary-dark/80"
+                                                                                                : "bg-bg-tertiary-light/50 group-hover:bg-bg-tertiary-light/80"
                                                                                         }
                                             
                                         `}
                                         whileHover={{ scale: 1.05 }}
                                     >
-                                        <div className="text-lg">{item.icon}</div>
+                                        <div
+                                            className={`text-lg ${
+                                                isDark ? item.iconColorDark : item.iconColorLight
+                                            }`}
+                                        >
+                                            {item.icon}
+                                        </div>
                                     </motion.div>
                                     <div className="text-left">
                                         <div className="font-medium">{item.label}</div>
@@ -534,11 +556,7 @@ export const FloatingNavigation: React.FC = () => {
                             >
                                 <motion.div
                                     className={`
-                                        ${
-                                                                                    isDark
-                                                                                        ? "text-brand-primary-dark"
-                                                                                        : "text-brand-primary-light"
-                                                                                }
+                                        ${isDark ? item.iconColorDark : item.iconColorLight}
                                         group-hover:scale-110
                                     `}
                                 >
