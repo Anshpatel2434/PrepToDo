@@ -66,7 +66,7 @@ export const dailyPracticeApi = createApi({
                     const { data: examInfo, error: examInfoError } = await supabase
                         .from("exam_papers")
                         .select("*")
-                        .eq("name", "Daily Practice")
+                        .eq("year", 2026)
                         .limit(1);
 
                     if (examInfoError) {

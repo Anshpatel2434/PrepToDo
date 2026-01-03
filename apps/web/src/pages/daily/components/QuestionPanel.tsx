@@ -73,10 +73,11 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
     const getSentences = (q: Question): Option[] => {
         if (!q.jumbled_sentences || typeof q.jumbled_sentences !== "object")
             return [];
-        return Object.entries(q.jumbled_sentences).map(([k, v]) => ({
+        const sentences = Object.entries(q.jumbled_sentences).map(([k, v]) => ({
             id: k,
             text: typeof v === "string" ? v : String(v),
-        }));
+        }))
+        return q.question_type === "para_jumble" ? sentences.slice(0,4) : sentences;
     };
 
     const getOptionClass = (option: Option) => {
