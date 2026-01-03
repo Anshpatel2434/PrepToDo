@@ -63,12 +63,12 @@ const JumbledSentencesSchema = z.object({
     2: z.string(),
     3: z.string(),
     4: z.string(),
-    5: z.string().optional(),
+    5: z.string(),
 });
 
 export const QuestionSchema = z.object({
     id: UUIDSchema,
-    passage_id: UUIDSchema.nullable(),
+    passage_id: UUIDSchema,
     question_text: z.string(),
     question_type: z.enum([
         "rc_question",
@@ -84,9 +84,11 @@ export const QuestionSchema = z.object({
         "vocab_in_context",
         "odd_one_out",
     ]),
-    options: OptionsSchema.nullable(),
-    jumbled_sentences: JumbledSentencesSchema.nullable(),
-    correct_answer: z.string(), 
+    options: OptionsSchema,
+    jumbled_sentences: JumbledSentencesSchema,
+    correct_answer: z.object({
+        answer: z.string()
+    }), //{"answer" : "answer"}
     rationale: z.string(),
     difficulty: z.enum(["easy", "medium", "hard", "expert"]),
     tags: z.array(z.string()), // Use empty array [] instead of nullable

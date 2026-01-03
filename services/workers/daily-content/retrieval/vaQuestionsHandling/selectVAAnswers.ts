@@ -16,7 +16,9 @@ const AnswerSelectionSchema = z.object({
         z.object({
             id: z.string(), // Removed .uuid() to be more flexible with string matching
             type: z.string(),
-            correct_answer: z.string()
+            correct_answer: z.object({
+                answer: z.string()
+            })
         })
     ),
 });
@@ -72,7 +74,7 @@ Return STRICT JSON only.
     {
       "id": "EXACT_ID_FROM_INPUT",
       "type": "question_type",
-      "correct_answer": "formatted_answer"
+      "correct_answer": { "answer": "formatted_answer" }
     }
   ]
 }
@@ -114,7 +116,9 @@ Return STRICT JSON only.
 
             return {
                 ...originalQ,
-                correct_answer: answerData.correct_answer,
+                correct_answer: {
+                    answer: answerData.correct_answer.answer
+                },
             };
         });
 

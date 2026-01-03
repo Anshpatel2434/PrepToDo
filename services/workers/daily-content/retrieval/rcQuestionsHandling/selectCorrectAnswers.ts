@@ -24,7 +24,9 @@ const MODEL = "gpt-4o-mini";
 
 const CorrectAnswerSchema = z.object({
     id: z.string().uuid(),
-    correct_answer: z.enum(["A", "B", "C", "D"]),
+    correct_answer: z.object({
+        answer: z.enum(["A", "B", "C", "D"]),
+    }),
 });
 
 const ResponseSchema = z.object({
@@ -87,7 +89,7 @@ Return STRICT JSON array with objects:
 
 {
   "id": "<question_id>",
-  "correct_answer": "A|B|C|D"
+  "correct_answer": { "answer": "A|B|C|D" }
 }
 
 `;

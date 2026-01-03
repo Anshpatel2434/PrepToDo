@@ -246,12 +246,12 @@ Return STRICT JSON only in this format:
   "questions": [
     {
       "id": "<UUID>",
-      "passage_id": null,
+      "passage_id": "<UUID>",
       "question_text": "<text>",
       "question_type": "rc_question",
       "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
-      "jumbled_sentences": null,
-      "correct_answer": "",
+      "jumbled_sentences": { "1": "", "2": "", "3": "", "4": "", "5": "" },
+      "correct_answer": { "answer": "" },
       "rationale": "",
       "difficulty": "easy|medium|hard",
       "tags": [],
@@ -262,7 +262,7 @@ Return STRICT JSON only in this format:
 }
 
 IMPORTANT:
-- Leave correct_answer empty
+- Leave correct_answer.answer empty
 - Leave rationale empty
 - Generate EXACTLY ${questionCount} questions
 - No additional text or commentary

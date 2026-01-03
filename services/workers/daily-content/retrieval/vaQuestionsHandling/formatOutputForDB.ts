@@ -71,7 +71,7 @@ export function formatOutputForDB(params: FormatOutputParams): {
         // Add VA questions (no passage, different question types)
         const vaQuestionsNoPassage = vaQuestions.map(q => ({
             ...q,
-            passage_id: null,
+            passage_id: generateUUID(), // Assign unique UUID to satisfy non-nullable schema
         }));
         allQuestions.push(...vaQuestionsNoPassage);
 

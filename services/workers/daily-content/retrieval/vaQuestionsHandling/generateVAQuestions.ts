@@ -148,11 +148,11 @@ export async function generateVAQuestions(params: GenerateVAQuestionsParams) {
 
         console.log(`✅ [VA Questions] Total VA questions generated: ${allQuestions.length}`);
         
-        // Final pass to ensure all questions have fresh UUIDs and null passage_ids
+        // Final pass to ensure all questions have fresh UUIDs
         const finalQuestions = allQuestions.map(q => ({
             ...q,
             id: generateUUID(),
-            passage_id: null,
+            passage_id: generateUUID(), // New UUID to avoid linking to any real passage
             created_at: now,
             updated_at: now
         }));
@@ -208,7 +208,7 @@ B) ${q.options["B"]}
 C) ${q.options["C"]}
 D) ${q.options["D"]}
 
-Correct: ${q.correct_answer}
+Correct: ${q.correct_answer.answer}
 
 Rationale: ${q.rationale}
 `).join("\n")}
@@ -269,12 +269,12 @@ Return STRICT JSON only in this format:
   "questions": [
     {
       "id": "<UUID>",
-      "passage_id": null,
+      "passage_id": "<UUID>",
       "question_text": "The passage given below is followed by four alternate summaries. Choose the option that best captures the essence of the passage. \\n\\n<paragraph derived from semantic ideas>",
       "question_type": "para_summary",
       "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
-      "jumbled_sentences": null,
-      "correct_answer": "",
+      "jumbled_sentences": { "1": "", "2": "", "3": "", "4": "", "5": "" },
+      "correct_answer": { "answer": "" },
       "rationale": "",
       "difficulty": "easy|medium|hard",
       "tags": [],
@@ -285,7 +285,7 @@ Return STRICT JSON only in this format:
 }
 
 IMPORTANT:
-- Leave correct_answer empty
+- Leave correct_answer.answer empty
 - Leave rationale empty
 - Generate EXACTLY 1 question
 - No additional text or commentary
@@ -372,7 +372,7 @@ B) ${q.options["B"]}
 C) ${q.options["C"]}
 D) ${q.options["D"]}
 
-Correct: ${q.correct_answer}
+Correct: ${q.correct_answer.answer}
 
 Rationale: ${q.rationale}
 `).join("\n")}
@@ -433,12 +433,12 @@ Return STRICT JSON only in this format:
   "questions": [
     {
       "id": "<UUID>",
-      "passage_id": null,
+      "passage_id": "<UUID>",
       "question_text": "There is a sentence that is missing in the paragraph below. Look at the paragraph and decide in which blank (option 1, 2, 3, or 4) the following sentence would best fit.\\nSentence: <sentence>\\nParagraph: <paragraph with blanks ___(1)___, ___(2)___, ___(3)___, ___(4)___>",
       "question_type": "para_completion",
       "options": { "A": "Option 1", "B": "Option 2", "C": "Option 3", "D": "Option 4" },
-      "jumbled_sentences": null,
-      "correct_answer": "",
+      "jumbled_sentences": { "1": "", "2": "", "3": "", "4": "", "5": "" },
+      "correct_answer": { "answer": "" },
       "rationale": "",
       "difficulty": "easy|medium|hard",
       "tags": [],
@@ -449,7 +449,7 @@ Return STRICT JSON only in this format:
 }
 
 IMPORTANT:
-- Leave correct_answer empty
+- Leave correct_answer.answer empty
 - Leave rationale empty
 - Generate EXACTLY 1 question
 - No additional text or commentary
@@ -531,7 +531,7 @@ Q${j + 1}: ${q.question_text}
 Jumbled Sentences:
 ${JSON.stringify(q.jumbled_sentences, null, 2)}
 
-Correct: ${q.correct_answer}
+Correct: ${q.correct_answer.answer}
 
 Rationale: ${q.rationale}
 `).join("\n")}
@@ -588,17 +588,18 @@ Return STRICT JSON only in this format:
   "questions": [
     {
       "id": "<UUID>",
-      "passage_id": null,
+      "passage_id": "<UUID>",
       "question_text": "The four sentences (labelled 1, 2, 3 and 4) below, when properly sequenced would yield a coherent paragraph. Decide on the proper sequencing of the order of the sentences and key in the sequence of the four numbers as your answer: ",
       "question_type": "para_jumble",
-      "options": null,
+      "options": { "A": "", "B": "", "C": "", "D": "" },
       "jumbled_sentences": {
         "1": "<sentence for position 1>",
         "2": "<sentence for position 2>",
         "3": "<sentence for position 3>",
-        "4": "<sentence for position 4>"
+        "4": "<sentence for position 4>",
+        "5": ""
       },
-      "correct_answer": "",
+      "correct_answer": { "answer": "" },
       "rationale": "",
       "difficulty": "easy|medium|hard",
       "tags": [],
@@ -609,9 +610,9 @@ Return STRICT JSON only in this format:
 }
 
 IMPORTANT:
-- Fill jumbled_sentences with the 4 sentences in ANY order
-- Leave options as null
-- Leave correct_answer empty
+- Fill jumbled_sentences with the 4 sentences in keys 1-4, leave key 5 as empty string
+- Leave options as empty strings for keys A-D
+- Leave correct_answer.answer empty
 - Leave rationale empty
 - Generate EXACTLY 1 question
 - No additional text or commentary
@@ -693,7 +694,7 @@ Q${j + 1}: ${q.question_text}
 Jumbled Sentences:
 ${JSON.stringify(q.jumbled_sentences, null, 2)}
 
-Correct: ${q.correct_answer}
+Correct: ${q.correct_answer.answer}
 
 Rationale: ${q.rationale}
 `).join("\n")}
@@ -758,10 +759,10 @@ Return STRICT JSON only in this format:
   "questions": [
     {
       "id": "<UUID>",
-      "passage_id": null,
+      "passage_id": "<UUID>",
       "question_text": "Five jumbled up sentences, related to a topic, are given below. Four of them can be put together to form a coherent paragraph. Identify the odd one out and key in the number of the sentence as your answer: ",
       "question_type": "odd_one_out",
-      "options": null,
+      "options": { "A": "", "B": "", "C": "", "D": "" },
       "jumbled_sentences": {
         "1": "<sentence 1>",
         "2": "<sentence 2>",
@@ -769,7 +770,7 @@ Return STRICT JSON only in this format:
         "4": "<sentence 4>",
         "5": "<sentence 5>"
       },
-      "correct_answer": "",
+      "correct_answer": { "answer": "" },
       "rationale": "",
       "difficulty": "easy|medium|hard",
       "tags": [],
@@ -781,8 +782,8 @@ Return STRICT JSON only in this format:
 
 IMPORTANT:
 - Fill jumbled_sentences with 5 sentences in ANY order (4 that form a paragraph + 1 odd one out)
-- options should be null
-- Leave correct_answer empty
+- Leave options as empty strings for keys A-D
+- Leave correct_answer.answer empty
 - Leave rationale empty
 - Generate EXACTLY 1 question
 - No additional text or commentary
