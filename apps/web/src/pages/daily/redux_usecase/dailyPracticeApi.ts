@@ -62,12 +62,13 @@ export const dailyPracticeApi = createApi({
 
                     console.log('[DailyPracticeApi] User authenticated:', user.id);
 
-                    // Step 2: Get the daily practice exam details from the table
+                    // Step 2: Get the latest daily practice exam for 2026
                     const { data: examInfo, error: examInfoError } = await supabase
                         .from("exam_papers")
                         .select("*")
                         .eq("year", 2026)
-                        .limit(1);
+                        .order("created_at", { ascending: false }) // Sorts by newest first
+                        .limit(1)
 
                     if (examInfoError) {
                         console.log('[DailyPracticeApi] Error while fetching daily exam details:', examInfoError);

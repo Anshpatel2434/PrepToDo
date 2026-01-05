@@ -1,14 +1,6 @@
 // formatOutputForDB.ts
 import { Exam, Passage, Question } from "../../schemas/types";
-
-// Simple UUID generator to avoid additional dependencies
-function generateUUID(): string {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-}
+import { v4 as uuidv4 } from 'uuid';
 
 interface FormatOutputParams {
     passageData: Passage;
@@ -34,7 +26,7 @@ export function formatOutputForDB(params: FormatOutputParams): {
 
         // 1. Create Exam data
         const exam: Exam = {
-            id: generateUUID(),
+            id: uuidv4(),
             name: "Daily Practice",
             year: currentYear,
             exam_type: "CAT",
@@ -45,7 +37,7 @@ export function formatOutputForDB(params: FormatOutputParams): {
 
         // 2. Create Passage data
         const passage: Passage = {
-            id: passageData.id,
+            id: uuidv4(),
             title: passageData.title,
             content: passageData.content,
             word_count: passageData.word_count,
@@ -66,8 +58,8 @@ export function formatOutputForDB(params: FormatOutputParams): {
         // Add RC questions (tag to passage)
         const rcQuestionsWithPassage = rcQuestions.map(q => ({
             ...q,
-            id: generateUUID(),
-            passage_id: passageData.id,
+            id: uuidv4(),
+            passage_id: passage.id,
             paper_id: exam.id
         }));
         allQuestions.push(...rcQuestionsWithPassage);
@@ -75,7 +67,7 @@ export function formatOutputForDB(params: FormatOutputParams): {
         // Add VA questions (no passage, different question types)
         const vaQuestionsNoPassage = vaQuestions.map(q => ({
             ...q,
-            id: generateUUID(),
+            id: uuidv4(),
             passage_id: null, 
             paper_id: exam.id
         }));

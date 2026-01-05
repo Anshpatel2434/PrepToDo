@@ -95,19 +95,16 @@ Study it to match the usual level of precision, tone, and concision.
 
 ## REFERENCE MATERIAL (Observe Patterns)
 
-PASSAGE 1 + QUESTIONS + RATIONALES:
-${referenceData[0].passage.content}
-
 Questions with Rationales (similar question type: ${q.question_type}):
 ${referenceData[0].questions
-    .filter(rq => rq.question_type === q.question_type)
+    .filter(rq => rq.question_type === q.question_type && q.question_type !== "rc_question")
     .slice(0, 3)
     .map(
         (rq, i) => `
 Question ${i + 1}:
 ${rq.question_text}
 
-${rq.question_type === "para_jumble" ? `Jumbled Sentences:\n${JSON.stringify(rq.jumbled_sentences, null, 2)}` : `Options:\n${JSON.stringify(rq.options, null, 2)}`}
+${rq.question_type === "para_jumble" || rq.question_type === "odd_one_out" ? `Jumbled Sentences:\n${JSON.stringify(rq.jumbled_sentences, null, 2)}` : `Options:\n${JSON.stringify(rq.options, null, 2)}`}
 
 Correct Answer: ${rq.correct_answer.answer}
 
@@ -123,14 +120,11 @@ ${rq.rationale}
 
 QUESTION TYPE: ${q.question_type}
 
-${q.question_type === "para_jumble"
+${q.question_type === "para_jumble" || q.question_type === "odd_one_out"
     ? `QUESTION: ${q.question_text}
 
 Jumbled Sentences:
 ${JSON.stringify(q.jumbled_sentences, null, 2)}
-
-OPTIONS:
-${q.options ? Object.entries(q.options).map(([key, value]) => `${key}) ${value}`).join("\n") : "None"}
 
 CORRECT ANSWER: ${q.correct_answer.answer}`
     : `QUESTION: ${q.question_text}
@@ -159,11 +153,28 @@ ${context.edges
 
 ## OUTPUT REQUIREMENTS (Must Follow)
 
+${q.question_type === "para_jumble" ? `
+1) Identify the "Anchor": Explain the Mandatory Pair (two sentences that must stay together) or the starting sentence, citing specific keywords (pronouns, conjunctions, or chronology).
+2) Explain wrong sequences: 
+   - The Trap: Why the flow seems okay initially (e.g., "Sentence 1 and 2 share a keyword").
+   - The Flaw: The specific "logical break" (e.g., "Sentence 3 introduces an acronym that wasn't defined until Sentence 4").
+3) Briefly dismiss other sequences: Point out one structural error (e.g., "Sequence starts with a concluding transition").
+4) The "Golden Key": Highlight the specific **connector word** (e.g., **"However," "This," "Thus"**) that locks the order.
+` : q.question_type === "odd_one_out" ? `
+1) Define the "Common Thread": Briefly state the specific theme or logical structure that connects four of the sentences.
+2) Eliminate TWO "Trap" sentences: 
+   - Option: State the sentence letter/number.
+   - The Trap: Why it feels like it belongs (e.g., "It uses the same subject matter/vocabulary").
+   - The Connection: Explain exactly how it fits into the main group's logic.
+3) Briefly dismiss the remaining fit: State why it is safely part of the group.
+4) The "Misfit" Factor: Highlight the specific **word or scope shift** that makes the odd sentence different (e.g., **"Personal opinion vs. General facts"**).
+` : `
 1) Explain briefly why the correct option is correct, anchored to the logic/passage.
 2) Eliminate at least TWO wrong options in a way that is clearly guided by the elimination cues above.
    - For each eliminated option: state the option letter, why it tempts, what it gets wrong.
 3) Briefly dismiss any remaining option(s) without over-explaining.
 4) Use simple words and specifically highlight the part of the question which just solves the questions.
+`}
 
 Hard constraints:
 - Do NOT include the cue list, relationship words, node labels, or any prompt meta-language.

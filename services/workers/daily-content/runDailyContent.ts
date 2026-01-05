@@ -113,7 +113,6 @@ export async function runDailyContent() {
 
         const rcContext = await getQuestionGraphContext(rcTagged, nodes);
         const vaContext = await getQuestionGraphContext(vaTagged, nodes);
-        console.log("--------------this is the vaContext-------------")
 
         console.log("\n🧾 [Step 13/15] Generating rationales for RC");
         const rcQuestionsFinal = await generateRationalesWithEdges({
@@ -144,14 +143,6 @@ export async function runDailyContent() {
         //     throw new Error("Output validation failed");
         // }
 
-        // --- PHASE 6: FINALIZATION ---
-        console.log("\n📋 [Step 16/16] Uploading to database");
-        await saveAllDataToDB({
-            examData: output.exam,
-            passageData: output.passage,
-            questionsData : output.questions
-        });
-
         // Generate and print report
         const report = generateOutputReport(output);
         console.log(report);
@@ -159,13 +150,21 @@ export async function runDailyContent() {
         console.log("\nBreakdown:");
 
         // Save to file for review
-        const fs = require('fs');
-        const outputPath = './justReadingOutput.json';
-        fs.writeFileSync(outputPath, JSON.stringify(output, null, 2));
-        console.log(`\n💾 Output saved to: ${outputPath}`);
+        // const fs = require('fs');
+        // const outputPath = './justReadingOutput.json';
+        // fs.writeFileSync(outputPath, JSON.stringify(output, null, 2));
+        // console.log(`\n💾 Output saved to: ${outputPath}`);
 
-        console.log("\n✅ [COMPLETE] Daily Content Generation finished successfully");
         printSummaryReport(output);
+        
+        // --- PHASE 6: FINALIZATION ---
+        console.log("\n📋 [Step 16/16] Uploading to database");
+        await saveAllDataToDB({
+            examData: output.exam,
+            passageData: output.passage,
+            questionsData : output.questions
+        });
+        console.log("\n✅ [COMPLETE] Daily Content Generation finished successfully");
 
         return output;
 

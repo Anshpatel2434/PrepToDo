@@ -1,0 +1,66 @@
+{
+	"version": "v1.0",
+	"philosophy": "Metrics are cognition-first, exam-agnostic, and graph-derived. Each metric maps to multiple ReasoningStep nodes and avoids semantic overlap with others.",
+	"metrics": [
+		{
+			"metric_key": "inference_accuracy",
+			"derived_from": "Skill, Concept, ReasoningStep",
+			"description": "Measures the ability to draw correct implicit conclusions from text, including logical deduction and identification of unstated assumptions.",
+			"mapping_logic": "Aggregates performance on reasoning steps involving inference, deduction, assumption identification, and author-intent alignment."
+		},
+		{
+			"metric_key": "argument_structure_analysis",
+			"derived_from": "Skill, Concept, ReasoningStep",
+			"description": "Evaluates the ability to analyze argumentative structure, including identifying premises, conclusions, and logical dependencies.",
+			"mapping_logic": "Combines scores from reasoning steps focused on premise identification, conclusion validation, and argument evaluation."
+		},
+		{
+			"metric_key": "trap_avoidance_rate",
+			"derived_from": "ErrorPattern, ReasoningStep",
+			"description": "Assesses the ability to recognize and avoid common CAT VARC traps such as extreme language, opposites, scope shifts, and distortions.",
+			"mapping_logic": "Incorporates failures and successes linked to error-pattern nodes like extreme-option trap, scope trap, and distortion trap."
+		},
+		{
+			"metric_key": "elimination_effectiveness",
+			"derived_from": "Strategy, ReasoningStep",
+			"description": "Measures how effectively a user eliminates incorrect options to converge on the correct answer, independent of direct inference.",
+			"mapping_logic": "Tracks the correctness and quality of eliminated options relative to known trap patterns and valid eliminations."
+		},
+		{
+			"metric_key": "strategic_efficiency",
+			"derived_from": "Strategy, Skill, ReasoningStep",
+			"description": "Evaluates the appropriateness and sequencing of strategies applied while solving a question.",
+			"mapping_logic": "Combines reasoning steps related to strategy selection, execution order, and alignment with question intent."
+		},
+		{
+			"metric_key": "detail_vs_structure_balance",
+			"derived_from": "Skill, Concept, StructuralElement",
+			"description": "Assesses the ability to balance attention between local details and global structure such as main idea, theme, and logical flow.",
+			"mapping_logic": "Aggregates performance on reasoning steps involving main idea tracking, supporting detail evaluation, and structural coherence."
+		},
+		{
+			"metric_key": "tone_and_intent_sensitivity",
+			"derived_from": "Tone, Concept, ReasoningStep",
+			"description": "Measures sensitivity to author tone, attitude, and communicative intent.",
+			"mapping_logic": "Incorporates reasoning steps related to tone detection, intent inference, and attitude-based elimination."
+		},
+		{
+			"metric_key": "evidence_evaluation",
+			"derived_from": "Skill, Concept, ReasoningStep",
+			"description": "Evaluates the ability to assess relevance, sufficiency, and strength of evidence supporting claims or conclusions.",
+			"mapping_logic": "Combines reasoning steps that involve validating evidence, rejecting weak support, and distinguishing correlation from causation."
+		},
+		{
+			"metric_key": "time_pressure_stability",
+			"derived_from": "ReasoningStep, TemporalPerformance",
+			"description": "Measures the stability of reasoning accuracy under increasing time pressure, especially toward the latter part of a session.",
+			"mapping_logic": "Analyzes accuracy decay, error-pattern frequency, and rushed reasoning steps as time spent per question increases."
+		},
+		{
+			"metric_key": "reading_speed_wpm",
+			"derived_from": "PassageMetadata, TemporalPerformance",
+			"description": "Measures effective reading speed in words per minute without regard to correctness.",
+			"mapping_logic": "Calculated using passage word count and time spent before first interaction with questions, normalized across sessions."
+		}
+	]
+}

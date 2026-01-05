@@ -40,6 +40,15 @@ STRICT SOURCE ALLOWLIST:
 - psyche.co
 - smithsonianmag.com
 - technologyreview.com
+- theatlantic.com
+- nautil.us
+- economist.com
+- project-syndicate.org
+- theconversation.com
+- harvardmagazine.com
+- scientificamerican.com
+- lrb.co.uk
+- nybooks.com
 
 STRICT EXCLUSION RULE (CRITICAL):
 You MUST NOT return any article whose URL matches or closely resembles
