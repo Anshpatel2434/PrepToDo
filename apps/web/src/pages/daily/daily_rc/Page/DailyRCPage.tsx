@@ -4,8 +4,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 import { useTheme } from "../../../../context/ThemeContext";
-import { FloatingNavigation } from "../../../../ui_components/FloatingNavigation";
-import { FloatingThemeToggle } from "../../../../ui_components/ThemeToggle";
 import { supabase } from "../../../../services/apiClient";
 
 // Redux

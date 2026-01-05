@@ -9,7 +9,9 @@
         "start": "ts-node index.ts",
         "bundle:edge": "node scripts/bundle-edge-function.js",
         "deploy:edge": "npm run bundle:edge && supabase functions deploy daily-content",
-        "dev:edge": "npm run bundle:edge && supabase functions serve daily-content"
+        "dev:edge": "npm run bundle:edge && supabase functions serve daily-content",
+        "bundle:varc-analytics": "node scripts/bundle-varc-analytics.cjs",
+        "deploy:varc-analytics": "npm run bundle:varc-analytics && supabase functions deploy analyze-varc-session"
     },
     "author": "",
     "license": "ISC",

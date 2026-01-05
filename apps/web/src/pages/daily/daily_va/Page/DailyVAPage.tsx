@@ -2,8 +2,6 @@ import React, { useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../../../context/ThemeContext";
-import { FloatingNavigation } from "../../../../ui_components/FloatingNavigation";
-import { FloatingThemeToggle } from "../../../../ui_components/ThemeToggle";
 import { supabase } from "../../../../services/apiClient";
 import { QuestionPalette } from "../../components/QuestionPalette";
 import { QuestionPanel } from "../../components/QuestionPanel";
