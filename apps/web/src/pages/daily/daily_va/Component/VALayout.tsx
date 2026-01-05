@@ -1,10 +1,10 @@
 import React from "react";
 import { motion } from "framer-motion";
-import type { DailyQuestion } from "../../../../types";
+import type { Question } from "../../../../types";
 
 interface VALayoutProps {
 	isDark: boolean;
-	question: DailyQuestion;
+	question: Question;
 	isExamMode: boolean;
 	children: React.ReactNode;
 }
@@ -71,7 +71,7 @@ export const VALayout: React.FC<VALayoutProps> = ({
 												}
                     `}
 					>
-						{getQuestionTypeLabel(question.questionType)}
+						{getQuestionTypeLabel(question.question_type)}
 					</span>
 					{question.difficulty && (
 						<span
@@ -102,7 +102,7 @@ export const VALayout: React.FC<VALayoutProps> = ({
                     ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}
                 `}
 				>
-					{getQuestionTypeDescription(question.questionType)}
+					{getQuestionTypeDescription(question.question_type)}
 				</p>
 			</motion.div>
 
@@ -132,7 +132,7 @@ export const VALayout: React.FC<VALayoutProps> = ({
 												}
                     `}
 					>
-						{question.questionText}
+						{question.question_type}
 					</h2>
 				</div>
 

@@ -312,8 +312,6 @@ const DailyVAPage: React.FC = () => {
             className={`h-screen flex flex-col ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
                 }`}
         >
-            <FloatingThemeToggle />
-            <FloatingNavigation />
 
             {/* Header */}
             <header
