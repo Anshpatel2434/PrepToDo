@@ -44,6 +44,16 @@ This is a CAT (Common Admission Test) VARC (Verbal Ability and Reading Comprehen
 
 ## Tech Stack & Key Dependencies
 
+### Frontend (`apps/web/`)
+- **Framework**: React 19 with TypeScript (strict mode)
+- **Build Tool**: Vite 7
+- **State Management**: Redux Toolkit + RTK Query
+- **Routing**: React Router DOM v7
+- **Styling**: Tailwind CSS v4
+- **UI Library**: Framer Motion (animations), React Icons, React Hot Toast (notifications)
+- **Authentication**: Supabase Auth
+- **Database**: Supabase Client
+
 ### Backend Services (`services/`)
 - **Runtime**: Node.js
 - **Language**: TypeScript (strict mode)
@@ -175,6 +185,468 @@ const { data: records, error: queryError } = await supabase
 
 ---
 
+## Frontend Code Conventions
+
+### 1. Project Structure (apps/web/)
+
+```
+apps/web/src/
+├── context/              # React Context providers
+│   └── ThemeContext.tsx  # Light/Dark theme management
+├── pages/                # Feature-based page components
+│   ├── auth/            # Authentication pages
+│   ├── daily/           # Daily practice (RC/VA)
+│   ├── dashboard/       # User dashboard
+│   ├── home/            # Landing page
+│   └── teach-concept/   # Concept teaching
+├── services/            # API client and external services
+│   └── apiClient.ts     # Supabase client configuration
+├── store/               # Redux store configuration
+│   └── index.ts         # Central store setup
+├── types/               # Shared TypeScript type definitions
+│   └── index.ts         # Zod schemas + inferred types
+├── ui_components/       # Reusable UI components
+│   ├── FloatingNavigation.tsx
+│   └── ThemeToggle.tsx
+├── App.tsx              # Root component with routing
+└── main.tsx             # Application entry point
+```
+
+### 2. React Component Guidelines
+
+#### Functional Components with Hooks
+```typescript
+import React, { useEffect, useState, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
+
+const MyComponent: React.FC = () => {
+    // State
+    const [data, setData] = useState<Type | null>(null);
+
+    // Redux hooks
+    const dispatch = useDispatch();
+    const someState = useSelector(selectSomeState);
+
+    // Callbacks
+    const handleClick = useCallback(() => {
+        // handler logic
+    }, [dependency]);
+
+    // Effects
+    useEffect(() => {
+        // initialization or cleanup
+        return () => {
+            // cleanup
+        };
+    }, [dependency]);
+
+    return (
+        <div>
+            {/* JSX */}
+        </div>
+    );
+};
+
+export default MyComponent;
+```
+
+#### Component Organization
+- Keep components focused on a single responsibility
+- Use TypeScript for all props and state
+- Prefer functional components with hooks over class components
+- Use proper React key props for lists
+
+### 3. State Management with Redux Toolkit
+
+#### Redux Store Configuration
+The store uses Redux Toolkit with RTK Query for server state:
+
+```typescript
+// store/index.ts
+import { configureStore } from "@reduxjs/toolkit";
+import { setupListeners } from "@reduxjs/toolkit/query/react";
+
+export const store = configureStore({
+    reducer: {
+        // Slices for local state
+        auth: authReducer,
+        dailyPractice: dailyPracticeReducer,
+
+        // RTK Query APIs for server state
+        [authApi.reducerPath]: authApi.reducer,
+        [dailyPracticeApi.reducerPath]: dailyPracticeApi.reducer,
+    },
+    middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware().concat(
+            authApi.middleware,
+            dailyPracticeApi.middleware
+        ),
+});
+
+setupListeners(store.dispatch);
+```
+
+#### Creating a Slice
+```typescript
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
+
+interface StateType {
+    value: number;
+    loading: boolean;
+}
+
+const initialState: StateType = {
+    value: 0,
+    loading: false,
+};
+
+const mySlice = createSlice({
+    name: "myFeature",
+    initialState,
+    reducers: {
+        increment: (state) => {
+            state.value += 1;
+        },
+        setValue: (state, action: PayloadAction<number>) => {
+            state.value = action.payload;
+        },
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(asyncAction.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(asyncAction.fulfilled, (state, action) => {
+                state.loading = false;
+                // handle success
+            })
+            .addCase(asyncAction.rejected, (state, action) => {
+                state.loading = false;
+                // handle error
+            });
+    },
+});
+
+export const { increment, setValue } = mySlice.actions;
+export default mySlice.reducer;
+```
+
+#### Using Selectors
+```typescript
+// Simple selector
+export const selectValue = (state: RootState) => state.myFeature.value;
+
+// Memoized selector (using createSelector)
+import { createSelector } from "@reduxjs/toolkit";
+
+export const selectDerivedValue = createSelector(
+    [selectValue, selectOtherState],
+    (value, other) => {
+        return value * other;
+    }
+);
+
+// In component
+const value = useSelector(selectValue);
+```
+
+### 4. RTK Query for API Calls
+
+#### Creating an API Slice
+```typescript
+import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
+import { supabase } from "../../../services/apiClient";
+
+export const myApi = createApi({
+    reducerPath: "myApi",
+    baseQuery: fakeBaseQuery(),
+    tagTypes: ["MyResource"],
+    endpoints: (builder) => ({
+        fetchResource: builder.query<ResourceType, void>({
+            queryFn: async () => {
+                try {
+                    const { data, error } = await supabase
+                        .from("table_name")
+                        .select("*");
+
+                    if (error) {
+                        return {
+                            error: {
+                                status: "CUSTOM_ERROR",
+                                data: error.message,
+                            },
+                        };
+                    }
+
+                    return { data };
+                } catch (error) {
+                    return {
+                        error: {
+                            status: "CUSTOM_ERROR",
+                            data: "Error message",
+                        },
+                    };
+                }
+            },
+            providesTags: ["MyResource"],
+        }),
+        updateResource: builder.mutation<ResourceType, UpdateParams>({
+            queryFn: async ({ id, updates }) => {
+                const { data, error } = await supabase
+                    .from("table_name")
+                    .update(updates)
+                    .eq("id", id)
+                    .select();
+
+                if (error) {
+                    return {
+                        error: {
+                            status: "CUSTOM_ERROR",
+                            data: error.message,
+                        },
+                    };
+                }
+
+                return { data: data[0] };
+            },
+            invalidatesTags: ["MyResource"],
+        }),
+    }),
+});
+
+export const {
+    useFetchResourceQuery,
+    useLazyFetchResourceQuery,
+    useUpdateResourceMutation,
+} = myApi;
+```
+
+#### Using RTK Query in Components
+```typescript
+// Auto-fetch with query
+const { data, isLoading, error, refetch } = useFetchResourceQuery();
+
+// Lazy fetch with mutation
+const [updateResource, { isLoading: isUpdating }] = useUpdateResourceMutation();
+
+const handleUpdate = async () => {
+    try {
+        const result = await updateResource({ id: "123", updates: { ... } }).unwrap();
+        // success
+    } catch (error) {
+        // error handling
+    }
+};
+```
+
+### 5. Supabase Client Usage (Frontend)
+
+```typescript
+import { supabase } from "../../../services/apiClient";
+
+// Authentication
+const { data: { user }, error } = await supabase.auth.getUser();
+
+// Sign in with OTP
+await supabase.auth.signInWithOtp({ email });
+
+// Verify OTP
+await supabase.auth.verifyOtp({ email, token, type: "email" });
+
+// Sign out
+await supabase.auth.signOut();
+
+// Database queries
+const { data, error } = await supabase
+    .from("table_name")
+    .select("*")
+    .eq("column", value)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+// Insert
+const { data, error } = await supabase
+    .from("table_name")
+    .insert([{ ... }])
+    .select();
+
+// Update
+const { data, error } = await supabase
+    .from("table_name")
+    .update({ ... })
+    .eq("id", id)
+    .select();
+
+// Real-time subscription
+const subscription = supabase
+    .channel("custom-channel")
+    .on("postgres_changes", { event: "*", schema: "public", table: "table_name" }, (payload) => {
+        console.log("Change:", payload);
+    })
+    .subscribe();
+
+// Cleanup
+return () => {
+    subscription.unsubscribe();
+};
+```
+
+### 6. Routing with React Router
+
+```typescript
+import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
+import { MyComponent } from "./MyComponent";
+
+const router = createBrowserRouter([
+    {
+        path: "/",
+        element: <Navigate to="/home" replace />,
+    },
+    {
+        path: "/home",
+        element: <MyComponent />,
+    },
+]);
+
+function App() {
+    return <RouterProvider router={router} />;
+}
+```
+
+```typescript
+// Navigation within components
+import { useNavigate } from "react-router-dom";
+
+const MyComponent = () => {
+    const navigate = useNavigate();
+
+    const handleClick = () => {
+        navigate("/some-path");
+    };
+
+    return <button onClick={handleClick}>Go</button>;
+};
+```
+
+### 7. Styling with Tailwind CSS
+
+```typescript
+// Using Tailwind classes
+<div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+    <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+        Title
+    </h2>
+    <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+        Action
+    </button>
+</div>
+```
+
+**Dark Mode Support**: Use `dark:` prefix for dark theme styles:
+```typescript
+className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+```
+
+### 8. Type Safety with Zod (Frontend)
+
+```typescript
+import { z } from "zod";
+
+// Define schema
+export const UserSchema = z.object({
+    id: z.string().uuid(),
+    email: z.string().email(),
+    name: z.string().min(1),
+    age: z.number().min(0).optional(),
+});
+
+// Infer type
+export type User = z.infer<typeof UserSchema>;
+
+// Validate at runtime
+const result = UserSchema.safeParse(rawData);
+
+if (!result.success) {
+    console.error("Validation errors:", result.error.errors);
+} else {
+    // result.data is typed as User
+}
+```
+
+### 9. Context API for App-wide State
+
+```typescript
+// ThemeContext example
+import { createContext, useContext, useState } from "react";
+
+type Theme = "dark" | "light";
+
+interface ThemeContextValue {
+    theme: Theme;
+    toggleTheme: () => void;
+}
+
+const ThemeContext = createContext<ThemeContextValue | null>(null);
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+    const [theme, setTheme] = useState<Theme>("light");
+
+    const toggleTheme = () => {
+        setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+    };
+
+    return (
+        <ThemeContext.Provider value={{ theme, toggleTheme }}>
+            {children}
+        </ThemeContext.Provider>
+    );
+}
+
+export const useTheme = () => {
+    const ctx = useContext(ThemeContext);
+    if (!ctx) throw new Error("useTheme must be used inside ThemeProvider");
+    return ctx;
+};
+```
+
+### 10. Common Patterns
+
+#### Toast Notifications
+```typescript
+import toast from "react-hot-toast";
+
+toast.success("Operation successful!");
+toast.error("Something went wrong");
+toast.loading("Loading...");
+
+const myToast = toast.loading("Processing...");
+// Later...
+toast.success("Done!", { id: myToast });
+```
+
+#### Loading States
+```typescript
+const { data, isLoading, error } = useSomeQuery();
+
+if (isLoading) return <Spinner />;
+if (error) return <ErrorMessage error={error} />;
+return <Component data={data} />;
+```
+
+#### Conditional Rendering
+```typescript
+{condition && <Component />}
+
+{condition ? <TrueComponent /> : <FalseComponent />}
+
+{items.map((item) => (
+    <Item key={item.id} data={item} />
+))}
+```
+
+---
+
 ## Daily Content Workflow
 
 The main workflow is in `services/workers/daily-content/runDailyContent.ts`:
@@ -263,6 +735,16 @@ Set with: `supabase secrets set VAR_NAME=value`
 
 ## Running the Code
 
+### Frontend Development (Vite)
+```bash
+cd apps/web
+npm install
+npm run dev           # Start dev server at http://localhost:5173
+npm run build         # Production build
+npm run preview       # Preview production build locally
+npm run lint          # Run ESLint
+```
+
 ### Backend (Node.js)
 ```bash
 cd services
@@ -279,11 +761,19 @@ supabase functions deploy daily-content
 supabase functions serve daily-content  # Local testing
 ```
 
-### Frontend (Vite)
+### Environment Variables
+
+#### Frontend (apps/web/.env)
 ```bash
-cd apps/web
-npm install
-npm run dev           # Start dev server
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+#### Backend (services/.env)
+```bash
+OPENAI_API_KEY=your_openai_api_key
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
 ---
@@ -312,6 +802,7 @@ try {
 
 ## Important Notes
 
+### Backend Services
 1. **No Node.js in Edge Functions**: Always bundle before deploying. Ensure no Node.js built-ins are used in code that will run in edge functions.
 
 2. **Consistent Logging**: Follow the emoji prefix pattern. Always log before/after LLM calls.
@@ -324,11 +815,30 @@ try {
 
 6. **Prompt Engineering**: When modifying prompts, maintain the structured format with clear sections (SYSTEM, USER, STEP 1, STEP 2, etc.).
 
+### Frontend
+7. **TypeScript Strict Mode**: The frontend uses TypeScript strict mode. Always define types for props, state, and function parameters.
+
+8. **Component Reusability**: Extract common UI patterns to `ui_components/` directory.
+
+9. **Redux Usage**: Use Redux slices for local component state and RTK Query for server state. Don't mix them unnecessarily.
+
+10. **Dark Mode**: Always include dark mode styles with `dark:` prefix in Tailwind classes.
+
+11. **Performance**: Use `useCallback` and `useMemo` to prevent unnecessary re-renders. Use `React.memo()` for expensive components.
+
+12. **Error Boundaries**: Implement error boundaries for critical components to prevent app crashes.
+
+13. **Accessibility**: Use semantic HTML elements. Add `aria-label` where necessary. Ensure keyboard navigation works.
+
+14. **Loading States**: Always provide loading states for async operations. Avoid showing blank screens during data fetching.
+
+15. **Environment Variables**: Frontend env vars must start with `VITE_` prefix to be accessible via `import.meta.env`.
+
 ---
 
 ## Testing
 
-To test changes locally:
+### Backend Testing
 ```bash
 cd services
 npm start  # Runs runDailyContent() pipeline
@@ -340,12 +850,28 @@ Review the output logs for each phase. The pipeline generates:
 - 3+ VA questions (summary, completion, jumble) with rationales
 - All saved to Supabase database
 
+### Frontend Testing
+```bash
+cd apps/web
+npm run dev  # Starts dev server at http://localhost:5173
+npm run build  # Production build (runs TypeScript check)
+npm run lint  # ESLint validation
+```
+
+**TypeScript Validation**: The build process includes TypeScript compilation:
+```bash
+npx tsc -b  # Check TypeScript types across the project
+```
+
+**Important**: Fix all TypeScript errors before deploying. The CI/CD pipeline will fail on type errors.
+
 ---
 
 ## Memory for Future Tasks
 
 When working on this codebase:
 
+### Backend Services
 - The daily content worker lives under `services/workers/daily-content/`
 - Main workflow: `runDailyContent.ts`
 - Schema definitions: `schemas/types.ts`
@@ -354,3 +880,18 @@ When working on this codebase:
 - Always check for Deno compatibility when editing code that will be bundled
 - Follow logging pattern with emoji prefixes
 - Use "⏳ Waiting for LLM response..." before OpenAI calls
+
+### Frontend
+- App entry: `apps/web/src/main.tsx`
+- Root component: `apps/web/src/App.tsx` with router configuration
+- Redux store: `apps/web/src/store/index.ts`
+- Shared types: `apps/web/src/types/index.ts` (Zod schemas)
+- Supabase client: `apps/web/src/services/apiClient.ts`
+- Theme context: `apps/web/src/context/ThemeContext.tsx`
+- Feature pages organized under `apps/web/src/pages/`
+- API slices in each feature's `redux_usecase/` directory
+- Always use TypeScript strict mode
+- Use Tailwind CSS for styling with dark mode support
+- Use Redux Toolkit + RTK Query for state management
+- Run `npm run lint` and fix issues before committing
+- Build process includes TypeScript validation - ensure no type errors
