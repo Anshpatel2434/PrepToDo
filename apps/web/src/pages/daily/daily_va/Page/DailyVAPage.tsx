@@ -1,9 +1,7 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../../../context/ThemeContext";
-import { FloatingNavigation } from "../../../../ui_components/FloatingNavigation";
-import { FloatingThemeToggle } from "../../../../ui_components/ThemeToggle";
 import { supabase } from "../../../../services/apiClient";
 import { QuestionPalette } from "../../components/QuestionPalette";
 import { QuestionPanel } from "../../components/QuestionPanel";
@@ -102,63 +100,80 @@ const DailyVAPage: React.FC = () => {
     const isLoading = isTestDataLoading || isSessionLoading || isCreatingSession;
 
     // 2. Initialization
+
+    // Ref to track initialization in progress to prevent duplicate sessions
+    const isInitializingRef = useRef(false);
+
     useEffect(() => {
-        if (!testData || session.id || isLoading) return;
+        // Only run if test data is ready and we haven't initialized a session yet
+        // Also check if initialization is already in progress to prevent duplicate calls
+        if (!testData || session.id || isLoading || isInitializingRef.current) return;
 
         const init = async () => {
-            const {
-                data: { user },
-            } = await supabase.auth.getUser();
-            if (!user) {
-                navigate("/login");
-                return;
-            }
+            // Mark initialization as in progress
+            isInitializingRef.current = true;
 
-            const sessionResult = await fetchExistingSession({
-                user_id: user.id,
-                paper_id: testData.examInfo.id,
-                session_type: "daily_challenge_va",
-            });
+            try {
+                const {
+                    data: { user },
+                } = await supabase.auth.getUser();
+                if (!user) {
+                    navigate("/login");
+                    return;
+                }
 
-            const questionIds = questions.map((q) => q.id);
-
-            if (sessionResult.data) {
-                dispatch(
-                    initializeSession({
-                        session: sessionResult.data.session,
-                        questionIds,
-                        existingAttempts: sessionResult.data.attempts,
-                        elapsedTime: sessionResult.data.session.time_spent_seconds,
-                        status: sessionResult.data.session.status,
-                    })
-                );
-            } else {
-                const newSession = await startNewSession({
+                const sessionResult = await fetchExistingSession({
                     user_id: user.id,
                     paper_id: testData.examInfo.id,
-                    passage_ids: [],
-                    question_ids: questionIds,
-                }).unwrap();
+                    session_type: "daily_challenge_va",
+                });
 
-                dispatch(
-                    initializeSession({
-                        session: newSession,
-                        questionIds,
-                        elapsedTime: 0,
-                    })
-                );
+                const questionIds = questions.map((q) => q.id);
+
+                if (sessionResult.data) {
+                    // Resume existing session
+                    dispatch(
+                        initializeSession({
+                            session: sessionResult.data.session,
+                            questionIds,
+                            existingAttempts: sessionResult.data.attempts,
+                            elapsedTime: sessionResult.data.session.time_spent_seconds,
+                            status: sessionResult.data.session.status,
+                        })
+                    );
+                } else {
+                    // Start new session
+                    const newSession = await startNewSession({
+                        user_id: user.id,
+                        paper_id: testData.examInfo.id,
+                        passage_ids: [],
+                        question_ids: questionIds,
+                    }).unwrap();
+
+                    dispatch(
+                        initializeSession({
+                            session: newSession,
+                            questionIds,
+                            elapsedTime: 0,
+                        })
+                    );
+                }
+            } finally {
+                // Reset initialization flag
+                isInitializingRef.current = false;
             }
         };
         init();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         testData,
         session.id,
         dispatch,
-        fetchExistingSession,
         isLoading,
         navigate,
-        startNewSession,
         questions,
+        // Note: fetchExistingSession and startNewSession are NOT in dependencies
+        // to prevent the effect from running multiple times due to hook reference changes
     ]);
 
     // 3. Timer
@@ -292,7 +307,7 @@ const DailyVAPage: React.FC = () => {
 
         window.addEventListener("beforeunload", handler);
         return () => window.removeEventListener("beforeunload", handler);
-    }, [saveSession]);
+    }, [saveSession, session.id, viewMode, elapsedTime, currentQuestionIndex, attempts]);
 
     //Just to check the updated attempts on each change if happenning or not
     useEffect(() => {
