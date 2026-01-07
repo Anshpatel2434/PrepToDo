@@ -1,7 +1,6 @@
 import React, { useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 import { useTheme } from "../../../../context/ThemeContext";
 import { supabase } from "../../../../services/apiClient";
@@ -45,7 +44,6 @@ import { useExamNavigationGuard } from "../../navigation_hook/useExamNavigation"
 
 const DailyRCPage: React.FC = () => {
     const dispatch = useDispatch();
-    const navigate = useNavigate();
     const { isDark } = useTheme();
 
     const [windowWidth, setWindowWidth] = React.useState(
@@ -128,7 +126,6 @@ const DailyRCPage: React.FC = () => {
                     data: { user },
                 } = await supabase.auth.getUser();
                 if (!user) {
-                    navigate("/login");
                     return;
                 }
 
@@ -191,7 +188,6 @@ const DailyRCPage: React.FC = () => {
         session.id,
         dispatch,
         isLoading,
-        navigate,
         // Note: fetchExistingSession and startNewSession are NOT in dependencies
         // to prevent the effect from running multiple times due to hook reference changes
     ]);
