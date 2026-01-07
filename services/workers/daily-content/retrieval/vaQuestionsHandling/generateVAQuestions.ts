@@ -790,7 +790,7 @@ IMPORTANT:
 - Leave rationale empty
 - Generate EXACTLY 1 question
 - No additional text or commentary
-- The question should be able to assess the metrics from "user_core_metrics_definition_v1.json" file.
+- The question should be able to assess the metrics from "user_core_metrics_definition_v1.json" file and try to divide all the metrics across 4 questions.
 `;
 
         console.log("⏳ [Odd One Out] Waiting for LLM to generate questions");
