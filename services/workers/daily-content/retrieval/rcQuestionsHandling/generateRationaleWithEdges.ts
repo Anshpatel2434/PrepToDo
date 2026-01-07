@@ -207,7 +207,7 @@ Hard constraints:
 - Do NOT include the cue list, relationship words, node labels, or any prompt meta-language.
 - Do NOT use fixed section headers such as "PART 1" / "SYSTEMATIC ELIMINATION".
 - Keep the tone academic and exam-oriented.
-- Keep the structure flexible (2–6 short paragraphs OR compact bullets), similar to PYQs.
+- Keep the structure flexible (2-6 short paragraphs OR compact bullets), similar to PYQs.
 
 Output ONLY the rationale text.`;
 
