@@ -1,38 +1,59 @@
 // AuthCallback.tsx
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../../services/apiClient";
 
 export default function AuthCallback() {
-	const navigate = useNavigate();
+    const navigate = useNavigate();
+    const timeoutRef = useRef<NodeJS.Timeout>();
 
-	useEffect(() => {
-		const {
-			data: { subscription },
-		} = supabase.auth.onAuthStateChange((event, session) => {
-			console.log("CALLBACK EVENT:", event);
+    useEffect(() => {
+        // Set a timeout to handle failed/cancelled authentication
+        // If no SIGNED_IN event within 5 seconds, redirect to home
+        timeoutRef.current = setTimeout(async () => {
+            console.log("Authentication timeout - redirecting to home");
+            localStorage.removeItem("post_auth_redirect");
+            navigate("/home", { replace: true });
+        }, 5000);
 
-			if (event === "SIGNED_IN" && session) {
-				console.log(
-					"77777777777777777777777777777 in authCallback : ",
-					localStorage.getItem("post_auth_redirect")?.startsWith("/auth", 0)
-				);
-				if (
-					localStorage.getItem("post_auth_redirect")?.startsWith("/auth", 0)
-				) {
-					navigate("/home", { replace: true });
-				} else {
-					const redirectTo = localStorage.getItem("post_auth_redirect") || "/";
+        const {
+            data: { subscription },
+        } = supabase.auth.onAuthStateChange((event, session) => {
+            console.log("CALLBACK EVENT:", event);
 
-					localStorage.removeItem("post_auth_redirect");
+            if (event === "SIGNED_IN" && session) {
+                // Clear the timeout since auth succeeded
+                if (timeoutRef.current) {
+                    clearTimeout(timeoutRef.current);
+                }
 
-					navigate(redirectTo, { replace: true });
-				}
-			}
-		});
+                console.log(
+                    "77777777777777777777777777777 in authCallback : ",
+                    localStorage.getItem("post_auth_redirect")?.startsWith("/auth", 0)
+                );
+                
+                // Get the redirect URL and clear it from localStorage
+                const redirectUrl = localStorage.getItem("post_auth_redirect");
+                localStorage.removeItem("post_auth_redirect");
+                
+                // Navigate based on the redirect URL
+                if (redirectUrl?.startsWith("/auth")) {
+                    navigate("/home", { replace: true });
+                } else {
+                    const redirectTo = redirectUrl || "/";
+                    navigate(redirectTo, { replace: true });
+                }
+            }
+        });
 
-		return () => subscription.unsubscribe();
-	}, [navigate]);
+        return () => {
+            // Cleanup on unmount
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+            subscription.unsubscribe();
+        };
+    }, [navigate]);
 
-	return <div>Completing sign in…</div>;
+    return <div>Completing sign in…</div>;
 }
