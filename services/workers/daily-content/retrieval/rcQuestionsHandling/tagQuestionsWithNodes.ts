@@ -1,53 +1,48 @@
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
-import { QuestionNodeTagArraySchema } from "../../schemas/types";
+import { QuestionMetricTagArraySchema } from "../../schemas/types";
 import z from "zod";
+import * as fs from "fs";
+import * as path from "path";
 
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
+// Read metrics definition
+const metricsPath = path.join(process.cwd(), "config/user_core_metrics_definition_v1.json");
+const metricsData = JSON.parse(fs.readFileSync(metricsPath, "utf-8"));
+const metricsCatalog = metricsData.metrics.map((m: any) => ({
+    metric_key: m.metric_key,
+    description: m.description
+}));
+
 /**
- * Tags each question with the primary reasoning node from the reasoning graph.
- *
- * This function identifies the cognitive skill(s) required to correctly answer
- * each question by matching it against the ReasoningStep nodes in the graph.
- *
- * For each question:
- * - Selects ONE primary reasoning step (required)
- * - Optionally selects up to TWO secondary reasoning steps (optional)
- *
- * The primary node is then used to fetch outgoing edges in the reasoning graph,
- * which are used to structure the elimination in the rationale generation phase.
+ * Tags each question with up to 2 metric_keys from the user core metrics definition.
  */
 
 const ResponseSchema = z.object({
-    questionsTagged : QuestionNodeTagArraySchema
+    questionsTagged : QuestionMetricTagArraySchema
 })
 
 export async function tagQuestionsWithNodes(params: {
     passageText: string;
     questions: any[];
-    nodes: { id: string; label: string; type: string }[];
 }) {
-    const { passageText, questions, nodes } = params;
+    const { passageText, questions } = params;
 
     console.log(
-        `🏷️ [Node Tagging] Tagging ${questions.length} questions (nodes available=${nodes.length})`
+        `🏷️ [Metric Tagging] Tagging ${questions.length} questions`
     );
-
-    const filteredNodes = nodes.filter((node) => node.type === "ReasoningStep");
 
     const prompt = `
 You are a CAT diagnostic engine.
 
-Your task is to identify which cognitive skills or concepts
-are required to correctly answer each question.
+Your task is to identify which cognitive metrics are assessed by each question.
 
 RULES:
 - Do NOT explain
 - Do NOT justify
-- Choose ONE primary node
-- Optionally choose up to TWO secondary nodes
+- Choose up to TWO metric_keys that best suit the question from the provided catalog.
 
 --------------------------------
 PASSAGE
@@ -55,9 +50,9 @@ PASSAGE
 ${passageText}
 
 --------------------------------
-NODE CATALOG
+METRICS CATALOG
 --------------------------------
-${JSON.stringify(filteredNodes, null, 2)}
+${JSON.stringify(metricsCatalog, null, 2)}
 
 --------------------------------
 QUESTIONS
@@ -76,7 +71,7 @@ ${JSON.stringify(
 Return STRICT JSON only.
 `;
 
-    console.log("⏳ [Node Tagging] Waiting for LLM response (node tags)");
+    console.log("⏳ [Metric Tagging] Waiting for LLM response (metric tags)");
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
@@ -85,7 +80,7 @@ Return STRICT JSON only.
             {
                 role: "system",
                 content:
-                    "You classify cognitive skills. You do not explain or reason.",
+                    "You classify cognitive metrics. You do not explain or reason.",
             },
             {
                 role: "user",
@@ -94,16 +89,16 @@ Return STRICT JSON only.
         ],
         response_format: zodResponseFormat(
             ResponseSchema,
-            "node_tags"
+            "metric_tags"
         ),
     });
 
     const parsed = completion.choices[0].message.parsed;
     if (!parsed) {
-        throw new Error("Node tagging failed");
+        throw new Error("Metric tagging failed");
     }
 
-    console.log(`✅ [Node Tagging] Tags generated for ${parsed.questionsTagged.length} questions`);
+    console.log(`✅ [Metric Tagging] Tags generated for ${parsed.questionsTagged.length} questions`);
 
     return parsed.questionsTagged;
 }

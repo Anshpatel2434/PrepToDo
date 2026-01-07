@@ -1,47 +1,51 @@
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
-import { QuestionNodeTagArraySchema } from "../../schemas/types";
+import { QuestionMetricTagArraySchema } from "../../schemas/types";
 import z from "zod";
+import * as fs from "fs";
+import * as path from "path";
 
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
+// Read metrics definition
+const metricsPath = path.join(process.cwd(), "config/user_core_metrics_definition_v1.json");
+const metricsData = JSON.parse(fs.readFileSync(metricsPath, "utf-8"));
+const metricsCatalog = metricsData.metrics.map((m: any) => ({
+    metric_key: m.metric_key,
+    description: m.description
+}));
+
 const ResponseSchema = z.object({
-    questionsTagged: QuestionNodeTagArraySchema
+    questionsTagged: QuestionMetricTagArraySchema
 })
 
 /**
- * Tags VA questions using the exact same logic and return format as RC tagging.
+ * Tags VA questions using metric_keys instead of reasoning graph nodes.
  */
 export async function tagVAQuestionsWithNodes(params: {
     questions: any[];
-    nodes: { id: string; label: string; type: string }[];
 }) {
-    const { questions, nodes } = params;
+    const { questions } = params;
 
     console.log(
-        `🏷️ [VA Node Tagging] Tagging ${questions.length} questions (nodes available=${nodes.length})`
+        `🏷️ [VA Metric Tagging] Tagging ${questions.length} questions`
     );
-
-    // Filter nodes for ReasoningStep type
-    const filteredNodes = nodes.filter((node) => node.type === "ReasoningStep");
 
     const prompt = `
 You are a CAT diagnostic engine.
 
-Your task is to identify which cognitive skills or concepts
-are required to correctly answer each VA (Verbal Ability) question.
+Your task is to identify which cognitive metrics are assessed by each VA (Verbal Ability) question.
 
 RULES:
 - Do NOT explain
 - Do NOT justify
-- Choose ONE primary node
-- Optionally choose up to TWO secondary nodes
+- Choose up to TWO metric_keys that best suit the question from the provided catalog.
 
 --------------------------------
-NODE CATALOG
+METRICS CATALOG
 --------------------------------
-${JSON.stringify(filteredNodes, null, 2)}
+${JSON.stringify(metricsCatalog, null, 2)}
 
 --------------------------------
 QUESTIONS
@@ -64,7 +68,7 @@ ${JSON.stringify(
 Return STRICT JSON only.
 `;
 
-    console.log("⏳ [VA Node Tagging] Waiting for LLM response (node tags)");
+    console.log("⏳ [VA Metric Tagging] Waiting for LLM response (metric tags)");
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
@@ -72,7 +76,7 @@ Return STRICT JSON only.
         messages: [
             {
                 role: "system",
-                content: "You classify cognitive skills. You do not explain or reason.",
+                content: "You classify cognitive metrics. You do not explain or reason.",
             },
             {
                 role: "user",
@@ -81,17 +85,17 @@ Return STRICT JSON only.
         ],
         response_format: zodResponseFormat(
             ResponseSchema,
-            "va_node_tags"
+            "va_metric_tags"
         ),
     });
 
     const parsed = completion.choices[0].message.parsed;
     if (!parsed) {
-        throw new Error("VA Node tagging failed");
+        throw new Error("VA Metric tagging failed");
     }
 
-    console.log(`✅ [VA Node Tagging] Tags generated for ${parsed.questionsTagged.length} questions`);
+    console.log(`✅ [VA Metric Tagging] Tags generated for ${parsed.questionsTagged.length} questions`);
 
-    // Returns raw array matching QuestionNodeTagArraySchema, exactly like the RC function
+    // Returns raw array matching QuestionMetricTagArraySchema, exactly like the RC function
     return parsed.questionsTagged;
 }

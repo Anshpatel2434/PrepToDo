@@ -1,23 +1,20 @@
 import { supabase } from "../../../config/supabase";
-import { Edge, Node, QuestionNodeTag, ReasoningGraphContext } from "../schemas/types";
+import { Edge, Node, QuestionMetricTag, ReasoningGraphContext } from "../schemas/types";
+import * as fs from "fs";
+import * as path from "path";
 
 /**
- * Assembles reasoning graph context for each question using primary nodes and their edges.
+ * Assembles reasoning graph context for each question using metric_keys and their mapped reasoning nodes.
  *
  * This function:
- * 1. Takes question-to-primary-node mappings from the tagging phase
- * 2. Fetches all outgoing edges from each primary node in the reasoning graph
- * 3. Maps each edge to its target node to build the full reasoning path
- *
- * The resulting ReasoningGraphContext for each question contains:
- * - primary_node: The main reasoning step required
- * - edges: Array of connected reasoning steps with their relationship types
- *
- * This context is then used by generateRationalesWithEdges to force
- * elimination-driven explanations that follow the graph structure.
+ * 1. Takes question-to-metric mappings from the tagging phase
+ * 2. Loads the metric-to-reasoning-step map
+ * 3. Collects all ReasoningStep nodes associated with the tagged metrics
+ * 4. Fetches all outgoing edges from these nodes in the reasoning graph
+ * 5. Builds a consolidated context for rationale generation
  */
 export async function getQuestionGraphContext(
-    questionTags: QuestionNodeTag[],
+    questionTags: QuestionMetricTag[],
     nodes: Node[]
 ): Promise<Record<string, ReasoningGraphContext>> {
 
@@ -25,69 +22,69 @@ export async function getQuestionGraphContext(
         `🧩 [Graph] Building reasoning context (questions=${questionTags.length}, nodes=${nodes.length})`
     );
 
-    const primaryNodeIds = questionTags.map(q => q.primary_node_id);
-
-    if (primaryNodeIds.length === 0) {
-        console.warn("⚠️ [Graph] No primary_node_ids found in questionTags.");
-        return {};
-    }
-
-    console.log(`🧩 [Graph] Fetching outgoing edges for ${primaryNodeIds.length} primary nodes`);
-
-    const { data: graphEdges, error } = await supabase
-        .from('graph_edges')
-        .select('source_node_id, target_node_id, relationship')
-        .in('source_node_id', primaryNodeIds);
-
-    if (error) {
-        console.error("❌ [Graph] Supabase Error:", error);
-        throw error;
-    }
-
-    const nodeMap = new Map<string, Node>(nodes.map(n => [n.id, n]));
-
-    const edgeLookup: Record<string, Edge[]> = {};
-    graphEdges?.forEach(edge => {
-        if (!edgeLookup[edge.source_node_id]) {
-            edgeLookup[edge.source_node_id] = [];
-        }
-        edgeLookup[edge.source_node_id].push(edge);
-    });
+    // Load core metric reasoning map
+    const mapPath = path.join(process.cwd(), "config/core_metric_reasoning_map_v1.0.json");
+    const metricMapData = JSON.parse(fs.readFileSync(mapPath, "utf-8"));
+    const metricMap = metricMapData.metrics;
 
     const result: Record<string, ReasoningGraphContext> = {};
+    const nodeLookup = new Map<string, Node>(nodes.map(n => [n.id, n]));
 
-    questionTags.forEach((tag) => {
-        const primaryNode = nodeMap.get(tag.primary_node_id);
+    for (const tag of questionTags) {
+        const metricKeys = tag.metric_keys;
+        const associatedNodes: { node_id: string; label: string; justification: string }[] = [];
+        const sourceNodeIds: string[] = [];
 
-        if (!primaryNode) {
-            console.warn(`⚠️ [Graph] Primary Node ${tag.primary_node_id} not found`);
+        metricKeys.forEach(key => {
+            const metricData = metricMap[key];
+            if (metricData && metricData.reasoning_steps) {
+                metricData.reasoning_steps.forEach((step: any) => {
+                    associatedNodes.push(step);
+                    sourceNodeIds.push(step.node_id);
+                });
+            }
+        });
+
+        if (sourceNodeIds.length === 0) {
+            console.warn(`⚠️ [Graph] No nodes found for metrics: ${metricKeys.join(", ")}`);
             result[tag.question_id] = {
-                primary_node: primaryNode || { id: tag?.primary_node_id, label: "MISSING NODE", type: "ReasoningStep" } as Node,
+                metric_keys: metricKeys,
+                nodes: [],
                 edges: []
             };
-            return;
+            continue;
         }
 
-        const rawEdges = edgeLookup[tag.primary_node_id] || [];
+        // Fetch outgoing edges for all associated nodes
+        const { data: graphEdges, error } = await supabase
+            .from('graph_edges')
+            .select('source_node_id, target_node_id, relationship')
+            .in('source_node_id', sourceNodeIds);
 
-        const formattedEdges = rawEdges
-            .map(edge => {
-                const targetNode = nodeMap.get(edge.target_node_id);
-                if (!targetNode) {
-                    console.warn(`⚠️ [Graph] Edge target node ${edge.target_node_id} not found`);
-                }
-                return targetNode ? {
-                    relationship: edge.relationship,
-                    target_node: targetNode
-                } : null;
-            })
-            .filter((e): e is { relationship: string; target_node: Node } => e !== null);
+        if (error) {
+            console.error("❌ [Graph] Supabase Error:", error);
+            throw error;
+        }
+
+        const formattedEdges = graphEdges?.map(edge => {
+            const sourceNode = nodeLookup.get(edge.source_node_id);
+            const targetNode = nodeLookup.get(edge.target_node_id);
+            if (!targetNode) {
+                console.warn(`⚠️ [Graph] Edge target node ${edge.target_node_id} not found`);
+            }
+            return targetNode ? {
+                relationship: edge.relationship,
+                source_node_label: sourceNode?.label || "Unknown Node",
+                target_node_label: targetNode.label
+            } : null;
+        }).filter((e): e is any => e !== null) || [];
 
         result[tag.question_id] = {
-            primary_node: primaryNode,
+            metric_keys: metricKeys,
+            nodes: associatedNodes,
             edges: formattedEdges
         };
-    });
+    }
 
     console.log(`✅ [Graph] Context assembled for ${Object.keys(result).length} questions`);
     return result;

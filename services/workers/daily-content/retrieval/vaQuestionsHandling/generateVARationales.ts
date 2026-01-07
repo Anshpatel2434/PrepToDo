@@ -70,7 +70,7 @@ export async function generateVARationalesWithEdges(params: {
                 }
 
                 console.log(
-                    `🧾 [VA Rationales] Q${q.id} | primary="${context.primary_node.label}" | edges=${context.edges.length}`
+                    `🧾 [VA Rationales] Q${q.id} | metrics="${context.metric_keys.join(", ")}" | nodes=${context.nodes.length} | edges=${context.edges.length}`
                 );
 
                 const prompt = `SYSTEM:
@@ -139,14 +139,17 @@ CORRECT ANSWER: ${q.correct_answer.answer}`
 
 ## REASONING GRAPH (Hidden Rubric — Do Not Mention or Quote)
 
-Primary reasoning step:
-- ${context.primary_node.label}
+Core Metrics:
+${context.metric_keys.map(k => `- ${k}`).join("\n")}
+
+Reasoning steps involved:
+${context.nodes.map(n => `- ${n.label}: ${n.justification}`).join("\n")}
 
 Elimination cues (use at least TWO of these to eliminate TWO different wrong options):
 ${context.edges
     .map(
         (e, i) =>
-            `${i + 1}. relationship="${e.relationship}", cue="${e.target_node.label}"`
+            `${i + 1}. relationship="${e.relationship}", from="${e.source_node_label}", cue="${e.target_node_label}"`
     )
     .join("\n")}
 ---
@@ -216,10 +219,7 @@ Output ONLY the rationale text.`;
                 updatedQuestions.push({
                     ...q,
                     rationale,
-                    tags: [
-                        context.primary_node.label,
-                        ...context.edges.map((e) => e.target_node.label),
-                    ],
+                    tags: context.metric_keys,
                     updated_at: new Date().toISOString(),
                 });
             } catch (error) {

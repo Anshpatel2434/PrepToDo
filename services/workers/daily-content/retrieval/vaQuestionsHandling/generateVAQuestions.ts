@@ -289,6 +289,7 @@ IMPORTANT:
 - Leave rationale empty
 - Generate EXACTLY 1 question
 - No additional text or commentary
+- The question should be able to assess the metrics from "user_core_metrics_definition_v1.json" file.
 `;
 
         console.log("⏳ [Para Summary] Waiting for LLM to generate questions");
@@ -453,6 +454,7 @@ IMPORTANT:
 - Leave rationale empty
 - Generate EXACTLY 1 question
 - No additional text or commentary
+- The question should be able to assess the metrics from "user_core_metrics_definition_v1.json" file.
 `;
 
         console.log("⏳ [Para Completion] Waiting for LLM to generate questions");
@@ -616,6 +618,7 @@ IMPORTANT:
 - Leave rationale empty
 - Generate EXACTLY 1 question
 - No additional text or commentary
+- The question should be able to assess the metrics from "user_core_metrics_definition_v1.json" file.
 `;
 
         console.log("⏳ [Para Jumble] Waiting for LLM to generate questions");
@@ -787,6 +790,7 @@ IMPORTANT:
 - Leave rationale empty
 - Generate EXACTLY 1 question
 - No additional text or commentary
+- The question should be able to assess the metrics from "user_core_metrics_definition_v1.json" file.
 `;
 
         console.log("⏳ [Odd One Out] Waiting for LLM to generate questions");

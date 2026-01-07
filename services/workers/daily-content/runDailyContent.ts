@@ -108,8 +108,8 @@ export async function runDailyContent() {
         const nodes = await fetchNodes();
 
         console.log("\n🕸️ [Step 12/15] Tagging questions and building graph context");
-        const rcTagged = await tagQuestionsWithNodes({ passageText, questions: rcQuestionsWithAnswers, nodes });
-        const vaTagged = await tagVAQuestionsWithNodes({ questions: vaQuestionsWithAnswers, nodes });
+        const rcTagged = await tagQuestionsWithNodes({ passageText, questions: rcQuestionsWithAnswers });
+        const vaTagged = await tagVAQuestionsWithNodes({ questions: vaQuestionsWithAnswers });
 
         const rcContext = await getQuestionGraphContext(rcTagged, nodes);
         const vaContext = await getQuestionGraphContext(vaTagged, nodes);

@@ -98,29 +98,26 @@ export const QuestionSchema = z.object({
 
 export type Question = z.infer<typeof QuestionSchema>;
 
-export const QuestionNodeTagSchema = z.object({
+export const QuestionMetricTagSchema = z.object({
     question_id: z.string().uuid(),
-    primary_node_id: z.string().uuid(),
-    secondary_node_ids: z.array(z.string().uuid()).max(2),
+    metric_keys: z.array(z.string()).max(2),
 });
 
-export const QuestionNodeTagArraySchema = z.array(QuestionNodeTagSchema);
+export const QuestionMetricTagArraySchema = z.array(QuestionMetricTagSchema);
 
-export type QuestionNodeTag = z.infer<typeof QuestionNodeTagSchema>;
+export type QuestionMetricTag = z.infer<typeof QuestionMetricTagSchema>;
 
 export type ReasoningGraphContext = {
-    primary_node: {
-        id: string;
+    metric_keys: string[];
+    nodes: {
+        node_id: string;
         label: string;
-        type: "ReasoningStep";
-    };
+        justification: string;
+    }[];
     edges: {
-        relationship: string; // supports | misleads_into | requires | validates
-        target_node: {
-            id: string;
-            label: string;
-            type: string;
-        };
+        relationship: string;
+        source_node_label: string;
+        target_node_label: string;
     }[];
 };
 

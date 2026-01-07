@@ -266,6 +266,7 @@ IMPORTANT:
 - Leave rationale empty
 - Generate EXACTLY ${questionCount} questions
 - No additional text or commentary
+- The question should be able to assess the metrics from "user_core_metrics_definition_v1.json" file.
 `;
 
     console.log("⏳ [RC Questions] Waiting for LLM to generate questions");
