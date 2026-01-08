@@ -5,7 +5,7 @@ import { supabase } from "../../../services/apiClient";
 
 export default function AuthCallback() {
     const navigate = useNavigate();
-    const timeoutRef = useRef<NodeJS.Timeout>();
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
         // Set a timeout to handle failed/cancelled authentication
