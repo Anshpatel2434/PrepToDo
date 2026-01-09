@@ -20,7 +20,7 @@ import {
     useFetchRecentSessionsQuery 
 } from "../redux_usecases/dashboardApi";
 import { supabase } from "../../../services/apiClient";
-import { Globe, Lock, Smartphone, Zap, Target, Brain, BarChart3, TrendingUp } from "lucide-react";
+import { LuGlobe, LuLock, LuSmartphone, LuZap, LuTarget, LuBrain, LuBarChart3, LuTrendingUp } from "react-icons/lu";
 
 export const DashboardPage: React.FC = () => {
     const { isDark } = useTheme();
@@ -115,7 +115,7 @@ export const DashboardPage: React.FC = () => {
                                     viewport={{ once: true }}
                                 >
                                     <div className="flex items-center gap-2 mb-4">
-                                        <Target className="w-5 h-5 text-blue-500" />
+                                        <LuTarget className="w-5 h-5 text-blue-500" />
                                         <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Skill Radar</h3>
                                     </div>
                                     <div className="flex-1 min-h-0">
@@ -132,7 +132,7 @@ export const DashboardPage: React.FC = () => {
                                     transition={{ delay: 0.1 }}
                                 >
                                     <div className="flex items-center gap-2 mb-4">
-                                        <Brain className="w-5 h-5 text-amber-500" />
+                                        <LuBrain className="w-5 h-5 text-amber-500" />
                                         <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Logic Gaps</h3>
                                     </div>
                                     <div className="flex-1 overflow-y-auto">
@@ -160,7 +160,7 @@ export const DashboardPage: React.FC = () => {
                                     transition={{ delay: 0.3 }}
                                 >
                                     <div className="flex items-center gap-2 mb-4">
-                                        <Zap className="w-5 h-5 text-yellow-500" />
+                                        <LuZap className="w-5 h-5 text-yellow-500" />
                                         <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>WPM vs Accuracy</h3>
                                     </div>
                                     <div className="flex-1 min-h-0">
@@ -177,7 +177,7 @@ export const DashboardPage: React.FC = () => {
                                     transition={{ delay: 0.4 }}
                                 >
                                     <div className="flex items-center gap-2 mb-4">
-                                        <BarChart3 className="w-5 h-5 text-green-500" />
+                                        <LuBarChart3 className="w-5 h-5 text-green-500" />
                                         <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Genre Proficiency</h3>
                                     </div>
                                     <div className="flex-1 min-h-0">
@@ -194,7 +194,7 @@ export const DashboardPage: React.FC = () => {
                                     transition={{ delay: 0.5 }}
                                 >
                                     <div className="flex items-center gap-2 mb-4">
-                                        <TrendingUp className="w-5 h-5 text-blue-400" />
+                                        <LuTrendingUp className="w-5 h-5 text-blue-400" />
                                         <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Performance Trend</h3>
                                     </div>
                                     <div className="flex-1 min-h-0">

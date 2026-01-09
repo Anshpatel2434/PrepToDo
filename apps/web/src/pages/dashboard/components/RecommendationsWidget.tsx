@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles } from "lucide-react";
+import { LuSparkles } from "react-icons/lu";
 import type { UserProficiencySignals } from "../../../types";
 
 interface RecommendationsWidgetProps {
@@ -11,7 +11,7 @@ export const RecommendationsWidget: React.FC<RecommendationsWidgetProps> = ({ si
     return (
         <div className="flex flex-col h-full">
             <div className="flex items-center gap-2 mb-4">
-                <Sparkles className="w-5 h-5 text-purple-500" />
+                <LuSparkles className="w-5 h-5 text-purple-500" />
                 <span className="text-xs font-semibold uppercase tracking-wider text-purple-500">
                     AI Insights (Developing)
                 </span>

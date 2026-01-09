@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import type { UserMetricProficiency } from "../../../types";
-import { AlertTriangle } from "lucide-react";
+import { LuAlertTriangle } from "react-icons/lu";
 
 interface LogicGapPanelProps {
     data: UserMetricProficiency[];
@@ -35,7 +35,7 @@ export const LogicGapPanel: React.FC<LogicGapPanelProps> = ({ data, isDark }) =>
                     }`}
                 >
                     <div className="mt-1">
-                        <AlertTriangle className="w-4 h-4 text-amber-500" />
+                        <LuAlertTriangle className="w-4 h-4 text-amber-500" />
                     </div>
                     <div>
                         <div className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>
