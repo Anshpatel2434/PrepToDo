@@ -234,6 +234,65 @@ export const UserAnalyticsSchema = z.object({
 export type UserAnalytics = z.infer<typeof UserAnalyticsSchema>;
 
 /* =========================================================
+    📈 User Metric Proficiency
+    (Tracks granular skill levels across dimensions)
+   ========================================================= */
+
+export const UserMetricProficiencySchema = z.object({
+    id: z.string(),
+    user_id: z.string(),
+    dimension_type: z.enum([
+        "core_metric",
+        "genre",
+        "question_type",
+        "reasoning_step",
+        "error_pattern",
+    ]),
+    dimension_key: z.string(),
+    proficiency_score: z.number().int().min(0).max(100),
+    confidence_score: z.number().min(0).max(1),
+    total_attempts: z.number().int().default(0),
+    correct_attempts: z.number().int().default(0),
+    last_session_id: z.string().nullish(),
+    trend: z.enum(["improving", "declining", "stagnant"]).nullish(),
+    updated_at: z.string(), // ISO Timestamp
+    created_at: z.string(), // ISO Timestamp
+});
+
+export type UserMetricProficiency = z.infer<typeof UserMetricProficiencySchema>;
+
+/* =========================================================
+    🎯 User Proficiency Signals
+    (Aggregated high-level insights and CAT-specific metrics)
+   ========================================================= */
+
+export const UserProficiencySignalsSchema = z.object({
+    id: z.string(),
+    user_id: z.string(),
+    overall_percentile: z.number().int().min(0).max(100).nullish(),
+    estimated_cat_percentile: z.number().int().min(0).max(100).nullish(),
+
+    // JSONB structure: typically Record<string, number> for scores
+    genre_strengths: z.array(z.any()).nullish(),
+
+    // inference_skill: z.number().int().min(0).max(100).nullish(),
+    // tone_analysis_skill: z.number().int().min(0).max(100).nullish(),
+    // main_idea_skill: z.number().int().min(0).max(100).nullish(),
+    // detail_comprehension_skill: z.number().int().min(0).max(100).nullish(),
+
+    recommended_difficulty: z.string().max(20).nullish(),
+    weak_topics: z.array(z.string()).nullish(),
+    weak_question_types: z.array(z.string()).nullish(),
+
+    calculated_at: z.string().nullish(),
+    data_points_count: z.number().int().nullish(),
+    created_at: z.string().nullish(),
+    updated_at: z.string().nullish(),
+});
+
+export type UserProficiencySignals = z.infer<typeof UserProficiencySignalsSchema>;
+
+/* =========================================================
    📖 Vocabulary
    ========================================================= */
 
