@@ -1,4 +1,4 @@
-{
+export const metricMappingJson = {
 	"version": "v1.0",
 	"generated_at": "05/01/2026",
 	"mapping_philosophy": "ReasoningStep-driven, batch-processed, deterministic",
