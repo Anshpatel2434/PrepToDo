@@ -296,3 +296,33 @@ export type UserProficiencySignals = z.infer<typeof UserProficiencySignalsSchema
 
 export const UserMetricProficiencyArraySchema = z.array(UserMetricProficiencySchema);
 export type UserMetricProficiencyArray = z.infer<typeof UserMetricProficiencyArraySchema>;
+
+/* =========================================================
+     📊 User Analytics
+     (Daily aggregated analytics per user)
+    ========================================================= */
+
+export const UserAnalyticsSchema = z.object({
+    id: z.string(),
+    user_id: z.string(),
+    date: z.string(), // YYYY-MM-DD format
+    minutes_practiced: z.number().int().default(0),
+    questions_attempted: z.number().int().default(0),
+    questions_correct: z.number().int().default(0),
+    accuracy_percentage: z.number().min(0).max(100).nullish(),
+    is_active_day: z.boolean().default(false),
+    current_streak: z.number().int().default(0),
+    longest_streak: z.number().int().default(0),
+    points_earned_today: z.number().int().default(0),
+    total_points: z.number().int().default(0),
+    genre_performance: z.record(z.number()).nullish(),
+    difficulty_performance: z.record(z.number()).nullish(),
+    question_type_performance: z.record(z.number()).nullish(),
+    reading_speed_wpm: z.number().int().nullish(),
+    new_words_learned: z.number().int().default(0),
+    words_reviewed: z.number().int().default(0),
+    created_at: z.string().nullish(),
+    updated_at: z.string().nullish(),
+});
+
+export type UserAnalytics = z.infer<typeof UserAnalyticsSchema>;
