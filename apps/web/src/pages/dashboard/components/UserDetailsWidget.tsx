@@ -29,14 +29,14 @@ function Stat({
 }) {
     return (
         <div
-            className={`flex items-center gap-3 p-3 rounded-xl border ${
+            className={`flex items-center gap-2 p-2 rounded-lg border ${
                 isDark
                     ? "bg-bg-tertiary-dark border-border-dark"
                     : "bg-bg-tertiary-light border-border-light"
             }`}
         >
             <div
-                className={`p-2 rounded-lg ${
+                className={`p-1 rounded-lg ${
                     isDark ? "bg-bg-secondary-dark" : "bg-bg-secondary-light"
                 }`}
             >
@@ -44,14 +44,14 @@ function Stat({
             </div>
             <div className="min-w-0">
                 <div
-                    className={`text-xs uppercase tracking-widest font-semibold ${
+                    className={`text-[10px] uppercase tracking-widest font-semibold ${
                         isDark ? "text-text-muted-dark" : "text-text-muted-light"
                     }`}
                 >
                     {label}
                 </div>
                 <div
-                    className={`text-sm font-semibold truncate ${
+                    className={`text-xs font-semibold truncate ${
                         isDark
                             ? "text-text-primary-dark"
                             : "text-text-primary-light"
@@ -105,7 +105,7 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className={`rounded-2xl border p-6 transition-colors ${
+            className={`rounded-2xl border p-5 transition-colors ${
                 isDark
                     ? "bg-bg-secondary-dark border-border-dark"
                     : "bg-bg-secondary-light border-border-light"
@@ -115,19 +115,19 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                 <div className="space-y-4">
                     <div className="animate-pulse h-6 w-48 rounded bg-bg-tertiary-light dark:bg-bg-tertiary-dark bg-opacity-60" />
                     <div className="animate-pulse h-4 w-72 rounded bg-bg-tertiary-light dark:bg-bg-tertiary-dark bg-opacity-60" />
-                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-1.5">
                         {[...Array(4)].map((_, i) => (
                             <div
                                 key={i}
-                                className="animate-pulse h-16 rounded-xl bg-bg-tertiary-light dark:bg-bg-tertiary-dark bg-opacity-60"
+                                className="animate-pulse h-12 rounded-lg bg-bg-tertiary-light dark:bg-bg-tertiary-dark bg-opacity-60"
                             />
                         ))}
                     </div>
                 </div>
             ) : (
                 <>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <div className="flex items-center gap-4 min-w-0 flex-1">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
                             <div
                                 className={`w-12 h-12 rounded-2xl flex items-center justify-center border ${
                                     isDark
@@ -182,22 +182,20 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                         </div>
 
                         <div
-                            className={`text-sm sm:text-right w-full sm:w-auto mt-4 sm:mt-0 ${
+                            className={`text-sm sm:text-right w-full sm:w-auto mt-3 sm:mt-0 ${
                                 isDark
                                     ? "text-text-secondary-dark"
                                     : "text-text-secondary-light"
                             }`}
                         >
                             <div className="font-semibold">Last {analytics?.length ?? 0} days</div>
-                            <div>
-                                <span className="font-medium">Time Practiced:</span> {summary.minutes} minutes<br/>
-                                <span className="font-medium">Questions Attempted:</span> {summary.questions}<br/>
-                                <span className="font-medium">Accuracy Rate:</span> {summary.accuracy}%
+                            <div className="text-xs">
+                                {summary.minutes} min • {summary.questions} Qs • {summary.accuracy}% acc
                             </div>
                         </div>
                     </div>
 
-                    <div className="mt-6 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="mt-4 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-1.5">
                         <Stat
                             label="Current Practice Streak"
                             value={latest ? `${latest.current_streak} days` : "—"}

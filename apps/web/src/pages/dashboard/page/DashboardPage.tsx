@@ -50,12 +50,12 @@ export const DashboardPage: React.FC = () => {
             <FloatingThemeToggle />
             <FloatingNavigation />
 
-            <div className="container mx-auto px-4 sm:px-6 py-12 md:pl-24">
+            <div className="container mx-auto px-4 sm:px-6 py-6 md:pl-24">
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="text-center mb-10"
+                    className="text-center mb-6"
                 >
                     <h1
                         className={`font-serif font-bold text-3xl md:text-5xl mb-3 ${
@@ -90,7 +90,7 @@ export const DashboardPage: React.FC = () => {
                         Please sign in to view your analytics dashboard.
                     </div>
                 ) : (
-                    <div className="space-y-6">
+                    <div className="space-y-3">
                         <UserDetailsWidget
                             profile={profileQuery.data}
                             analytics={analyticsQuery.data}
@@ -101,7 +101,7 @@ export const DashboardPage: React.FC = () => {
                             isDark={isDark}
                         />
 
-                        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 auto-rows-fr">
+                        <div className="grid grid-cols-1 md:grid-cols-6 gap-2 auto-rows-fr">
                             <SkillRadarWidget
                                 coreMetrics={coreMetrics}
                                 isLoading={metricQuery.isLoading || metricQuery.isFetching}

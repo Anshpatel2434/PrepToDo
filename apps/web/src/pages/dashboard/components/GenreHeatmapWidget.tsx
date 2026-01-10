@@ -45,7 +45,7 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1, duration: 0.5 }}
             whileHover={{ scale: 1.02 }}
-            className={`rounded-2xl border p-6 overflow-hidden transition-colors ${
+            className={`rounded-2xl border p-5 overflow-hidden transition-colors ${
                 isDark
                     ? "bg-bg-secondary-dark border-border-dark hover:border-zinc-700"
                     : "bg-bg-secondary-light border-border-light hover:border-zinc-300"
@@ -81,7 +81,7 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
                 </div>
             </div>
 
-            <div className="mt-6">
+            <div className="mt-5">
                 {error ? (
                     <div
                         className={`text-sm ${
@@ -91,11 +91,11 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
                         Error loading genre performance.
                     </div>
                 ) : isLoading ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5">
                         {[...Array(8)].map((_, i) => (
                             <div
                                 key={i}
-                                className="animate-pulse h-16 rounded-xl bg-bg-tertiary-light dark:bg-bg-tertiary-dark bg-opacity-60"
+                                className="animate-pulse h-12 rounded-lg bg-bg-tertiary-light dark:bg-bg-tertiary-dark bg-opacity-60"
                             />
                         ))}
                     </div>
@@ -110,19 +110,19 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
                         No genre data yet. Attempt a few RC sets to unlock this view.
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                        {heatData.slice(0, 12).map((g) => {
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5">
+                            {heatData.slice(0, 12).map((g) => {
                             const heatClass = scoreToHeatClass(g.score, isDark);
                             return (
                                 <motion.div
-                                    key={g.genre}
-                                    whileHover={{ scale: 1.02 }}
-                                    className={`relative group rounded-xl border p-3 overflow-hidden ${heatClass} ${
-                                        isDark
-                                            ? "border-border-dark"
-                                            : "border-border-light"
-                                    }`}
-                                    title={`${g.genre} • Proficiency: ${g.score}/100 • Accuracy: ${Math.round(g.accuracy)}% • Attempts: ${g.attempts}`}
+                                   key={g.genre}
+                                   whileHover={{ scale: 1.02 }}
+                                   className={`relative group rounded-lg border p-2 overflow-hidden ${heatClass} ${
+                                       isDark
+                                           ? "border-border-dark"
+                                           : "border-border-light"
+                                   }`}
+                                   title={`${g.genre} • Proficiency: ${g.score}/100 • Accuracy: ${Math.round(g.accuracy)}% • Attempts: ${g.attempts}`}
                                 >
                                     <div className="flex items-center justify-between gap-2">
                                         <div
@@ -146,13 +146,13 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
                                     </div>
 
                                     <div
-                                        className={`mt-2 text-[11px] ${
+                                        className={`text-[11px] ${
                                             isDark
                                                 ? "text-text-secondary-dark"
                                                 : "text-text-secondary-light"
                                         }`}
                                     >
-                                        <span className="font-medium">Attempts:</span> {g.attempts} • <span className="font-medium">Accuracy:</span> {Math.round(g.accuracy)}%
+                                        {g.attempts} att • {Math.round(g.accuracy)}% acc
                                     </div>
 
                                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
