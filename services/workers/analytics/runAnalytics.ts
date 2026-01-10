@@ -8,6 +8,7 @@ import { phaseB_computeProficiencyMetrics } from "./phases/phaseB_computeProfici
 import { phaseC_llmDiagnostics } from "./phases/phaseC_llmDiagnostics";
 import { phaseD_updateProficiency } from "./phases/phaseD_updateProficiency";
 import { phaseE_rollupSignals } from "./phases/phaseE_rollupSignals";
+import { phaseF_updateUserAnalytics } from "./phases/phaseF_updateUserAnalytics";
 import { AnalyticsResult } from "./types";
 import { loadMetricMapping } from "./utils/mapping";
 
@@ -25,7 +26,7 @@ export async function runAnalytics(params: {
     try {
 
         // --- PHASE A: DATA COLLECTION ---
-        console.log("\n📥 [Phase A/5] Fetching session data");
+        console.log("\n📥 [Phase A/6] Fetching session data");
         const phaseAResult = await phaseA_fetchSessionData(supabase, session_id, user_id);
 
         // Check if already analysed
@@ -59,11 +60,11 @@ export async function runAnalytics(params: {
         console.log(`   - Loaded mapping: ${metricMapping.metricToNodes.size} metrics`);
 
         // --- PHASE B: QUANTITATIVE AGGREGATION ---
-        console.log("\n📊 [Phase B/5] Computing surface statistics");
+        console.log("\n📊 [Phase B/6] Computing surface statistics");
         const sessionMetrics = phaseB_computeProficiencyMetrics(user_id, session_id, dataset, metricMapping,);
 
         // --- PHASE C: LLM DIAGNOSTICS ---
-        console.log("\n🧠 [Phase C/5] Running LLM diagnostics on incorrect attempts");
+        console.log("\n🧠 [Phase C/6] Running LLM diagnostics on incorrect attempts");
         const incorrectAttempts = dataset.filter(a => !a.correct);
         console.log(`   - Incorrect attempts: ${incorrectAttempts.length}`);
 
@@ -94,12 +95,20 @@ export async function runAnalytics(params: {
         }
 
         // --- PHASE D: PROFICIENCY ENGINE ---
-        console.log("\n🧮 [Phase D/5] Updating atomic proficiency scores");
+        console.log("\n🧮 [Phase D/6] Updating atomic proficiency scores");
         await phaseD_updateProficiency(supabase, user_id, session_id, sessionMetrics);
 
         // --- PHASE E: SUMMARY ROLLUP ---
-        console.log("\n📦 [Phase E/5] Rolling up proficiency signals");
+        console.log("\n📦 [Phase E/6] Rolling up proficiency signals");
         await phaseE_rollupSignals(supabase, user_id);
+
+        // --- PHASE F: USER ANALYTICS ---
+        console.log("\n📊 [Phase F/6] Updating user analytics");
+        await phaseF_updateUserAnalytics(supabase, user_id, session_id, dataset, {
+            time_spent_seconds: session.time_spent_seconds,
+            points_earned: session.points_earned,
+            completed_at: session.completed_at,
+        });
 
         // --- FINALIZATION: MARK AS ANALYSED ---
         console.log("\n🔒 [Finalization] Marking session as analysed");
