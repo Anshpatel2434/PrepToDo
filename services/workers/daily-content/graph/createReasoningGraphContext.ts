@@ -1,3 +1,4 @@
+import { metricMappingJson } from "../../../config/core_metric_reasoning_map_v1_0";
 import { supabase } from "../../../config/supabase";
 import { Edge, Node, QuestionMetricTag, ReasoningGraphContext } from "../schemas/types";
 import * as fs from "fs";
@@ -24,7 +25,7 @@ export async function getQuestionGraphContext(
 
     // Load core metric reasoning map
     const mapPath = path.join(process.cwd(), "config/core_metric_reasoning_map_v1.0.json");
-    const metricMapData = JSON.parse(fs.readFileSync(mapPath, "utf-8"));
+    const metricMapData = metricMappingJson
     const metricMap = metricMapData.metrics;
 
     const result: Record<string, ReasoningGraphContext> = {};
