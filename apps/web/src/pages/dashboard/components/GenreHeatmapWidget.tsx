@@ -67,7 +67,7 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
                                     : "text-brand-primary-light"
                             }
                         />
-                        Genre Heatmap
+                        Genre Performance
                     </h3>
                     <p
                         className={`text-sm mt-1 ${
@@ -76,7 +76,7 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
                                 : "text-text-secondary-light"
                         }`}
                     >
-                        Performance across passage genres.
+                        Your performance across different passage genres - shows proficiency scores and accuracy rates.
                     </p>
                 </div>
             </div>
@@ -91,15 +91,15 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
                         Error loading genre performance.
                     </div>
                 ) : isLoading ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {[...Array(6)].map((_, i) => (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        {[...Array(8)].map((_, i) => (
                             <div
                                 key={i}
                                 className="animate-pulse h-16 rounded-xl bg-bg-tertiary-light dark:bg-bg-tertiary-dark bg-opacity-60"
                             />
                         ))}
                     </div>
-                ) : heatData.length === 0 ? (
+                ) : (!heatData || heatData.length === 0) ? (
                     <div
                         className={`text-sm ${
                             isDark
@@ -110,7 +110,7 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
                         No genre data yet. Attempt a few RC sets to unlock this view.
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                         {heatData.slice(0, 12).map((g) => {
                             const heatClass = scoreToHeatClass(g.score, isDark);
                             return (
@@ -122,9 +122,7 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
                                             ? "border-border-dark"
                                             : "border-border-light"
                                     }`}
-                                    title={`${g.genre} • ${g.score}/100 • ${Math.round(
-                                        g.accuracy
-                                    )}% accuracy (${g.attempts} attempts)`}
+                                    title={`${g.genre} • Proficiency: ${g.score}/100 • Accuracy: ${Math.round(g.accuracy)}% • Attempts: ${g.attempts}`}
                                 >
                                     <div className="flex items-center justify-between gap-2">
                                         <div
@@ -143,7 +141,7 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
                                                     : "text-text-primary-light"
                                             }`}
                                         >
-                                            {g.score}
+                                            {g.score}/100
                                         </div>
                                     </div>
 
@@ -154,7 +152,7 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
                                                 : "text-text-secondary-light"
                                         }`}
                                     >
-                                        {g.attempts} attempts • {Math.round(g.accuracy)}%
+                                        <span className="font-medium">Attempts:</span> {g.attempts} • <span className="font-medium">Accuracy:</span> {Math.round(g.accuracy)}%
                                     </div>
 
                                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">

@@ -115,7 +115,7 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                 <div className="space-y-4">
                     <div className="animate-pulse h-6 w-48 rounded bg-bg-tertiary-light dark:bg-bg-tertiary-dark bg-opacity-60" />
                     <div className="animate-pulse h-4 w-72 rounded bg-bg-tertiary-light dark:bg-bg-tertiary-dark bg-opacity-60" />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         {[...Array(4)].map((_, i) => (
                             <div
                                 key={i}
@@ -126,8 +126,8 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                 </div>
             ) : (
                 <>
-                    <div className="flex items-start justify-between gap-6">
-                        <div className="flex items-center gap-4 min-w-0">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-4 min-w-0 flex-1">
                             <div
                                 className={`w-12 h-12 rounded-2xl flex items-center justify-center border ${
                                     isDark
@@ -171,14 +171,18 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                                     }`}
                                 >
                                     {profile
-                                        ? `${profile.subscription_tier} • goal ${profile.daily_goal_minutes} min/day • ${profile.preferred_difficulty} difficulty`
+                                        ? <>
+                                            <span className="font-medium">Subscription:</span> {profile.subscription_tier} •
+                                            <span className="font-medium">Daily Goal:</span> {profile.daily_goal_minutes} min/day •
+                                            <span className="font-medium">Difficulty:</span> {profile.preferred_difficulty}
+                                          </>
                                         : "Loading your preferences…"}
                                 </div>
                             </div>
                         </div>
 
                         <div
-                            className={`text-right text-sm ${
+                            className={`text-sm sm:text-right w-full sm:w-auto mt-4 sm:mt-0 ${
                                 isDark
                                     ? "text-text-secondary-dark"
                                     : "text-text-secondary-light"
@@ -186,33 +190,35 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                         >
                             <div className="font-semibold">Last {analytics?.length ?? 0} days</div>
                             <div>
-                                {summary.minutes} min • {summary.questions} questions • {summary.accuracy}%
+                                <span className="font-medium">Time Practiced:</span> {summary.minutes} minutes<br/>
+                                <span className="font-medium">Questions Attempted:</span> {summary.questions}<br/>
+                                <span className="font-medium">Accuracy Rate:</span> {summary.accuracy}%
                             </div>
                         </div>
                     </div>
 
-                    <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="mt-6 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         <Stat
-                            label="Current streak"
+                            label="Current Practice Streak"
                             value={latest ? `${latest.current_streak} days` : "—"}
                             icon={<MdLocalFireDepartment size={18} />}
                             isDark={isDark}
                         />
                         <Stat
-                            label="Longest streak"
+                            label="Longest Practice Streak"
                             value={latest ? `${latest.longest_streak} days` : "—"}
                             icon={<MdLocalFireDepartment size={18} />}
                             isDark={isDark}
                         />
                         <Stat
-                            label="Total points"
+                            label="Total Achievement Points"
                             value={latest ? latest.total_points : "—"}
                             icon={<MdStars size={18} />}
                             isDark={isDark}
                         />
                         <Stat
-                            label="Minutes today"
-                            value={today ? today.minutes_practiced : 0}
+                            label="Practice Time Today"
+                            value={today ? `${today.minutes_practiced} minutes` : "0 minutes"}
                             icon={<MdTimer size={18} />}
                             isDark={isDark}
                         />

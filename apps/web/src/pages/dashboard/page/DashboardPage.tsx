@@ -50,7 +50,7 @@ export const DashboardPage: React.FC = () => {
             <FloatingThemeToggle />
             <FloatingNavigation />
 
-            <div className="container mx-auto px-6 py-12">
+            <div className="container mx-auto px-4 sm:px-6 py-12 md:pl-24">
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -101,14 +101,14 @@ export const DashboardPage: React.FC = () => {
                             isDark={isDark}
                         />
 
-                        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 auto-rows-[minmax(220px,_auto)]">
+                        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 auto-rows-fr">
                             <SkillRadarWidget
                                 coreMetrics={coreMetrics}
                                 isLoading={metricQuery.isLoading || metricQuery.isFetching}
                                 isDark={isDark}
                                 index={0}
                                 error={metricQuery.error}
-                                className="md:col-span-2 md:row-span-2"
+                                className="md:col-span-3 md:row-span-2"
                             />
 
                             <GenreHeatmapWidget
@@ -117,7 +117,7 @@ export const DashboardPage: React.FC = () => {
                                 isDark={isDark}
                                 index={1}
                                 error={metricQuery.error}
-                                className="md:col-span-2"
+                                className="md:col-span-3"
                             />
 
                             <LogicGapWidget
@@ -126,7 +126,7 @@ export const DashboardPage: React.FC = () => {
                                 isDark={isDark}
                                 index={2}
                                 error={metricQuery.error}
-                                className="md:col-span-2 md:row-span-2"
+                                className="md:col-span-3 md:row-span-2"
                             />
 
                             <WPMAccuracyWidget
