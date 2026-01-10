@@ -294,6 +294,7 @@ CREATE TABLE public.practice_sessions (
   updated_at timestamp with time zone DEFAULT now(),
   paper_id uuid,
   is_analysed boolean DEFAULT false,
+  analytics jsonb,
   CONSTRAINT practice_sessions_pkey PRIMARY KEY (id),
   CONSTRAINT practice_sessions_paper_id_fkey FOREIGN KEY (paper_id) REFERENCES public.exam_papers(id),
   CONSTRAINT practice_sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.user_profiles(id),
