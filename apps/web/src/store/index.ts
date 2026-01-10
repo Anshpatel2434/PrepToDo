@@ -5,6 +5,8 @@ import authReducer from "../pages/auth/redux_usecases/authSlice";
 import { conceptTeachingApi } from "../pages/teach-concept/redux_usecases/teachConceptApi";
 import dailyPracticeReducer from "../pages/daily/redux_usecase/dailyPracticeSlice";
 import { dailyPracticeApi } from "../pages/daily/redux_usecase/dailyPracticeApi";
+import dashboardReducer from "../pages/dashboard/redux_usecases/dashboardSlice";
+import { dashboardApi } from "../pages/dashboard/redux_usecases/dashboardApi";
 
 export const store = configureStore({
     reducer: {
@@ -19,14 +21,23 @@ export const store = configureStore({
         dailyPractice: dailyPracticeReducer,
 
         // Daily Practice api
-        [dailyPracticeApi.reducerPath] : dailyPracticeApi.reducer
+        [dailyPracticeApi.reducerPath]: dailyPracticeApi.reducer,
+
+        // Dashboard state
+        dashboard: dashboardReducer,
+
+        // Dashboard API
+        [dashboardApi.reducerPath]: dashboardApi.reducer,
     },
     // Adding the api middleware enables caching, invalidation, polling,
     // and other useful features of RTK Query
     middleware: (getDefaultMiddleware) =>
-        getDefaultMiddleware().concat(authApi.middleware
-            , conceptTeachingApi.middleware,
-        dailyPracticeApi.middleware),
+        getDefaultMiddleware().concat(
+            authApi.middleware,
+            conceptTeachingApi.middleware,
+            dailyPracticeApi.middleware,
+            dashboardApi.middleware
+        ),
 });
 
 //optional, but required for refetchOnFocus/refetchOnReconnect behaviours

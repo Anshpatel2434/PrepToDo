@@ -11,6 +11,13 @@ import { StrengthWeakness } from "../components/StrengthWeakness";
 import { NextSteps } from "../components/NextSteps";
 import { SocialPreview } from "../components/SocialPreview";
 import { DashboardSkeleton } from "../components/SkeletonLoader";
+import SkillRadar from "../components/SkillRadar";
+import GenreHeatmap from "../components/GenreHeatmap";
+import LogicGapPanel from "../components/LogicGapPanel";
+import WPMAccuracy from "../components/WPMAccuracy";
+import WhatToDoNext from "../components/WhatToDoNext";
+
+import { useFetchUserProfileQuery, useFetchUserAnalyticsQuery, useFetchCoreSkillMetricsQuery, useFetchGenreProficiencyQuery, useFetchErrorPatternTrendsQuery, useFetchPracticeSessionsQuery, useFetchUserProficiencySignalsQuery } from "../redux_usecases/dashboardApi";
 import type {
     LeaderboardEntry,
     PracticeSession,
@@ -324,6 +331,35 @@ export const DashboardPage: React.FC = () => {
     const { isDark } = useTheme();
     const [isLoading, setIsLoading] = useState(true);
 
+    // Redux Query hooks for fetching dashboard data (currently skipped for dummy data mode)
+    const { 
+        data: userProfile
+    } = useFetchUserProfileQuery({ user_id: USER_ID }, { skip: true });
+
+    const { 
+        data: analyticsData
+    } = useFetchUserAnalyticsQuery({ user_id: USER_ID, days: 84 }, { skip: true });
+
+    const { 
+        data: coreSkillMetrics
+    } = useFetchCoreSkillMetricsQuery({ user_id: USER_ID }, { skip: true });
+
+    const { 
+        data: genreProficiency
+    } = useFetchGenreProficiencyQuery({ user_id: USER_ID }, { skip: true });
+
+    const { 
+        data: errorPatterns
+    } = useFetchErrorPatternTrendsQuery({ user_id: USER_ID }, { skip: true });
+
+    const { 
+        data: sessionsData
+    } = useFetchPracticeSessionsQuery({ user_id: USER_ID, limit: 10 }, { skip: true });
+
+    const { 
+        data: proficiencySignals
+    } = useFetchUserProficiencySignalsQuery({ user_id: USER_ID }, { skip: true });
+
     useEffect(() => {
         // Simulate initial data loading with 1.5s controlled delay
         const timer = setTimeout(() => {
@@ -339,13 +375,26 @@ export const DashboardPage: React.FC = () => {
         return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
     }, []);
 
-    const userProfile = useMemo(() => buildDummyUserProfile(nowIso), [nowIso]);
-    const analytics = useMemo(() => buildDummyAnalytics(endDateUtc), [endDateUtc]);
-    const sessions = useMemo(() => buildDummySessions(nowIso), [nowIso]);
+    // Use real data from Redux or fall back to dummy data
+    const effectiveUserProfile = useMemo(() => {
+        if (userProfile) return userProfile;
+        return buildDummyUserProfile(nowIso);
+    }, [userProfile, nowIso]);
+
+    const effectiveAnalytics = useMemo(() => {
+        if (analyticsData && analyticsData.length > 0) return analyticsData;
+        return buildDummyAnalytics(endDateUtc);
+    }, [analyticsData, endDateUtc]);
+
+    const effectiveSessions = useMemo(() => {
+        if (sessionsData && sessionsData.length > 0) return sessionsData;
+        return buildDummySessions(nowIso);
+    }, [sessionsData, nowIso]);
+
     const questions = useMemo(() => buildDummyQuestions(nowIso), [nowIso]);
     const attempts = useMemo(
-        () => buildDummyAttempts(nowIso, questions, sessions),
-        [nowIso, questions, sessions]
+        () => buildDummyAttempts(nowIso, questions, effectiveSessions),
+        [nowIso, questions, effectiveSessions]
     );
     const leaderboard = useMemo(() => buildDummyLeaderboard(nowIso), [nowIso]);
 
@@ -375,22 +424,58 @@ export const DashboardPage: React.FC = () => {
                         transition={{ duration: 0.25 }}
                     >
                         <div className="mx-auto max-w-7xl space-y-6">
+                            {/* Header */}
                             <motion.div
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.25, delay: 0.1 }}
                             >
-                                <DashboardHeader userProfile={userProfile} isDark={isDark} />
+                                <DashboardHeader 
+                                    userProfile={effectiveUserProfile} 
+                                    isDark={isDark} 
+                                />
                             </motion.div>
 
+                            {/* Summary Cards */}
                             <motion.div
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.25, delay: 0.2 }}
                             >
-                                <SummaryCards analytics={analytics} sessions={sessions} isDark={isDark} />
+                                <SummaryCards 
+                                    analytics={effectiveAnalytics} 
+                                    sessions={effectiveSessions} 
+                                    isDark={isDark} 
+                                />
                             </motion.div>
 
+                            {/* New Analytics Widgets Row */}
+                            <motion.div
+                                className="grid grid-cols-1 lg:grid-cols-12 gap-6"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.25, delay: 0.25 }}
+                            >
+                                {/* Skill Radar - Core Skills */}
+                                <div className="lg:col-span-4">
+                                    <SkillRadar
+                                        coreMetrics={coreSkillMetrics || []}
+                                        isLoading={false}
+                                        isDark={isDark}
+                                    />
+                                </div>
+
+                                {/* Genre Heatmap - Genre Proficiency */}
+                                <div className="lg:col-span-8">
+                                    <GenreHeatmap
+                                        genreProficiency={genreProficiency || []}
+                                        isLoading={false}
+                                        isDark={isDark}
+                                    />
+                                </div>
+                            </motion.div>
+
+                            {/* Activity & Progress */}
                             <motion.div
                                 className="grid grid-cols-1 lg:grid-cols-12 gap-6"
                                 initial={{ opacity: 0, y: 8 }}
@@ -398,13 +483,45 @@ export const DashboardPage: React.FC = () => {
                                 transition={{ duration: 0.25, delay: 0.3 }}
                             >
                                 <div className="lg:col-span-5">
-                                    <ActivityHeatmap analytics={analytics} isDark={isDark} weeks={12} />
+                                    <ActivityHeatmap 
+                                        analytics={effectiveAnalytics} 
+                                        isDark={isDark} 
+                                        weeks={12} 
+                                    />
                                 </div>
                                 <div className="lg:col-span-7">
-                                    <ProgressChart analytics={analytics} isDark={isDark} />
+                                    <ProgressChart 
+                                        analytics={effectiveAnalytics} 
+                                        isDark={isDark} 
+                                    />
                                 </div>
                             </motion.div>
 
+                            {/* WPM vs Accuracy & Logic Gap Panel */}
+                            <motion.div
+                                className="grid grid-cols-1 lg:grid-cols-12 gap-6"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.25, delay: 0.35 }}
+                            >
+                                <div className="lg:col-span-7">
+                                    <WPMAccuracy
+                                        analytics={effectiveAnalytics}
+                                        sessions={effectiveSessions}
+                                        isLoading={false}
+                                        isDark={isDark}
+                                    />
+                                </div>
+                                <div className="lg:col-span-5">
+                                    <LogicGapPanel
+                                        errorPatterns={errorPatterns || []}
+                                        isLoading={false}
+                                        isDark={isDark}
+                                    />
+                                </div>
+                            </motion.div>
+
+                            {/* Strengths/Weaknesses & Recommendations */}
                             <motion.div
                                 className="grid grid-cols-1 lg:grid-cols-12 gap-6"
                                 initial={{ opacity: 0, y: 8 }}
@@ -412,11 +529,29 @@ export const DashboardPage: React.FC = () => {
                                 transition={{ duration: 0.25, delay: 0.4 }}
                             >
                                 <div className="lg:col-span-7">
-                                    <StrengthWeakness performance={questionTypePerformance} isDark={isDark} />
+                                    <StrengthWeakness 
+                                        performance={questionTypePerformance} 
+                                        isDark={isDark} 
+                                    />
                                 </div>
                                 <div className="lg:col-span-5 space-y-6">
-                                    <NextSteps performance={questionTypePerformance} isDark={isDark} />
-                                    <SocialPreview leaderboard={leaderboard} isDark={isDark} />
+                                    {/* New What To Do Next Widget */}
+                                    <WhatToDoNext
+                                        proficiencySignals={proficiencySignals || null}
+                                        coreMetrics={coreSkillMetrics || []}
+                                        genreProficiency={genreProficiency || []}
+                                        isLoading={false}
+                                        isDark={isDark}
+                                    />
+                                    {/* Keep existing NextSteps for backwards compatibility */}
+                                    <NextSteps 
+                                        performance={questionTypePerformance} 
+                                        isDark={isDark} 
+                                    />
+                                    <SocialPreview 
+                                        leaderboard={leaderboard} 
+                                        isDark={isDark} 
+                                    />
                                 </div>
                             </motion.div>
                         </div>
@@ -426,3 +561,5 @@ export const DashboardPage: React.FC = () => {
         </div>
     );
 };
+
+export default DashboardPage;
