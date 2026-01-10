@@ -31,7 +31,9 @@ export async function phaseF_updateUserAnalytics(
 ): Promise<PhaseFResult> {
     console.log('📊 [Phase F] Updating user_analytics');
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = sessionData.completed_at
+        ? new Date(sessionData.completed_at).toISOString().split('T')[0]
+        : new Date().toISOString().split('T')[0];
 
     // 1. Calculate basic session stats
     const questions_attempted = dataset.length;
@@ -75,13 +77,15 @@ export async function phaseF_updateUserAnalytics(
         reading_speed_wpm,
     };
 
-    // 8. Fetch existing analytics for streak calculation
-    const { data: existingAnalytics } = await supabase
+    // 8. Fetch existing analytics for today to handle multiple sessions
+    const { data: existingAnalyticsList } = await supabase
         .from('user_analytics')
         .select('*')
         .eq('user_id', user_id)
         .eq('date', today)
-        .maybeSingle();
+        .order('created_at', { ascending: false });
+
+    const existingAnalytics = existingAnalyticsList?.[0] || null;
 
     // 9. Calculate streaks
     const streakData = await calculateStreaks(supabase, user_id, today, analyticsData.is_active_day);
@@ -399,67 +403,52 @@ async function calculateStreaks(
     today: string,
     isActiveToday: boolean
 ): Promise<{ currentStreak: number; longestStreak: number }> {
-    // Fetch all active days for this user, ordered by date descending
+    // Fetch active days for this user, ordered by date descending
+    // We only really need the date and longest_streak for the calculation
     const { data: analytics, error } = await supabase
         .from('user_analytics')
-        .select('*')
+        .select('date, longest_streak')
         .eq('user_id', user_id)
         .eq('is_active_day', true)
         .order('date', { ascending: false });
 
     if (error || !analytics || analytics.length === 0) {
-        // First active day
+        // First active day ever
         return { currentStreak: isActiveToday ? 1 : 0, longestStreak: isActiveToday ? 1 : 0 };
     }
-
-    let analyticsVerified: z.infer<typeof UserAnalyticsSchema>[];
-                try {
-                    analyticsVerified = UserAnalyticsArraySchema.parse(analytics);
-                    console.log("Validation passed for user analytics ");
-                } catch (error) {
-                    if (error instanceof z.ZodError) {
-                        console.error("Validation failed  for user analytics : ", error.issues[0]);
-                    } else {
-                        console.error("Unexpected error  for user analytics : ", error);
-                    }
-                }
 
     // Calculate current streak
     let currentStreak = isActiveToday ? 1 : 0;
     const todayDate = new Date(today);
     const yesterdayDate = new Date(todayDate);
-    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-
+    yesterdayDate.setUTCDate(yesterdayDate.getUTCDate() - 1);
     const yesterdayStr = yesterdayDate.toISOString().split('T')[0];
 
-    // Check if yesterday was active (or today to extend streak)
-    const lastActiveDay = analyticsVerified.find(a => a.date <= today && a.is_active_day);
-
     if (isActiveToday) {
-        // Check consecutive days
-        const dates = analyticsVerified.map(a => a.date);
-        let expectedDate = yesterdayStr;
+        // Use a Set for O(1) lookups and to handle potential duplicates
+        const dates = new Set(analytics.map((a: any) => a.date));
         let streak = 1;
+        let expectedDate = yesterdayStr;
 
-        for (const date of dates) {
-            if (date === expectedDate) {
-                streak++;
-                const expDate = new Date(expectedDate);
-                expDate.setDate(expDate.getDate() - 1);
-                expectedDate = expDate.toISOString().split('T')[0];
-            } else if (date < expectedDate) {
-                break;
-            }
+        // Count backwards from yesterday
+        while (dates.has(expectedDate)) {
+            streak++;
+            const expDate = new Date(expectedDate);
+            expDate.setUTCDate(expDate.getUTCDate() - 1);
+            expectedDate = expDate.toISOString().split('T')[0];
         }
 
         currentStreak = streak;
     }
 
-    // Find longest streak from existing data or calculate new max
-    let longestStreak = Math.max(
-        ...analyticsVerified.map(a => a.longest_streak || 0),
-        currentStreak
-    );
+    // Find longest streak from existing data or current streak
+    let maxPreviousStreak = 0;
+    for (const a of analytics) {
+        if (a.longest_streak > maxPreviousStreak) {
+            maxPreviousStreak = a.longest_streak;
+        }
+    }
+    const longestStreak = Math.max(maxPreviousStreak, currentStreak);
 
     return { currentStreak, longestStreak };
 }
