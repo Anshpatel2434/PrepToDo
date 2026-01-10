@@ -24,12 +24,12 @@ export async function phaseA_fetchSessionData(
     let sessionVerified : z.infer<typeof PracticeSessionSchema>;
     try {
         sessionVerified = PracticeSessionSchema.parse(session);
-        console.log("Validation passed for session : ", sessionVerified);
+        console.log("Validation passed for session ");
     } catch (error) {
         if (error instanceof z.ZodError) {
             console.error("Validation failed for session: ", error.issues[0]);
         } else {
-            console.error("Unexpected error: ", error);
+            console.error("Unexpected error for session : ", error);
         }
     }
 
@@ -56,12 +56,12 @@ export async function phaseA_fetchSessionData(
     let attemptsVerified: z.infer<typeof QuestionAttemptSchema>[];
         try {
             attemptsVerified = QuestionAttemptArraySchema.parse(attempts);
-            console.log("Validation passed for attempts: ", attemptsVerified);
+            console.log("Validation passed for attempts: ");
         } catch (error) {
             if (error instanceof z.ZodError) {
                 console.error("Validation failed for attempts: ", error.issues[0]);
             } else {
-                console.error("Unexpected error: ", error);
+                console.error("Unexpected error for attempts : ", error);
             }
         }
 
@@ -85,12 +85,12 @@ export async function phaseA_fetchSessionData(
     let questionsVerified: z.infer<typeof QuestionSchema>[];
             try {
                 questionsVerified = QuestionArraySchema.parse(questions);
-                console.log("Validation passed: ", questionsVerified);
+                console.log("Validation passed for questions ");
             } catch (error) {
                 if (error instanceof z.ZodError) {
-                    console.error("Validation failed: ", error.issues[0]);
+                    console.error("Validation failed for questions : ", error.issues[0]);
                 } else {
-                    console.error("Unexpected error: ", error);
+                    console.error("Unexpected error  for questions : ", error);
                 }
             }
 
@@ -111,12 +111,12 @@ export async function phaseA_fetchSessionData(
         if (passagesError) throw new Error(`Passages fetch failed: ${passagesError.message}`);
         try {
             passageVerified = PassageArraySchema.parse(passages);
-            console.log("Validation passed: ", passageVerified);
+            console.log("Validation passed for passages  ");
         } catch (error) {
             if (error instanceof z.ZodError) {
-                console.error("Validation failed: ", error.issues[0]);
+                console.error("Validation failed  for passages : ", error.issues[0]);
             } else {
-                console.error("Unexpected error: ", error);
+                console.error("Unexpected error  for passages : ", error);
             }
         }
         // Build passage lookup map

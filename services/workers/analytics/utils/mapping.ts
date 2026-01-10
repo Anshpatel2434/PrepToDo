@@ -10,12 +10,12 @@ export function loadMetricMapping(json: any): MetricMapping {
         const nodesLabel = new Set<string>();
 
         for (const step of (metricData as any).reasoning_steps) {
-            nodesLabel.add(step.node_id);
+            nodesLabel.add(step.label);
 
-            if (!nodeToMetrics.has(step.node_id)) {
-                nodeToMetrics.set(step.node_id, new Set<string>());
+            if (!nodeToMetrics.has(step.label)) {
+                nodeToMetrics.set(step.label, new Set<string>());
             }
-            nodeToMetrics.get(step.node_id)!.add(metricKey);
+            nodeToMetrics.get(step.label)!.add(metricKey);
         }
 
         metricToNodes.set(metricKey, nodesLabel);

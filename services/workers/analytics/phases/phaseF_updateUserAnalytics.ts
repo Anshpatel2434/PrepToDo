@@ -1,6 +1,7 @@
 // VARC Analytics - Phase F: Update User Analytics
 
-import type { AttemptDatum, UserAnalytics } from "../types";
+import z from "zod";
+import { PassageArraySchema, QuestionArraySchema, QuestionSchema, UserAnalyticsArraySchema, UserAnalyticsSchema, type AttemptDatum, type PassageSchema, type UserAnalytics } from "../types";
 
 export interface PhaseFResult {
     user_id: string;
@@ -126,8 +127,7 @@ export async function phaseF_updateUserAnalytics(
             existingAnalytics?.question_type_performance as Record<string, number> || {},
             questionTypePerformance
         ),
-        reading_speed_wpm: reading_speed_wpm > 0 ? reading_speed_wpm : (existingAnalytics?.reading_speed_wpm || null),
-        new_words_learned: existingAnalytics?.new_words_learned || 0, // To be implemented with vocab tracking
+         new_words_learned: existingAnalytics?.new_words_learned || 0, // To be implemented with vocab tracking
         words_reviewed: existingAnalytics?.words_reviewed || 0, // To be implemented with vocab tracking
         updated_at: new Date().toISOString(),
     };
@@ -229,22 +229,33 @@ async function calculateReadingSpeedWpm(
 
     // Get unique passage IDs from dataset
     const passageIds = Array.from(new Set(dataset.map(d => d.passage_id).filter(Boolean)));
-    
+
     if (passageIds.length === 0) return 0;
 
     // Fetch passages to get word counts
     const { data: passages, error } = await supabase
         .from('passages')
-        .select('id, word_count')
+        .select('*')
         .in('id', passageIds);
 
     if (error || !passages || passages.length === 0) {
         console.warn('⚠️ [Phase F] Could not fetch passage word counts for WPM calculation');
         return 0;
     }
+    let passageVerified: z.infer<typeof PassageSchema>[];
+    try {
+        passageVerified = PassageArraySchema.parse(passages);
+        console.log("Validation passed for passages: ");
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            console.error("Validation failed  for passages : ", error.issues[0]);
+        } else {
+            console.error("Unexpected error  for passages : ", error);
+        }
+    }
 
     // Build passage word count map
-    const passageWordCount = new Map(passages.map(p => [p.id, p.word_count]));
+    const passageWordCount = new Map(passageVerified.map(p => [p.id, p.word_count]));
 
     // Calculate total words read and total time spent
     let totalWords = 0;
@@ -289,7 +300,7 @@ function calculateGenrePerformance(dataset: AttemptDatum[]): Record<string, numb
     }
 
     const performance: Record<string, number> = {};
-    for (const [genre, stats] of genreStats.entries()) {
+    for (const [genre, stats] of Array.from(genreStats)) {
         performance[genre] = Math.round((stats.correct / stats.total) * 100);
     }
 
@@ -311,7 +322,7 @@ async function calculateDifficultyPerformance(
 
     const { data: questions, error } = await supabase
         .from('questions')
-        .select('id, difficulty')
+        .select('*')
         .in('id', questionIds);
 
     if (error || !questions || questions.length === 0) {
@@ -319,13 +330,25 @@ async function calculateDifficultyPerformance(
         return {};
     }
 
-    const questionDifficulty = new Map(questions.map(q => [q.id, q.difficulty]));
+    let questionsVerified: z.infer<typeof QuestionSchema>[];
+    try {
+        questionsVerified = QuestionArraySchema.parse(questions);
+        console.log("Validation passed for questions");
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            console.error("Validation failed  for questions : ", error.issues[0]);
+        } else {
+            console.error("Unexpected error  for questions : ", error);
+        }
+    }
+
+    const questionDifficulty = new Map(questionsVerified.map(q => [q.id, q.difficulty]));
 
     const difficultyStats = new Map<string, { correct: number; total: number }>();
 
     for (const attempt of dataset) {
         const difficulty = questionDifficulty.get(attempt.question_id) || 'medium';
-        
+
         if (!difficultyStats.has(difficulty)) {
             difficultyStats.set(difficulty, { correct: 0, total: 0 });
         }
@@ -336,7 +359,7 @@ async function calculateDifficultyPerformance(
     }
 
     const performance: Record<string, number> = {};
-    for (const [difficulty, stats] of difficultyStats.entries()) {
+    for (const [difficulty, stats] of Array.from(difficultyStats)) {
         performance[difficulty] = Math.round((stats.correct / stats.total) * 100);
     }
 
@@ -360,7 +383,7 @@ function calculateQuestionTypePerformance(dataset: AttemptDatum[]): Record<strin
     }
 
     const performance: Record<string, number> = {};
-    for (const [type, stats] of typeStats.entries()) {
+    for (const [type, stats] of Array.from(typeStats)) {
         performance[type] = Math.round((stats.correct / stats.total) * 100);
     }
 
@@ -379,7 +402,7 @@ async function calculateStreaks(
     // Fetch all active days for this user, ordered by date descending
     const { data: analytics, error } = await supabase
         .from('user_analytics')
-        .select('date, is_active_day, current_streak, longest_streak')
+        .select('*')
         .eq('user_id', user_id)
         .eq('is_active_day', true)
         .order('date', { ascending: false });
@@ -388,6 +411,18 @@ async function calculateStreaks(
         // First active day
         return { currentStreak: isActiveToday ? 1 : 0, longestStreak: isActiveToday ? 1 : 0 };
     }
+
+    let analyticsVerified: z.infer<typeof UserAnalyticsSchema>[];
+                try {
+                    analyticsVerified = UserAnalyticsArraySchema.parse(analytics);
+                    console.log("Validation passed for user analytics ");
+                } catch (error) {
+                    if (error instanceof z.ZodError) {
+                        console.error("Validation failed  for user analytics : ", error.issues[0]);
+                    } else {
+                        console.error("Unexpected error  for user analytics : ", error);
+                    }
+                }
 
     // Calculate current streak
     let currentStreak = isActiveToday ? 1 : 0;
@@ -398,11 +433,11 @@ async function calculateStreaks(
     const yesterdayStr = yesterdayDate.toISOString().split('T')[0];
 
     // Check if yesterday was active (or today to extend streak)
-    const lastActiveDay = analytics.find(a => a.date <= today && a.is_active_day);
-    
+    const lastActiveDay = analyticsVerified.find(a => a.date <= today && a.is_active_day);
+
     if (isActiveToday) {
         // Check consecutive days
-        const dates = analytics.map(a => a.date);
+        const dates = analyticsVerified.map(a => a.date);
         let expectedDate = yesterdayStr;
         let streak = 1;
 
@@ -422,7 +457,7 @@ async function calculateStreaks(
 
     // Find longest streak from existing data or calculate new max
     let longestStreak = Math.max(
-        ...analytics.map(a => a.longest_streak || 0),
+        ...analyticsVerified.map(a => a.longest_streak || 0),
         currentStreak
     );
 
@@ -460,7 +495,7 @@ function calculateWeightedAccuracy(
     newAccuracy: number
 ): number {
     const totalAttempts = existingAttempts + newAttempts;
-    
+
     if (totalAttempts === 0) return 0;
 
     const existingWeighted = (existingAttempts / totalAttempts) * existingAccuracy;

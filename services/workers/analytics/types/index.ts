@@ -315,14 +315,15 @@ export const UserAnalyticsSchema = z.object({
     longest_streak: z.number().int().default(0),
     points_earned_today: z.number().int().default(0),
     total_points: z.number().int().default(0),
-    genre_performance: z.record(z.number()).nullish(),
-    difficulty_performance: z.record(z.number()).nullish(),
-    question_type_performance: z.record(z.number()).nullish(),
-    reading_speed_wpm: z.number().int().nullish(),
+    genre_performance: z.any().nullish(),
+    difficulty_performance: z.any().nullish(),
+    question_type_performance: z.any().nullish(),
     new_words_learned: z.number().int().default(0),
     words_reviewed: z.number().int().default(0),
     created_at: z.string().nullish(),
     updated_at: z.string().nullish(),
 });
+
+export const UserAnalyticsArraySchema = z.array(UserAnalyticsSchema)
 
 export type UserAnalytics = z.infer<typeof UserAnalyticsSchema>;
