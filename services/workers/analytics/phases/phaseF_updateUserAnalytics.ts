@@ -49,7 +49,14 @@ export async function phaseF_updateUserAnalytics(
 
     // 3. Update user_metric_proficiency with reading_speed_wpm if calculated
     if (reading_speed_wpm > 0) {
-        await updateReadingSpeedProficiency(supabase, user_id, session_id, reading_speed_wpm, accuracy_percentage);
+        await updateReadingSpeedProficiency(
+            supabase, 
+            user_id, 
+            session_id, 
+            reading_speed_wpm, 
+            accuracy_percentage,
+            sessionData.completed_at
+        );
     }
 
     // 4. Calculate genre performance
@@ -168,7 +175,8 @@ async function updateReadingSpeedProficiency(
     user_id: string,
     session_id: string,
     wpm: number,
-    accuracy: number
+    accuracy: number,
+    completed_at: string
 ): Promise<void> {
     console.log(`📊 [Phase F] Updating reading_speed_wpm in user_metric_proficiency: ${wpm} WPM, ${accuracy}% accuracy`);
 
@@ -197,10 +205,16 @@ async function updateReadingSpeedProficiency(
     }
 
     // Update speed_vs_accuracy_data with the last 60 sessions
-    const today = new Date().toISOString().split('T')[0];
-    const newSessionData = { date: today, wpm, accuracy };
+    // Use the session's completed_at date, not today's date
+    const sessionDate = new Date(completed_at).toISOString().split('T')[0];
+    const newSessionData = { 
+        date: sessionDate, 
+        wpm, 
+        accuracy,
+        session_id // Track session_id to handle multiple sessions per day
+    };
     
-    let speedVsAccuracyData: Array<{ date: string; wpm: number; accuracy: number }> = [];
+    let speedVsAccuracyData: Array<{ date: string; wpm: number; accuracy: number; session_id: string }> = [];
     
     if (existing?.speed_vs_accuracy_data) {
         // Parse existing data
@@ -209,20 +223,30 @@ async function updateReadingSpeedProficiency(
             : [];
     }
     
-    // Check if today's data already exists
-    const todayIndex = speedVsAccuracyData.findIndex((d: any) => d.date === today);
-    if (todayIndex >= 0) {
-        // Update today's data (multiple sessions on same day - use latest)
-        speedVsAccuracyData[todayIndex] = newSessionData;
+    // Check if this specific session already exists (for idempotency)
+    const existingSessionIndex = speedVsAccuracyData.findIndex((d: any) => d.session_id === session_id);
+    if (existingSessionIndex >= 0) {
+        // Update existing session data (reprocessing scenario)
+        speedVsAccuracyData[existingSessionIndex] = newSessionData;
+        console.log(`   - Updated existing session data for session ${session_id}`);
     } else {
         // Add new session data
         speedVsAccuracyData.push(newSessionData);
+        console.log(`   - Added new session data for session ${session_id}`);
     }
     
-    // Keep only the last 60 sessions, sorted by date
-    speedVsAccuracyData.sort((a: any, b: any) => a.date.localeCompare(b.date));
+    // Sort by date (oldest to newest), then keep only the last 60 sessions
+    speedVsAccuracyData.sort((a: any, b: any) => {
+        const dateCompare = a.date.localeCompare(b.date);
+        if (dateCompare !== 0) return dateCompare;
+        // If same date, sort by session_id for consistency
+        return a.session_id.localeCompare(b.session_id);
+    });
+    
     if (speedVsAccuracyData.length > 60) {
+        // Remove oldest sessions, keep last 60
         speedVsAccuracyData = speedVsAccuracyData.slice(-60);
+        console.log(`   - Trimmed to last 60 sessions (removed ${speedVsAccuracyData.length - 60} oldest)`);
     }
 
     const { error: upsertError } = await supabase
