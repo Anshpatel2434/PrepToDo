@@ -92,7 +92,19 @@ export async function phaseF_updateUserAnalytics(
         .eq('date', today)
         .order('created_at', { ascending: false });
 
-    const existingAnalytics = existingAnalyticsList?.[0] || null;
+    // Aggregate all existing records to handle potential duplicates (defensive programming)
+    const existingAnalytics = existingAnalyticsList?.length > 0 ? {
+        minutes_practiced: existingAnalyticsList.reduce((sum, r) => sum + (r.minutes_practiced || 0), 0),
+        questions_attempted: existingAnalyticsList.reduce((sum, r) => sum + (r.questions_attempted || 0), 0),
+        questions_correct: existingAnalyticsList.reduce((sum, r) => sum + (r.questions_correct || 0), 0),
+        accuracy_percentage: existingAnalyticsList[0]?.accuracy_percentage || 0, // Use most recent as baseline
+        points_earned_today: existingAnalyticsList.reduce((sum, r) => sum + (r.points_earned_today || 0), 0),
+        genre_performance: existingAnalyticsList[0]?.genre_performance as Record<string, number> || {},
+        difficulty_performance: existingAnalyticsList[0]?.difficulty_performance as Record<string, number> || {},
+        question_type_performance: existingAnalyticsList[0]?.question_type_performance as Record<string, number> || {},
+        new_words_learned: existingAnalyticsList[0]?.new_words_learned || 0,
+        words_reviewed: existingAnalyticsList[0]?.words_reviewed || 0,
+    } : null;
 
     // 9. Calculate streaks
     const streakData = await calculateStreaks(supabase, user_id, today, analyticsData.is_active_day);
@@ -143,15 +155,30 @@ export async function phaseF_updateUserAnalytics(
         updated_at: new Date().toISOString(),
     };
 
-    // 12. Upsert into user_analytics table
+    // 12. Delete all existing analytics records for this user/day to prevent duplicates
+    // This ensures we maintain a single consolidated record per user per day
+    if (existingAnalyticsList && existingAnalyticsList.length > 0) {
+        const { error: deleteError } = await supabase
+            .from('user_analytics')
+            .delete()
+            .eq('user_id', user_id)
+            .eq('date', today);
+
+        if (deleteError) {
+            console.warn('⚠️ [Phase F] Failed to delete existing analytics records:', deleteError.message);
+            // Continue anyway - upsert may still work
+        } else {
+            console.log(`🧹 [Phase F] Cleaned up ${existingAnalyticsList.length} existing analytics record(s)`);
+        }
+    }
+
+    // 13. Insert new consolidated analytics record
     const { error: upsertError } = await supabase
         .from('user_analytics')
-        .upsert(upsertData, {
-            onConflict: 'user_id,date',
-        });
+        .insert(upsertData);
 
     if (upsertError) {
-        console.error('❌ [Phase F] Failed to upsert user_analytics:', upsertError);
+        console.error('❌ [Phase F] Failed to insert user_analytics:', upsertError);
         throw new Error(`Failed to update user_analytics: ${upsertError.message}`);
     }
 
@@ -316,17 +343,17 @@ async function calculateReadingSpeedWpm(
     // Build passage word count map
     const passageWordCount = new Map(passageVerified.map(p => [p.id, p.word_count]));
 
-    // Calculate total words read and total time spent
+    // Calculate total words (each passage counted once - user reads the passage once, not once per question)
     let totalWords = 0;
-    let totalTimeSeconds = 0;
-
-    for (const attempt of dataset) {
-        if (attempt.passage_id && passageWordCount.has(attempt.passage_id)) {
-            // Assume equal distribution of passage words across questions
-            // This is an approximation - for more accuracy, we'd need per-question word tracking
-            const passageWordCountValue = passageWordCount.get(attempt.passage_id) || 0;
-            totalWords += passageWordCountValue;
+    for (const passageId of passageIds) {
+        if (passageWordCount.has(passageId)) {
+            totalWords += passageWordCount.get(passageId) || 0;
         }
+    }
+
+    // Calculate total time spent (sum of all question attempt times)
+    let totalTimeSeconds = 0;
+    for (const attempt of dataset) {
         totalTimeSeconds += attempt.time_spent_seconds;
     }
 
