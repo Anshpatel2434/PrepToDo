@@ -407,7 +407,7 @@ async function calculateStreaks(
     // We only really need the date and longest_streak for the calculation
     const { data: analytics, error } = await supabase
         .from('user_analytics')
-        .select('date, longest_streak')
+        .select('*')
         .eq('user_id', user_id)
         .eq('is_active_day', true)
         .order('date', { ascending: false });
@@ -415,6 +415,18 @@ async function calculateStreaks(
     if (error || !analytics || analytics.length === 0) {
         // First active day ever
         return { currentStreak: isActiveToday ? 1 : 0, longestStreak: isActiveToday ? 1 : 0 };
+    }
+
+    let analyticsVerified: z.infer<typeof UserAnalyticsSchema>[];
+    try {
+        analyticsVerified = UserAnalyticsArraySchema.parse(analytics);
+        console.log("Validation passed for user analytics ");
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            console.error("Validation failed  for user analytics : ", error.issues[0]);
+        } else {
+            console.error("Unexpected error  for user analytics : ", error);
+        }
     }
 
     // Calculate current streak
@@ -426,7 +438,7 @@ async function calculateStreaks(
 
     if (isActiveToday) {
         // Use a Set for O(1) lookups and to handle potential duplicates
-        const dates = new Set(analytics.map((a: any) => a.date));
+        const dates = new Set(analyticsVerified.map((a: any) => a.date));
         let streak = 1;
         let expectedDate = yesterdayStr;
 
@@ -443,7 +455,7 @@ async function calculateStreaks(
 
     // Find longest streak from existing data or current streak
     let maxPreviousStreak = 0;
-    for (const a of analytics) {
+    for (const a of analyticsVerified) {
         if (a.longest_streak > maxPreviousStreak) {
             maxPreviousStreak = a.longest_streak;
         }
