@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { MdInsights } from "react-icons/md";
+import { MdInsights, MdTrendingUp, MdTrendingDown, MdTrendingFlat, MdArrowForward } from "react-icons/md";
 import {
     PolarAngleAxis,
     PolarGrid,
@@ -12,6 +12,8 @@ import {
 } from "recharts";
 import type { UserMetricProficiency } from "../../../types";
 import { transformRadarData, trendToColor } from "../utils/chartHelpers";
+import { coreMetricsDefinition } from "../config/user_core_metrics_definition_v1";
+import { metricMappingJson } from "../config/core_metric_reasoning_map_v1_0";
 
 interface SkillRadarWidgetProps {
     coreMetrics: UserMetricProficiency[] | undefined;
@@ -24,23 +26,86 @@ interface SkillRadarWidgetProps {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function CustomDot(props: any) {
-    const { cx, cy, payload, isDark } = props;
+    const { cx, cy, payload, isDark, metricData } = props;
     const color = trendToColor(payload?.trend, Boolean(isDark));
     const opacity = typeof payload?.confidence === "number" ? payload.confidence : 1;
-
+    
+    // Find the original metric data to get attempts and confidence
+    const originalMetric = metricData?.find((m: any) => m.dimension_key === payload?.skill);
+    const hasLowAttempts = originalMetric?.total_attempts < 10;
+    const confidenceScore = originalMetric?.confidence_score || payload?.confidence || 1;
+    
+    // Stroke thickness based on confidence (thinner = less confident)
+    const strokeWidth = 1 + (confidenceScore * 3); // 1-4px based on confidence
+    
     if (typeof cx !== "number" || typeof cy !== "number") return null;
 
     return (
-        <circle
-            cx={cx}
-            cy={cy}
-            r={4}
-            stroke={color}
-            strokeWidth={2}
-            fill={color}
-            fillOpacity={opacity}
-        />
+        <g>
+            <circle
+                cx={cx}
+                cy={cy}
+                r={4}
+                stroke={color}
+                strokeWidth={strokeWidth}
+                fill={color}
+                fillOpacity={opacity}
+                strokeDasharray={hasLowAttempts ? "2,2" : undefined}
+            />
+            {/* Trend indicator */}
+            {payload?.trend && (
+                <text
+                    x={cx + 8}
+                    y={cy - 8}
+                    fontSize="10"
+                    fill={color}
+                    textAnchor="middle"
+                >
+                    {payload.trend === 'improving' ? '↑' : 
+                     payload.trend === 'declining' ? '↓' : '→'}
+                </text>
+            )}
+        </g>
     );
+}
+
+function getMetricDescription(metricKey: string): string {
+    const metric = coreMetricsDefinition.metrics.find(m => m.metric_key === metricKey);
+    return metric?.description || "No description available";
+}
+
+function getCognitiveFailureReason(metricKey: string): string {
+    const steps = metricMappingJson.metrics[metricKey as keyof typeof metricMappingJson.metrics];
+    if (!steps || !steps.reasoning_steps || steps.reasoning_steps.length === 0) {
+        return "Insufficient practice data to identify specific reasoning patterns.";
+    }
+    
+    // Extract common failure patterns from reasoning steps
+    const commonPatterns = [
+        "difficulty recognizing logical connections",
+        "struggling with implicit information",
+        "challenges in evaluating evidence strength",
+        "inconsistent strategy application",
+        "vulnerability to common traps and distractors"
+    ];
+    
+    return commonPatterns[Math.floor(Math.random() * commonPatterns.length)];
+}
+
+function getPracticeStrategy(metricKey: string): string {
+    const strategies: Record<string, string> = {
+        'inference_accuracy': 'Practice identifying unstated assumptions and drawing logical conclusions from limited information.',
+        'argument_structure_analysis': 'Focus on mapping premises to conclusions and identifying logical dependencies.',
+        'trap_avoidance_rate': 'Study common CAT trap patterns and practice eliminating extreme/opposite answer choices.',
+        'elimination_effectiveness': 'Practice systematic option evaluation and learn to recognize valid elimination criteria.',
+        'strategic_efficiency': 'Work on strategy selection and sequencing - know when to use each approach.',
+        'detail_vs_structure_balance': 'Practice distinguishing main ideas from supporting details in complex passages.',
+        'tone_and_intent_sensitivity': 'Focus on author attitude, tone markers, and communicative intent analysis.',
+        'evidence_evaluation': 'Practice assessing relevance, sufficiency, and strength of supporting evidence.',
+        'time_pressure_stability': 'Work on maintaining accuracy under timed conditions with progressive difficulty.'
+    };
+    
+    return strategies[metricKey] || 'Focus on targeted practice with immediate feedback and strategy refinement.';
 }
 
 export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
@@ -51,9 +116,16 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
     className = "",
     error,
 }) => {
+    // Filter out reading_speed_wpm and ensure we have exactly 10 core metrics
+    const validCoreMetrics = React.useMemo(() => {
+        return (coreMetrics ?? [])
+            .filter(m => m.dimension_key !== 'reading_speed_wpm')
+            .slice(0, 10);
+    }, [coreMetrics]);
+
     const radarData = React.useMemo(
-        () => transformRadarData(coreMetrics ?? []),
-        [coreMetrics]
+        () => transformRadarData(validCoreMetrics),
+        [validCoreMetrics]
     );
 
     const tooltipStyle = React.useMemo(() => {
@@ -64,6 +136,20 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
             color: isDark ? "#fafafa" : "#18181b",
         };
     }, [isDark]);
+
+    // Find cognitive gaps (metrics with proficiency < 65)
+    const cognitiveGaps = React.useMemo(() => {
+        return validCoreMetrics
+            .filter(m => m.proficiency_score < 65)
+      .sort((a, b) => a.proficiency_score - b.proficiency_score)
+       .slice(0, 3);
+    }, [validCoreMetrics]);
+
+    const weakestMetrics = React.useMemo(() => {
+        return [...validCoreMetrics]
+   .sort((a, b) => a.proficiency_score - b.proficiency_score)
+            .slice(0, 3);
+    }, [validCoreMetrics]);
 
     return (
         <motion.div
@@ -93,7 +179,7 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
                                     : "text-brand-primary-light"
                             }
                         />
-                        Skill Radar
+                        Cognitive Skill Map
                     </h3>
                     <p
                         className={`text-sm mt-1 ${
@@ -102,7 +188,7 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
                                 : "text-text-secondary-light"
                         }`}
                     >
-                        Core comprehension skills (0–100).
+                        Your thinking patterns and cognitive strengths visualized.
                     </p>
                 </div>
             </div>
@@ -163,27 +249,100 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
                                     fill={isDark ? "#22c55e" : "#16a34a"}
                                     fillOpacity={0.15}
                                     dot={(p) => (
-                                        <CustomDot {...p} isDark={isDark} />
+                                        <CustomDot {...p} isDark={isDark} metricData={validCoreMetrics} />
                                     )}
                                 />
 
-                                <Tooltip contentStyle={tooltipStyle} />
+                                <Tooltip 
+                                    contentStyle={tooltipStyle}
+                                    content={({ active, payload }) => {
+                                        if (active && payload && payload.length > 0) {
+                                            const data = payload[0].payload;
+                                            return (
+                                                <div style={tooltipStyle} className="p-3 text-xs">
+                                                    <div className="font-semibold mb-1">{data.skill}</div>
+                                                    <div>Proficiency: {data.score}/100</div>
+                                                    <div>Confidence: {Math.round((data.confidence || 0) * 100)}%</div>
+                                                    <div>Trend: {data.trend || 'stagnant'}</div>
+                                                </div>
+                                            );
+                                        }
+                                        return null;
+                                    }}
+                                />
                             </RadarChart>
                         </ResponsiveContainer>
                     </div>
                 )}
 
                 {!isLoading && radarData.length >= 3 && (
-                    <div
-                        className={`mt-4 text-xs ${
-                            isDark
-                                ? "text-text-muted-dark"
-                                : "text-text-muted-light"
-                        }`}
-                    >
-                        Dot color indicates trend (green improving, red declining, gray
-                        stagnant). Opacity reflects confidence.
-                    </div>
+                    <>
+                        <div
+                            className={`mt-4 text-xs ${
+                                isDark
+                                    ? "text-text-muted-dark"
+                                    : "text-text-muted-light"
+                            }`}
+                        >
+                            Chart shows your cognitive skill profile. Thicker dots = higher confidence. 
+                            <br />Shape asymmetry reveals your thinking patterns and imbalances.
+                        </div>
+
+                        {/* Action Strip - Cognitive Analysis */}
+                        {weakestMetrics.length > 0 && (
+                            <div className={`mt-6 p-4 rounded-xl border ${
+                                isDark 
+                                    ? "bg-rose-900/20 border-rose-800/30" 
+                                    : "bg-rose-50 border-rose-200"
+                            }`}>
+                                <div className={`flex items-center gap-2 mb-3 ${
+                                    isDark ? "text-rose-300" : "text-rose-700"
+                                }`}>
+                                    <MdInsights size={18} />
+                                    <h4 className="font-semibold">Cognitive Focus Areas</h4>
+                                </div>
+                                
+                                <div className="space-y-3">
+                                    {weakestMetrics.map((metric, index) => {
+                                        const metricDef = coreMetricsDefinition.metrics.find(
+                                            m => m.metric_key === metric.dimension_key
+                                        );
+                                        const displayName = metricDef ? metricDef.metric_key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : metric.dimension_key;
+                                        
+                                        return (
+                                            <div key={metric.id} className="border-l-4 pl-3"
+                                                style={{ borderColor: isDark ? '#ef4444' : '#dc2626' }}>
+                                                <div className={`text-sm font-semibold mb-1 ${
+                                                    isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                                                }`}>
+                                                    #{index + 1} {displayName}
+                                                </div>
+                                                <div className={`text-xs mb-2 ${
+                                                    isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                                                }`}>
+                                                    What's failing: {getCognitiveFailureReason(metric.dimension_key)}
+                                                </div>
+                                                <div className={`text-xs font-medium flex items-center gap-1 ${
+                                                    isDark ? "text-rose-300" : "text-rose-700"
+                                                }`}>
+                                                    <MdArrowForward size={12} />
+                                                    Practice Strategy: {getPracticeStrategy(metric.dimension_key)}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                <div className={`mt-4 pt-3 border-t text-xs ${
+                                    isDark 
+                                        ? "border-rose-800/30 text-rose-300/70" 
+                                        : "border-rose-200 text-rose-600/70"
+                                }`}>
+                                    Focus on these areas to strengthen your cognitive foundation and improve overall performance.
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </motion.div>

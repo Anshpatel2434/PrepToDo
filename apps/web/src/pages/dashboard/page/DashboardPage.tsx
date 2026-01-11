@@ -14,7 +14,6 @@ import {
 import { DashboardSkeleton } from "../components/DashboardSkeleton";
 import { SkillRadarWidget } from "../components/SkillRadarWidget";
 import { GenreHeatmapWidget } from "../components/GenreHeatmapWidget";
-import { LogicGapWidget } from "../components/LogicGapWidget";
 import { WPMAccuracyWidget } from "../components/WPMAccuracyWidget";
 import { RecommendationWidget } from "../components/RecommendationWidget";
 import { UserDetailsWidget } from "../components/UserDetailsWidget";
@@ -50,7 +49,7 @@ export const DashboardPage: React.FC = () => {
             <FloatingThemeToggle />
             <FloatingNavigation />
 
-            <div className="container mx-auto px-6 py-12">
+            <div className="min-h-screen pl-20 pr-6 py-12">
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -108,7 +107,7 @@ export const DashboardPage: React.FC = () => {
                                 isDark={isDark}
                                 index={0}
                                 error={metricQuery.error}
-                                className="md:col-span-2 md:row-span-2"
+                                className="md:col-span-3 md:row-span-2"
                             />
 
                             <GenreHeatmapWidget
@@ -117,16 +116,7 @@ export const DashboardPage: React.FC = () => {
                                 isDark={isDark}
                                 index={1}
                                 error={metricQuery.error}
-                                className="md:col-span-2"
-                            />
-
-                            <LogicGapWidget
-                                metricProficiency={metricProficiency}
-                                isLoading={metricQuery.isLoading || metricQuery.isFetching}
-                                isDark={isDark}
-                                index={2}
-                                error={metricQuery.error}
-                                className="md:col-span-2 md:row-span-2"
+                                className="md:col-span-3"
                             />
 
                             <WPMAccuracyWidget
@@ -135,7 +125,7 @@ export const DashboardPage: React.FC = () => {
                                     metricQuery.isLoading || metricQuery.isFetching
                                 }
                                 isDark={isDark}
-                                index={3}
+                                index={2}
                                 error={metricQuery.error}
                                 className="md:col-span-3"
                             />
@@ -146,7 +136,7 @@ export const DashboardPage: React.FC = () => {
                                     signalsQuery.isLoading || signalsQuery.isFetching
                                 }
                                 isDark={isDark}
-                                index={4}
+                                index={3}
                                 error={signalsQuery.error}
                                 className="md:col-span-3"
                             />

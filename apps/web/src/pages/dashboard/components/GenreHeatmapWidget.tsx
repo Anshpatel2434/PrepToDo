@@ -113,6 +113,12 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {heatData.slice(0, 12).map((g) => {
                             const heatClass = scoreToHeatClass(g.score, isDark);
+                            const trendText = g.trend === "improving" ? "Improving" : 
+                                            g.trend === "declining" ? "Declining" : "Stable";
+                            const trendColor = g.trend === "improving" ? (isDark ? "text-emerald-400" : "text-emerald-600") :
+                                             g.trend === "declining" ? (isDark ? "text-rose-400" : "text-rose-600") :
+                                             (isDark ? "text-text-muted-dark" : "text-text-muted-light");
+                            
                             return (
                                 <motion.div
                                     key={g.genre}
@@ -122,9 +128,6 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
                                             ? "border-border-dark"
                                             : "border-border-light"
                                     }`}
-                                    title={`${g.genre} • ${g.score}/100 • ${Math.round(
-                                        g.accuracy
-                                    )}% accuracy (${g.attempts} attempts)`}
                                 >
                                     <div className="flex items-center justify-between gap-2">
                                         <div
@@ -143,18 +146,23 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
                                                     : "text-text-primary-light"
                                             }`}
                                         >
-                                            {g.score}
+                                            {g.score}/100
                                         </div>
                                     </div>
 
-                                    <div
-                                        className={`mt-2 text-[11px] ${
-                                            isDark
-                                                ? "text-text-secondary-dark"
-                                                : "text-text-secondary-light"
-                                        }`}
-                                    >
-                                        {g.attempts} attempts • {Math.round(g.accuracy)}%
+                                    <div className="mt-2 space-y-1 text-[11px]">
+                                        <div className={isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}>
+                                            Proficiency Score: {g.score}/100
+                                        </div>
+                                        <div className={isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}>
+                                            Accuracy: {Math.round(g.accuracy)}%
+                                        </div>
+                                        <div className={isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}>
+                                            Questions Attempted: {g.attempts}
+                                        </div>
+                                        <div className={`font-medium ${trendColor}`}>
+                                            Trend: {trendText}
+                                        </div>
                                     </div>
 
                                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">

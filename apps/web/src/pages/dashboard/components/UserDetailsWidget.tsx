@@ -184,35 +184,35 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                                     : "text-text-secondary-light"
                             }`}
                         >
-                            <div className="font-semibold">Last {analytics?.length ?? 0} days</div>
+                            <div className="font-semibold">Performance Summary (Last {analytics?.length ?? 0} days)</div>
                             <div>
-                                {summary.minutes} min • {summary.questions} questions • {summary.accuracy}%
+                                Total Practice Time: {summary.minutes} minutes • Questions Attempted: {summary.questions} • Overall Accuracy: {summary.accuracy}%
                             </div>
                         </div>
                     </div>
 
                     <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         <Stat
-                            label="Current streak"
-                            value={latest ? `${latest.current_streak} days` : "—"}
+                            label="Current Practice Streak"
+                            value={latest ? `${latest.current_streak} consecutive days` : "No active streak"}
                             icon={<MdLocalFireDepartment size={18} />}
                             isDark={isDark}
                         />
                         <Stat
-                            label="Longest streak"
-                            value={latest ? `${latest.longest_streak} days` : "—"}
+                            label="Longest Streak Record"
+                            value={latest ? `${latest.longest_streak} days` : "No data"}
                             icon={<MdLocalFireDepartment size={18} />}
                             isDark={isDark}
                         />
                         <Stat
-                            label="Total points"
-                            value={latest ? latest.total_points : "—"}
+                            label="Total Points Earned"
+                            value={latest ? `${latest.total_points} points` : "0 points"}
                             icon={<MdStars size={18} />}
                             isDark={isDark}
                         />
                         <Stat
-                            label="Minutes today"
-                            value={today ? today.minutes_practiced : 0}
+                            label="Practice Time Today"
+                            value={today ? `${today.minutes_practiced} minutes` : "0 minutes"}
                             icon={<MdTimer size={18} />}
                             isDark={isDark}
                         />
