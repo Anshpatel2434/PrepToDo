@@ -49,7 +49,7 @@ export async function phaseF_updateUserAnalytics(
 
     // 3. Update user_metric_proficiency with reading_speed_wpm if calculated
     if (reading_speed_wpm > 0) {
-        await updateReadingSpeedProficiency(supabase, user_id, session_id, reading_speed_wpm);
+        await updateReadingSpeedProficiency(supabase, user_id, session_id, reading_speed_wpm, accuracy_percentage);
     }
 
     // 4. Calculate genre performance
@@ -167,9 +167,10 @@ async function updateReadingSpeedProficiency(
     supabase: any,
     user_id: string,
     session_id: string,
-    wpm: number
+    wpm: number,
+    accuracy: number
 ): Promise<void> {
-    console.log(`📊 [Phase F] Updating reading_speed_wpm in user_metric_proficiency: ${wpm} WPM`);
+    console.log(`📊 [Phase F] Updating reading_speed_wpm in user_metric_proficiency: ${wpm} WPM, ${accuracy}% accuracy`);
 
     // Normalize WPM to 0-100 proficiency score
     // Typical reading speeds: 50-400 WPM
@@ -195,6 +196,35 @@ async function updateReadingSpeedProficiency(
         newScore = normalizedScore;
     }
 
+    // Update speed_vs_accuracy_data with the last 60 sessions
+    const today = new Date().toISOString().split('T')[0];
+    const newSessionData = { date: today, wpm, accuracy };
+    
+    let speedVsAccuracyData: Array<{ date: string; wpm: number; accuracy: number }> = [];
+    
+    if (existing?.speed_vs_accuracy_data) {
+        // Parse existing data
+        speedVsAccuracyData = Array.isArray(existing.speed_vs_accuracy_data) 
+            ? existing.speed_vs_accuracy_data 
+            : [];
+    }
+    
+    // Check if today's data already exists
+    const todayIndex = speedVsAccuracyData.findIndex((d: any) => d.date === today);
+    if (todayIndex >= 0) {
+        // Update today's data (multiple sessions on same day - use latest)
+        speedVsAccuracyData[todayIndex] = newSessionData;
+    } else {
+        // Add new session data
+        speedVsAccuracyData.push(newSessionData);
+    }
+    
+    // Keep only the last 60 sessions, sorted by date
+    speedVsAccuracyData.sort((a: any, b: any) => a.date.localeCompare(b.date));
+    if (speedVsAccuracyData.length > 60) {
+        speedVsAccuracyData = speedVsAccuracyData.slice(-60);
+    }
+
     const { error: upsertError } = await supabase
         .from('user_metric_proficiency')
         .upsert({
@@ -207,6 +237,7 @@ async function updateReadingSpeedProficiency(
             correct_attempts: newScore, // Store score as "correct" for this metric
             last_session_id: session_id,
             trend: existing ? (newScore > existing.proficiency_score ? 'improving' : newScore < existing.proficiency_score ? 'declining' : 'stagnant') : null,
+            speed_vs_accuracy_data: speedVsAccuracyData,
             updated_at: new Date().toISOString(),
             created_at: existing?.created_at || new Date().toISOString(),
         }, {
@@ -217,7 +248,7 @@ async function updateReadingSpeedProficiency(
         console.error('❌ [Phase F] Failed to update reading_speed_wpm proficiency:', upsertError);
         // Don't throw - this is not critical
     } else {
-        console.log(`✅ [Phase F] Reading speed proficiency updated: ${newScore}`);
+        console.log(`✅ [Phase F] Reading speed proficiency updated: ${newScore}, sessions tracked: ${speedVsAccuracyData.length}`);
     }
 }
 

@@ -9,6 +9,28 @@ export function transformRadarData(metrics: UserMetricProficiency[]) {
     }));
 }
 
+export function extractSpeedVsAccuracyData(metrics: UserMetricProficiency[]) {
+    const readingSpeedMetric = metrics.find(
+        (m) => m.dimension_type === "core_metric" && m.dimension_key === "reading_speed_wpm"
+    );
+
+    if (!readingSpeedMetric?.speed_vs_accuracy_data) {
+        return [];
+    }
+
+    const data = readingSpeedMetric.speed_vs_accuracy_data;
+    
+    if (!Array.isArray(data)) {
+        return [];
+    }
+
+    return data.map((d: any) => ({
+        date: d.date,
+        wpm: d.wpm || 0,
+        accuracy: d.accuracy || 0,
+    }));
+}
+
 export function transformHeatmapData(genres: UserMetricProficiency[]) {
     return genres.map((g) => {
         const attempts = g.total_attempts || 0;

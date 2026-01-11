@@ -10,11 +10,11 @@ import {
     XAxis,
     YAxis,
 } from "recharts";
-import type { UserAnalytics } from "../../../types";
-import { calculateWPMAccuracyData, clamp } from "../utils/chartHelpers";
+import type { UserMetricProficiency } from "../../../types";
+import { extractSpeedVsAccuracyData, clamp } from "../utils/chartHelpers";
 
 interface WPMAccuracyWidgetProps {
-    analytics: UserAnalytics[] | undefined;
+    metrics: UserMetricProficiency[] | undefined;
     isLoading: boolean;
     isDark: boolean;
     index: number;
@@ -33,7 +33,7 @@ function formatDateShort(date: string) {
 }
 
 export const WPMAccuracyWidget: React.FC<WPMAccuracyWidgetProps> = ({
-    analytics,
+    metrics,
     isLoading,
     isDark,
     index,
@@ -41,14 +41,14 @@ export const WPMAccuracyWidget: React.FC<WPMAccuracyWidgetProps> = ({
     error,
 }) => {
     const series = React.useMemo(() => {
-        const raw = calculateWPMAccuracyData(analytics ?? []);
+        const raw = extractSpeedVsAccuracyData(metrics ?? []);
         return raw.map((d) => ({
             ...d,
             wpm: Math.round(d.wpm),
             accuracy: clamp(Math.round(d.accuracy), 0, 100),
             label: formatDateShort(d.date),
         }));
-    }, [analytics]);
+    }, [metrics]);
 
     const tooltipStyle = React.useMemo(() => {
         return {
@@ -96,7 +96,7 @@ export const WPMAccuracyWidget: React.FC<WPMAccuracyWidgetProps> = ({
                                 : "text-text-secondary-light"
                         }`}
                     >
-                        Speed–accuracy tradeoff over the last 30 days.
+                        Speed–accuracy tradeoff over the last 60 sessions.
                     </p>
                 </div>
             </div>

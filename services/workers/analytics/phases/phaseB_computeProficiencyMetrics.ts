@@ -66,31 +66,10 @@ export function phaseB_computeProficiencyMetrics(
     }
 
     // 2. Handle reading_speed_wpm metric (special case - not from question tags)
-    // reading_speed_wpm is calculated from passage word count and time spent
-    // We add it as a core_metric with the calculated WPM score (0-100 normalized)
-    const readingSpeedWpm = calculateReadingSpeedWpm(dataset);
-    if (readingSpeedWpm > 0) {
-        // Normalize WPM to 0-100 scale for proficiency score
-        // Typical reading speeds: 50-400 WPM
-        // We cap at 50 (0%) and 400 (100%)
-        const normalizedWpm = Math.min(100, Math.max(0, Math.round(((readingSpeedWpm - 50) / 350) * 100)));
-        
-        // Add reading_speed_wpm as a special metric entry
-        // For this metric, we use the session's overall performance as the "correct" indicator
-        // This is a proxy - in practice, reading speed doesn't have "correct/incorrect"
-        // but we store it in the same schema for consistency
-        const correctPercentage = dataset.filter(d => d.correct).length / dataset.length;
-        
-        // Set the aggregation for reading_speed_wpm
-        aggregation.set("core_metric|reading_speed_wpm", {
-            correct: Math.round(correctPercentage * 100), // Store accuracy proxy as "correct" count
-            total: 100, // Normalize to 100 for percentage
-            totalConfidence: 0,
-            confidenceCount: 0,
-        });
-        
-        console.log(`   - Reading speed: ${readingSpeedWpm} WPM (normalized: ${normalizedWpm}%)`);
-    }
+    // reading_speed_wpm is now fully handled in Phase F which has access to passage data
+    // We skip creating it here to avoid conflicts - Phase F will create the entry with speed_vs_accuracy_data
+    // This comment is kept for context
+    console.log('   - Skipping reading_speed_wpm calculation (handled in Phase F)');
 
     // 3. Transform Aggregation into UserMetricProficiency objects
     const results: UserMetricProficiency[] = [];
@@ -99,36 +78,24 @@ export function phaseB_computeProficiencyMetrics(
     for (const [compositeKey, stats] of Array.from(aggregation.entries())) {
         const [dimension_type, dimension_key] = compositeKey.split("|");
 
-        let accuracy: number;
-        let normalizedConfidence: number;
-
-        if (dimension_key === 'reading_speed_wpm') {
-            // Special handling for reading_speed_wpm
-            // Use the stored "correct" value as the proficiency score directly
-            accuracy = stats.correct / 100; // Already normalized
-            normalizedConfidence = 0.8; // High confidence for calculated metrics
-        } else {
-            accuracy = stats.correct / stats.total;
-            
-            // Calculate Confidence Score (Normalized to 0-1)
-            // If confidence_level is 1-3, (avg / 3) gives 0-1 range
-            const avgRawConfidence = stats.confidenceCount > 0
-                ? stats.totalConfidence / stats.confidenceCount
-                : 2; // Default to middle (2) if not provided
-            normalizedConfidence = avgRawConfidence / 3;
-        }
+        const accuracy = stats.correct / stats.total;
+        
+        // Calculate Confidence Score (Normalized to 0-1)
+        // If confidence_level is 1-3, (avg / 3) gives 0-1 range
+        const avgRawConfidence = stats.confidenceCount > 0
+            ? stats.totalConfidence / stats.confidenceCount
+            : 2; // Default to middle (2) if not provided
+        const normalizedConfidence = avgRawConfidence / 3;
 
         results.push({
             id: uuidv4(),
             user_id: userId,
             dimension_type: dimension_type as any, // Cast to your Zod Enum
             dimension_key: dimension_key,
-            proficiency_score: dimension_key === 'reading_speed_wpm' 
-                ? stats.correct // Use the stored value directly for reading_speed_wpm
-                : Math.round(accuracy * 100),
+            proficiency_score: Math.round(accuracy * 100),
             confidence_score: Number(normalizedConfidence.toFixed(2)),
-            total_attempts: dimension_key === 'reading_speed_wpm' ? dataset.length : stats.total,
-            correct_attempts: dimension_key === 'reading_speed_wpm' ? stats.correct : stats.correct,
+            total_attempts: stats.total,
+            correct_attempts: stats.correct,
             last_session_id: sessionId,
             trend: null, // Trend requires historical comparison (Phase D)
             updated_at: now,
@@ -138,23 +105,4 @@ export function phaseB_computeProficiencyMetrics(
 
     console.log(`✅ [Phase B] Generated ${results.length} proficiency updates`);
     return results;
-}
-
-/**
- * Calculate reading speed in words per minute from dataset
- * This is used in Phase B to populate the reading_speed_wpm metric
- */
-export function calculateReadingSpeedWpm(dataset: AttemptDatum[]): number {
-    if (dataset.length === 0) return 0;
-
-    // Collect passage IDs and their word counts
-    // We need to get word_count from passage data which is not in AttemptDatum
-    // This function returns 0 if passage data is not available
-    // The actual calculation will happen in Phase F with full passage access
-    
-    // For Phase B, we return 0 since we don't have passage word counts here
-    // Phase F will calculate the actual WPM and update user_analytics
-    // But we still need to add the metric entry for user_metric_proficiency
-    
-    return 0;
 }

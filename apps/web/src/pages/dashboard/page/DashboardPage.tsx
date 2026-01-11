@@ -130,13 +130,13 @@ export const DashboardPage: React.FC = () => {
                             />
 
                             <WPMAccuracyWidget
-                                analytics={analyticsQuery.data}
+                                metrics={metricProficiency}
                                 isLoading={
-                                    analyticsQuery.isLoading || analyticsQuery.isFetching
+                                    metricQuery.isLoading || metricQuery.isFetching
                                 }
                                 isDark={isDark}
                                 index={3}
-                                error={analyticsQuery.error}
+                                error={metricQuery.error}
                                 className="md:col-span-3"
                             />
 
