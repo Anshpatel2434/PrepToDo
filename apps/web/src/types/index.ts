@@ -257,6 +257,7 @@ export const UserMetricProficiencySchema = z.object({
     trend: z.enum(["improving", "declining", "stagnant"]).nullish(),
     updated_at: z.string(), // ISO Timestamp
     created_at: z.string(), // ISO Timestamp
+    speed_vs_accuracy_data: z.any().nullish(), // JSONB for speed vs accuracy analysis
 });
 
 export type UserMetricProficiency = z.infer<typeof UserMetricProficiencySchema>;

@@ -474,6 +474,7 @@ CREATE TABLE public.user_metric_proficiency (
   trend text CHECK (trend = ANY (ARRAY['improving'::text, 'declining'::text, 'stagnant'::text])),
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
   created_at timestamp with time zone NOT NULL DEFAULT now(),
+  speed_vs_accuracy_data jsonb,
   CONSTRAINT user_metric_proficiency_pkey PRIMARY KEY (id),
   CONSTRAINT user_metric_proficiency_user_fkey FOREIGN KEY (user_id) REFERENCES public.user_profiles(id)
 );
