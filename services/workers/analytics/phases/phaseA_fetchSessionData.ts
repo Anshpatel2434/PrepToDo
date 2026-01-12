@@ -21,27 +21,23 @@ export async function phaseA_fetchSessionData(
 
     if (sessionError) throw new Error(`Session fetch failed: ${sessionError.message}`);
 
-    let sessionVerified : z.infer<typeof PracticeSessionSchema>;
-    try {
-        sessionVerified = PracticeSessionSchema.parse(session);
-        console.log("Validation passed for session ");
-    } catch (error) {
-        if (error instanceof z.ZodError) {
-            console.error("Validation failed for session: ", error.issues[0]);
-        } else {
-            console.error("Unexpected error for session : ", error);
-        }
+    const sessionParsed = PracticeSessionSchema.safeParse(session);
+    if (!sessionParsed.success) {
+        console.error("Validation failed for session:", sessionParsed.error.issues[0]);
+        throw new Error(`Invalid practice_session payload for session_id=${session_id}`);
     }
+    console.log("Validation passed for session");
+    const sessionVerified = sessionParsed.data;
 
     // Critical idempotence check
-    if (session.is_analysed) {
+    if (sessionVerified.is_analysed) {
         console.log('⚠️ [Phase A] Session already analysed, skipping');
-        return { alreadyAnalysed: true, session, dataset: [] };
+        return { alreadyAnalysed: true, session: sessionVerified, dataset: [] };
     }
 
     // Verify session is completed
-    if (session.status !== 'completed') {
-        throw new Error(`Session status is '${session.status}', expected 'completed'`);
+    if (sessionVerified.status !== 'completed') {
+        throw new Error(`Session status is '${sessionVerified.status}', expected 'completed'`);
     }
 
     // Fetch all attempts for this session
@@ -53,23 +49,19 @@ export async function phaseA_fetchSessionData(
 
     if (attemptsError) throw new Error(`Attempts fetch failed: ${attemptsError.message}`);
 
-    let attemptsVerified: z.infer<typeof QuestionAttemptSchema>[];
-        try {
-            attemptsVerified = QuestionAttemptArraySchema.parse(attempts);
-            console.log("Validation passed for attempts: ");
-        } catch (error) {
-            if (error instanceof z.ZodError) {
-                console.error("Validation failed for attempts: ", error.issues[0]);
-            } else {
-                console.error("Unexpected error for attempts : ", error);
-            }
-        }
+    const attemptsParsed = QuestionAttemptArraySchema.safeParse(attempts);
+    if (!attemptsParsed.success) {
+        console.error("Validation failed for attempts:", attemptsParsed.error.issues[0]);
+        throw new Error(`Invalid question_attempts payload for session_id=${session_id}`);
+    }
+    console.log("Validation passed for attempts");
+    const attemptsVerified = attemptsParsed.data;
 
     console.log(`📊 [Phase A] Fetched ${attemptsVerified.length} attempts`);
 
     if (attemptsVerified.length === 0) {
         console.log('⚠️ [Phase A] No attempts found for this session');
-        return { alreadyAnalysed: false, session, dataset: [] };
+        return { alreadyAnalysed: false, session: sessionVerified, dataset: [] };
     }
 
     // Fetch question metadata
@@ -82,17 +74,13 @@ export async function phaseA_fetchSessionData(
 
     if (questionsError) throw new Error(`Questions fetch failed: ${questionsError.message}`);
 
-    let questionsVerified: z.infer<typeof QuestionSchema>[];
-            try {
-                questionsVerified = QuestionArraySchema.parse(questions);
-                console.log("Validation passed for questions ");
-            } catch (error) {
-                if (error instanceof z.ZodError) {
-                    console.error("Validation failed for questions : ", error.issues[0]);
-                } else {
-                    console.error("Unexpected error  for questions : ", error);
-                }
-            }
+    const questionsParsed = QuestionArraySchema.safeParse(questions);
+    if (!questionsParsed.success) {
+        console.error("Validation failed for questions:", questionsParsed.error.issues[0]);
+        throw new Error(`Invalid questions payload for session_id=${session_id}`);
+    }
+    console.log("Validation passed for questions");
+    const questionsVerified = questionsParsed.data;
 
     // Build question lookup map
     const questionMap = new Map(questionsVerified.map(q => [q.id, q]));
@@ -102,23 +90,21 @@ export async function phaseA_fetchSessionData(
 
     let passageMap = new Map();
     if (passageIds.length > 0) {
-        let passageVerified: z.infer<typeof PassageSchema>[];
         const { data: passages, error: passagesError } = await supabase
             .from('passages')
             .select('*')
             .in('id', passageIds);
 
         if (passagesError) throw new Error(`Passages fetch failed: ${passagesError.message}`);
-        try {
-            passageVerified = PassageArraySchema.parse(passages);
-            console.log("Validation passed for passages  ");
-        } catch (error) {
-            if (error instanceof z.ZodError) {
-                console.error("Validation failed  for passages : ", error.issues[0]);
-            } else {
-                console.error("Unexpected error  for passages : ", error);
-            }
+        
+        const passagesParsed = PassageArraySchema.safeParse(passages);
+        if (!passagesParsed.success) {
+            console.error("Validation failed for passages:", passagesParsed.error.issues[0]);
+            throw new Error(`Invalid passages payload for session_id=${session_id}`);
         }
+        console.log("Validation passed for passages");
+        const passageVerified = passagesParsed.data;
+        
         // Build passage lookup map
         passageMap = new Map(passageVerified.map(p => [p.id, p]));
     }
@@ -159,13 +145,13 @@ export async function phaseA_fetchSessionData(
 
     return {
         alreadyAnalysed: false,
-        session,
+        session: sessionVerified,
         dataset,
         sessionMetadata: {
             session_id,
             user_id,
-            completed_at: session.completed_at,
-            session_type: session.session_type,
+            completed_at: sessionVerified.completed_at,
+            session_type: sessionVerified.session_type,
         }
     }
 }

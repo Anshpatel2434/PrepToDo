@@ -92,15 +92,18 @@ export const AnalyticsResultSchema = z.object({
     success: z.boolean(),
     session_id: z.string().optional(),
     user_id: z.string().optional(),
-    stats: z.object({
-        total_attempts: z.number(),
-        correct_attempts: z.number(),
-        dimensions_updated: z.object({
-            core_metrics: z.number(),
-            genres: z.number(),
-            question_types: z.number(),
-        }),
-    }).optional(),
+    stats: z
+        .object({
+            sessions_processed: z.number().optional(),
+            total_attempts: z.number(),
+            correct_attempts: z.number(),
+            dimensions_updated: z.object({
+                core_metrics: z.number(),
+                genres: z.number(),
+                question_types: z.number(),
+            }),
+        })
+        .optional(),
     message: z.string().optional(),
 });
 
