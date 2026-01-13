@@ -28,23 +28,23 @@ DECLARE
     request_id BIGINT;
 BEGIN
     -- Only trigger when session is completed and not yet analyzed
-    -- Handle both INSERT and UPDATE scenarios
     IF (TG_OP = 'INSERT' AND NEW.status = 'completed' AND NEW.is_analysed = false) OR
-       (TG_OP = 'UPDATE' AND OLD.status != 'completed' AND NEW.status = 'completed' AND NEW.is_analysed = false) OR
-       (TG_OP = 'UPDATE' AND NEW.status = 'completed' AND OLD.is_analysed = true AND NEW.is_analysed = false) THEN
+       (TG_OP = 'UPDATE' AND OLD.status != 'completed' AND NEW.status = 'completed' AND NEW.is_analysed = false) THEN
         
-        -- IMPORTANT: Update these values with your actual Supabase URL and service role key
-        -- Option 1: Use runtime settings (recommended for security)
-        -- You must set these via: ALTER DATABASE postgres SET app.supabase_url = 'https://your-project.supabase.co';
-        function_url := current_setting('app.supabase_url', true) || '/functions/v1/user-analytics';
-        service_key := current_setting('app.supabase_service_role_key', true);
+        -- 1. Fetch credentials from Supabase Vault
+        -- Note: Ensure these names match exactly what you saved in the Vault UI
+        SELECT decrypted_secret INTO function_url 
+        FROM vault.decrypted_secrets 
+        WHERE name = 'SUPABASE_URL' LIMIT 1;
+
+        SELECT decrypted_secret INTO service_key 
+        FROM vault.decrypted_secrets 
+        WHERE name = 'SUPABASE_SERVICE_ROLE_KEY' LIMIT 1;
+
+        -- 2. Build the full Edge Function path
+        function_url := function_url || '/functions/v1/user-analytics';
         
-        -- Option 2: Hardcode for testing (NOT recommended for production)
-        -- function_url := 'https://your-project.supabase.co/functions/v1/user-analytics';
-        -- service_key := 'your-service-role-key';
-        
-        -- Make async HTTP POST request to edge function
-        -- This uses pg_net which queues the request asynchronously
+        -- 3. Make async HTTP POST request via pg_net
         SELECT INTO request_id net.http_post(
             url := function_url,
             headers := jsonb_build_object(
@@ -55,10 +55,9 @@ BEGIN
                 'user_id', NEW.user_id::text,
                 'trigger_type', 'session_completed'
             ),
-            timeout_milliseconds := 30000  -- 30 second timeout
+            timeout_milliseconds := 30000
         );
         
-        -- Log the request (optional, for debugging)
         RAISE NOTICE 'Analytics trigger queued for user %, request_id: %', NEW.user_id, request_id;
     END IF;
     
@@ -92,30 +91,78 @@ EXECUTE FUNCTION trigger_user_analytics();
 
 -- CREATE EXTENSION IF NOT EXISTS pg_cron;
 
--- -- Schedule daily at 00:05 UTC to process all active users
--- SELECT cron.schedule(
---     'daily-streak-update',
---     '5 0 * * *',  -- Every day at 00:05 UTC
---     $$
---     SELECT net.http_post(
---         url := current_setting('app.supabase_url', true) || '/functions/v1/user-analytics',
---         headers := jsonb_build_object(
---             'Content-Type', 'application/json',
---             'Authorization', 'Bearer ' || current_setting('app.supabase_service_role_key', true)
---         ),
---         body := jsonb_build_object(
---             'user_id', u.id::text,
---             'trigger_type', 'day_change'
---         )
---     )
---     FROM (
---         SELECT DISTINCT user_id as id
---         FROM practice_sessions
---         WHERE updated_at >= NOW() - INTERVAL '7 days'
---           AND status = 'completed'
---     ) u;
---     $$
--- );
+CREATE OR REPLACE PROCEDURE process_daily_streaks()
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    function_url TEXT;
+    service_key TEXT;
+    user_record RECORD;
+BEGIN
+    -- 1. Fetch credentials from Vault
+    SELECT decrypted_secret INTO function_url FROM vault.decrypted_secrets WHERE name = 'SUPABASE_URL' LIMIT 1;
+    SELECT decrypted_secret INTO service_key FROM vault.decrypted_secrets WHERE name = 'SUPABASE_SERVICE_ROLE_KEY' LIMIT 1;
+
+    -- 2. Validate secrets exist
+    IF function_url IS NULL OR service_key IS NULL THEN
+        RAISE EXCEPTION 'Vault secrets not found. Check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY names.';
+    END IF;
+
+    -- 3. Loop through active users and trigger the edge function
+    FOR user_record IN (
+        SELECT DISTINCT user_id
+        FROM practice_sessions
+        WHERE updated_at >= NOW() - INTERVAL '7 days'
+          AND status = 'completed'
+    ) LOOP
+        PERFORM net.http_post(
+            url := function_url || '/functions/v1/user-analytics',
+            headers := jsonb_build_object(
+                'Content-Type', 'application/json',
+                'Authorization', 'Bearer ' || service_key
+            ),
+            body := jsonb_build_object(
+                'user_id', user_record.user_id::text,
+                'trigger_type', 'day_change'
+            )
+        );
+    END LOOP;
+END;
+$$;
+
+-- First, unschedule any existing version to avoid duplicates
+SELECT cron.unschedule('daily-streak-update');
+
+-- Schedule the new version
+SELECT cron.schedule(
+    'daily-streak-update',
+    '5 0 * * *',  -- Every day at 00:05 UTC
+    'CALL process_daily_streaks();'
+);
+
+-- TO GET ALL THE PROCEDURES DECLARED IN THE PUBLIC SCHEMA :
+-- 
+-- SELECT n.nspname as schema, p.proname as name
+-- FROM pg_proc p
+-- JOIN pg_namespace n ON p.pronamespace = n.oid
+-- WHERE p.prokind = 'p' -- 'p' stands for Procedure
+-- AND n.nspname = 'public';
+
+-- TO CHECK IF THE CRON JOBS ARE CREATED AND IF THEY ARE WORKING PERFECTLY ? : 
+-- SELECT jobid, schedule, command, nodename, nodeport, database, username 
+-- FROM cron.job;
+
+-- SELECT 
+--     jobid, 
+--     start_time, 
+--     end_time, 
+--     status, 
+--     return_message 
+-- FROM cron.job_run_details 
+-- ORDER BY start_time DESC 
+-- LIMIT 10;
+
 
 -- ============================================================================
 -- Configuration Instructions

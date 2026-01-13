@@ -1,6 +1,8 @@
 // services/scripts/bundle-edge-function.js
 // Enhanced version with proper Deno import handling
 
+//change line 67 and 109 for separate ai-orchestrator and workers if needed in future
+
 import { build } from "esbuild";
 import { writeFileSync, existsSync, mkdirSync, readFileSync } from "fs";
 import { resolve, dirname } from "path";
@@ -55,14 +57,14 @@ function convertImportsToDeno(code) {
 
 async function bundleFunction() {
     try {
-        console.log("🔨 Bundling daily-content function...");
+        console.log("🔨 Bundling analytics function...");
         console.log("📂 Services dir:", servicesDir);
         console.log("📂 Root dir:", rootDir);
         console.log("");
 
         const entryPoint = resolve(
             servicesDir,
-            "workers/daily-content/runDailyContent.ts"
+            "workers/analytics/runAnalytics.ts"
         );
         console.log("📍 Entry point:", entryPoint);
         console.log("");
@@ -104,7 +106,7 @@ async function bundleFunction() {
         bundledCode = denoHeader + bundledCode;
 
         // Ensure output directory exists
-        const outputDir = resolve(rootDir, "supabase/functions/daily-content");
+        const outputDir = resolve(rootDir, "supabase/functions/user-analytics");
         if (!existsSync(outputDir)) {
             mkdirSync(outputDir, { recursive: true });
         }
@@ -124,7 +126,7 @@ async function bundleFunction() {
 
         console.log("");
         console.log("Deploy with:");
-        console.log("  cd .. && supabase functions deploy daily-content");
+        console.log("  cd .. && supabase functions deploy user-analytics");
     } catch (err) {
         console.error("❌ Bundle failed:", err.message);
         if (err.errors && err.errors.length > 0) {
