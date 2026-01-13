@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTheme } from "../../../context/ThemeContext";
 import {
     useFetchPreviousDailyExamsQuery,
@@ -13,7 +13,15 @@ interface PreviousExamsPaginationProps {
 
 const PreviousExamsPagination: React.FC<PreviousExamsPaginationProps> = ({ type }) => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { isDark } = useTheme();
+    const examId = searchParams.get("exam_id");
+
+    // Don't show pagination when viewing a practice session
+    if (examId) {
+        return null;
+    }
+
     const { data: previousExams, isLoading, error } = useFetchPreviousDailyExamsQuery();
 
     const formatDate = (dateString: string) => {
@@ -43,7 +51,7 @@ const PreviousExamsPagination: React.FC<PreviousExamsPaginationProps> = ({ type 
     };
 
     const handleExamClick = (examId: string) => {
-        navigate(`/daily/${type}?exam_id=${examId}`);
+        navigate(`/daily?exam_id=${examId}`);
     };
 
     if (isLoading) {

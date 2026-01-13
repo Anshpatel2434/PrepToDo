@@ -30,7 +30,6 @@ import {
 } from "../../redux_usecase/dailyPracticeSlice";
 
 import {
-    useFetchDailyTestDataQuery,
     useFetchTestDataByExamIdQuery,
     useLazyFetchExistingSessionDetailsQuery,
     useFetchExistingSessionDetailsQuery,
@@ -69,18 +68,15 @@ const DailyRCPage: React.FC = () => {
 
     // --- 1. Data Fetching & Initialization ---
 
-    // Fetch test data based on whether exam_id is present in URL
+    // Always use the exam_id from URL params - this is required for consistency
     const { data: testData, isLoading: isTestDataLoading } =
         useFetchTestDataByExamIdQuery(
             { exam_id: examId || "" },
             { skip: !examId }
         );
-    const { data: todayTestData, isLoading: isTodayLoading } =
-        useFetchDailyTestDataQuery({ skip: !!examId });
 
-    // Merge data sources - use testData if exam_id is present, otherwise use todayTestData
-    const mergedTestData = examId ? testData : todayTestData;
-    const finalIsLoading = examId ? isTestDataLoading : isTodayLoading;
+    const mergedTestData = testData;
+    const finalIsLoading = isTestDataLoading;
 
     // Mutations and Lazy Queries
     const [fetchExistingSession, { isFetching: isSessionLoading }] =

@@ -1,19 +1,43 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTheme } from "../../../context/ThemeContext";
 import { FloatingNavigation } from "../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
 import { MdMenuBook, MdSpellcheck } from "react-icons/md";
 import PreviousExamsPagination from "../components/PreviousExamsPagination";
+import { useFetchDailyTestDataQuery, useFetchTestDataByExamIdQuery } from "../redux_usecase/dailyPracticeApi";
+import DailyRCPage from "../daily_rc/Page/DailyRCPage";
+import DailyVAPage from "../daily_va/Page/DailyVAPage";
 
 const DailyPage: React.FC = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { isDark } = useTheme();
+    const examId = searchParams.get("exam_id");
+
+    // Fetch exam data if exam_id is present (for previous exams)
+    const { data: examData, isLoading: isExamLoading } = useFetchTestDataByExamIdQuery(
+        { exam_id: examId || "" },
+        { skip: !examId }
+    );
+
+    // Fetch today's exam data if no exam_id is present
+    const { data: todayExamData } = useFetchDailyTestDataQuery({ skip: !!examId });
+
+    // Determine if we should show practice interface or landing page
+    const isPracticeView = !!examId;
+
+    // Determine exam type from exam name
+    const isRCExam = examData?.examInfo.name?.toLowerCase().includes("rc") ||
+                     examData?.examInfo.name?.toLowerCase().includes("reading");
 
     const handleStartPractice = async (type: "rc" | "va") => {
         console.log("[DailyPage] handleStartPractice called for type:", type);
-        navigate(`/daily/${type}`);
+        // Navigate to today's practice with the exam_id for consistency
+        if (todayExamData) {
+            navigate(`/daily?exam_id=${todayExamData.examInfo.id}`);
+        }
     };
 
     const practiceOptions = [
@@ -41,6 +65,30 @@ const DailyPage: React.FC = () => {
             iconColor: isDark ? "text-green-400" : "text-green-600",
         },
     ];
+
+    // If exam_id is present, show practice view
+    if (isPracticeView) {
+        if (isExamLoading) {
+            return (
+                <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"}`}>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+                </div>
+            );
+        }
+
+        if (!examData) {
+            return (
+                <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"}`}>
+                    <p className={`text-lg ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                        Exam not found
+                    </p>
+                </div>
+            );
+        }
+
+        // Render appropriate practice page based on exam type
+        return isRCExam ? <DailyRCPage /> : <DailyVAPage />;
+    }
 
     return (
         <div
@@ -127,7 +175,7 @@ const DailyPage: React.FC = () => {
                                                                                                 ? "bg-bg-tertiary-dark"
                                                                                                 : "bg-bg-tertiary-light"
                                                                                         }
-                                        `}
+                                            `}
                                         >
                                             <Icon className={`w-8 h-8 ${option.iconColor}`} />
                                         </div>

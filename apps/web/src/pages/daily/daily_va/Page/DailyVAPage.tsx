@@ -31,7 +31,6 @@ import {
 } from "../../redux_usecase/dailyPracticeSlice";
 
 import {
-    useFetchDailyTestDataQuery,
     useFetchTestDataByExamIdQuery,
     useLazyFetchExistingSessionDetailsQuery,
     useFetchExistingSessionDetailsQuery,
@@ -64,18 +63,15 @@ const DailyVAPage: React.FC = () => {
     const isMobile = windowWidth < 768;
     const paletteWidth = isMobile ? 288 : 256;
 
-    // 1. Data Fetching
+    // 1. Data Fetching - Always use exam_id from URL params for consistency
     const { data: testData, isLoading: isTestDataLoading } =
         useFetchTestDataByExamIdQuery(
             { exam_id: examId || "" },
             { skip: !examId }
         );
-    const { data: todayTestData, isLoading: isTodayLoading } =
-        useFetchDailyTestDataQuery({ skip: !!examId });
 
-    // Merge data sources - use testData if exam_id is present, otherwise use todayTestData
-    const mergedTestData = examId ? testData : todayTestData;
-    const finalIsLoading = examId ? isTestDataLoading : isTodayLoading;
+    const mergedTestData = testData;
+    const finalIsLoading = isTestDataLoading;
     const [fetchExistingSession, { isFetching: isSessionLoading }] =
         useLazyFetchExistingSessionDetailsQuery();
     const [startNewSession, { isLoading: isCreatingSession }] =
