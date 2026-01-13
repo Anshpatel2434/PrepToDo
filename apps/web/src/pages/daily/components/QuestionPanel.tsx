@@ -16,15 +16,11 @@ import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 interface QuestionPanelProps {
     question: Question;
     isDark: boolean;
-    onNext?: () => void;
-    onPrev?: () => void;
 }
 
 export const QuestionPanel: React.FC<QuestionPanelProps> = ({
     question,
     isDark,
-    onNext,
-    onPrev,
 }) => {
     const dispatch = useDispatch();
     const viewMode = useSelector(selectViewMode);
@@ -351,32 +347,6 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                     <div className="h-20" /> {/* Spacer for navigation buttons */}
                 </div>
             </div>
-
-            {/* Navigation Buttons (Moved from Footer) */}
-            {isExamMode && (
-                <div className={`shrink-0 p-4 border-t flex justify-between gap-4 ${isDark ? "bg-bg-secondary-dark border-border-dark" : "bg-bg-secondary-light border-border-light"}`}>
-                    <button
-                        onClick={onPrev}
-                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${isDark
-                                ? "bg-bg-tertiary-dark text-text-primary-dark hover:bg-bg-primary-dark border border-border-dark"
-                                : "bg-bg-tertiary-light text-text-primary-light hover:bg-bg-primary-light border border-border-light"
-                            }`}
-                    >
-                        <MdChevronLeft className="w-5 h-5" />
-                        Previous
-                    </button>
-                    <button
-                        onClick={onNext}
-                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${isDark
-                                ? "bg-brand-primary-dark text-white hover:scale-[1.02]"
-                                : "bg-brand-primary-light text-white hover:scale-[1.02]"
-                            }`}
-                    >
-                        {isExamMode ? "Save & Next" : "Next"}
-                        <MdChevronRight className="w-5 h-5" />
-                    </button>
-                </div>
-            )}
         </div>
     );
 };

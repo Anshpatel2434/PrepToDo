@@ -448,8 +448,6 @@ const DailyVAPage: React.FC = () => {
                     <QuestionPanel
                         question={currentQuestion}
                         isDark={isDark}
-                        onNext={handleSaveAndNext}
-                        onPrev={() => dispatch(goToPreviousQuestion())}
                     />
                 </div>
 
@@ -551,6 +549,18 @@ const DailyVAPage: React.FC = () => {
                         </button>
                     </div>
                     <div className="flex gap-2 md:gap-3 w-full md:w-auto justify-between md:justify-end">
+                        <button
+                            onClick={handleSaveAndNext}
+                            className={`
+                                    flex-1 md:flex-none px-4 md:px-6 py-2 md:py-3 rounded-xl font-medium text-sm md:text-base transition-all duration-200
+                                    ${isDark
+                                    ? "bg-brand-primary-dark text-white hover:scale-105"
+                                    : "bg-brand-primary-light text-white hover:scale-105"
+                                }
+                                `}
+                        >
+                            Save & Next
+                        </button>
                         <button
                             onClick={handleFinishExam}
                             className="px-4 md:px-6 py-2 md:py-3 bg-green-600 text-white rounded-xl font-medium text-sm md:text-base hover:scale-105 transition-all duration-200"
