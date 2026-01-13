@@ -7,8 +7,10 @@ import {
     setCurrentQuestionIndex,
     selectViewMode,
     selectElapsedTime,
+    goToNextQuestion,
+    goToPreviousQuestion,
 } from "../redux_usecase/dailyPracticeSlice";
-import { MdCheck, MdFlag } from "react-icons/md";
+import { MdCheck, MdFlag, MdChevronLeft, MdChevronRight } from "react-icons/md";
 
 interface QuestionPaletteProps {
     questions: Question[];
@@ -438,6 +440,32 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
                             No question selected.
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Navigation Buttons in Solution Mode */}
+            {viewMode === "solution" && (
+                <div className={`mt-auto p-4 border-t flex justify-between gap-2 ${isDark ? "border-border-dark" : "border-border-light"}`}>
+                    <button
+                        onClick={() => dispatch(goToPreviousQuestion())}
+                        className={`flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${isDark
+                            ? "bg-bg-tertiary-dark text-text-primary-dark hover:bg-bg-primary-dark border border-border-dark"
+                            : "bg-bg-tertiary-light text-text-primary-light hover:bg-bg-primary-light border border-border-light"
+                            }`}
+                    >
+                        <MdChevronLeft className="w-4 h-4" />
+                        Prev
+                    </button>
+                    <button
+                        onClick={() => dispatch(goToNextQuestion())}
+                        className={`flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${isDark
+                            ? "bg-brand-primary-dark text-white hover:opacity-90"
+                            : "bg-brand-primary-light text-white hover:opacity-90"
+                            }`}
+                    >
+                        Next
+                        <MdChevronRight className="w-4 h-4" />
+                    </button>
                 </div>
             )}
         </motion.div>
