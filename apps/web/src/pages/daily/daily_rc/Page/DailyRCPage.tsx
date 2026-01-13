@@ -530,54 +530,49 @@ const DailyRCPage: React.FC = () => {
             </div>
 
             {/* Footer */}
-            <footer
-                className={`shrink-0 min-h-20 md:h-20 border-t flex flex-col md:flex-row items-center justify-between px-4 md:px-6 py-4 md:py-0 backdrop-blur-xl z-30 gap-4 ${isDark
-                    ? "bg-bg-primary-dark/90 border-border-dark"
-                    : "bg-bg-primary-light/90 border-border-light"
-                    }`}
-            >
-                {viewMode === "exam" ? (
-                    <>
-                        <div className="flex gap-2 md:gap-3 w-full md:w-auto justify-between md:justify-start">
-                            <button
-                                onClick={() => dispatch(clearResponse())}
-                                className={`
-                                        flex-1 md:flex-none px-4 md:px-6 py-2 md:py-3 rounded-xl font-medium text-sm md:text-base transition-all duration-200
-                                        ${isDark
-                                        ? "bg-brand-primary-dark text-white hover:scale-105"
-                                        : "bg-brand-primary-light text-white hover:scale-105"
-                                    }
-                                    `}
-                            >
-                                Clear
-                            </button>
-                            <button
-                                onClick={handleMarkForReviewAndNext}
-                                className={`
-                                        flex-1 md:flex-none px-4 md:px-6 py-2 md:py-3 rounded-xl font-medium text-sm md:text-base transition-all duration-200
-                                        ${isDark
-                                        ? "bg-brand-primary-dark text-white hover:scale-105"
-                                        : "bg-brand-primary-light text-white hover:scale-105"
-                                    }
-                                    `}
-                            >
-                                Mark for Review
-                            </button>
-                        </div>
-                        <div className="flex gap-2 md:gap-3 w-full md:w-auto justify-between md:justify-end">
-                            <button
-                                onClick={handleFinishExam}
-                                className="px-4 md:px-6 py-2 md:py-3 bg-green-600 text-white rounded-xl font-medium text-sm md:text-base hover:scale-105 transition-all duration-200"
-                            >
-                                Submit
-                            </button>
-                        </div>
-                    </>
-                ) : (
-                    <div className="flex gap-4 w-full justify-center">
+            {viewMode === "exam" && (
+                <footer
+                    className={`shrink-0 min-h-20 md:h-20 border-t flex flex-col md:flex-row items-center justify-between px-4 md:px-6 py-4 md:py-0 backdrop-blur-xl z-30 gap-4 ${isDark
+                        ? "bg-bg-primary-dark/90 border-border-dark"
+                        : "bg-bg-primary-light/90 border-border-light"
+                        }`}
+                >
+                    <div className="flex gap-2 md:gap-3 w-full md:w-auto justify-between md:justify-start">
+                        <button
+                            onClick={() => dispatch(clearResponse())}
+                            className={`
+                                    flex-1 md:flex-none px-4 md:px-6 py-2 md:py-3 rounded-xl font-medium text-sm md:text-base transition-all duration-200
+                                    ${isDark
+                                    ? "bg-brand-primary-dark text-white hover:scale-105"
+                                    : "bg-brand-primary-light text-white hover:scale-105"
+                                }
+                                `}
+                        >
+                            Clear
+                        </button>
+                        <button
+                            onClick={handleMarkForReviewAndNext}
+                            className={`
+                                    flex-1 md:flex-none px-4 md:px-6 py-2 md:py-3 rounded-xl font-medium text-sm md:text-base transition-all duration-200
+                                    ${isDark
+                                    ? "bg-brand-primary-dark text-white hover:scale-105"
+                                    : "bg-brand-primary-light text-white hover:scale-105"
+                                }
+                                `}
+                        >
+                            Mark for Review
+                        </button>
                     </div>
-                )}
-            </footer>
+                    <div className="flex gap-2 md:gap-3 w-full md:w-auto justify-between md:justify-end">
+                        <button
+                            onClick={handleFinishExam}
+                            className="px-4 md:px-6 py-2 md:py-3 bg-green-600 text-white rounded-xl font-medium text-sm md:text-base hover:scale-105 transition-all duration-200"
+                        >
+                            Submit
+                        </button>
+                    </div>
+                </footer>
+            )}
         </div>
     );
 };
