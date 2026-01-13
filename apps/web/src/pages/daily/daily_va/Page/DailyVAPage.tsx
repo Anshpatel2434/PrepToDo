@@ -2,6 +2,7 @@ import React, { useEffect, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useTheme } from "../../../../context/ThemeContext";
 import { supabase } from "../../../../services/apiClient";
+import { useNavigate } from "react-router-dom";
 import { QuestionPalette } from "../../components/QuestionPalette";
 import { QuestionPanel } from "../../components/QuestionPanel";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,6 +17,7 @@ import {
     selectProgressStats,
     selectSession,
     selectElapsedTime,
+    selectStartTime,
     selectPendingAttempts,
     initializeSession,
     clearResponse,
@@ -25,22 +27,25 @@ import {
     incrementElapsedTime,
     resetDailyPractice,
     commitPendingAttempt,
+    updateSessionAnalytics,
 } from "../../redux_usecase/dailyPracticeSlice";
 
 import {
     useFetchDailyTestDataQuery,
     useLazyFetchExistingSessionDetailsQuery,
+    useFetchExistingSessionDetailsQuery,
     useStartDailyVASessionMutation, // Note: VA specific mutation
     useSaveSessionDetailsMutation,
     useSaveQuestionAttemptsMutation,
 } from "../../redux_usecase/dailyPracticeApi";
-import { MdChevronLeft, MdChevronRight } from "react-icons/md";
+import { MdChevronLeft, MdChevronRight, MdArrowBack } from "react-icons/md";
 import { DailyRCVAPageSkeleton } from "../../components/DailySkeleton";
 import { v4 as uuid4 } from "uuid";
 import { useExamNavigationGuard } from "../../navigation_hook/useExamNavigation";
 
 const DailyVAPage: React.FC = () => {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const { isDark } = useTheme();
 
     const [windowWidth, setWindowWidth] = React.useState(
@@ -75,7 +80,27 @@ const DailyVAPage: React.FC = () => {
     const progress = useSelector(selectProgressStats);
     const session = useSelector(selectSession);
     const elapsedTime = useSelector(selectElapsedTime);
+    const startTime = useSelector(selectStartTime);
     const isLastQuestion = useSelector(selectIsLastQuestion);
+
+    // Toast logic for AI Insights
+    const [showToast, setShowToast] = React.useState(false);
+    const prevIsAnalysed = useRef(session.is_analysed);
+
+    useEffect(() => {
+        if (viewMode === "solution" && !prevIsAnalysed.current && session.is_analysed) {
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 5000);
+        }
+        prevIsAnalysed.current = session.is_analysed;
+    }, [session.is_analysed, viewMode]);
+
+    // Timer format helper
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, "0")}`;
+    };
 
     //navigation restricitons
     const allowNavigation = false;
@@ -96,6 +121,30 @@ const DailyVAPage: React.FC = () => {
 
     const [showPalette, setShowPalette] = React.useState(true);
     const isLoading = isTestDataLoading || isSessionLoading || isCreatingSession;
+
+    // Polling for session updates in solution mode
+    const { data: polledSessionData } = useFetchExistingSessionDetailsQuery(
+        {
+            user_id: session.user_id,
+            paper_id: testData?.examInfo.id,
+            session_type: "daily_challenge_va",
+        },
+        {
+            skip: viewMode !== "solution" || session.is_analysed || !session.user_id || !testData?.examInfo.id,
+            pollingInterval: 5000,
+        }
+    );
+
+    useEffect(() => {
+        if (polledSessionData) {
+            dispatch(
+                updateSessionAnalytics({
+                    session: polledSessionData.session,
+                    attempts: polledSessionData.attempts,
+                })
+            );
+        }
+    }, [polledSessionData, dispatch]);
 
     // 2. Initialization
 
@@ -197,19 +246,28 @@ const DailyVAPage: React.FC = () => {
 
         try {
             // 1. Prepare Data
-            const attemptList = Object.values(attempts).map((a) => ({
-                ...a,
-                // Ensure strictly required fields for DB
-                id: a.id ? a.id : uuid4(),
-                user_id: session.user_id,
-                session_id: session.id,
-                user_answer: a.user_answer || {},
-                marked_for_review: a.marked_for_review || false,
-                rationale_viewed: false,
-                rationale_helpful: null,
-                ai_feedback: null,
+            const timeNow = Date.now();
+            const finalTimeSpentOnCurrent = startTime ? Math.floor((timeNow - startTime) / 1000) : 0;
+
+            const attemptList = Object.values(attempts).map((a) => {
+                const isCurrent = a.question_id === currentQuestionId;
+                const pending = pendingAttempts[a.question_id!] || {};
+                return {
+                    ...a,
+                    ...pending,
+                    time_spent_seconds: (a.time_spent_seconds || 0) + (pending.time_spent_seconds || 0) + (isCurrent ? finalTimeSpentOnCurrent : 0),
+                    // Ensure strictly required fields for DB
+                    id: a.id ? a.id : uuid4(),
+                    user_id: session.user_id,
+                    session_id: session.id,
+                    user_answer: pending.user_answer || a.user_answer || {},
+                    marked_for_review: pending.marked_for_review ?? a.marked_for_review ?? false,
+                    rationale_viewed: false,
+                    rationale_helpful: null,
+                    ai_feedback: null,
+                };
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            })) as any;
+            }) as any;
 
             await Promise.all([
                 saveSession({
@@ -220,7 +278,7 @@ const DailyVAPage: React.FC = () => {
                     total_questions: questions.length,
                     correct_answers: progress.correct,
                     score_percentage: progress.percentage,
-                    current_question_index: 0,
+                    current_question_index: currentQuestionIndex,
                 }).unwrap(),
                 attemptList.length > 0
                     ? saveAttempts({ attempts: attemptList }).unwrap()
@@ -236,9 +294,12 @@ const DailyVAPage: React.FC = () => {
         session.id,
         session.user_id,
         attempts,
+        pendingAttempts,
         elapsedTime,
+        startTime,
         progress,
         questions.length,
+        currentQuestionId,
         saveSession,
         saveAttempts,
         dispatch,
@@ -257,11 +318,7 @@ const DailyVAPage: React.FC = () => {
                 })
             );
         }
-        if (!isLastQuestion) {
-            dispatch(goToNextQuestion());
-        } else {
-            handleFinishExam();
-        }
+        dispatch(goToNextQuestion());
     };
 
     const handleMarkForReviewAndNext = () => {
@@ -276,11 +333,7 @@ const DailyVAPage: React.FC = () => {
                 })
             );
         }
-        if (!isLastQuestion) {
-            dispatch(goToNextQuestion());
-        } else {
-            handleFinishExam();
-        }
+        dispatch(goToNextQuestion());
     };
 
     useEffect(() => {
@@ -331,15 +384,32 @@ const DailyVAPage: React.FC = () => {
                     : "bg-bg-primary-light/90 border-border-light"
                     }`}
             >
-                <h1
-                    className={`font-serif font-bold text-lg md:text-xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                        }`}
-                >
-                    <span className="hidden sm:inline">
-                        {testData?.examInfo.name || "Daily Practice"}:{" "}
-                    </span>
-                    VA
-                </h1>
+                <div className="flex items-center gap-4">
+                    {viewMode === "solution" && (
+                        <button
+                            onClick={() => navigate("/daily")}
+                            className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-bg-tertiary-dark text-text-primary-dark" : "hover:bg-bg-tertiary-light text-text-primary-light"}`}
+                            title="Back to Daily"
+                        >
+                            <MdArrowBack className="w-6 h-6" />
+                        </button>
+                    )}
+                    <h1
+                        className={`font-serif font-bold text-lg md:text-xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                            }`}
+                    >
+                        <span className="hidden sm:inline">
+                            {testData?.examInfo.name || "Daily Practice"}:{" "}
+                        </span>
+                        VA
+                    </h1>
+                </div>
+
+                {/* Session Timer */}
+                <div className={`absolute left-1/2 -translate-x-1/2 font-mono text-lg font-bold ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                    {formatTime(elapsedTime)}
+                </div>
+
                 <div className="flex items-center gap-2 md:gap-4">
                     <div className="w-20 md:w-32 h-2 rounded-full bg-gray-200 overflow-hidden">
                         <div
@@ -358,10 +428,29 @@ const DailyVAPage: React.FC = () => {
                 </div>
             </header>
 
+            {/* Toast Notification for AI Insights */}
+            <AnimatePresence>
+                {showToast && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20, x: "-50%" }}
+                        animate={{ opacity: 1, y: 20, x: "-50%" }}
+                        exit={{ opacity: 0, y: -20, x: "-50%" }}
+                        className="fixed top-20 left-1/2 z-50 px-6 py-3 rounded-full bg-brand-primary-light text-white shadow-2xl font-medium"
+                    >
+                        AI Insights are now available.
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Main Body */}
             <div className="flex-1 flex relative overflow-hidden">
                 <div className="flex-1 h-full overflow-hidden">
-                    <QuestionPanel question={currentQuestion} isDark={isDark} />
+                    <QuestionPanel
+                        question={currentQuestion}
+                        isDark={isDark}
+                        onNext={handleSaveAndNext}
+                        onPrev={() => dispatch(goToPreviousQuestion())}
+                    />
                 </div>
 
                 {/* Palette Toggle Button */}
@@ -464,18 +553,6 @@ const DailyVAPage: React.FC = () => {
                         </div>
                         <div className="flex gap-2 md:gap-3 w-full md:w-auto justify-between md:justify-end">
                             <button
-                                onClick={handleSaveAndNext}
-                                className={`
-                                        flex-1 md:flex-none px-4 md:px-6 py-2 md:py-3 rounded-xl font-medium text-sm md:text-base transition-all duration-200
-                                        ${isDark
-                                        ? "bg-brand-primary-dark text-white hover:scale-105"
-                                        : "bg-brand-primary-light text-white hover:scale-105"
-                                    }
-                                    `}
-                            >
-                                {isLastQuestion ? "Finish" : "Save & Next"}
-                            </button>
-                            <button
                                 onClick={handleFinishExam}
                                 className="px-4 md:px-6 py-2 md:py-3 bg-green-600 text-white rounded-xl font-medium text-sm md:text-base hover:scale-105 transition-all duration-200"
                             >
@@ -485,24 +562,6 @@ const DailyVAPage: React.FC = () => {
                     </>
                 ) : (
                     <div className="flex gap-4 w-full justify-center">
-                        <button
-                            onClick={() => dispatch(goToPreviousQuestion())}
-                            className={`px-6 py-2 border rounded-lg ${isDark
-                                ? " border-border-dark text-text-primary-dark hover:scale-105"
-                                : " border-border-light text-text-primary-light hover:scale-105"
-                                }`}
-                        >
-                            Previous
-                        </button>
-                        <button
-                            onClick={() => dispatch(goToNextQuestion())}
-                            className={`px-6 py-2 border rounded-lg ${isDark
-                                ? " border-border-dark text-text-primary-dark hover:scale-105"
-                                : " border-border-light text-text-primary-light hover:scale-105"
-                                }`}
-                        >
-                            Next
-                        </button>
                     </div>
                 )}
             </footer>

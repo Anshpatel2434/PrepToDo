@@ -92,8 +92,20 @@ const dailyPracticeSlice = createSlice({
             state.elapsedTimeSeconds = elapsedTime || 0;
             state.currentQuestionIndex = 0;
 
-            // Map existing attempts to Record<UUID, Attempt>
+            // Map existing attempts or initialize new ones
             state.attempts = {};
+            questionIds.forEach((id) => {
+                state.attempts[id] = {
+                    user_id: session.user_id,
+                    session_id: session.id,
+                    question_id: id,
+                    user_answer: null,
+                    is_correct: false,
+                    time_spent_seconds: 0,
+                    marked_for_review: false,
+                };
+            });
+
             if (existingAttempts) {
                 existingAttempts.forEach((attempt) => {
                     state.attempts[attempt.question_id] = attempt;
@@ -156,25 +168,33 @@ const dailyPracticeSlice = createSlice({
             }>
         ) => {
             const { questionId, userId, passageId, markForReview } = action.payload;
+
+            const timeNow = Date.now();
+            const timeSpent = state.startTime ? Math.floor((timeNow - state.startTime) / 1000) : 0;
+            state.startTime = timeNow;
+
             const pending = state.pendingAttempts[questionId];
+            const existing = state.attempts[questionId];
 
             if (pending) {
                 state.attempts[questionId] = {
                     ...pending,
+                    passage_id: passageId || pending.passage_id,
                     marked_for_review: markForReview ?? pending.marked_for_review ?? false,
+                    time_spent_seconds: (pending.time_spent_seconds || 0) + timeSpent,
                 };
                 // Clear from pending
                 delete state.pendingAttempts[questionId];
             } else {
-                // If no pending, just mark for review with empty answer
                 state.attempts[questionId] = {
+                    ...existing,
                     user_id: userId,
                     session_id: state.session.id!,
                     question_id: questionId,
-                    passage_id: passageId,
-                    marked_for_review: markForReview ?? true,
-                    time_spent_seconds: 0,
-                    is_correct: false,
+                    passage_id: passageId || existing?.passage_id || null,
+                    marked_for_review: markForReview ?? existing?.marked_for_review ?? false,
+                    time_spent_seconds: (existing?.time_spent_seconds || 0) + timeSpent,
+                    is_correct: existing?.is_correct || false,
                 };
             }
         },
@@ -264,7 +284,11 @@ const dailyPracticeSlice = createSlice({
             const questionId = state.questionOrder[state.currentQuestionIndex];
 
             if (state.attempts[questionId]) {
-                delete state.attempts[questionId];
+                state.attempts[questionId] = {
+                    ...state.attempts[questionId],
+                    user_answer: null,
+                    is_correct: false,
+                };
             }
             // Also clear from pending if exists
             if (state.pendingAttempts[questionId]) {
@@ -274,37 +298,73 @@ const dailyPracticeSlice = createSlice({
 
         // --- Navigation ---
         setCurrentQuestionIndex: (state, action: PayloadAction<number>) => {
-            // Clear pending attempt for previous question when navigating
             const previousQuestionId = state.questionOrder[state.currentQuestionIndex];
-            if (previousQuestionId) {
+            const timeNow = Date.now();
+            const timeSpent = state.startTime ? Math.floor((timeNow - state.startTime) / 1000) : 0;
+
+            if (previousQuestionId && state.viewMode === "exam") {
+                const existing = state.attempts[previousQuestionId] || {};
+                const pending = state.pendingAttempts[previousQuestionId] || {};
+                
+                state.attempts[previousQuestionId] = {
+                    ...existing,
+                    ...pending,
+                    time_spent_seconds: (existing.time_spent_seconds || 0) + (pending.time_spent_seconds || 0) + timeSpent,
+                };
                 delete state.pendingAttempts[previousQuestionId];
             }
             state.currentQuestionIndex = action.payload;
-            state.startTime = Date.now(); // Reset question timer on navigation
+            state.startTime = timeNow;
         },
 
         goToNextQuestion: (state) => {
-            // Clear pending attempt for current question when navigating without saving
             const currentQuestionId = state.questionOrder[state.currentQuestionIndex];
-            if (currentQuestionId) {
+            const timeNow = Date.now();
+            const timeSpent = state.startTime ? Math.floor((timeNow - state.startTime) / 1000) : 0;
+
+            if (currentQuestionId && state.viewMode === "exam") {
+                const existing = state.attempts[currentQuestionId] || {};
+                const pending = state.pendingAttempts[currentQuestionId] || {};
+
+                state.attempts[currentQuestionId] = {
+                    ...existing,
+                    ...pending,
+                    time_spent_seconds: (existing.time_spent_seconds || 0) + (pending.time_spent_seconds || 0) + timeSpent,
+                };
                 delete state.pendingAttempts[currentQuestionId];
             }
+
             if (state.currentQuestionIndex < state.questionOrder.length - 1) {
                 state.currentQuestionIndex++;
-                state.startTime = Date.now();
+            } else {
+                state.currentQuestionIndex = 0;
             }
+            state.startTime = timeNow;
         },
 
         goToPreviousQuestion: (state) => {
-            // Clear pending attempt for current question when navigating without saving
             const currentQuestionId = state.questionOrder[state.currentQuestionIndex];
-            if (currentQuestionId) {
+            const timeNow = Date.now();
+            const timeSpent = state.startTime ? Math.floor((timeNow - state.startTime) / 1000) : 0;
+
+            if (currentQuestionId && state.viewMode === "exam") {
+                const existing = state.attempts[currentQuestionId] || {};
+                const pending = state.pendingAttempts[currentQuestionId] || {};
+
+                state.attempts[currentQuestionId] = {
+                    ...existing,
+                    ...pending,
+                    time_spent_seconds: (existing.time_spent_seconds || 0) + (pending.time_spent_seconds || 0) + timeSpent,
+                };
                 delete state.pendingAttempts[currentQuestionId];
             }
+
             if (state.currentQuestionIndex > 0) {
                 state.currentQuestionIndex--;
-                state.startTime = Date.now();
+            } else {
+                state.currentQuestionIndex = state.questionOrder.length - 1;
             }
+            state.startTime = timeNow;
         },
 
         // --- Timer & System ---
@@ -325,6 +385,22 @@ const dailyPracticeSlice = createSlice({
             action: PayloadAction<"common" | "personalized">
         ) => {
             state.solutionViewType = action.payload;
+        },
+
+        updateSessionAnalytics: (
+            state,
+            action: PayloadAction<{
+                session: PracticeSession;
+                attempts?: QuestionAttempt[];
+            }>
+        ) => {
+            const { session, attempts } = action.payload;
+            state.session = session;
+            if (attempts) {
+                attempts.forEach((attempt) => {
+                    state.attempts[attempt.question_id] = attempt;
+                });
+            }
         },
 
         resetDailyPractice: () => initialState,
@@ -362,6 +438,10 @@ export const selectQuestionOrder = createSelector(
 export const selectElapsedTime = createSelector(
     selectDailyState,
     (s) => s.elapsedTimeSeconds
+);
+export const selectStartTime = createSelector(
+    selectDailyState,
+    (s) => s.startTime
 );
 export const selectShowPalette = createSelector(
     selectDailyState,
@@ -424,6 +504,7 @@ export const {
     commitPendingAttempt,
     clearPendingAttempt,
     clearAllPendingAttempts,
+    updateSessionAnalytics,
 } = dailyPracticeSlice.actions;
 
 export default dailyPracticeSlice.reducer;
