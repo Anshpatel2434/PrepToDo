@@ -274,33 +274,114 @@ const dailyPracticeSlice = createSlice({
 
         // --- Navigation ---
         setCurrentQuestionIndex: (state, action: PayloadAction<number>) => {
-            // Clear pending attempt for previous question when navigating
+            // Commit pending attempt time before navigating
             const previousQuestionId = state.questionOrder[state.currentQuestionIndex];
             if (previousQuestionId) {
-                delete state.pendingAttempts[previousQuestionId];
+                const pending = state.pendingAttempts[previousQuestionId];
+                if (pending) {
+                    // Calculate time spent on current question
+                    const timeNow = Date.now();
+                    const timeSpent = state.startTime
+                        ? Math.floor((timeNow - state.startTime) / 1000)
+                        : 0;
+
+                    // Accumulate time into pending attempt
+                    state.pendingAttempts[previousQuestionId] = {
+                        ...pending,
+                        time_spent_seconds: (pending.time_spent_seconds || 0) + timeSpent,
+                    };
+                }
+                // Store time for unanswered questions too
+                if (!state.pendingAttempts[previousQuestionId] && !state.attempts[previousQuestionId]) {
+                    state.attempts[previousQuestionId] = {
+                        question_id: previousQuestionId,
+                        session_id: state.session.id!,
+                        time_spent_seconds: 0,
+                        is_correct: false,
+                    };
+                }
             }
             state.currentQuestionIndex = action.payload;
             state.startTime = Date.now(); // Reset question timer on navigation
         },
 
         goToNextQuestion: (state) => {
-            // Clear pending attempt for current question when navigating without saving
+            // Store time for current question before navigating
             const currentQuestionId = state.questionOrder[state.currentQuestionIndex];
             if (currentQuestionId) {
-                delete state.pendingAttempts[currentQuestionId];
+                const pending = state.pendingAttempts[currentQuestionId];
+                const existing = state.attempts[currentQuestionId];
+
+                if (pending) {
+                    // Calculate and store time in pending attempt
+                    const timeNow = Date.now();
+                    const timeSpent = state.startTime
+                        ? Math.floor((timeNow - state.startTime) / 1000)
+                        : 0;
+
+                    state.pendingAttempts[currentQuestionId] = {
+                        ...pending,
+                        time_spent_seconds: (pending.time_spent_seconds || 0) + timeSpent,
+                    };
+                } else if (!existing) {
+                    // Store attempt for unanswered question
+                    const timeNow = Date.now();
+                    const timeSpent = state.startTime
+                        ? Math.floor((timeNow - state.startTime) / 1000)
+                        : 0;
+
+                    state.attempts[currentQuestionId] = {
+                        question_id: currentQuestionId,
+                        session_id: state.session.id!,
+                        time_spent_seconds: timeSpent,
+                        is_correct: false,
+                    };
+                }
             }
+
+            // Cyclic navigation
             if (state.currentQuestionIndex < state.questionOrder.length - 1) {
                 state.currentQuestionIndex++;
-                state.startTime = Date.now();
+            } else {
+                state.currentQuestionIndex = 0;
             }
+            state.startTime = Date.now();
         },
 
         goToPreviousQuestion: (state) => {
-            // Clear pending attempt for current question when navigating without saving
+            // Store time for current question before navigating
             const currentQuestionId = state.questionOrder[state.currentQuestionIndex];
             if (currentQuestionId) {
-                delete state.pendingAttempts[currentQuestionId];
+                const pending = state.pendingAttempts[currentQuestionId];
+                const existing = state.attempts[currentQuestionId];
+
+                if (pending) {
+                    // Calculate and store time in pending attempt
+                    const timeNow = Date.now();
+                    const timeSpent = state.startTime
+                        ? Math.floor((timeNow - state.startTime) / 1000)
+                        : 0;
+
+                    state.pendingAttempts[currentQuestionId] = {
+                        ...pending,
+                        time_spent_seconds: (pending.time_spent_seconds || 0) + timeSpent,
+                    };
+                } else if (!existing) {
+                    // Store attempt for unanswered question
+                    const timeNow = Date.now();
+                    const timeSpent = state.startTime
+                        ? Math.floor((timeNow - state.startTime) / 1000)
+                        : 0;
+
+                    state.attempts[currentQuestionId] = {
+                        question_id: currentQuestionId,
+                        session_id: state.session.id!,
+                        time_spent_seconds: timeSpent,
+                        is_correct: false,
+                    };
+                }
             }
+
             if (state.currentQuestionIndex > 0) {
                 state.currentQuestionIndex--;
                 state.startTime = Date.now();

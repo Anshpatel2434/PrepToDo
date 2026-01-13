@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 import { useTheme } from "../../../../context/ThemeContext";
 import { supabase } from "../../../../services/apiClient";
@@ -20,6 +21,7 @@ import {
     clearResponse,
     goToNextQuestion,
     goToPreviousQuestion,
+    setCurrentQuestionIndex,
     setViewMode,
     incrementElapsedTime,
     resetDailyPractice,
@@ -45,6 +47,13 @@ import { useExamNavigationGuard } from "../../navigation_hook/useExamNavigation"
 const DailyRCPage: React.FC = () => {
     const dispatch = useDispatch();
     const { isDark } = useTheme();
+    const navigate = useNavigate();
+
+    const formatTime = (seconds: number): string => {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+    };
 
     const [windowWidth, setWindowWidth] = React.useState(
         typeof window !== "undefined" ? window.innerWidth : 1024
@@ -278,10 +287,11 @@ const DailyRCPage: React.FC = () => {
                 })
             );
         }
-        if (!isLastQuestion) {
-            dispatch(goToNextQuestion());
+        // Cyclic navigation: if at last question, go to first question
+        if (isLastQuestion) {
+            dispatch(setCurrentQuestionIndex(0));
         } else {
-            handleFinishExam();
+            dispatch(goToNextQuestion());
         }
     };
 
@@ -297,10 +307,11 @@ const DailyRCPage: React.FC = () => {
                 })
             );
         }
-        if (!isLastQuestion) {
-            dispatch(goToNextQuestion());
+        // Cyclic navigation: if at last question, go to first question
+        if (isLastQuestion) {
+            dispatch(setCurrentQuestionIndex(0));
         } else {
-            handleFinishExam();
+            dispatch(goToNextQuestion());
         }
     };
 
@@ -337,31 +348,99 @@ const DailyRCPage: React.FC = () => {
                     : "bg-bg-primary-light/90 border-border-light"
                     }`}
             >
-                <h1
-                    className={`font-serif font-bold text-lg md:text-xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                        }`}
-                >
-                    <span className="hidden sm:inline">
-                        {testData?.examInfo.name || "Daily Practice"}:{" "}
-                    </span>
-                    RC
-                </h1>
-                <div className="flex items-center gap-2 md:gap-4">
-                    <div className="w-20 md:w-32 h-2 rounded-full bg-gray-200 overflow-hidden">
-                        <div
-                            className="h-full bg-blue-600 transition-all duration-300"
-                            style={{
-                                width: `${(progress.answered / questions.length) * 100}%`,
-                            }}
-                        />
-                    </div>
-                    <span
-                        className={`text-sm ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                <div className="flex items-center gap-4">
+                    {viewMode === "solution" && (
+                        <button
+                            onClick={() => navigate("/daily")}
+                            className={`px-3 py-1 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                isDark
+                                    ? "bg-bg-tertiary-dark text-text-secondary-dark hover:bg-bg-secondary-dark"
+                                    : "bg-bg-tertiary-light text-text-secondary-light hover:bg-bg-secondary-light"
+                            }`}
+                        >
+                            ← Back
+                        </button>
+                    )}
+                    <h1
+                        className={`font-serif font-bold text-lg md:text-xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
                             }`}
                     >
-                        {progress.answered}/{questions.length}
-                    </span>
+                        <span className="hidden sm:inline">
+                            {testData?.examInfo.name || "Daily Practice"}:{" "}
+                        </span>
+                        RC
+                    </h1>
                 </div>
+                {viewMode === "exam" && (
+                    <div className="flex items-center gap-4">
+                        <div className="text-center">
+                            <div
+                                className={`text-xs font-medium ${
+                                    isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                                }`}
+                            >
+                                Time Spent
+                            </div>
+                            <div
+                                className={`text-lg font-mono font-bold ${
+                                    isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                                }`}
+                            >
+                                {formatTime(elapsedTime)}
+                            </div>
+                        </div>
+                        <div className="w-20 md:w-32 h-2 rounded-full bg-gray-200 overflow-hidden">
+                            <div
+                                className="h-full bg-blue-600 transition-all duration-300"
+                                style={{
+                                    width: `${(progress.answered / questions.length) * 100}%`,
+                                }}
+                            />
+                        </div>
+                        <span
+                            className={`text-sm ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                                }`}
+                        >
+                            {progress.answered}/{questions.length}
+                        </span>
+                    </div>
+                )}
+                {viewMode === "solution" && (
+                    <div className="flex items-center gap-4">
+                        <div className="text-center">
+                            <div
+                                className={`text-xs font-medium ${
+                                    isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                                }`}
+                            >
+                                Total Time
+                            </div>
+                            <div
+                                className={`text-lg font-mono font-bold ${
+                                    isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                                }`}
+                            >
+                                {formatTime(elapsedTime)}
+                            </div>
+                        </div>
+                        <div className="text-center">
+                            <div
+                                className={`text-xs font-medium ${
+                                    isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                                }`}
+                            >
+                                Score
+                            </div>
+                            <div
+                                className={`text-lg font-bold ${
+                                    isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                                }`}
+                            >
+                                {progress.correct}/{questions.length}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </header>
 
             {/* Main Body */}
@@ -376,6 +455,8 @@ const DailyRCPage: React.FC = () => {
                         <QuestionPanel
                             question={currentQuestion}
                             isDark={isDark}
+                            isLastQuestion={isLastQuestion}
+                            isFirstQuestion={currentQuestionIndex === 0}
                         // Pass down handlers that dispatch to Redux
                         />
                     </SplitPaneLayout>
@@ -451,7 +532,7 @@ const DailyRCPage: React.FC = () => {
                     : "bg-bg-primary-light/90 border-border-light"
                     }`}
             >
-                {viewMode === "exam" ? (
+                {viewMode === "exam" && (
                     <>
                         <div className="flex gap-2 md:gap-3 w-full md:w-auto justify-between md:justify-start">
                             <button
@@ -490,7 +571,7 @@ const DailyRCPage: React.FC = () => {
                                     }
                                     `}
                             >
-                                {isLastQuestion ? "Finish" : "Save & Next"}
+                                Save & Next
                             </button>
                             <button
                                 onClick={handleFinishExam}
@@ -500,21 +581,6 @@ const DailyRCPage: React.FC = () => {
                             </button>
                         </div>
                     </>
-                ) : (
-                    <div className="flex gap-4 w-full justify-center">
-                        <button
-                            onClick={() => dispatch(goToPreviousQuestion())}
-                            className={`px-6 py-2 border rounded-lg ${isDark ? "border-border-dark text-text-primary-dark" : "border-border-light text-text-primary-light"}`}
-                        >
-                            Previous
-                        </button>
-                        <button
-                            onClick={() => dispatch(goToNextQuestion())}
-                            className={`px-6 py-2 border rounded-lg ${isDark ? "border-border-dark text-text-primary-dark" : "border-border-light text-text-primary-light"}`}
-                        >
-                            Next
-                        </button>
-                    </div>
                 )}
             </footer>
         </div>

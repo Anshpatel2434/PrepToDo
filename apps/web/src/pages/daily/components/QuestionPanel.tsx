@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import type { Option, Question } from "../../../types";
@@ -6,7 +6,10 @@ import {
     selectViewMode,
     selectCurrentAttempt,
     submitAnswer,
-    selectSolutionViewType, // Assuming you add this selector to slice
+    selectSolutionViewType,
+    selectSession,
+    goToNextQuestion,
+    goToPreviousQuestion,
 } from "../redux_usecase/dailyPracticeSlice";
 import { ConfidenceSelector } from "./ConfidenceSelector";
 import { SolutionToggle } from "./SolutionToggle";
@@ -14,20 +17,70 @@ import { SolutionToggle } from "./SolutionToggle";
 interface QuestionPanelProps {
     question: Question;
     isDark: boolean;
+    isLastQuestion: boolean;
+    isFirstQuestion: boolean;
 }
 
 export const QuestionPanel: React.FC<QuestionPanelProps> = ({
     question,
     isDark,
+    isLastQuestion,
+    isFirstQuestion,
 }) => {
     const dispatch = useDispatch();
     const viewMode = useSelector(selectViewMode);
-    const solutionViewType = useSelector(selectSolutionViewType); // "common" | "personalized"
+    const solutionViewType = useSelector(selectSolutionViewType);
     const currentAttempt = useSelector(selectCurrentAttempt);
+    const session = useSelector(selectSession);
+    const [showAIToast, setShowAIToast] = useState(false);
+    const [showAILoader, setShowAILoader] = useState(false);
+    const [hasShownToast, setHasShownToast] = useState(false);
 
     const isExamMode = viewMode === "exam";
 
-    // Derived State
+    // AI Insights Logic
+    const isAttemptCorrect = currentAttempt?.is_correct;
+    const hasAnalytics = session.is_analysed && session.analytics;
+
+    // Poll for analytics when in solution mode and not yet analysed
+    useEffect(() => {
+        if (!isExamMode && session.id && !session.is_analysed && !hasShownToast) {
+            setShowAILoader(true);
+            const pollInterval = setInterval(() => {
+                // This would trigger a refetch of the session
+                // For now, we'll just set a timeout to simulate analysis
+            }, 3000);
+
+            // Simulate analysis completion after 5 seconds
+            const timeout = setTimeout(() => {
+                setShowAILoader(false);
+                if (!hasShownToast) {
+                    setShowAIToast(true);
+                    setHasShownToast(true);
+                    setTimeout(() => setShowAIToast(false), 5000);
+                }
+            }, 5000);
+
+            return () => {
+                clearInterval(pollInterval);
+                clearTimeout(timeout);
+            };
+        }
+    }, [isExamMode, session.id, session.is_analysed, hasShownToast]);
+
+    // Handle solution view type toggle
+    const handleSolutionViewToggle = useCallback((type: "common" | "personalized") => {
+        if (type === "personalized") {
+            if (isAttemptCorrect) {
+                // Don't toggle, show message
+                return;
+            }
+            if (!hasAnalytics) {
+                setShowAILoader(true);
+                return;
+            }
+        }
+    }, [isAttemptCorrect, hasAnalytics]);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const userAnswer = (currentAttempt?.user_answer as any)?.user_answer || "";
     const selectedOption = userAnswer; // For standard questions
@@ -250,30 +303,129 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                 )}
 
                 {!isExamMode && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className={`mt-6 p-6 rounded-xl border ${
-                            isDark
-                                ? "bg-bg-secondary-dark text-text-secondary-dark border-border-dark"
-                            : "bg-bg-secondary-light text-text-secondary-light border-border-light"
-                        }`}
-                    >
-                        <div className="flex justify-between items-center mb-4">
-                            <h4 className="font-semibold">Solution</h4>
-                            <SolutionToggle
-                                hasPersonalizedRationale={!!question.rationale}
-                                isDark={isDark}
-                            />
+                    <>
+                        {/* AI Insights Toast */}
+                        <AnimatePresence>
+                            {showAIToast && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    className={`p-4 rounded-xl border mb-4 ${
+                                        isDark
+                                            ? "bg-brand-primary-dark/20 border-brand-primary-dark"
+                                            : "bg-brand-primary-light/20 border-brand-primary-light"
+                                    }`}
+                                >
+                                    <p
+                                        className={`text-sm font-medium ${
+                                            isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                                        }`}
+                                    >
+                                        🎉 AI Insights are now available!
+                                    </p>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        {/* AI Loader */}
+                        {solutionViewType === "personalized" && showAILoader && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className={`p-6 rounded-xl border mb-4 ${
+                                    isDark
+                                        ? "bg-bg-secondary-dark text-text-secondary-dark border-border-dark"
+                                        : "bg-bg-secondary-light text-text-secondary-light border-border-light"
+                                }`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <motion.div
+                                        className="w-6 h-6 border-2 border-current rounded-full"
+                                        style={{ borderTopColor: "transparent" }}
+                                        animate={{ rotate: 360 }}
+                                        transition={{ repeat: Infinity, duration: 1 }}
+                                    />
+                                    <p className="text-sm">
+                                        AI is analyzing your mistakes. Meanwhile, explore the common solutions.
+                                    </p>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* Correct Attempt Message */}
+                        {solutionViewType === "personalized" && isAttemptCorrect && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className={`p-6 rounded-xl border mb-4 ${
+                                    isDark
+                                        ? "bg-bg-secondary-dark text-text-secondary-dark border-border-dark"
+                                        : "bg-bg-secondary-light text-text-secondary-light border-border-light"
+                                }`}
+                            >
+                                <p className="text-sm">
+                                    AI insights are only available for incorrect attempts.
+                                </p>
+                            </motion.div>
+                        )}
+
+                        {/* Solution Section */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className={`mt-6 p-6 rounded-xl border ${
+                                isDark
+                                    ? "bg-bg-secondary-dark text-text-secondary-dark border-border-dark"
+                                    : "bg-bg-secondary-light text-text-secondary-light border-border-light"
+                            }`}
+                        >
+                            <div className="flex justify-between items-center mb-4">
+                                <h4 className="font-semibold">Solution</h4>
+                                <SolutionToggle
+                                    hasPersonalizedRationale={!!question.rationale}
+                                    isDark={isDark}
+                                />
+                            </div>
+                            <p className="leading-relaxed opacity-90 whitespace-pre-line">
+                                {solutionViewType === "personalized" && hasAnalytics
+                                    ? (() => {
+                                          const analytics = session.analytics as any;
+                                          const attemptId = currentAttempt?.id;
+                                          const diagnostic = analytics?.analytics?.diagnostics?.find(
+                                              (d: any) => d.attempt_id === attemptId
+                                          );
+                                          return diagnostic?.trap_analysis || question.rationale;
+                                      })()
+                                    : question.rationale}
+                            </p>
+                        </motion.div>
+
+                        {/* Navigation Buttons for Solution Mode */}
+                        <div className="flex gap-4 w-full justify-center mt-6">
+                            <button
+                                onClick={() => dispatch(goToPreviousQuestion())}
+                                className={`px-6 py-2 border rounded-lg ${
+                                    isDark
+                                        ? "border-border-dark text-text-primary-dark"
+                                        : "border-border-light text-text-primary-light"
+                                }`}
+                                disabled={isFirstQuestion}
+                            >
+                                Previous
+                            </button>
+                            <button
+                                onClick={() => dispatch(goToNextQuestion())}
+                                className={`px-6 py-2 border rounded-lg ${
+                                    isDark
+                                        ? "border-border-dark text-text-primary-dark"
+                                        : "border-border-light text-text-primary-light"
+                                }`}
+                            >
+                                {isLastQuestion ? "Back to Start" : "Next"}
+                            </button>
                         </div>
-                        <p className="leading-relaxed opacity-90 whitespace-pre-line">
-                            {
-                                solutionViewType === "personalized"
-                                    ? question.rationale
-                                    : question.rationale /* Use actual field if available */
-                            }
-                        </p>
-                    </motion.div>
+                    </>
                 )}
                 <div />
             </div>
