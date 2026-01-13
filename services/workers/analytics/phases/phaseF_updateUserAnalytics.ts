@@ -34,9 +34,13 @@ export async function phaseF_updateUserAnalytics(
     const today = sessionData.completed_at
         ? new Date(sessionData.completed_at).toISOString().split('T')[0]
         : new Date().toISOString().split('T')[0];
+
+        console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% today : ", today)
     
     // Determine if this is a real session or just a streak update
     const isStreakUpdateOnly = session_id === null || dataset.length === 0;
+
+    console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% isStreakUpdateOnly : ", isStreakUpdateOnly)
 
     // 1. Calculate basic session stats
     const questions_attempted = dataset.length;
@@ -51,6 +55,8 @@ export async function phaseF_updateUserAnalytics(
     const reading_speed_wpm = await calculateReadingSpeedWpm(supabase, dataset);
 
     // 3. Update user_metric_proficiency with reading_speed_wpm if calculated
+    console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Reading speed wm : ", reading_speed_wpm)
+    console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% session_id : ", session_id)
     if (reading_speed_wpm > 0 && session_id) {
         await updateReadingSpeedProficiency(
             supabase, 
@@ -203,6 +209,8 @@ async function updateReadingSpeedProficiency(
     completed_at: string
 ): Promise<void> {
     console.log(`📊 [Phase F] Updating reading_speed_wpm in user_metric_proficiency: ${wpm} WPM, ${accuracy}% accuracy`);
+
+    console.log("completed at : ", completed_at)
 
     // Normalize WPM to 0-100 proficiency score
     // Typical reading speeds: 50-400 WPM

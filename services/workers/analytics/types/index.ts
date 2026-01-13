@@ -20,6 +20,7 @@ export const AttemptDatumSchema = z.object({
     question_text: z.string().optional(),
     options: z.any().optional(),
     correct_answer: z.any().optional(),
+    jumbled_sentences: z.any().optional(),
 });
 
 export type AttemptDatum = z.infer<typeof AttemptDatumSchema>;
