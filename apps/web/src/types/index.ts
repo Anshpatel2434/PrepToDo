@@ -185,6 +185,8 @@ export const PracticeSessionSchema = z.object({
     points_earned: z.number(),
     created_at: TimestampSchema,
     updated_at: TimestampSchema,
+    analytics: z.any().nullish(),
+    is_analysed: z.boolean().default(false),
 });
 
 export type PracticeSession = z.infer<typeof PracticeSessionSchema>;
