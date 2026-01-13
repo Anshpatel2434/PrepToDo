@@ -26,6 +26,8 @@ export { default as QuestionPalette } from './components/QuestionPalette';
 export { default as ConfidenceSelector } from './components/ConfidenceSelector';
 export { default as SolutionToggle } from './components/SolutionToggle';
 export { default as QuestionPanel } from './components/QuestionPanel';
+export { default as PreviousExamsPagination } from './components/PreviousExamsPagination';
+export { default as DailyRCVAPageSkeleton } from './components/DailySkeleton';
 
 // RC Components
 export { default as SplitPaneLayout } from './daily_rc/Component/SplitPaneLayout';

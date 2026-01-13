@@ -9,6 +9,17 @@ interface TestDataState {
     questions: Question[];
 }
 
+interface PreviousExam {
+    id: UUID;
+    name: string;
+    created_at: string;
+    exam_type: string;
+}
+
+interface FetchTestDataByExamIdParams {
+    exam_id: UUID;
+}
+
 interface StartDailySessionQuery {
     user_id: UUID;
     paper_id: UUID;
@@ -134,6 +145,172 @@ export const dailyPracticeApi = createApi({
                         error: {
                             status: "CUSTOM_ERROR",
                             data: e.message || "Error while fetching daily test data",
+                        },
+                    };
+                }
+            },
+            providesTags: ["DailyPractice"],
+        }),
+
+        // Fetch previous daily exams for pagination
+        fetchPreviousDailyExams: builder.query<PreviousExam[], void>({
+            queryFn: async () => {
+                console.log('[DailyPracticeApi] fetchPreviousDailyExams called');
+                try {
+                    // Get current user
+                    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+                    if (userError || !user) {
+                        console.log('[DailyPracticeApi] User is not authenticated');
+                        return {
+                            error: {
+                                status: "UNAUTHORIZED",
+                                data: "User not authenticated",
+                            },
+                        };
+                    }
+
+                    // Get latest exam first (today's)
+                    const { data: latestExams, error: latestError } = await supabase
+                        .from("exam_papers")
+                        .select("id")
+                        .eq("year", 2026)
+                        .order("created_at", { ascending: false })
+                        .limit(1);
+
+                    if (latestError) {
+                        console.log('[DailyPracticeApi] Error fetching latest exam:', latestError);
+                        return {
+                            error: {
+                                status: "CUSTOM_ERROR",
+                                data: latestError.message,
+                            },
+                        };
+                    }
+
+                    // Get all daily exams for 2026, excluding today's
+                    const latestExamId = latestExams?.[0]?.id;
+
+                    const { data: exams, error } = await supabase
+                        .from("exam_papers")
+                        .select("id, name, created_at, exam_type")
+                        .eq("year", 2026)
+                        .neq("id", latestExamId)
+                        .order("created_at", { ascending: false });
+
+                    if (error) {
+                        console.log('[DailyPracticeApi] Error while fetching previous exams:', error);
+                        return {
+                            error: {
+                                status: "CUSTOM_ERROR",
+                                data: error.message,
+                            },
+                        };
+                    }
+
+                    console.log('[DailyPracticeApi] Fetched', exams?.length || 0, 'previous exams');
+                    return { data: exams || [] };
+                } catch (error) {
+                    console.log('[DailyPracticeApi] Error in fetchPreviousDailyExams:', error);
+                    const e = error as { message?: string };
+                    return {
+                        error: {
+                            status: "CUSTOM_ERROR",
+                            data: e.message || "Error while fetching previous exams",
+                        },
+                    };
+                }
+            },
+            providesTags: ["DailyPractice"],
+        }),
+
+        // Fetch test data by specific exam ID (for previous exams)
+        fetchTestDataByExamId: builder.query<TestDataState, FetchTestDataByExamIdParams>({
+            queryFn: async ({ exam_id }) => {
+                console.log('[DailyPracticeApi] fetchTestDataByExamId called for exam:', exam_id);
+                try {
+                    // Step 1: Get current user
+                    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+                    if (userError || !user) {
+                        console.log('[DailyPracticeApi] User is not authenticated');
+                        return {
+                            error: {
+                                status: "UNAUTHORIZED",
+                                data: "User not authenticated",
+                            },
+                        };
+                    }
+
+                    // Step 2: Get exam info
+                    const { data: examInfo, error: examInfoError } = await supabase
+                        .from("exam_papers")
+                        .select("*")
+                        .eq("id", exam_id)
+                        .single();
+
+                    if (examInfoError || !examInfo) {
+                        console.log('[DailyPracticeApi] Error while fetching exam details:', examInfoError);
+                        return {
+                            error: {
+                                status: "CUSTOM_ERROR",
+                                data: examInfoError?.message || "Exam not found",
+                            },
+                        };
+                    }
+
+                    console.log('[DailyPracticeApi] Fetched exam info:', examInfo.id);
+
+                    // Step 3: Get passages
+                    const { data: passage, error: passageError } = await supabase
+                        .from("passages")
+                        .select("*")
+                        .eq("paper_id", examInfo.id);
+
+                    if (passageError) {
+                        console.log('[DailyPracticeApi] Error while fetching exam passages:', passageError);
+                        return {
+                            error: {
+                                status: "CUSTOM_ERROR",
+                                data: passageError.message,
+                            },
+                        };
+                    }
+
+                    console.log('[DailyPracticeApi] Fetched', passage.length, 'passages');
+
+                    // Step 4: Get questions
+                    const { data: questions, error: questionError } = await supabase
+                        .from("questions")
+                        .select("*")
+                        .eq("paper_id", examInfo.id);
+
+                    if (questionError) {
+                        console.log('[DailyPracticeApi] Error while fetching exam questions:', questionError);
+                        return {
+                            error: {
+                                status: "CUSTOM_ERROR",
+                                data: questionError.message,
+                            },
+                        };
+                    }
+
+                    console.log('[DailyPracticeApi] Fetched', questions.length, 'questions');
+
+                    return {
+                        data: {
+                            examInfo,
+                            passages: passage,
+                            questions,
+                        },
+                    };
+                } catch (error) {
+                    console.log('[DailyPracticeApi] Error in fetchTestDataByExamId:', error);
+                    const e = error as { message?: string };
+                    return {
+                        error: {
+                            status: "CUSTOM_ERROR",
+                            data: e.message || "Error while fetching exam data",
                         },
                     };
                 }
@@ -477,6 +654,8 @@ export const dailyPracticeApi = createApi({
 export const {
     useFetchDailyTestDataQuery,
     useLazyFetchDailyTestDataQuery,
+    useFetchPreviousDailyExamsQuery,
+    useFetchTestDataByExamIdQuery,
     useStartDailyRCSessionMutation,
     useStartDailyVASessionMutation,
     useFetchExistingSessionDetailsQuery,

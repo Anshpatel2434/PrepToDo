@@ -5,6 +5,7 @@ import { useTheme } from "../../../context/ThemeContext";
 import { FloatingNavigation } from "../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
 import { MdMenuBook, MdSpellcheck } from "react-icons/md";
+import PreviousExamsPagination from "../components/PreviousExamsPagination";
 
 const DailyPage: React.FC = () => {
     const navigate = useNavigate();
@@ -227,6 +228,10 @@ const DailyPage: React.FC = () => {
                         <li>✓ Track your progress and improve accuracy</li>
                     </ul>
                 </motion.div>
+
+                {/* Previous Exams Pagination */}
+                <PreviousExamsPagination type="rc" />
+                <PreviousExamsPagination type="va" />
             </div>
         </div>
     );

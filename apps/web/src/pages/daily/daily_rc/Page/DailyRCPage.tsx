@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { MdChevronLeft, MdChevronRight, MdArrowBack } from "react-icons/md";
 import { useTheme } from "../../../../context/ThemeContext";
 import { supabase } from "../../../../services/apiClient";
@@ -31,6 +31,7 @@ import {
 
 import {
     useFetchDailyTestDataQuery,
+    useFetchTestDataByExamIdQuery,
     useLazyFetchExistingSessionDetailsQuery,
     useFetchExistingSessionDetailsQuery,
     useStartDailyRCSessionMutation,
@@ -50,6 +51,8 @@ const DailyRCPage: React.FC = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { isDark } = useTheme();
+    const [searchParams] = useSearchParams();
+    const examId = searchParams.get("exam_id");
 
     const [windowWidth, setWindowWidth] = React.useState(
         typeof window !== "undefined" ? window.innerWidth : 1024
@@ -66,9 +69,18 @@ const DailyRCPage: React.FC = () => {
 
     // --- 1. Data Fetching & Initialization ---
 
-    // Fetch generic daily test data
+    // Fetch test data based on whether exam_id is present in URL
     const { data: testData, isLoading: isTestDataLoading } =
-        useFetchDailyTestDataQuery();
+        useFetchTestDataByExamIdQuery(
+            { exam_id: examId || "" },
+            { skip: !examId }
+        );
+    const { data: todayTestData, isLoading: isTodayLoading } =
+        useFetchDailyTestDataQuery({ skip: !!examId });
+
+    // Merge data sources - use testData if exam_id is present, otherwise use todayTestData
+    const mergedTestData = examId ? testData : todayTestData;
+    const finalIsLoading = examId ? isTestDataLoading : isTodayLoading;
 
     // Mutations and Lazy Queries
     const [fetchExistingSession, { isFetching: isSessionLoading }] =
@@ -120,27 +132,27 @@ const DailyRCPage: React.FC = () => {
 
     // Derived UI Data
     const questions =
-        testData?.questions.filter(
+        mergedTestData?.questions.filter(
             (q) => q.question_type === "rc_question" || q.passage_id !== null
         ) || [];
-    const passages = testData?.passages || [];
+    const passages = mergedTestData?.passages || [];
     const currentQuestion = questions.find((q) => q.id === currentQuestionId);
     const currentPassage = currentQuestion?.passage_id
         ? passages.find((p) => p.id === currentQuestion.passage_id)
         : null;
 
     const [showPalette, setShowPalette] = React.useState(true);
-    const isLoading = isTestDataLoading || isSessionLoading || isCreatingSession;
+    const isLoading = finalIsLoading || isSessionLoading || isCreatingSession;
 
     // Polling for session updates in solution mode (to detect when AI analysis is done)
     const { data: polledSessionData } = useFetchExistingSessionDetailsQuery(
         {
             user_id: session.user_id,
-            paper_id: testData?.examInfo.id ? testData?.examInfo.id : "",
+            paper_id: mergedTestData?.examInfo.id ? mergedTestData?.examInfo.id : "",
             session_type: "daily_challenge_rc",
         },
         {
-            skip: viewMode !== "solution" || session.is_analysed || !session.user_id || !testData?.examInfo.id,
+            skip: viewMode !== "solution" || session.is_analysed || !session.user_id || !mergedTestData?.examInfo.id,
             pollingInterval: 5000,
         }
     );
@@ -164,7 +176,7 @@ const DailyRCPage: React.FC = () => {
     useEffect(() => {
         // Only run if test data is ready and we haven't initialized a session yet
         // Also check if initialization is already in progress to prevent duplicate calls
-        if (!testData || session.id || isLoading || isInitializingRef.current) return;
+        if (!mergedTestData || session.id || isLoading || isInitializingRef.current) return;
 
         const init = async () => {
             // Mark initialization as in progress
@@ -181,12 +193,12 @@ const DailyRCPage: React.FC = () => {
                 // 1. Check for existing session
                 const sessionResult = await fetchExistingSession({
                     user_id: user.id,
-                    paper_id: testData.examInfo.id,
+                    paper_id: mergedTestData.examInfo.id,
                     session_type: "daily_challenge_rc",
                 });
 
                 // Prepare Question IDs
-                const rcQuestions = testData.questions.filter(
+                const rcQuestions = mergedTestData.questions.filter(
                     (q: Question) =>
                         q.question_type === "rc_question" || q.passage_id !== null
                 );
@@ -211,7 +223,7 @@ const DailyRCPage: React.FC = () => {
 
                     const newSession = await startNewSession({
                         user_id: user.id,
-                        paper_id: testData.examInfo.id,
+                        paper_id: mergedTestData.examInfo.id,
                         passage_ids: passageIds,
                         question_ids: questionIds,
                     }).unwrap();
@@ -233,7 +245,7 @@ const DailyRCPage: React.FC = () => {
         init();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
-        testData,
+        mergedTestData,
         session.id,
         dispatch,
         isLoading,
@@ -405,9 +417,14 @@ const DailyRCPage: React.FC = () => {
                             }`}
                     >
                         <span className="hidden sm:inline">
-                            {testData?.examInfo.name || "Daily Practice"}:{" "}
+                            {mergedTestData?.examInfo.name || "Daily Practice"}:{" "}
                         </span>
                         RC
+                        {examId && (
+                            <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-500/30">
+                                Past Test
+                            </span>
+                        )}
                     </h1>
                 </div>
 
