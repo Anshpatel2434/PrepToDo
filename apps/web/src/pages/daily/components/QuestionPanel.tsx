@@ -11,7 +11,6 @@ import {
 } from "../redux_usecase/dailyPracticeSlice";
 import { ConfidenceSelector } from "./ConfidenceSelector";
 import { SolutionToggle } from "./SolutionToggle";
-import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 
 interface QuestionPanelProps {
     question: Question;

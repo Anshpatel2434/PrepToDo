@@ -69,18 +69,18 @@ const DailyVAPage: React.FC = () => {
     // 1. Data Fetching
     // Fetch test data - use specific exam if provided, otherwise fetch today's test
     const { data: testData, isLoading: isTestDataLoading } = useFetchDailyTestDataQuery(
-        {},
+        undefined,
         { skip: !!examId }
     );
-    
+
     const { data: specificTestData, isLoading: isSpecificTestDataLoading } = useFetchDailyTestByIdQuery(
-        { exam_id: examId },
+        { exam_id: examId ? examId : "" },
         { skip: !examId }
     );
 
     // Use the appropriate test data based on whether we have an exam_id
     const currentTestData = examId ? specificTestData : testData;
-    
+
     const [fetchExistingSession, { isFetching: isSessionLoading }] =
         useLazyFetchExistingSessionDetailsQuery();
     const [startNewSession, { isLoading: isCreatingSession }] =

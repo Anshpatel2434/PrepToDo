@@ -73,12 +73,12 @@ const DailyRCPage: React.FC = () => {
 
     // Fetch test data - use specific exam if provided, otherwise fetch today's test
     const { data: testData, isLoading: isTestDataLoading } = useFetchDailyTestDataQuery(
-        {},
+        undefined,
         { skip: !!examId }
     );
     
     const { data: specificTestData, isLoading: isSpecificTestDataLoading } = useFetchDailyTestByIdQuery(
-        { exam_id: examId },
+        { exam_id: examId ? examId : "" },
         { skip: !examId }
     );
 

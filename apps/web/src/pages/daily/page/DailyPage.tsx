@@ -5,8 +5,8 @@ import { useTheme } from "../../../context/ThemeContext";
 import { FloatingNavigation } from "../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
 import { MdMenuBook, MdSpellcheck, MdHistory } from "react-icons/md";
-import { useFetchDailyTestDataQuery, useFetchPreviousDailyTestsQuery } from "../../redux_usecase/dailyPracticeApi";
 import type { Exam } from "../../../types";
+import { useFetchDailyTestDataQuery, useFetchPreviousDailyTestsQuery } from "../redux_usecase/dailyPracticeApi";
 
 const DailyPage: React.FC = () => {
     const navigate = useNavigate();
@@ -156,8 +156,8 @@ const DailyPage: React.FC = () => {
                             max-w-4xl mx-auto mb-8 p-6 rounded-xl border-2
                             ${isTodayExam(selectedExam)
                                 ? (isDark
-                                    ? "bg-gradient-to-r from-amber-900/20 to-orange-900/20 border-amber-500/50"
-                                    : "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-300")
+                                    ? "bg-linear-to-r from-amber-900/20 to-orange-900/20 border-amber-500/50"
+                                    : "bg-linear-to-r from-amber-50 to-orange-50 border-amber-300")
                                 : (isDark
                                     ? "bg-bg-secondary-dark border-border-dark"
                                     : "bg-bg-secondary-light border-border-light")
