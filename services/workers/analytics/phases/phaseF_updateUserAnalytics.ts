@@ -236,49 +236,105 @@ async function updateReadingSpeedProficiency(
         newScore = normalizedScore;
     }
 
-    // Update speed_vs_accuracy_data with the last 60 sessions
+    // Update speed_vs_accuracy_data with aggregated daily averages
     // Use the session's completed_at date, not today's date
     const sessionDate = new Date(completed_at).toISOString().split('T')[0];
-    const newSessionData = { 
-        date: sessionDate, 
-        wpm, 
-        accuracy,
-        session_id // Track session_id to handle multiple sessions per day
-    };
     
-    let speedVsAccuracyData: Array<{ date: string; wpm: number; accuracy: number; session_id: string }> = [];
+    let speedVsAccuracyData: Array<{ date: string; wpm: number; accuracy: number; sessions_count: number }> = [];
     
     if (existing?.speed_vs_accuracy_data) {
-        // Parse existing data
-        speedVsAccuracyData = Array.isArray(existing.speed_vs_accuracy_data) 
+        // Parse existing data and handle backward compatibility
+        const rawData = Array.isArray(existing.speed_vs_accuracy_data) 
             ? existing.speed_vs_accuracy_data 
             : [];
+            
+        // Handle old format (with session_id) vs new format (with sessions_count)
+        if (rawData.length > 0 && 'session_id' in rawData[0]) {
+            // Old format - convert to new aggregated format
+            console.log('   - Converting old session-based format to new aggregated format');
+            
+            const dateAggregates = new Map<string, { totalWpm: number; totalAccuracy: number; count: number }>();
+            
+            for (const record of rawData as Array<{ date: string; wpm: number; accuracy: number; session_id: string }>) {
+                const existing = dateAggregates.get(record.date);
+                if (existing) {
+                    existing.totalWpm += record.wpm;
+                    existing.totalAccuracy += record.accuracy;
+                    existing.count += 1;
+                } else {
+                    dateAggregates.set(record.date, {
+                        totalWpm: record.wpm,
+                        totalAccuracy: record.accuracy,
+                        count: 1
+                    });
+                }
+            }
+            
+            // Convert to new format
+            speedVsAccuracyData = Array.from(dateAggregates.entries())
+                .map(([date, aggregate]) => ({
+                    date,
+                    wpm: Math.round(aggregate.totalWpm / aggregate.count),
+                    accuracy: Math.round(aggregate.totalAccuracy / aggregate.count * 100) / 100,
+                    sessions_count: aggregate.count
+                }));
+        } else {
+            // Already in new format
+            speedVsAccuracyData = rawData;
+        }
     }
     
-    // Check if this specific session already exists (for idempotency)
-    const existingSessionIndex = speedVsAccuracyData.findIndex((d: any) => d.session_id === session_id);
-    if (existingSessionIndex >= 0) {
-        // Update existing session data (reprocessing scenario)
-        speedVsAccuracyData[existingSessionIndex] = newSessionData;
-        console.log(`   - Updated existing session data for session ${session_id}`);
+    // Group existing data by date and calculate aggregates
+    const dateAggregates = new Map<string, { totalWpm: number; totalAccuracy: number; count: number }>();
+    
+    // Process existing aggregated data
+    for (const record of speedVsAccuracyData) {
+        const existing = dateAggregates.get(record.date);
+        if (existing) {
+            existing.totalWpm += record.wpm * record.sessions_count;
+            existing.totalAccuracy += record.accuracy * record.sessions_count;
+            existing.count += record.sessions_count;
+        } else {
+            dateAggregates.set(record.date, {
+                totalWpm: record.wpm * record.sessions_count,
+                totalAccuracy: record.accuracy * record.sessions_count,
+                count: record.sessions_count
+            });
+        }
+    }
+    
+    // Add or update the current session
+    const currentSession = dateAggregates.get(sessionDate);
+    if (currentSession) {
+        // Update existing date with new session data
+        currentSession.totalWpm += wpm;
+        currentSession.totalAccuracy += accuracy;
+        currentSession.count += 1;
+        console.log(`   - Updated aggregated data for date ${sessionDate}`);
     } else {
-        // Add new session data
-        speedVsAccuracyData.push(newSessionData);
-        console.log(`   - Added new session data for session ${session_id}`);
+        // Add new date
+        dateAggregates.set(sessionDate, {
+            totalWpm: wpm,
+            totalAccuracy: accuracy,
+            count: 1
+        });
+        console.log(`   - Added new aggregated data for date ${sessionDate}`);
     }
     
-    // Sort by date (oldest to newest), then keep only the last 60 sessions
-    speedVsAccuracyData.sort((a: any, b: any) => {
-        const dateCompare = a.date.localeCompare(b.date);
-        if (dateCompare !== 0) return dateCompare;
-        // If same date, sort by session_id for consistency
-        return a.session_id.localeCompare(b.session_id);
-    });
+    // Convert back to array format with averaged values
+    speedVsAccuracyData = Array.from(dateAggregates.entries())
+        .map(([date, aggregate]) => ({
+            date,
+            wpm: Math.round(aggregate.totalWpm / aggregate.count),
+            accuracy: Math.round(aggregate.totalAccuracy / aggregate.count * 100) / 100, // Round to 2 decimal places
+            sessions_count: aggregate.count
+        }))
+        .sort((a, b) => a.date.localeCompare(b.date)); // Sort by date (oldest to newest)
     
+    // Keep only the last 60 days of data
     if (speedVsAccuracyData.length > 60) {
-        // Remove oldest sessions, keep last 60
         speedVsAccuracyData = speedVsAccuracyData.slice(-60);
-        console.log(`   - Trimmed to last 60 sessions (removed ${speedVsAccuracyData.length - 60} oldest)`);
+        console.log(`   - Trimmed to last 60 days (removed ${speedVsAccuracyData.length - 60} oldest)`);
     }
 
     const { error: upsertError } = await supabase
@@ -304,7 +360,7 @@ async function updateReadingSpeedProficiency(
         console.error('❌ [Phase F] Failed to update reading_speed_wpm proficiency:', upsertError);
         // Don't throw - this is not critical
     } else {
-        console.log(`✅ [Phase F] Reading speed proficiency updated: ${newScore}, sessions tracked: ${speedVsAccuracyData.length}`);
+        console.log(`✅ [Phase F] Reading speed proficiency updated: ${newScore}, days tracked: ${speedVsAccuracyData.length}`);
     }
 }
 
