@@ -172,6 +172,7 @@ export const PracticeSessionSchema = z.object({
     created_at: z.string(),
     updated_at: z.string(),
     analytics: z.any().nullish(),
+    is_analysed: z.boolean().default(false),
 });
 
 export type PracticeSession = z.infer<typeof PracticeSessionSchema>;
