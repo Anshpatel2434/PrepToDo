@@ -136,7 +136,7 @@ const DailyRCPage: React.FC = () => {
     const { data: polledSessionData } = useFetchExistingSessionDetailsQuery(
         {
             user_id: session.user_id,
-            paper_id: testData?.examInfo.id,
+            paper_id: testData?.examInfo.id ? testData?.examInfo.id : "",
             session_type: "daily_challenge_rc",
         },
         {

@@ -167,7 +167,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                 </div>
 
                 <div>
-                    <h5 className="text-sm font-bold uppercase tracking-wider mb-2 opacity-60">Reasoning Failures</h5>
+                    <h5 className="text-sm font-bold uppercase tracking-wider mb-2 opacity-60">Possible Reasoning Failures</h5>
                     <div className="space-y-3">
                         {diagnostic.dominant_reasoning_failures?.map((f: any, i: number) => (
                             <div key={i} className={`p-3 rounded-lg ${isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"}`}>
