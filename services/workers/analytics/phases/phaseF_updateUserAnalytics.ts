@@ -310,61 +310,144 @@ async function updateReadingSpeedProficiency(
 
 /**
  * Calculate reading speed in words per minute
- * Uses passage word count and time spent on each attempt
+ * Counts words across:
+ * - unique passages (by passage_id)
+ * - question text
+ * - options (if present)
+ * - jumbled sentences (if present)
  */
+function countWordsInText(text: string): number {
+    const cleaned = text
+        .replace(/<[^>]*>/g, ' ') // strip any HTML-ish tags
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    if (!cleaned) return 0;
+    return cleaned.split(' ').filter(Boolean).length;
+}
+
+function collectStringsFromUnknown(value: unknown, depth = 0, maxDepth = 6): string[] {
+    if (value === null || value === undefined) return [];
+    if (typeof value === 'string') return [value];
+    if (typeof value === 'number' || typeof value === 'boolean') return [];
+
+    if (Array.isArray(value)) {
+        if (depth >= maxDepth) return [];
+        return value.flatMap(v => collectStringsFromUnknown(v, depth + 1, maxDepth));
+    }
+
+    if (typeof value === 'object') {
+        if (depth >= maxDepth) return [];
+        return Object.values(value as Record<string, unknown>).flatMap(v =>
+            collectStringsFromUnknown(v, depth + 1, maxDepth)
+        );
+    }
+
+    return [];
+}
+
+function countWordsInUnknown(value: unknown): number {
+    const parts = collectStringsFromUnknown(value);
+    return parts.reduce((sum, part) => sum + countWordsInText(part), 0);
+}
+
 async function calculateReadingSpeedWpm(
     supabase: any,
     dataset: AttemptDatum[]
 ): Promise<number> {
     if (dataset.length === 0) return 0;
 
-    // Get unique passage IDs from dataset
-    const passageIds = Array.from(new Set(dataset.map(d => d.passage_id).filter(Boolean)));
+    const totalTimeSeconds = dataset.reduce((sum, a) => sum + (a.time_spent_seconds || 0), 0);
+    if (totalTimeSeconds <= 0) return 0;
 
-    if (passageIds.length === 0) return 0;
+    // --- Passage words (count each passage once, even if multiple questions reference it) ---
+    const passageIds = Array.from(
+        new Set(dataset.map(d => d.passage_id).filter((id): id is string => Boolean(id)))
+    );
 
-    // Fetch passages to get word counts
-    const { data: passages, error } = await supabase
-        .from('passages')
-        .select('*')
-        .in('id', passageIds);
+    const passageWordCount = new Map<string, number>();
 
-    if (error || !passages || passages.length === 0) {
-        console.warn('⚠️ [Phase F] Could not fetch passage word counts for WPM calculation');
-        return 0;
+    if (passageIds.length > 0) {
+        const { data: passages, error } = await supabase
+            .from('passages')
+            .select('*')
+            .in('id', passageIds);
+
+        if (error || !passages || passages.length === 0) {
+            console.warn('⚠️ [Phase F] Could not fetch passage word counts for WPM calculation');
+        } else {
+            const passagesParsed = PassageArraySchema.safeParse(passages);
+            if (!passagesParsed.success) {
+                console.error('⚠️ [Phase F] Validation failed for passages:', passagesParsed.error.issues[0]);
+            } else {
+                for (const p of passagesParsed.data) {
+                    passageWordCount.set(p.id, p.word_count || 0);
+                }
+            }
+        }
     }
-    const passagesParsed = PassageArraySchema.safeParse(passages);
-    if (!passagesParsed.success) {
-        console.error('⚠️ [Phase F] Validation failed for passages:', passagesParsed.error.issues[0]);
-        return 0;
+
+    const totalPassageWords = passageIds.reduce((sum, id) => sum + (passageWordCount.get(id) || 0), 0);
+
+    // --- Jumbled sentences (only fetch if needed) ---
+    const paraJumbleQuestionIds = Array.from(
+        new Set(dataset.filter(a => a.question_type === 'para_jumble').map(a => a.question_id))
+    );
+
+    const jumbledByQuestionId = new Map<string, unknown>();
+
+    if (paraJumbleQuestionIds.length > 0) {
+        const QuestionJumbledSchema = z.object({
+            id: z.string(),
+            jumbled_sentences: z.any().nullish(),
+        });
+
+        const { data: questions, error } = await supabase
+            .from('questions')
+            .select('id, jumbled_sentences')
+            .in('id', paraJumbleQuestionIds);
+
+        if (error || !questions || questions.length === 0) {
+            console.warn('⚠️ [Phase F] Could not fetch jumbled_sentences for WPM calculation');
+        } else {
+            const parsed = z.array(QuestionJumbledSchema).safeParse(questions);
+            if (!parsed.success) {
+                console.error('⚠️ [Phase F] Validation failed for jumbled_sentences:', parsed.error.issues[0]);
+            } else {
+                for (const q of parsed.data) {
+                    jumbledByQuestionId.set(q.id, q.jumbled_sentences);
+                }
+            }
+        }
     }
 
-    const passageVerified = passagesParsed.data;
-
-    // Build passage word count map
-    const passageWordCount = new Map(passageVerified.map(p => [p.id, p.word_count]));
-
-    // Calculate total words read and total time spent
-    let totalWords = 0;
-    let totalTimeSeconds = 0;
+    // --- Question + option + jumbled words ---
+    let totalQuestionWords = 0;
+    let totalOptionWords = 0;
+    let totalJumbledWords = 0;
 
     for (const attempt of dataset) {
-        if (attempt.passage_id && passageWordCount.has(attempt.passage_id)) {
-            // Assume equal distribution of passage words across questions
-            // This is an approximation - for more accuracy, we'd need per-question word tracking
-            const passageWordCountValue = passageWordCount.get(attempt.passage_id) || 0;
-            totalWords += passageWordCountValue;
+        if (attempt.question_text) {
+            totalQuestionWords += countWordsInText(attempt.question_text);
         }
-        totalTimeSeconds += attempt.time_spent_seconds;
+
+        if (attempt.options !== undefined && attempt.options !== null) {
+            totalOptionWords += countWordsInUnknown(attempt.options);
+        }
+
+        const jumbled = attempt.jumbled_sentences ?? jumbledByQuestionId.get(attempt.question_id);
+        if (jumbled !== undefined && jumbled !== null) {
+            totalJumbledWords += countWordsInUnknown(jumbled);
+        }
     }
 
-    if (totalWords === 0 || totalTimeSeconds === 0) return 0;
+    const totalWords = totalPassageWords + totalQuestionWords + totalOptionWords + totalJumbledWords;
 
-    // WPM = total words / (total time in minutes)
+    if (totalWords === 0) return 0;
+
     const totalMinutes = totalTimeSeconds / 60;
     const wpm = Math.round(totalWords / totalMinutes);
 
-    // Sanity check: reasonable WPM range is typically 100-400
     return Math.min(400, Math.max(50, wpm));
 }
 
