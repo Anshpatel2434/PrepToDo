@@ -141,6 +141,159 @@ export const dailyPracticeApi = createApi({
             providesTags: ["DailyPractice"],
         }),
 
+        // Get previous daily practice tests
+        fetchPreviousDailyTests: builder.query<Exam[], { limit?: number }>({
+            queryFn: async ({ limit = 10 }) => {
+                console.log('[DailyPracticeApi] fetchPreviousDailyTests called');
+                try {
+                    // Step 1: Get current user
+                    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+                    if (userError || !user) {
+                        console.log('[DailyPracticeApi] User is not authenticated');
+                        return {
+                            error: {
+                                status: "UNAUTHORIZED",
+                                data: "User not authenticated",
+                            },
+                        };
+                    }
+
+                    console.log('[DailyPracticeApi] User authenticated:', user.id);
+
+                    // Step 2: Get previous daily practice exams (excluding the latest one)
+                    const { data: examInfo, error: examInfoError } = await supabase
+                        .from("exam_papers")
+                        .select("*")
+                        .eq("year", 2026)
+                        .order("created_at", { ascending: false }) // Sorts by newest first
+                        .range(1, limit) // Skip the first (latest) exam
+
+                    if (examInfoError) {
+                        console.log('[DailyPracticeApi] Error while fetching previous daily exams:', examInfoError);
+                        return {
+                            error: {
+                                status: "CUSTOM_ERROR",
+                                data: examInfoError.message,
+                            },
+                        };
+                    }
+
+                    console.log('[DailyPracticeApi] Fetched', examInfo?.length || 0, 'previous exams');
+
+                    return {
+                        data: examInfo || [],
+                    };
+                } catch (error) {
+                    console.log('[DailyPracticeApi] Error in fetchPreviousDailyTests:', error);
+                    const e = error as { message?: string };
+                    return {
+                        error: {
+                            status: "CUSTOM_ERROR",
+                            data: e.message || "Error while fetching previous daily tests",
+                        },
+                    };
+                }
+            },
+            providesTags: ["DailyPractice"],
+        }),
+
+        // Get specific daily test by exam_id
+        fetchDailyTestById: builder.query<TestDataState, { exam_id: UUID }>({
+            queryFn: async ({ exam_id }) => {
+                console.log('[DailyPracticeApi] fetchDailyTestById called for exam_id:', exam_id);
+                try {
+                    // Step 1: Get current user
+                    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+                    if (userError || !user) {
+                        console.log('[DailyPracticeApi] User is not authenticated');
+                        return {
+                            error: {
+                                status: "UNAUTHORIZED",
+                                data: "User not authenticated",
+                            },
+                        };
+                    }
+
+                    console.log('[DailyPracticeApi] User authenticated:', user.id);
+
+                    // Step 2: Get the specific daily practice exam
+                    const { data: examInfo, error: examInfoError } = await supabase
+                        .from("exam_papers")
+                        .select("*")
+                        .eq("id", exam_id)
+                        .single();
+
+                    if (examInfoError) {
+                        console.log('[DailyPracticeApi] Error while fetching daily exam details:', examInfoError);
+                        return {
+                            error: {
+                                status: "CUSTOM_ERROR",
+                                data: examInfoError.message,
+                            },
+                        };
+                    }
+
+                    console.log('[DailyPracticeApi] Fetched exam info:', examInfo.id);
+
+                    // Step 3: Get the passage linked with the particular exam id
+                    const { data: passage, error: passageError } = await supabase
+                        .from("passages")
+                        .select("*")
+                        .eq("paper_id", examInfo.id);
+
+                    if (passageError) {
+                        console.log('[DailyPracticeApi] Error while fetching daily exam passages:', passageError);
+                        return {
+                            error: {
+                                status: "CUSTOM_ERROR",
+                                data: passageError.message,
+                            },
+                        };
+                    }
+
+                    console.log('[DailyPracticeApi] Fetched', passage.length, 'passages');
+
+                    // Step 4: Get the questions linked with the particular exam id
+                    const { data: questions, error: questionError } = await supabase
+                        .from("questions")
+                        .select("*")
+                        .eq("paper_id", examInfo.id);
+
+                    if (questionError) {
+                        console.log('[DailyPracticeApi] Error while fetching daily exam questions:', questionError);
+                        return {
+                            error: {
+                                status: "CUSTOM_ERROR",
+                                data: questionError.message,
+                            },
+                        };
+                    }
+
+                    console.log('[DailyPracticeApi] Fetched', questions.length, 'questions');
+
+                    return {
+                        data: {
+                            examInfo: examInfo,
+                            passages: passage,
+                            questions: questions,
+                        },
+                    };
+                } catch (error) {
+                    console.log('[DailyPracticeApi] Error in fetchDailyTestById:', error);
+                    const e = error as { message?: string };
+                    return {
+                        error: {
+                            status: "CUSTOM_ERROR",
+                            data: e.message || "Error while fetching daily test data",
+                        },
+                    };
+                }
+            },
+            providesTags: ["DailyPractice"],
+        }),
+
         // Start the session for RC
         startDailyRCSession: builder.mutation<PracticeSession, StartDailySessionQuery>({
             queryFn: async ({ user_id, paper_id, passage_ids, question_ids }) => {
@@ -477,6 +630,10 @@ export const dailyPracticeApi = createApi({
 export const {
     useFetchDailyTestDataQuery,
     useLazyFetchDailyTestDataQuery,
+    useFetchPreviousDailyTestsQuery,
+    useLazyFetchPreviousDailyTestsQuery,
+    useFetchDailyTestByIdQuery,
+    useLazyFetchDailyTestByIdQuery,
     useStartDailyRCSessionMutation,
     useStartDailyVASessionMutation,
     useFetchExistingSessionDetailsQuery,

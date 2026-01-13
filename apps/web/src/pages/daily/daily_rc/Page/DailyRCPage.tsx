@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { MdChevronLeft, MdChevronRight, MdArrowBack } from "react-icons/md";
 import { useTheme } from "../../../../context/ThemeContext";
 import { supabase } from "../../../../services/apiClient";
@@ -31,6 +31,7 @@ import {
 
 import {
     useFetchDailyTestDataQuery,
+    useFetchDailyTestByIdQuery,
     useLazyFetchExistingSessionDetailsQuery,
     useFetchExistingSessionDetailsQuery,
     useStartDailyRCSessionMutation,
@@ -49,6 +50,7 @@ import { useExamNavigationGuard } from "../../navigation_hook/useExamNavigation"
 const DailyRCPage: React.FC = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { isDark } = useTheme();
 
     const [windowWidth, setWindowWidth] = React.useState(
@@ -64,11 +66,24 @@ const DailyRCPage: React.FC = () => {
     const isMobile = windowWidth < 768;
     const paletteWidth = isMobile ? 288 : 256;
 
+    // Get exam_id from URL params
+    const examId = searchParams.get('exam_id');
+
     // --- 1. Data Fetching & Initialization ---
 
-    // Fetch generic daily test data
-    const { data: testData, isLoading: isTestDataLoading } =
-        useFetchDailyTestDataQuery();
+    // Fetch test data - use specific exam if provided, otherwise fetch today's test
+    const { data: testData, isLoading: isTestDataLoading } = useFetchDailyTestDataQuery(
+        {},
+        { skip: !!examId }
+    );
+    
+    const { data: specificTestData, isLoading: isSpecificTestDataLoading } = useFetchDailyTestByIdQuery(
+        { exam_id: examId },
+        { skip: !examId }
+    );
+
+    // Use the appropriate test data based on whether we have an exam_id
+    const currentTestData = examId ? specificTestData : testData;
 
     // Mutations and Lazy Queries
     const [fetchExistingSession, { isFetching: isSessionLoading }] =
@@ -120,27 +135,27 @@ const DailyRCPage: React.FC = () => {
 
     // Derived UI Data
     const questions =
-        testData?.questions.filter(
+        currentTestData?.questions.filter(
             (q) => q.question_type === "rc_question" || q.passage_id !== null
         ) || [];
-    const passages = testData?.passages || [];
+    const passages = currentTestData?.passages || [];
     const currentQuestion = questions.find((q) => q.id === currentQuestionId);
     const currentPassage = currentQuestion?.passage_id
         ? passages.find((p) => p.id === currentQuestion.passage_id)
         : null;
 
     const [showPalette, setShowPalette] = React.useState(true);
-    const isLoading = isTestDataLoading || isSessionLoading || isCreatingSession;
+    const isLoading = isTestDataLoading || isSpecificTestDataLoading || isSessionLoading || isCreatingSession;
 
     // Polling for session updates in solution mode (to detect when AI analysis is done)
     const { data: polledSessionData } = useFetchExistingSessionDetailsQuery(
         {
             user_id: session.user_id,
-            paper_id: testData?.examInfo.id ? testData?.examInfo.id : "",
+            paper_id: currentTestData?.examInfo.id ? currentTestData?.examInfo.id : "",
             session_type: "daily_challenge_rc",
         },
         {
-            skip: viewMode !== "solution" || session.is_analysed || !session.user_id || !testData?.examInfo.id,
+            skip: viewMode !== "solution" || session.is_analysed || !session.user_id || !currentTestData?.examInfo.id,
             pollingInterval: 5000,
         }
     );
@@ -164,7 +179,7 @@ const DailyRCPage: React.FC = () => {
     useEffect(() => {
         // Only run if test data is ready and we haven't initialized a session yet
         // Also check if initialization is already in progress to prevent duplicate calls
-        if (!testData || session.id || isLoading || isInitializingRef.current) return;
+        if (!currentTestData || session.id || isLoading || isInitializingRef.current) return;
 
         const init = async () => {
             // Mark initialization as in progress
@@ -181,12 +196,12 @@ const DailyRCPage: React.FC = () => {
                 // 1. Check for existing session
                 const sessionResult = await fetchExistingSession({
                     user_id: user.id,
-                    paper_id: testData.examInfo.id,
+                    paper_id: currentTestData.examInfo.id,
                     session_type: "daily_challenge_rc",
                 });
 
                 // Prepare Question IDs
-                const rcQuestions = testData.questions.filter(
+                const rcQuestions = currentTestData.questions.filter(
                     (q: Question) =>
                         q.question_type === "rc_question" || q.passage_id !== null
                 );
@@ -211,7 +226,7 @@ const DailyRCPage: React.FC = () => {
 
                     const newSession = await startNewSession({
                         user_id: user.id,
-                        paper_id: testData.examInfo.id,
+                        paper_id: currentTestData.examInfo.id,
                         passage_ids: passageIds,
                         question_ids: questionIds,
                     }).unwrap();
@@ -233,7 +248,7 @@ const DailyRCPage: React.FC = () => {
         init();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
-        testData,
+        currentTestData,
         session.id,
         dispatch,
         isLoading,
@@ -405,7 +420,7 @@ const DailyRCPage: React.FC = () => {
                             }`}
                     >
                         <span className="hidden sm:inline">
-                            {testData?.examInfo.name || "Daily Practice"}:{" "}
+                            {currentTestData?.examInfo.name || "Daily Practice"}:{" "}
                         </span>
                         RC
                     </h1>

@@ -21,6 +21,7 @@ import {
 } from "../pages/auth/redux_usecases/authApi";
 import toast from "react-hot-toast";
 import { useTheme } from "../context/ThemeContext";
+import { useDailyExam } from "../context/DailyExamContext";
 
 interface NavigationItem {
     id: string;
@@ -104,6 +105,7 @@ export const FloatingNavigation: React.FC = () => {
     const containerRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
     const { isDark } = useTheme();
+    const { todayExamId } = useDailyExam();
 
     const { data: authState } = useFetchUserQuery();
     const user = authState ?? null;
@@ -135,6 +137,14 @@ export const FloatingNavigation: React.FC = () => {
         } else {
             handleLogout();
         }
+    };
+
+    // Get the daily path with exam_id if available
+    const getDailyPath = () => {
+        if (todayExamId) {
+            return `/daily?exam_id=${todayExamId}`;
+        }
+        return "/daily";
     };
 
     // Animation variants
@@ -174,7 +184,13 @@ export const FloatingNavigation: React.FC = () => {
     };
 
     const onNavigate = (path: string) => {
-        navigate(path);
+        // Special handling for daily path
+        if (path === "/daily") {
+            const dailyPath = getDailyPath();
+            navigate(dailyPath);
+        } else {
+            navigate(path);
+        }
     };
 
     const handleNavigate = (item: NavigationItem) => {

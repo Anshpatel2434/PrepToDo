@@ -2,7 +2,7 @@ import React, { useEffect, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useTheme } from "../../../../context/ThemeContext";
 import { supabase } from "../../../../services/apiClient";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { QuestionPalette } from "../../components/QuestionPalette";
 import { QuestionPanel } from "../../components/QuestionPanel";
 import { motion, AnimatePresence } from "framer-motion";
@@ -32,6 +32,7 @@ import {
 
 import {
     useFetchDailyTestDataQuery,
+    useFetchDailyTestByIdQuery,
     useLazyFetchExistingSessionDetailsQuery,
     useFetchExistingSessionDetailsQuery,
     useStartDailyVASessionMutation, // Note: VA specific mutation
@@ -46,6 +47,7 @@ import { useExamNavigationGuard } from "../../navigation_hook/useExamNavigation"
 const DailyVAPage: React.FC = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { isDark } = useTheme();
 
     const [windowWidth, setWindowWidth] = React.useState(
@@ -61,9 +63,24 @@ const DailyVAPage: React.FC = () => {
     const isMobile = windowWidth < 768;
     const paletteWidth = isMobile ? 288 : 256;
 
+    // Get exam_id from URL params
+    const examId = searchParams.get('exam_id');
+
     // 1. Data Fetching
-    const { data: testData, isLoading: isTestDataLoading } =
-        useFetchDailyTestDataQuery();
+    // Fetch test data - use specific exam if provided, otherwise fetch today's test
+    const { data: testData, isLoading: isTestDataLoading } = useFetchDailyTestDataQuery(
+        {},
+        { skip: !!examId }
+    );
+    
+    const { data: specificTestData, isLoading: isSpecificTestDataLoading } = useFetchDailyTestByIdQuery(
+        { exam_id: examId },
+        { skip: !examId }
+    );
+
+    // Use the appropriate test data based on whether we have an exam_id
+    const currentTestData = examId ? specificTestData : testData;
+    
     const [fetchExistingSession, { isFetching: isSessionLoading }] =
         useLazyFetchExistingSessionDetailsQuery();
     const [startNewSession, { isLoading: isCreatingSession }] =
@@ -112,25 +129,25 @@ const DailyVAPage: React.FC = () => {
     //Derived UI Data
     const questions = React.useMemo(
         () =>
-            testData?.questions.filter(
+            currentTestData?.questions.filter(
                 (q) => q.passage_id === null && q.question_type !== "rc_question"
             ) || [],
-        [testData?.questions]
+        [currentTestData?.questions]
     );
     const currentQuestion = questions.find((q) => q.id === currentQuestionId);
 
     const [showPalette, setShowPalette] = React.useState(true);
-    const isLoading = isTestDataLoading || isSessionLoading || isCreatingSession;
+    const isLoading = isTestDataLoading || isSpecificTestDataLoading || isSessionLoading || isCreatingSession;
 
     // Polling for session updates in solution mode
     const { data: polledSessionData } = useFetchExistingSessionDetailsQuery(
         {
             user_id: session.user_id,
-            paper_id: testData?.examInfo.id ? testData?.examInfo.id : "",
+            paper_id: currentTestData?.examInfo.id ? currentTestData?.examInfo.id : "",
             session_type: "daily_challenge_va",
         },
         {
-            skip: viewMode !== "solution" || session.is_analysed || !session.user_id || !testData?.examInfo.id,
+            skip: viewMode !== "solution" || session.is_analysed || !session.user_id || !currentTestData?.examInfo.id,
             pollingInterval: 5000,
         }
     );
@@ -154,7 +171,7 @@ const DailyVAPage: React.FC = () => {
     useEffect(() => {
         // Only run if test data is ready and we haven't initialized a session yet
         // Also check if initialization is already in progress to prevent duplicate calls
-        if (!testData || session.id || isLoading || isInitializingRef.current) return;
+        if (!currentTestData || session.id || isLoading || isInitializingRef.current) return;
 
         const init = async () => {
             // Mark initialization as in progress
@@ -170,7 +187,7 @@ const DailyVAPage: React.FC = () => {
 
                 const sessionResult = await fetchExistingSession({
                     user_id: user.id,
-                    paper_id: testData.examInfo.id,
+                    paper_id: currentTestData.examInfo.id,
                     session_type: "daily_challenge_va",
                 });
 
@@ -191,7 +208,7 @@ const DailyVAPage: React.FC = () => {
                     // Start new session
                     const newSession = await startNewSession({
                         user_id: user.id,
-                        paper_id: testData.examInfo.id,
+                        paper_id: currentTestData.examInfo.id,
                         passage_ids: [],
                         question_ids: questionIds,
                     }).unwrap();
@@ -212,7 +229,7 @@ const DailyVAPage: React.FC = () => {
         init();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
-        testData,
+        currentTestData,
         session.id,
         dispatch,
         isLoading,
@@ -399,7 +416,7 @@ const DailyVAPage: React.FC = () => {
                             }`}
                     >
                         <span className="hidden sm:inline">
-                            {testData?.examInfo.name || "Daily Practice"}:{" "}
+                            {currentTestData?.examInfo.name || "Daily Practice"}:{" "}
                         </span>
                         VA
                     </h1>

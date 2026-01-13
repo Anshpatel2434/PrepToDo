@@ -16,6 +16,7 @@ import DailyVAPage from "./pages/daily/daily_va/Page/DailyVAPage";
 import DailyPage from "./pages/daily/page/DailyPage";
 
 import { ThemeProvider } from "./context/ThemeContext";
+import { DailyExamProvider, useDailyExam } from "./context/DailyExamContext";
 import { SafeAuthRoute } from "./ui_components/SafeAuthRoute";
 import { supabase } from "./services/apiClient";
 import { useLazyFetchDailyTestDataQuery } from "./pages/daily/redux_usecase/dailyPracticeApi";
@@ -77,7 +78,8 @@ const router = createBrowserRouter([
 
 /* ---------------- APP ---------------- */
 
-function App() {
+function AppContent() {
+    const { setTodayExamId } = useDailyExam();
     const [triggerFetchDailyPracticeFunction, { error }] =
         useLazyFetchDailyTestDataQuery();
 
@@ -85,7 +87,10 @@ function App() {
 
     async function fetchDailyPracticeData() {
         try {
-            await triggerFetchDailyPracticeFunction();
+            const result = await triggerFetchDailyPracticeFunction();
+            if (result?.data?.examInfo?.id) {
+                setTodayExamId(result.data.examInfo.id);
+            }
         } catch (err) {
             console.error("Error while triggering daily practice fetch", err);
         }
@@ -107,7 +112,7 @@ function App() {
     }, []);
 
     return (
-        <ThemeProvider>
+        <>
             <RouterProvider router={router} />
             <Toaster
                 position="top-right"
@@ -132,6 +137,16 @@ function App() {
                     },
                 }}
             />
+        </>
+    );
+}
+
+function App() {
+    return (
+        <ThemeProvider>
+            <DailyExamProvider>
+                <AppContent />
+            </DailyExamProvider>
         </ThemeProvider>
     );
 }
