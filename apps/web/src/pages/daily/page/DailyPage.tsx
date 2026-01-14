@@ -62,7 +62,8 @@ const DailyPage: React.FC = () => {
 
     // Handle exam selection with toast notification for previous exams
     const handleExamSelect = (examId: string, examDate: string) => {
-        navigate(`/daily?exam_id=${examId}`);
+        // Force a page refresh to ensure proper rendering with the new exam_id
+        window.location.href = `/daily?exam_id=${examId}`;
 
         // Show toast for previous exams (not today's)
         if (!isTodayExam({ id: examId } as Exam)) {
@@ -214,8 +215,8 @@ const DailyPage: React.FC = () => {
                     </motion.div>
                 )}
 
-                {/* No Test For Today Message */}
-                {!hasTodayTest && !isLoadingToday && (
+                {/* No Test For Today Message - Only show when no test today and no exam selected */}
+                {!hasTodayTest && !isLoadingToday && !selectedExam && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -252,8 +253,8 @@ const DailyPage: React.FC = () => {
                     </motion.div>
                 )}
 
-                {/* Practice Options Grid - Only show when there's a test for today or a selected exam */}
-                {hasTodayTest && (
+                {/* Practice Options Grid - Show when there's a selected exam (today's or previous) */}
+                {selectedExam && (
                     <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-6 mb-12">
                         {practiceOptions.map((option, index) => {
                             const Icon = option.icon;

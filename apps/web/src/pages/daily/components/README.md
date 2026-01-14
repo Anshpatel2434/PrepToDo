@@ -10,15 +10,16 @@ A pagination-based container for displaying and navigating through previous dail
 
 - **Pagination**: Displays 20 tests per page with Previous/Next navigation
 - **Rectangular Strip Layout**: Tests are displayed as long rectangular strips stacked vertically
-- **Click-to-Select**: Clicking on a test selects it and updates the URL
+- **Click-to-Select**: Clicking on a test selects it and triggers a page refresh with updated URL
 - **Today's Test Indicator**: Highlights today's test with a special border and "TODAY" badge
 - **Selected State**: Visually indicates the currently selected test
 - **Loading State**: Shows a loading spinner while fetching data
 - **Empty State**: Displays a friendly message when no previous tests are available
+- **Toast Notification**: Shows a toast when a previous test is selected
 
 ### Props
 
-- `onExamSelect: (examId: string) => void` - Callback function when a test is selected
+- `onExamSelect: (examId: string, examDate: string) => void` - Callback function when a test is selected (includes exam ID and formatted date)
 - `selectedExamId: string | null` - The ID of the currently selected exam
 - `todayExamId: string | null` - The ID of today's exam (for highlighting)
 
@@ -26,10 +27,17 @@ A pagination-based container for displaying and navigating through previous dail
 
 ```tsx
 import PreviousTestsContainer from "../components/PreviousTestsContainer";
+import toast from "react-hot-toast";
 
 function MyPage() {
-  const handleExamSelect = (examId: string) => {
-    navigate(`/daily?exam_id=${examId}`);
+  const handleExamSelect = (examId: string, examDate: string) => {
+    // Force page refresh to ensure proper rendering
+    window.location.href = `/daily?exam_id=${examId}`;
+
+    // Show toast notification for previous tests
+    if (!isTodayExam({ id: examId } as Exam)) {
+      toast.success(`Viewing daily test from ${examDate}`);
+    }
   };
 
   return (
