@@ -4,9 +4,10 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTheme } from "../../../context/ThemeContext";
 import { FloatingNavigation } from "../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
-import { MdMenuBook, MdSpellcheck, MdHistory } from "react-icons/md";
+import { MdMenuBook, MdSpellcheck, MdHistory, MdCalendarToday } from "react-icons/md";
 import type { Exam } from "../../../types";
 import { useFetchDailyTestDataQuery, useFetchPreviousDailyTestsQuery } from "../redux_usecase/dailyPracticeApi";
+import PreviousTestsContainer from "../components/PreviousTestsContainer";
 
 const DailyPage: React.FC = () => {
     const navigate = useNavigate();
@@ -15,9 +16,12 @@ const DailyPage: React.FC = () => {
 
     // Fetch today's daily test data
     const { data: todayData, isLoading: isLoadingToday } = useFetchDailyTestDataQuery();
-    
-    // Fetch previous daily tests
-    const { data: previousTests, isLoading: isLoadingPrevious } = useFetchPreviousDailyTestsQuery({ limit: 20 });
+
+    // Fetch previous daily tests (first page only, for getting exam info when selected via URL)
+    const { data: previousTests } = useFetchPreviousDailyTestsQuery({ page: 1, limit: 20 });
+
+    // Check if there's a test for today
+    const hasTodayTest = !!todayData?.examInfo;
 
     // Compute selected exam ID from URL params or default to today's exam
     const urlExamId = searchParams.get('exam_id');
@@ -203,202 +207,147 @@ const DailyPage: React.FC = () => {
                     </motion.div>
                 )}
 
-                {/* Practice Options Grid */}
-                <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-6 mb-12">
-                    {practiceOptions.map((option, index) => {
-                        const Icon = option.icon;
-                        return (
-                            <motion.button
-                                key={option.id}
-                                onClick={() => handleStartPractice(option.id as "rc" | "va")}
-                                disabled={!selectedExamId}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 + index * 0.1, duration: 0.5 }}
-                                className={`
-                                    relative overflow-hidden p-8 rounded-2xl
-                                    border-2 text-left group
-                                    ${!selectedExamId ? 'opacity-50 cursor-not-allowed' : 'hover:cursor-pointer'}
-                                    ${
-                                        selectedExamId
-                                            ? (isDark
-                                                ? "bg-bg-secondary-dark border-border-dark hover:border-brand-primary-dark"
-                                                : "bg-bg-secondary-light border-border-light hover:border-brand-primary-light")
-                                            : (isDark
-                                                ? "bg-bg-secondary-dark border-border-dark"
-                                                : "bg-bg-secondary-light border-border-light")
-                                    }
-                                `}
-                            >
-                                {/* Gradient Background */}
-                                <div
+                {/* No Test For Today Message */}
+                {!hasTodayTest && !isLoadingToday && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2, duration: 0.5 }}
+                        className={`
+                            max-w-4xl mx-auto mb-8 p-6 rounded-xl border-2
+                            ${isDark
+                                ? "bg-red-900/10 border-red-500/30"
+                                : "bg-red-50 border-red-200"}
+                        `}
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className={`
+                                w-12 h-12 rounded-full flex items-center justify-center
+                                ${isDark ? "bg-red-500/20" : "bg-red-100"}
+                            `}>
+                                <MdCalendarToday size={24} className={isDark ? "text-red-400" : "text-red-600"} />
+                            </div>
+                            <div>
+                                <h3 className={`
+                                    text-lg font-semibold mb-1
+                                    ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
+                                `}>
+                                    No Test Generated Today
+                                </h3>
+                                <p className={`
+                                    text-sm
+                                    ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
+                                `}>
+                                    Today's daily test hasn't been generated yet. Please check back later or practice with previous tests below.
+                                </p>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* Practice Options Grid - Only show when there's a test for today or a selected exam */}
+                {hasTodayTest && (
+                    <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-6 mb-12">
+                        {practiceOptions.map((option, index) => {
+                            const Icon = option.icon;
+                            return (
+                                <motion.button
+                                    key={option.id}
+                                    onClick={() => handleStartPractice(option.id as "rc" | "va")}
+                                    disabled={!selectedExamId}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.3 + index * 0.1, duration: 0.5 }}
                                     className={`
-                                        absolute inset-0 bg-linear-to-br ${option.gradient}
-                                        opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                                        relative overflow-hidden p-8 rounded-2xl
+                                        border-2 text-left group
+                                        ${!selectedExamId ? 'opacity-50 cursor-not-allowed' : 'hover:cursor-pointer'}
+                                        ${
+                                            selectedExamId
+                                                ? (isDark
+                                                    ? "bg-bg-secondary-dark border-border-dark hover:border-brand-primary-dark"
+                                                    : "bg-bg-secondary-light border-border-light hover:border-brand-primary-light")
+                                                : (isDark
+                                                    ? "bg-bg-secondary-dark border-border-dark"
+                                                    : "bg-bg-secondary-light border-border-light")
+                                        }
                                     `}
-                                />
-
-                                {/* Content */}
-                                <div className="relative z-10">
-                                    <div className="flex items-center gap-4 mb-4">
-                                        <div
-                                            className={`
-                                                p-3 rounded-xl
-                                                ${isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"}
-                                            `}
-                                        >
-                                            <Icon className={`w-8 h-8 ${option.iconColor}`} />
-                                        </div>
-                                        <h2
-                                            className={`
-                                                font-serif font-bold text-xl md:text-2xl
-                                                ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
-                                            `}
-                                        >
-                                            {option.title}
-                                        </h2>
-                                    </div>
-                                    <p
+                                >
+                                    {/* Gradient Background */}
+                                    <div
                                         className={`
-                                            leading-relaxed mb-4
-                                            ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
+                                            absolute inset-0 bg-linear-to-br ${option.gradient}
+                                            opacity-0 group-hover:opacity-100 transition-opacity duration-300
                                         `}
-                                    >
-                                        {option.description}
-                                    </p>
+                                    />
 
-                                    {/* Arrow indicator or Loading */}
-                                    <div className="flex items-center gap-2">
-                                        <span
-                                            className={`text-sm font-medium ${
-                                                isDark
-                                                    ? "text-brand-primary-dark"
-                                                    : "text-brand-primary-light"
-                                            }`}
+                                    {/* Content */}
+                                    <div className="relative z-10">
+                                        <div className="flex items-center gap-4 mb-4">
+                                            <div
+                                                className={`
+                                                    p-3 rounded-xl
+                                                    ${isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"}
+                                                `}
+                                            >
+                                                <Icon className={`w-8 h-8 ${option.iconColor}`} />
+                                            </div>
+                                            <h2
+                                                className={`
+                                                    font-serif font-bold text-xl md:text-2xl
+                                                    ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
+                                                `}
+                                            >
+                                                {option.title}
+                                            </h2>
+                                        </div>
+                                        <p
+                                            className={`
+                                                leading-relaxed mb-4
+                                                ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
+                                            `}
                                         >
-                                            {selectedExamId ? "Start Practice" : "Select an exam first"}
-                                        </span>
-                                        {selectedExamId && (
-                                            <motion.span
-                                                className={`${
+                                            {option.description}
+                                        </p>
+
+                                        {/* Arrow indicator or Loading */}
+                                        <div className="flex items-center gap-2">
+                                            <span
+                                                className={`text-sm font-medium ${
                                                     isDark
                                                         ? "text-brand-primary-dark"
                                                         : "text-brand-primary-light"
                                                 }`}
-                                                animate={{ x: [0, 4, 0] }}
-                                                transition={{ repeat: Infinity, duration: 1.5 }}
                                             >
-                                                →
-                                            </motion.span>
-                                        )}
-                                    </div>
-                                </div>
-                            </motion.button>
-                        );
-                    })}
-                </div>
-
-                {/* Previous Tests Section */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5, duration: 0.5 }}
-                    className="max-w-6xl mx-auto"
-                >
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className={`
-                            w-10 h-10 rounded-xl flex items-center justify-center
-                            ${isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"}
-                        `}>
-                            <MdHistory className={`w-6 h-6 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`} />
-                        </div>
-                        <h2 className={`
-                            text-2xl font-serif font-bold
-                            ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
-                        `}>
-                            Previous Daily Tests
-                        </h2>
-                    </div>
-
-                    {isLoadingPrevious ? (
-                        <div className="flex justify-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary-light"></div>
-                        </div>
-                    ) : previousTests && previousTests.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            {previousTests.map((exam, index) => (
-                                <motion.button
-                                    key={exam.id}
-                                    onClick={() => handleExamSelect(exam.id)}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.6 + index * 0.05, duration: 0.3 }}
-                                    className={`
-                                        p-4 rounded-xl border-2 text-left transition-all duration-200 hover:scale-105
-                                        ${selectedExamId === exam.id
-                                            ? (isDark
-                                                ? "bg-brand-primary-dark/20 border-brand-primary-dark"
-                                                : "bg-brand-primary-light/20 border-brand-primary-light")
-                                            : (isDark
-                                                ? "bg-bg-secondary-dark border-border-dark hover:border-brand-primary-dark/50"
-                                                : "bg-bg-secondary-light border-border-light hover:border-brand-primary-light/50")
-                                        }
-                                    `}
-                                >
-                                    <div className="flex items-center justify-between mb-2">
-                                        <div className={`
-                                            w-8 h-8 rounded-lg flex items-center justify-center text-sm font-medium
-                                            ${isTodayExam(exam)
-                                                ? "bg-amber-500 text-white"
-                                                : (isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light")
-                                            }
-                                        `}>
-                                            {index + 1}
-                                        </div>
-                                        {isTodayExam(exam) && (
-                                            <span className="px-2 py-1 bg-amber-500 text-white text-xs rounded-full font-medium">
-                                                TODAY
+                                                {selectedExamId ? "Start Practice" : "Select an exam first"}
                                             </span>
-                                        )}
+                                            {selectedExamId && (
+                                                <motion.span
+                                                    className={`${
+                                                        isDark
+                                                            ? "text-brand-primary-dark"
+                                                            : "text-brand-primary-light"
+                                                    }`}
+                                                    animate={{ x: [0, 4, 0] }}
+                                                    transition={{ repeat: Infinity, duration: 1.5 }}
+                                                >
+                                                    →
+                                                </motion.span>
+                                            )}
+                                        </div>
                                     </div>
-                                    <h3 className={`
-                                        font-medium mb-1
-                                        ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
-                                    `}>
-                                        Daily Test #{previousTests.length - index}
-                                    </h3>
-                                    <p className={`
-                                        text-sm
-                                        ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
-                                    `}>
-                                        {formatDate(exam.created_at)}
-                                    </p>
                                 </motion.button>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className={`
-                            text-center py-12 rounded-xl border-2 border-dashed
-                            ${isDark ? "border-border-dark" : "border-border-light"}
-                        `}>
-                            <MdHistory className={`w-16 h-16 mx-auto mb-4 ${
-                                isDark ? "text-text-muted-dark" : "text-text-muted-light"
-                            }`} />
-                            <p className={`
-                                text-lg font-medium mb-2
-                                ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
-                            `}>
-                                No Previous Tests
-                            </p>
-                            <p className={`
-                                text-sm
-                                ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
-                            `}>
-                                Complete today's challenge to see it here!
-                            </p>
-                        </div>
-                    )}
-                </motion.div>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {/* Previous Tests Section - Always Displayed */}
+                <PreviousTestsContainer
+                    onExamSelect={handleExamSelect}
+                    selectedExamId={selectedExamId}
+                    todayExamId={todayData?.examInfo?.id || null}
+                />
 
                 {/* Info Section */}
                 <motion.div

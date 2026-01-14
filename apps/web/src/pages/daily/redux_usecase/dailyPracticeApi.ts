@@ -141,10 +141,10 @@ export const dailyPracticeApi = createApi({
             providesTags: ["DailyPractice"],
         }),
 
-        // Get previous daily practice tests
-        fetchPreviousDailyTests: builder.query<Exam[], { limit?: number }>({
-            queryFn: async ({ limit = 10 }) => {
-                console.log('[DailyPracticeApi] fetchPreviousDailyTests called');
+        // Get previous daily practice tests with pagination
+        fetchPreviousDailyTests: builder.query<Exam[], { page?: number; limit?: number }>({
+            queryFn: async ({ page = 1, limit = 20 }) => {
+                console.log('[DailyPracticeApi] fetchPreviousDailyTests called with page:', page, 'limit:', limit);
                 try {
                     // Step 1: Get current user
                     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -161,13 +161,18 @@ export const dailyPracticeApi = createApi({
 
                     console.log('[DailyPracticeApi] User authenticated:', user.id);
 
-                    // Step 2: Get previous daily practice exams (excluding the latest one)
+                    // Calculate range for pagination (skip the first (latest) exam and start from index 1)
+                    const offset = (page - 1) * limit;
+                    const from = offset + 1; // +1 to skip the latest exam
+                    const to = from + limit - 1;
+
+                    // Step 2: Get previous daily practice exams with pagination
                     const { data: examInfo, error: examInfoError } = await supabase
                         .from("exam_papers")
                         .select("*")
                         .eq("year", 2026)
                         .order("created_at", { ascending: false }) // Sorts by newest first
-                        .range(1, limit) // Skip the first (latest) exam
+                        .range(from, to)
 
                     if (examInfoError) {
                         console.log('[DailyPracticeApi] Error while fetching previous daily exams:', examInfoError);
@@ -179,7 +184,7 @@ export const dailyPracticeApi = createApi({
                         };
                     }
 
-                    console.log('[DailyPracticeApi] Fetched', examInfo?.length || 0, 'previous exams');
+                    console.log('[DailyPracticeApi] Fetched', examInfo?.length || 0, 'previous exams for page', page);
 
                     return {
                         data: examInfo || [],
