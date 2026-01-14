@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import toast from "react-hot-toast";
 import { useTheme } from "../../../context/ThemeContext";
 import { FloatingNavigation } from "../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
@@ -36,10 +37,6 @@ const DailyPage: React.FC = () => {
         navigate(`/daily/${type}?exam_id=${selectedExamId}`);
     };
 
-    const handleExamSelect = (examId: string) => {
-        navigate(`/daily?exam_id=${examId}`);
-    };
-
     const getSelectedExamInfo = (): Exam | null => {
         // If we have today's data and it's selected, return it
         if (todayData?.examInfo && selectedExamId === todayData.examInfo.id) {
@@ -61,6 +58,16 @@ const DailyPage: React.FC = () => {
 
     const isTodayExam = (exam: Exam) => {
         return todayData?.examInfo?.id === exam.id;
+    };
+
+    // Handle exam selection with toast notification for previous exams
+    const handleExamSelect = (examId: string, examDate: string) => {
+        navigate(`/daily?exam_id=${examId}`);
+
+        // Show toast for previous exams (not today's)
+        if (!isTodayExam({ id: examId } as Exam)) {
+            toast.success(`Viewing daily test from ${examDate}`);
+        }
     };
 
     const practiceOptions = [

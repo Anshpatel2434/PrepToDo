@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 import { useTheme } from "../../../../context/ThemeContext";
 import { MdHistory, MdArrowBack, MdArrowForward } from "react-icons/md";
 import type { Exam } from "../../../../types";
 import { useFetchPreviousDailyTestsQuery } from "../redux_usecase/dailyPracticeApi";
 
 interface PreviousTestsContainerProps {
-    onExamSelect: (examId: string) => void;
+    onExamSelect: (examId: string, examDate: string) => void;
     selectedExamId: string | null;
     todayExamId: string | null;
 }
@@ -101,7 +102,7 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
                         {previousTests.map((exam, index) => (
                             <motion.button
                                 key={exam.id}
-                                onClick={() => onExamSelect(exam.id)}
+                                onClick={() => onExamSelect(exam.id, formatDate(exam.created_at))}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.6 + index * 0.02, duration: 0.3 }}

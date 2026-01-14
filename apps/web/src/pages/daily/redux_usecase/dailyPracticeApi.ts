@@ -62,12 +62,19 @@ export const dailyPracticeApi = createApi({
 
                     console.log('[DailyPracticeApi] User authenticated:', user.id);
 
-                    // Step 2: Get the latest daily practice exam for 2026
+                    // Step 2: Get today's daily practice exam for 2026 (filter by today's date)
+                    const today = new Date().toISOString().split('T')[0];
+                    const startOfToday = `${today}T00:00:00.000Z`;
+                    const endOfToday = `${today}T23:59:59.999Z`;
+                    console.log('[DailyPracticeApi] Fetching exam for date:', today);
+
                     const { data: examInfo, error: examInfoError } = await supabase
                         .from("exam_papers")
                         .select("*")
                         .eq("year", 2026)
-                        .order("created_at", { ascending: false }) // Sorts by newest first
+                        .gte("created_at", startOfToday)
+                        .lte("created_at", endOfToday)
+                        .order("created_at", { ascending: false })
                         .limit(1)
 
                     if (examInfoError) {
@@ -76,6 +83,18 @@ export const dailyPracticeApi = createApi({
                             error: {
                                 status: "CUSTOM_ERROR",
                                 data: examInfoError.message,
+                            },
+                        };
+                    }
+
+                    // Check if there's an exam for today
+                    if (!examInfo || examInfo.length === 0) {
+                        console.log('[DailyPracticeApi] No exam found for today');
+                        return {
+                            data: {
+                                examInfo: null,
+                                passages: [],
+                                questions: [],
                             },
                         };
                     }
