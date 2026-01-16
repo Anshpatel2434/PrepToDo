@@ -1,7 +1,7 @@
 // dailyPracticeApi.ts
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
 import { supabase } from "../../../services/apiClient";
-import type { PracticeSession, QuestionAttempt, UUID, Question, Passage, Exam } from "../../../types";
+import type { PracticeSession, QuestionAttempt, UUID, Question, Passage, Exam, Article } from "../../../types";
 
 interface TestDataState {
     examInfo: Exam;
@@ -653,6 +653,69 @@ export const dailyPracticeApi = createApi({
             },
             invalidatesTags: ["Attempts"],
         }),
+
+        // Fetch articles by IDs
+        fetchArticlesByIds: builder.query<Article[], { article_ids: UUID[] }>({
+            queryFn: async ({ article_ids }) => {
+                console.log('[DailyPracticeApi] fetchArticlesByIds called with IDs:', article_ids);
+                try {
+                    // Step 1: Get current user
+                    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+                    if (userError || !user) {
+                        console.log('[DailyPracticeApi] User is not authenticated');
+                        return {
+                            error: {
+                                status: "UNAUTHORIZED",
+                                data: "User not authenticated",
+                            },
+                        };
+                    }
+
+                    console.log('[DailyPracticeApi] User authenticated:', user.id);
+
+                    // If no article IDs provided, return empty array
+                    if (!article_ids || article_ids.length === 0) {
+                        console.log('[DailyPracticeApi] No article IDs provided, returning empty array');
+                        return {
+                            data: [],
+                        };
+                    }
+
+                    // Step 2: Fetch articles by IDs
+                    const { data: articles, error: articlesError } = await supabase
+                        .from("articles")
+                        .select("*")
+                        .in("id", article_ids);
+
+                    if (articlesError) {
+                        console.log('[DailyPracticeApi] Error while fetching articles:', articlesError);
+                        return {
+                            error: {
+                                status: "CUSTOM_ERROR",
+                                data: articlesError.message,
+                            },
+                        };
+                    }
+
+                    console.log('[DailyPracticeApi] Fetched', articles?.length || 0, 'articles');
+
+                    return {
+                        data: articles || [],
+                    };
+                } catch (error) {
+                    console.log('[DailyPracticeApi] Error in fetchArticlesByIds:', error);
+                    const e = error as { message?: string };
+                    return {
+                        error: {
+                            status: "CUSTOM_ERROR",
+                            data: e.message || "Error while fetching articles",
+                        },
+                    };
+                }
+            },
+            providesTags: ["DailyPractice"],
+        }),
     }),
 });
 
@@ -669,4 +732,6 @@ export const {
     useLazyFetchExistingSessionDetailsQuery,
     useSaveSessionDetailsMutation,
     useSaveQuestionAttemptsMutation,
+    useFetchArticlesByIdsQuery,
+    useLazyFetchArticlesByIdsQuery,
 } = dailyPracticeApi;

@@ -69,6 +69,71 @@ function MyPage() {
   - `brand-primary-dark/light` for brand colors
   - `amber-500` for today's test highlights
 
+## ArticleInfoPanel
+
+A collapsible panel that displays information about source articles used to generate the test content.
+
+### Features
+
+- **Collapsible Design**: Starts expanded but can be collapsed via header click to save screen space
+- **Article Metadata Display**: Shows title, source, author, publication date, genre, and topic tags
+- **External Links**: Provides links to read the original articles
+- **Loading State**: Shows loading indicator while articles are being fetched
+- **Responsive Layout**: Gracefully adapts to mobile screens with responsive grid layouts
+- **Empty State Handling**: Component returns null if no articles are available
+- **Smooth Animations**: Uses Framer Motion for expand/collapse transitions
+
+### Props
+
+- `articles: Article[]` - Array of article objects to display
+- `isLoading?: boolean` - Optional loading state indicator
+
+### Usage Example
+
+```tsx
+import ArticleInfoPanel from "../components/ArticleInfoPanel";
+import { useFetchArticlesByIdsQuery } from "../redux_usecase/dailyPracticeApi";
+
+function MyPage() {
+  const selectedExam = getSelectedExamInfo();
+  const articleIds = selectedExam?.used_articles_id || [];
+  
+  const { data: articles = [], isLoading: isLoadingArticles } = useFetchArticlesByIdsQuery(
+    { article_ids: articleIds },
+    { skip: articleIds.length === 0 }
+  );
+
+  return (
+    <ArticleInfoPanel
+      articles={articles}
+      isLoading={isLoadingArticles}
+    />
+  );
+}
+```
+
+### Design Decisions
+
+1. **Collapsible by Default**: Starts expanded to help users mentally prepare, but can be collapsed to reduce distraction
+2. **Visually Distinct**: Uses subtle backgrounds and borders to stand out without being overwhelming
+3. **Information Architecture**: Organized with most important info (title) first, followed by metadata in a grid
+4. **Responsive Grid**: Metadata uses a 1-2 column responsive grid that adapts to screen size
+5. **External Links**: Opens original articles in new tab for reference
+
+### UX Expectations
+
+- **Visually Distinct**: Uses bordered card with icon header to stand out from other content
+- **Not Distracting**: Subtle colors and optional collapse functionality prevent overwhelming the user
+- **Mental Preparation**: Provides context about source material to help users prepare for the test
+- **Mobile Friendly**: Collapses gracefully on small screens with responsive layouts and truncated text
+
+### Styling
+
+- Consistent with the design system using theme-aware Tailwind classes
+- Framer Motion for smooth expand/collapse animations
+- Responsive grid layouts for different screen sizes
+- Icon integration from react-icons/md
+
 ## Future Components
 
 Feel free to add more components here as needed to keep the codebase organized and maintainable.

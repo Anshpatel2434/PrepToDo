@@ -7,8 +7,9 @@ import { FloatingNavigation } from "../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
 import { MdMenuBook, MdSpellcheck, MdHistory, MdCalendarToday } from "react-icons/md";
 import type { Exam } from "../../../types";
-import { useFetchDailyTestDataQuery, useFetchPreviousDailyTestsQuery } from "../redux_usecase/dailyPracticeApi";
+import { useFetchDailyTestDataQuery, useFetchPreviousDailyTestsQuery, useFetchArticlesByIdsQuery } from "../redux_usecase/dailyPracticeApi";
 import PreviousTestsContainer from "../components/PreviousTestsContainer";
+import ArticleInfoPanel from "../components/ArticleInfoPanel";
 
 const DailyPage: React.FC = () => {
     const navigate = useNavigate();
@@ -98,6 +99,13 @@ const DailyPage: React.FC = () => {
     ];
 
     const selectedExam = getSelectedExamInfo();
+
+    // Fetch articles using used_articles_id from the selected exam
+    const articleIds = selectedExam?.used_articles_id || [];
+    const { data: articles = [], isLoading: isLoadingArticles } = useFetchArticlesByIdsQuery(
+        { article_ids: articleIds },
+        { skip: articleIds.length === 0 }
+    );
 
     if (isLoadingToday) {
         return (
@@ -213,6 +221,14 @@ const DailyPage: React.FC = () => {
                             </div>
                         </div>
                     </motion.div>
+                )}
+
+                {/* Article Info Panel - Show when exam is selected */}
+                {selectedExam && (
+                    <ArticleInfoPanel
+                        articles={articles}
+                        isLoading={isLoadingArticles}
+                    />
                 )}
 
                 {/* No Test For Today Message - Only show when no test today and no exam selected */}
