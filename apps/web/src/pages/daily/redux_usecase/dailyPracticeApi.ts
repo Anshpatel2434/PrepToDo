@@ -3,6 +3,105 @@ import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
 import { supabase } from "../../../services/apiClient";
 import type { PracticeSession, QuestionAttempt, UUID, Question, Passage, Exam, Article } from "../../../types";
 
+interface LeaderboardEntry {
+    rank: number;
+    user_id: UUID;
+    username: string;
+    display_name: string | null;
+    avatar_url: string | null;
+    score: number;
+    accuracy: number;
+    time_taken_seconds: number;
+    questions_attempted: number;
+    avg_time_per_question: number;
+}
+
+interface LeaderboardData {
+    leaderboard: LeaderboardEntry[];
+    currentUserRank: number | null;
+    totalParticipants: number;
+}
+
+interface SessionData {
+    id: UUID;
+    user_id: UUID;
+    paper_id: UUID;
+    session_type: string;
+    time_spent_seconds: number;
+    total_questions: number;
+    correct_answers: number;
+    score_percentage: number | null;
+    completed_at: string | null;
+    created_at: string;
+}
+
+interface UserProfile {
+    id: UUID;
+    username: string;
+    display_name: string | null;
+    avatar_url: string | null;
+}
+
+// Calculate leaderboard from sessions
+function calculateLeaderboard(
+    sessions: SessionData[],
+    profiles: UserProfile[]
+): Map<UUID, LeaderboardEntry> {
+    const leaderboardMap = new Map<UUID, LeaderboardEntry>();
+    const profileMap = new Map(profiles.map(p => [p.id, p]));
+
+    // Group sessions by user
+    const userSessions = new Map<UUID, SessionData[]>();
+    sessions.forEach(session => {
+        if (!userSessions.has(session.user_id)) {
+            userSessions.set(session.user_id, []);
+        }
+        userSessions.get(session.user_id)!.push(session);
+    });
+
+    // Calculate metrics for each user
+    userSessions.forEach((userSessionList, userId) => {
+        const profile = profileMap.get(userId);
+        if (!profile) return;
+
+        // Aggregate metrics across all sessions for this exam
+        let totalQuestions = 0;
+        let totalCorrect = 0;
+        let totalTime = 0;
+
+        userSessionList.forEach(session => {
+            totalQuestions += session.total_questions || 0;
+            totalCorrect += session.correct_answers || 0;
+            totalTime += session.time_spent_seconds || 0;
+        });
+
+        const accuracy = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
+        const avgTimePerQuestion = totalQuestions > 0 ? totalTime / totalQuestions : 0;
+
+        // Calculate composite score
+        // Score = (Accuracy * 0.6) + (Speed Bonus * 0.4)
+        // Speed Bonus: faster is better, normalized to 0-100 scale
+        // Assuming 60 seconds per question is baseline (0 bonus), 30 seconds is excellent (100 bonus)
+        const speedBonus = Math.max(0, Math.min(100, 100 - (avgTimePerQuestion - 30) * 2));
+        const score = (accuracy * 0.6) + (speedBonus * 0.4);
+
+        leaderboardMap.set(userId, {
+            rank: 0, // Will be assigned later
+            user_id: userId,
+            username: profile.username,
+            display_name: profile.display_name,
+            avatar_url: profile.avatar_url,
+            score: Math.round(score * 100) / 100,
+            accuracy: Math.round(accuracy * 100) / 100,
+            time_taken_seconds: totalTime,
+            questions_attempted: totalQuestions,
+            avg_time_per_question: Math.round(avgTimePerQuestion * 100) / 100,
+        });
+    });
+
+    return leaderboardMap;
+}
+
 interface TestDataState {
     examInfo: Exam;
     passages: Passage[];
@@ -716,6 +815,128 @@ export const dailyPracticeApi = createApi({
             },
             providesTags: ["DailyPractice"],
         }),
+
+        // Fetch leaderboard for a specific exam
+        fetchDailyLeaderboard: builder.query<LeaderboardData, { exam_id: UUID }>({
+            queryFn: async ({ exam_id }) => {
+                console.log('[DailyPracticeApi] fetchDailyLeaderboard called for exam_id:', exam_id);
+                try {
+                    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+                    if (userError || !user) {
+                        console.log('[DailyPracticeApi] User is not authenticated');
+                        return {
+                            error: {
+                                status: "UNAUTHORIZED",
+                                data: "User not authenticated",
+                            },
+                        };
+                    }
+
+                    // Fetch all completed sessions for this exam
+                    const { data: sessions, error: sessionsError } = await supabase
+                        .from("practice_sessions")
+                        .select(`
+                            id,
+                            user_id,
+                            paper_id,
+                            session_type,
+                            time_spent_seconds,
+                            total_questions,
+                            correct_answers,
+                            score_percentage,
+                            completed_at,
+                            created_at
+                        `)
+                        .eq("paper_id", exam_id)
+                        .eq("status", "completed")
+                        .in("session_type", ["daily_challenge_rc", "daily_challenge_va"]);
+
+                    if (sessionsError) {
+                        console.log('[DailyPracticeApi] Error fetching sessions:', sessionsError);
+                        return {
+                            error: {
+                                status: "CUSTOM_ERROR",
+                                data: sessionsError.message,
+                            },
+                        };
+                    }
+
+                    if (!sessions || sessions.length === 0) {
+                        console.log('[DailyPracticeApi] No completed sessions found for this exam');
+                        return {
+                            data: {
+                                leaderboard: [],
+                                currentUserRank: null,
+                                totalParticipants: 0,
+                            },
+                        };
+                    }
+
+                    // Get unique user IDs
+                    const userIds = [...new Set(sessions.map(s => s.user_id))];
+
+                    // Fetch user profiles
+                    const { data: profiles, error: profilesError } = await supabase
+                        .from("user_profiles")
+                        .select("id, username, display_name, avatar_url")
+                        .in("id", userIds);
+
+                    if (profilesError) {
+                        console.log('[DailyPracticeApi] Error fetching profiles:', profilesError);
+                        return {
+                            error: {
+                                status: "CUSTOM_ERROR",
+                                data: profilesError.message,
+                            },
+                        };
+                    }
+
+                    // Calculate leaderboard entries
+                    const leaderboardMap = calculateLeaderboard(sessions, profiles || []);
+                    const sortedLeaderboard = Array.from(leaderboardMap.values())
+                        .sort((a, b) => b.score - a.score);
+
+                    // Assign ranks
+                    sortedLeaderboard.forEach((entry, index) => {
+                        entry.rank = index + 1;
+                    });
+
+                    // Find current user's rank
+                    const currentUserEntry = sortedLeaderboard.find(entry => entry.user_id === user.id);
+                    const currentUserRank = currentUserEntry?.rank || null;
+
+                    // Get top 30
+                    const top30 = sortedLeaderboard.slice(0, 30);
+
+                    // If user is not in top 30, add them separately
+                    let leaderboard = top30;
+                    if (currentUserRank && currentUserRank > 30 && currentUserEntry) {
+                        leaderboard = [...top30, currentUserEntry];
+                    }
+
+                    console.log('[DailyPracticeApi] Leaderboard calculated:', leaderboard.length, 'entries');
+
+                    return {
+                        data: {
+                            leaderboard,
+                            currentUserRank,
+                            totalParticipants: sortedLeaderboard.length,
+                        },
+                    };
+                } catch (error) {
+                    console.log('[DailyPracticeApi] Error in fetchDailyLeaderboard:', error);
+                    const e = error as { message?: string };
+                    return {
+                        error: {
+                            status: "CUSTOM_ERROR",
+                            data: e.message || "Error while fetching leaderboard",
+                        },
+                    };
+                }
+            },
+            providesTags: ["DailyPractice"],
+        }),
     }),
 });
 
@@ -734,4 +955,6 @@ export const {
     useSaveQuestionAttemptsMutation,
     useFetchArticlesByIdsQuery,
     useLazyFetchArticlesByIdsQuery,
+    useFetchDailyLeaderboardQuery,
+    useLazyFetchDailyLeaderboardQuery,
 } = dailyPracticeApi;
