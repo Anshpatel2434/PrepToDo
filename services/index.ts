@@ -8,9 +8,9 @@ async function main() {
 	const concept =
 		"I think I struggle with understanding political passages, how do I solve that ? ";
 
-	// await runAnalytics({ user_id: "1962e072-bcc0-48f4-8376-6c968d406cbe" });
+	await runAnalytics({ user_id: "1962e072-bcc0-48f4-8376-6c968d406cbe" });
 
-	await runDailyContent()
+	// await runDailyContent()
 
 	// console.log("\n📘 FINAL EXPLANATION:\n");
 	// console.log(explanation);

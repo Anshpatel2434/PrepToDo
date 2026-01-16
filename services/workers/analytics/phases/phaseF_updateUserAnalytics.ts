@@ -34,12 +34,9 @@ export async function phaseF_updateUserAnalytics(
         ? new Date(sessionData.completed_at).toISOString().split('T')[0]
         : new Date().toISOString().split('T')[0];
 
-    console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% today : ", today)
 
     // Determine if this is a real session or just a streak update
     const isStreakUpdateOnly = session_id === null || dataset.length === 0;
-
-    console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% isStreakUpdateOnly : ", isStreakUpdateOnly)
 
     // 1. Calculate basic session stats
     const questions_attempted = dataset.length;
@@ -54,8 +51,6 @@ export async function phaseF_updateUserAnalytics(
     const reading_speed_wpm = await calculateReadingSpeedWpm(supabase, dataset);
 
     // 3. Update user_metric_proficiency with reading_speed_wpm if calculated
-    console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Reading speed wm : ", reading_speed_wpm)
-    console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% session_id : ", session_id)
     if (reading_speed_wpm > 0 && session_id) {
         await updateReadingSpeedProficiency(
             supabase,
@@ -127,6 +122,7 @@ export async function phaseF_updateUserAnalytics(
     // 13. Prepare final upsert data
     const upsertData = {
         user_id,
+        date: today,
         last_active_date: today,
         minutes_practiced: (existingAnalytics?.minutes_practiced || 0) + minutes_practiced,
         questions_attempted: (existingAnalytics?.questions_attempted || 0) + questions_attempted,
@@ -161,9 +157,8 @@ export async function phaseF_updateUserAnalytics(
     // 14. Upsert into user_analytics table (single row per user)
     const { error: upsertError } = await supabase
         .from('user_analytics')
-        .upsert(upsertData, {
-            onConflict: 'user_id',
-        });
+        .upsert(upsertData)
+        .eq('user_id', user_id);
 
     if (upsertError) {
         console.error('❌ [Phase F] Failed to upsert user_analytics:', upsertError);

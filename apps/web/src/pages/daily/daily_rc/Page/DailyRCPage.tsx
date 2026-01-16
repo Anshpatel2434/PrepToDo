@@ -156,7 +156,7 @@ const DailyRCPage: React.FC = () => {
         },
         {
             skip: viewMode !== "solution" || session.is_analysed || !session.user_id || !currentTestData?.examInfo.id,
-            pollingInterval: 5000,
+            pollingInterval: 120000, // 2 minutes
         }
     );
 

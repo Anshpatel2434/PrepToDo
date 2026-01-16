@@ -46,7 +46,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                 submitAnswer({
                     questionId: question.id,
                     userId: session.user_id,
-                    passageId: question.passage_id,
+                    passageId: question.passage_id? question.passage_id : null,
                     answer: answerValue,
                     isCorrect,
                 })
@@ -116,6 +116,17 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
     };
 
     const renderAIInsights = () => {
+
+        if (currentAttempt?.is_correct) {
+            return (
+                <div className="p-6 text-center">
+                    <p className={`font-medium ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                        AI insights are generated only for incorrect attempts.
+                    </p>
+                </div>
+            );
+        }
+
         if (!session.is_analysed) {
             return (
                 <div className="flex flex-col items-center justify-center p-8 space-y-4">
@@ -129,16 +140,6 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                     </p>
                     <p className="text-xs text-center opacity-60">
                         Encourage checking common solutions meanwhile.
-                    </p>
-                </div>
-            );
-        }
-
-        if (currentAttempt?.is_correct) {
-            return (
-                <div className="p-6 text-center">
-                    <p className={`font-medium ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
-                        AI insights are generated only for incorrect attempts.
                     </p>
                 </div>
             );
