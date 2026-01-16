@@ -88,7 +88,7 @@ const DailyLeaderboard: React.FC<DailyLeaderboardProps> = ({ examId, isDark }) =
     const { leaderboard, currentUserRank, totalParticipants } = data;
     const top30 = leaderboard.slice(0, 30);
     const currentUserEntry = leaderboard.find(entry => entry.rank === currentUserRank);
-    const showCurrentUserSeparately = currentUserRank && currentUserRank > 30 && currentUserEntry;
+    const showCurrentUserSeparately = currentUserRank !== null && currentUserRank > 30 && currentUserEntry;
 
     return (
         <div className="max-w-5xl mx-auto space-y-6">
@@ -118,7 +118,7 @@ const DailyLeaderboard: React.FC<DailyLeaderboardProps> = ({ examId, isDark }) =
                             </p>
                         </div>
                     </div>
-                    {currentUserRank && (
+                    {currentUserRank !== null && (
                         <div className={`px-4 py-2 rounded-lg ${isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"}`}>
                             <p className={`text-sm ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
                                 Your Rank
@@ -198,7 +198,7 @@ const DailyLeaderboard: React.FC<DailyLeaderboardProps> = ({ examId, isDark }) =
                                 <p className={`font-medium ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
                                     {entry.username || "Anonymous"}
                                 </p>
-                                {entry.rank === currentUserRank && (
+                                {entry.rank === currentUserRank && currentUserRank !== null && (
                                     <span className={`text-xs ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}`}>
                                         (You)
                                     </span>

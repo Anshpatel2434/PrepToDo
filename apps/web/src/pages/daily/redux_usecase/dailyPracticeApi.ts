@@ -146,20 +146,6 @@ export const dailyPracticeApi = createApi({
             queryFn: async () => {
                 console.log('[DailyPracticeApi] fetchDailyTestData called');
                 try {
-                    // Step 1: Get current user
-                    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-                    if (userError || !user) {
-                        console.log('[DailyPracticeApi] User is not authenticated');
-                        return {
-                            error: {
-                                status: "UNAUTHORIZED",
-                                data: "User not authenticated",
-                            },
-                        };
-                    }
-
-                    console.log('[DailyPracticeApi] User authenticated:', user.id);
 
                     // Step 2: Get today's daily practice exam for 2026 (filter by today's date)
                     const today = new Date().toISOString().split('T')[0];
@@ -266,20 +252,6 @@ export const dailyPracticeApi = createApi({
             queryFn: async ({ page = 1, limit = 20 }) => {
                 console.log('[DailyPracticeApi] fetchPreviousDailyTests called with page:', page, 'limit:', limit);
                 try {
-                    // Step 1: Get current user
-                    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-                    if (userError || !user) {
-                        console.log('[DailyPracticeApi] User is not authenticated');
-                        return {
-                            error: {
-                                status: "UNAUTHORIZED",
-                                data: "User not authenticated",
-                            },
-                        };
-                    }
-
-                    console.log('[DailyPracticeApi] User authenticated:', user.id);
 
                     // Get today's date range for filtering
                     // const today = new Date().toISOString().split('T')[0];
@@ -821,17 +793,10 @@ export const dailyPracticeApi = createApi({
             queryFn: async ({ exam_id }) => {
                 console.log('[DailyPracticeApi] fetchDailyLeaderboard called for exam_id:', exam_id);
                 try {
-                    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-                    if (userError || !user) {
-                        console.log('[DailyPracticeApi] User is not authenticated');
-                        return {
-                            error: {
-                                status: "UNAUTHORIZED",
-                                data: "User not authenticated",
-                            },
-                        };
-                    }
+                    // Check if user is logged in (optional for leaderboard viewing)
+                    const { data: { user } } = await supabase.auth.getUser();
+                    const currentUserId = user?.id || null;
+                    console.log('[DailyPracticeApi] User logged in:', !!currentUserId);
 
                     // Fetch all completed sessions for this exam
                     const { data: sessions, error: sessionsError } = await supabase
@@ -848,9 +813,11 @@ export const dailyPracticeApi = createApi({
                             completed_at,
                             created_at
                         `)
-                        .eq("paper_id", exam_id)
+                        .eq("paper_id", `${exam_id}`)
                         .eq("status", "completed")
                         .in("session_type", ["daily_challenge_rc", "daily_challenge_va"]);
+
+                    console.log(sessions)
 
                     if (sessionsError) {
                         console.log('[DailyPracticeApi] Error fetching sessions:', sessionsError);
@@ -902,16 +869,18 @@ export const dailyPracticeApi = createApi({
                         entry.rank = index + 1;
                     });
 
-                    // Find current user's rank
-                    const currentUserEntry = sortedLeaderboard.find(entry => entry.user_id === user.id);
+                    // Find current user's rank (only if logged in)
+                    const currentUserEntry = currentUserId
+                        ? sortedLeaderboard.find(entry => entry.user_id === currentUserId)
+                        : null;
                     const currentUserRank = currentUserEntry?.rank || null;
 
                     // Get top 30
                     const top30 = sortedLeaderboard.slice(0, 30);
 
-                    // If user is not in top 30, add them separately
+                    // If user is logged in and not in top 30, add them separately
                     let leaderboard = top30;
-                    if (currentUserRank && currentUserRank > 30 && currentUserEntry) {
+                    if (currentUserId && currentUserRank && currentUserRank > 30 && currentUserEntry) {
                         leaderboard = [...top30, currentUserEntry];
                     }
 
