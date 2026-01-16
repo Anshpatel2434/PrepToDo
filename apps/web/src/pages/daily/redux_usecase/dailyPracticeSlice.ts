@@ -61,6 +61,7 @@ const initialState: DailyPracticeState = {
         points_earned: 0,
         created_at: "",
         updated_at: "",
+        is_analysed: false,
     },
     startTime: null,
     elapsedTimeSeconds: 0,

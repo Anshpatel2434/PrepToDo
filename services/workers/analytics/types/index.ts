@@ -305,18 +305,17 @@ export type UserMetricProficiencyArray = z.infer<typeof UserMetricProficiencyArr
 
 /* =========================================================
      📊 User Analytics
-     (Daily aggregated analytics per user)
+     (Single row per user with cumulative analytics)
     ========================================================= */
 
 export const UserAnalyticsSchema = z.object({
     id: z.string(),
     user_id: z.string(),
-    date: z.string(), // YYYY-MM-DD format
+    last_active_date: z.string(), // YYYY-MM-DD format - last date user was active
     minutes_practiced: z.number().int().default(0),
     questions_attempted: z.number().int().default(0),
     questions_correct: z.number().int().default(0),
     accuracy_percentage: z.number().min(0).max(100).nullish(),
-    is_active_day: z.boolean().default(false),
     current_streak: z.number().int().default(0),
     longest_streak: z.number().int().default(0),
     points_earned_today: z.number().int().default(0),

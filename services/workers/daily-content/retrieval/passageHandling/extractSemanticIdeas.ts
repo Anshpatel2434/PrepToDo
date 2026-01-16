@@ -99,11 +99,17 @@ ABSOLUTE CONSTRAINTS:
 - Do NOT include author opinions
 
 Extract:
-1. Core topic
-2. Subtopics discussed
-3. Key arguments or positions (abstracted)
-4. Implicit assumptions
-5. Areas of ambiguity or debate
+1. Core topic - Be DESCRIPTIVE and COMPREHENSIVE (2-3 sentences explaining the central theme, not just a label)
+2. Subtopics discussed - Each subtopic should be a DETAILED description (1-2 sentences each), not just keywords
+3. Key arguments or positions (abstracted) - Provide FULL, NUANCED descriptions of each argument with context and implications
+4. Implicit assumptions - Articulate the UNDERLYING BELIEFS or PREMISES in complete, explanatory sentences
+5. Areas of ambiguity or debate - Describe SPECIFIC TENSIONS, UNRESOLVED QUESTIONS, or COMPETING INTERPRETATIONS in detail
+
+DESCRIPTIVE FORMAT REQUIREMENT:
+- Each extracted idea should be a complete, self-explanatory statement
+- Provide sufficient context so the idea stands alone without the original text
+- Use full sentences with proper explanations, not bullet points or fragments
+- Capture the DEPTH and NUANCE of the argument, not just surface-level labels
 
 --------------------------------------------------
 PART 2: SENTENCE-LEVEL IDEAS (FOR VA QUESTIONS)
@@ -117,16 +123,20 @@ These ideas will be used to generate:
 
 Extract:
 1. sentence_ideas: 5-10 distinct, self-contained sentence-level ideas from the text
-   - Each should be a complete, standalone thought
-   - They should represent key logical steps or arguments
-   - Avoid preserving exact wording
+   - Each should be a COMPLETE, DETAILED, STANDALONE thought (2-3 sentences)
+   - They should represent key logical steps or arguments WITH FULL CONTEXT
+   - Avoid preserving exact wording but maintain the DEPTH of the idea
+   - Include enough detail so each idea is independently comprehensible
 
 2. conceptual_pairs: 3-5 pairs of related ideas
    - For each pair: idea_a, idea_b, relationship (how they connect)
+   - Make idea_a and idea_b DESCRIPTIVE and DETAILED (1-2 sentences each)
+   - Describe the relationship with SPECIFICITY (explain HOW and WHY they connect)
    - These will be used for odd_one_out questions
 
 3. logical_transitions: 3-5 key logical connectors used
    - Examples: "however", "therefore", "consequently", "in contrast"
+   - For each transition, provide CONTEXT: what it connects and why it's significant
    - These help identify sentence order and paragraph structure
 
 --------------------------------------------------
@@ -147,9 +157,13 @@ RULES:
 Identify:
 - stance_type (overall argumentative posture)
 - evaluative_intensity (degree of judgment)
-- typical_moves (recurring argumentative strategies)
-- syntactic_traits (sentence-level tendencies)
+- typical_moves (recurring argumentative strategies) - Be SPECIFIC and DESCRIPTIVE about each move (full sentences explaining the strategy)
+- syntactic_traits (sentence-level tendencies) - Provide DETAILED descriptions of patterns (e.g., "Uses long, complex sentences with multiple subordinate clauses to build layered arguments")
 - closure_style (how the author typically ends arguments)
+
+DESCRIPTIVE FORMAT FOR PERSONA:
+- typical_moves: Each move should be a COMPLETE DESCRIPTION of the rhetorical strategy with examples of its effect
+- syntactic_traits: Each trait should FULLY EXPLAIN the pattern and its purpose in the author's style
 
 --------------------------------------------------
 

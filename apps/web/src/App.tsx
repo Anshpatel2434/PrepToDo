@@ -16,7 +16,6 @@ import DailyVAPage from "./pages/daily/daily_va/Page/DailyVAPage";
 import DailyPage from "./pages/daily/page/DailyPage";
 
 import { ThemeProvider } from "./context/ThemeContext";
-import { DailyExamProvider, useDailyExam } from "./context/DailyExamContext";
 import { SafeAuthRoute } from "./ui_components/SafeAuthRoute";
 import { supabase } from "./services/apiClient";
 import { useLazyFetchDailyTestDataQuery } from "./pages/daily/redux_usecase/dailyPracticeApi";
@@ -79,7 +78,6 @@ const router = createBrowserRouter([
 /* ---------------- APP ---------------- */
 
 function AppContent() {
-    const { setTodayExamId } = useDailyExam();
     const [triggerFetchDailyPracticeFunction, { error }] =
         useLazyFetchDailyTestDataQuery();
 
@@ -87,14 +85,7 @@ function AppContent() {
 
     async function fetchDailyPracticeData() {
         try {
-            const result = await triggerFetchDailyPracticeFunction();
-            // Only set today's exam if it exists (there might not be an exam for today)
-            if (result?.data?.examInfo?.id) {
-                setTodayExamId(result.data.examInfo.id);
-            } else {
-                console.log('[App] No exam found for today');
-                setTodayExamId(null);
-            }
+            await triggerFetchDailyPracticeFunction();
         } catch (err) {
             console.error("Error while triggering daily practice fetch", err);
         }
@@ -148,9 +139,7 @@ function AppContent() {
 function App() {
     return (
         <ThemeProvider>
-            <DailyExamProvider>
                 <AppContent />
-            </DailyExamProvider>
         </ThemeProvider>
     );
 }

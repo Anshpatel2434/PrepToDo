@@ -4,7 +4,7 @@ import { z } from "zod";
    🔹 Shared Primitives
    ========================================================= */
 
-export const UUIDSchema = z.string().uuid();
+export const UUIDSchema = z.string();
 export const TimestampSchema = z.string(); // ISO string from Supabase
 export const JSONSchema = z.any();
 
@@ -23,8 +23,8 @@ export const UserSchema = z.object({
 export const UserProfileSchema = z.object({
     id: UUIDSchema,
     username: z.string(),
-    display_name: z.string().nullable(),
-    avatar_url: z.string().nullable(),
+    display_name: z.string().nullish(),
+    avatar_url: z.string().nullish(),
     subscription_tier: z.enum(["free", "pro", "premium"]),
     preferred_difficulty: z.enum(["easy", "medium", "hard", "adaptive"]),
     theme: z.enum(["light", "dark", "auto"]),
@@ -47,13 +47,43 @@ export const TheoryChunkSchema = z.object({
     sub_topic: z.string(),
     concept_title: z.string(),
     content: z.string(),
-    example_text: z.string().nullable(),
-    source_pdf: z.string().nullable(),
-    page_number: z.number().nullable(),
+    example_text: z.string().nullish(),
+    source_pdf: z.string().nullish(),
+    page_number: z.number().nullish(),
     created_at: TimestampSchema,
 });
 
 export type TheoryChunk = z.infer<typeof TheoryChunkSchema>;
+
+/* =========================================================
+   📄 Articles
+   ========================================================= */
+
+export const ArticleSchema = z.object({
+    id: UUIDSchema,
+    title: z.string().nullish(),
+    url: z.string().nullish(),
+    source_name: z.string().nullish(),
+    author: z.string().nullish(),
+    published_at: z.coerce.date().nullish(),
+    genre: z.string(),
+    topic_tags: z.array(z.string()).nullish(),
+    used_in_daily: z.boolean().default(false),
+    used_in_custom_exam: z.boolean().default(false),
+    daily_usage_count: z.number().int().nonnegative().default(0),
+    custom_exam_usage_count: z.number().int().nonnegative().default(0),
+    last_used_at: z.coerce.date().nullish(),
+    semantic_hash: z.string().nullish(),
+    extraction_model: z.string().nullish(),
+    extraction_version: z.string().nullish(),
+    is_safe_source: z.boolean().default(true),
+    is_archived: z.boolean().default(false),
+    notes: z.string().nullish(),
+    created_at: z.coerce.date().optional(),
+    updated_at: z.coerce.date().optional(),
+});
+
+export type Article = z.infer<typeof ArticleSchema>;
 
 /* =========================================================
    📄 Exams
@@ -64,9 +94,11 @@ export const ExamSchema = z.object({
     name: z.string(),
     year: z.number(),
     exam_type: z.string(),
-    slot: z.string(),
+    slot: z.string().nullish(),
     is_official: z.boolean(),
-    created_at: TimestampSchema
+    created_at: TimestampSchema,
+    used_articles_id: z.array(UUIDSchema).nullish(),
+    generate_by_user_id: UUIDSchema.nullish(),
 })
 
 export type Exam = z.infer<typeof ExamSchema>
@@ -77,13 +109,13 @@ export type Exam = z.infer<typeof ExamSchema>
 
 export const PassageSchema = z.object({
     id: UUIDSchema,
-    title: z.string().nullable(),
+    title: z.string().nullish(),
     content: z.string(),
     word_count: z.number(),
     genre: z.string(),
     difficulty: z.enum(["easy", "medium", "hard"]),
-    source: z.string().nullable(),
-    paper_id: UUIDSchema.nullable(),
+    source: z.string().nullish(),
+    paper_id: UUIDSchema.nullish(),
     is_daily_pick: z.boolean(),
     is_featured: z.boolean(),
     is_archived: z.boolean(),
@@ -99,7 +131,7 @@ export type Passage = z.infer<typeof PassageSchema>;
 
 export const QuestionSchema = z.object({
     id: UUIDSchema,
-    passage_id: UUIDSchema.nullable(),
+    passage_id: UUIDSchema.nullish(),
     question_text: z.string(),
     question_type: z.enum([
         "rc_question",
@@ -116,11 +148,11 @@ export const QuestionSchema = z.object({
         "odd_one_out",
     ]),
     options: JSONSchema.optional(),
-    jumbled_sentences : JSONSchema.optional(),
+    jumbled_sentences: JSONSchema.optional(),
     correct_answer: JSONSchema, //{"answer" : "answer"}
     rationale: z.string(),
-    difficulty: z.enum(["easy", "medium", "hard", "expert"]).nullable(),
-    tags: z.array(z.string()).nullable(),
+    difficulty: z.enum(["easy", "medium", "hard", "expert"]).nullish(),
+    tags: z.array(z.string()).nullish(),
     created_at: TimestampSchema,
     updated_at: TimestampSchema,
 });
@@ -134,11 +166,11 @@ export type Question = z.infer<typeof QuestionSchema>;
 export const EmbeddingSchema = z.object({
     id: UUIDSchema,
     embedding_model: z.string(),
-    theory_id: UUIDSchema.nullable(),
-    passage_id: UUIDSchema.nullable(),
-    question_id: UUIDSchema.nullable(),
-    content_preview: z.string().nullable(),
-    metadata: z.record(z.string(), z.any()).nullable(),
+    theory_id: UUIDSchema.nullish(),
+    passage_id: UUIDSchema.nullish(),
+    question_id: UUIDSchema.nullish(),
+    content_preview: z.string().nullish(),
+    metadata: z.record(z.string(), z.any()).nullish(),
     created_at: TimestampSchema,
 });
 
@@ -163,13 +195,13 @@ export const PracticeSessionSchema = z.object({
         "drill",
         "group_practice",
     ]),
-    mode: z.enum(["tutor", "test", "adaptive"]).nullable(),
-    passage_ids: z.array(UUIDSchema).nullable(),
-    question_ids: z.array(UUIDSchema).nullable(),
+    mode: z.enum(["tutor", "test", "adaptive"]).nullish(),
+    passage_ids: z.array(UUIDSchema).nullish(),
+    question_ids: z.array(UUIDSchema).nullish(),
     target_difficuly: z.string(),
     target_genres: z.array(z.string()),
     target_question_types: z.array(z.string()),
-    time_limit_seconds: z.number().nullable(),
+    time_limit_seconds: z.number().nullish(),
     time_spent_seconds: z.number(),
     started_at: TimestampSchema,
     completed_at: TimestampSchema,
@@ -177,11 +209,11 @@ export const PracticeSessionSchema = z.object({
     pause_duration_seconds: z.number(),
     total_questions: z.number(),
     correct_answers: z.number(),
-    current_question_index : z.number(),
+    current_question_index: z.number(),
     is_group_session: z.boolean(),
     group_id: UUIDSchema,
     status: z.enum(["in_progress", "completed", "abandoned", "paused"]),
-    score_percentage: z.number().nullable(),
+    score_percentage: z.number().nullish(),
     points_earned: z.number(),
     created_at: TimestampSchema,
     updated_at: TimestampSchema,
@@ -200,15 +232,15 @@ export const QuestionAttemptSchema = z.object({
     user_id: UUIDSchema,
     session_id: UUIDSchema,
     question_id: UUIDSchema,
-    passage_id: UUIDSchema.nullable(),
+    passage_id: UUIDSchema.nullish(),
     user_answer: JSONSchema, // {"user_answer" : "answer"}
     is_correct: z.boolean(),
     time_spent_seconds: z.number(),
-    confidence_level: z.number().min(1).max(5).nullable(),
+    confidence_level: z.number().min(1).max(5).nullish(),
     marked_for_review: z.boolean(),
     rationale_viewed: z.boolean(),
     rationale_helpful: z.boolean(),
-    ai_feedback: z.string().nullable(),
+    ai_feedback: z.string().nullish(),
     created_at: TimestampSchema,
 });
 
@@ -221,13 +253,14 @@ export type QuestionAttempt = z.infer<typeof QuestionAttemptSchema>;
 export const UserAnalyticsSchema = z.object({
     id: UUIDSchema,
     user_id: UUIDSchema,
-    date: z.string(), // YYYY-MM-DD
+    last_active_date: z.string(), // YYYY-MM-DD - last date user was active
     minutes_practiced: z.number(),
     questions_attempted: z.number(),
     questions_correct: z.number(),
-    accuracy_percentage: z.number().nullable(),
+    accuracy_percentage: z.number().nullish(),
     current_streak: z.number(),
     longest_streak: z.number(),
+    points_earned_today: z.number(),
     total_points: z.number(),
     created_at: TimestampSchema,
     updated_at: TimestampSchema,
@@ -303,13 +336,13 @@ export const VocabEntrySchema = z.object({
     id: UUIDSchema,
     word: z.string(),
     definition: JSONSchema,
-    part_of_speech: z.string().nullable(),
+    part_of_speech: z.string().nullish(),
     difficulty_level: z
         .enum(["basic", "intermediate", "advanced", "expert"])
-        .nullable(),
-    mnemonic: z.string().nullable(),
-    synonyms: z.array(z.string()).nullable(),
-    antonyms: z.array(z.string()).nullable(),
+        .nullish(),
+    mnemonic: z.string().nullish(),
+    synonyms: z.array(z.string()).nullish(),
+    antonyms: z.array(z.string()).nullish(),
     created_at: TimestampSchema,
 });
 
@@ -343,7 +376,7 @@ export const LeaderboardEntrySchema = z.object({
     user_id: UUIDSchema,
     rank: z.number(),
     score: z.number(),
-    accuracy_percentage: z.number().nullable(),
+    accuracy_percentage: z.number().nullish(),
     created_at: TimestampSchema,
 });
 

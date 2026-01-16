@@ -8,6 +8,36 @@ export const JSONSchema = z.any();
 export type UUID = z.infer<typeof UUIDSchema>
 
 /* =========================================================
+   📄 Articles
+   ========================================================= */
+
+export const ArticleSchema = z.object({
+    id: UUIDSchema,
+    title: z.string().nullish(),
+    url: z.string().nullish(),
+    source_name: z.string().nullish(),
+    author: z.string().nullish(),
+    published_at: z.coerce.date().nullish(),
+    genre: z.string(),
+    topic_tags: z.array(z.string()).nullish(),
+    used_in_daily: z.boolean().default(false),
+    used_in_custom_exam: z.boolean().default(false),
+    daily_usage_count: z.number().int().nonnegative().default(0),
+    custom_exam_usage_count: z.number().int().nonnegative().default(0),
+    last_used_at: z.coerce.date().nullish(),
+    semantic_hash: z.string().nullish(),
+    extraction_model: z.string().nullish(),
+    extraction_version: z.string().nullish(),
+    is_safe_source: z.boolean().default(true),
+    is_archived: z.boolean().default(false),
+    notes: z.string().nullish(),
+    created_at: z.coerce.date().optional(),
+    updated_at: z.coerce.date().optional(),
+});
+
+export type Article = z.infer<typeof ArticleSchema>;
+
+/* =========================================================
    📄 Exams
    ========================================================= */
 
@@ -18,7 +48,9 @@ export const ExamSchema = z.object({
     exam_type: z.string(),
     slot: z.string(),
     is_official: z.boolean(),
-    created_at: TimestampSchema
+    created_at: TimestampSchema,
+    used_articles_id: z.array(UUIDSchema).nullish(),
+    generate_by_user_id: UUIDSchema.nullish(),
 })
 
 export type Exam = z.infer<typeof ExamSchema>;

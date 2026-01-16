@@ -1,10 +1,8 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
-import toast from "react-hot-toast";
-import { useTheme } from "../../../../context/ThemeContext";
+import { motion } from "framer-motion"
 import { MdHistory, MdArrowBack, MdArrowForward } from "react-icons/md";
-import type { Exam } from "../../../../types";
 import { useFetchPreviousDailyTestsQuery } from "../redux_usecase/dailyPracticeApi";
+import { useTheme } from "../../../context/ThemeContext";
 
 interface PreviousTestsContainerProps {
     onExamSelect: (examId: string, examDate: string) => void;

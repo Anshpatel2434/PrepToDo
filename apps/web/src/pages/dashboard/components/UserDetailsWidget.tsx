@@ -10,7 +10,7 @@ import type { UserAnalytics, UserProfile } from "../../../types";
 
 interface UserDetailsWidgetProps {
     profile: UserProfile | null | undefined;
-    analytics: UserAnalytics[] | undefined;
+    analytics: UserAnalytics | null | undefined;
     isLoadingProfile: boolean;
     isLoadingAnalytics: boolean;
     isDark: boolean;
@@ -29,33 +29,29 @@ function Stat({
 }) {
     return (
         <div
-            className={`flex items-center gap-3 p-3 rounded-xl border ${
-                isDark
+            className={`flex items-center gap-3 p-3 rounded-xl border ${isDark
                     ? "bg-bg-tertiary-dark border-border-dark"
                     : "bg-bg-tertiary-light border-border-light"
-            }`}
+                }`}
         >
             <div
-                className={`p-2 rounded-lg ${
-                    isDark ? "bg-bg-secondary-dark" : "bg-bg-secondary-light"
-                }`}
+                className={`p-2 rounded-lg ${isDark ? "bg-bg-secondary-dark" : "bg-bg-secondary-light"
+                    }`}
             >
                 {icon}
             </div>
             <div className="min-w-0">
                 <div
-                    className={`text-xs uppercase tracking-widest font-semibold ${
-                        isDark ? "text-text-muted-dark" : "text-text-muted-light"
-                    }`}
+                    className={`text-xs uppercase tracking-widest font-semibold ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                        }`}
                 >
                     {label}
                 </div>
                 <div
-                    className={`text-sm font-semibold truncate ${
-                        isDark
+                    className={`text-sm font-semibold truncate ${isDark
                             ? "text-text-primary-dark"
                             : "text-text-primary-light"
-                    }`}
+                        }`}
                 >
                     {value}
                 </div>
@@ -76,27 +72,11 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
         []
     );
 
-    const latest = React.useMemo(() => {
-        if (!analytics || analytics.length === 0) return null;
-        return analytics[analytics.length - 1];
-    }, [analytics]);
-
-    const today = React.useMemo(() => {
-        if (!analytics || analytics.length === 0) return null;
-        return analytics.find((a) => a.date === todayKey) ?? null;
+    // Check if user practiced today
+    const practicedToday = React.useMemo(() => {
+        if (!analytics) return false;
+        return analytics.last_active_date === todayKey;
     }, [analytics, todayKey]);
-
-    const summary = React.useMemo(() => {
-        const list = analytics ?? [];
-        const minutes = list.reduce((acc, a) => acc + (a.minutes_practiced || 0), 0);
-        const questions = list.reduce(
-            (acc, a) => acc + (a.questions_attempted || 0),
-            0
-        );
-        const correct = list.reduce((acc, a) => acc + (a.questions_correct || 0), 0);
-        const accuracy = questions > 0 ? Math.round((correct / questions) * 100) : 0;
-        return { minutes, questions, accuracy };
-    }, [analytics]);
 
     const name = profile?.display_name || profile?.username || "Your Profile";
 
@@ -105,11 +85,10 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className={`rounded-2xl border p-6 transition-colors ${
-                isDark
+            className={`rounded-2xl border p-6 transition-colors ${isDark
                     ? "bg-bg-secondary-dark border-border-dark"
                     : "bg-bg-secondary-light border-border-light"
-            }`}
+                }`}
         >
             {isLoadingProfile && !profile ? (
                 <div className="space-y-4">
@@ -129,11 +108,10 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                     <div className="flex items-start justify-between gap-6">
                         <div className="flex items-center gap-4 min-w-0">
                             <div
-                                className={`w-12 h-12 rounded-2xl flex items-center justify-center border ${
-                                    isDark
+                                className={`w-12 h-12 rounded-2xl flex items-center justify-center border ${isDark
                                         ? "bg-bg-tertiary-dark border-border-dark"
                                         : "bg-bg-tertiary-light border-border-light"
-                                }`}
+                                    }`}
                             >
                                 {profile?.avatar_url ? (
                                     <img
@@ -155,20 +133,18 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
 
                             <div className="min-w-0">
                                 <h2
-                                    className={`font-serif font-bold text-2xl truncate ${
-                                        isDark
+                                    className={`font-serif font-bold text-2xl truncate ${isDark
                                             ? "text-text-primary-dark"
                                             : "text-text-primary-light"
-                                    }`}
+                                        }`}
                                 >
                                     {name}
                                 </h2>
                                 <div
-                                    className={`text-sm mt-1 ${
-                                        isDark
+                                    className={`text-sm mt-1 ${isDark
                                             ? "text-text-secondary-dark"
                                             : "text-text-secondary-light"
-                                    }`}
+                                        }`}
                                 >
                                     {profile
                                         ? `${profile.subscription_tier} • goal ${profile.daily_goal_minutes} min/day • ${profile.preferred_difficulty} difficulty`
@@ -178,15 +154,14 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                         </div>
 
                         <div
-                            className={`text-right text-sm ${
-                                isDark
+                            className={`text-right text-sm ${isDark
                                     ? "text-text-secondary-dark"
                                     : "text-text-secondary-light"
-                            }`}
+                                }`}
                         >
-                            <div className="font-semibold">Performance Summary (Last {analytics?.length ?? 0} days)</div>
+                            <div className="font-semibold">Overall Performance</div>
                             <div>
-                                Total Practice Time: {summary.minutes} minutes • Questions Attempted: {summary.questions} • Overall Accuracy: {summary.accuracy}%
+                                Total Practice Time: {analytics?.minutes_practiced || 0} minutes • Questions Attempted: {analytics?.questions_attempted || 0} • Overall Accuracy: {Math.round(analytics?.accuracy_percentage || 0)}%
                             </div>
                         </div>
                     </div>
@@ -194,25 +169,25 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                     <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         <Stat
                             label="Current Practice Streak"
-                            value={latest ? `${latest.current_streak} consecutive days` : "No active streak"}
+                            value={analytics ? `${analytics.current_streak} consecutive days` : "No active streak"}
                             icon={<MdLocalFireDepartment size={18} />}
                             isDark={isDark}
                         />
                         <Stat
                             label="Longest Streak Record"
-                            value={latest ? `${latest.longest_streak} days` : "No data"}
+                            value={analytics ? `${analytics.longest_streak} days` : "No data"}
                             icon={<MdLocalFireDepartment size={18} />}
                             isDark={isDark}
                         />
                         <Stat
                             label="Total Points Earned"
-                            value={latest ? `${latest.total_points} points` : "0 points"}
+                            value={analytics ? `${analytics.total_points} points` : "0 points"}
                             icon={<MdStars size={18} />}
                             isDark={isDark}
                         />
                         <Stat
-                            label="Practice Time Today"
-                            value={today ? `${today.minutes_practiced} minutes` : "0 minutes"}
+                            label="Points Earned Today"
+                            value={practicedToday && analytics ? `${analytics.points_earned_today} points` : "0 points"}
                             icon={<MdTimer size={18} />}
                             isDark={isDark}
                         />

@@ -21,8 +21,6 @@ import {
 } from "../pages/auth/redux_usecases/authApi";
 import toast from "react-hot-toast";
 import { useTheme } from "../context/ThemeContext";
-import { useDailyExam } from "../context/DailyExamContext";
-import { useFetchPreviousDailyTestsQuery } from "../pages/daily/redux_usecase/dailyPracticeApi";
 
 interface NavigationItem {
     id: string;
@@ -106,15 +104,11 @@ export const FloatingNavigation: React.FC = () => {
     const containerRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
     const { isDark } = useTheme();
-    const { todayExamId } = useDailyExam();
 
     const { data: authState } = useFetchUserQuery();
     const user = authState ?? null;
     const isAuthenticated = user !== null;
     const [logout, { isLoading: isLogoutLoading }] = useLogoutMutation();
-
-    // Fetch previous tests to get the most recent one if no today exam exists
-    const { data: previousTests } = useFetchPreviousDailyTestsQuery({ page: 1, limit: 20 });
 
     async function handleLogout() {
         try {
@@ -145,15 +139,6 @@ export const FloatingNavigation: React.FC = () => {
 
     // Get the daily path with exam_id if available
     const getDailyPath = () => {
-        // Prefer today's exam if available
-        if (todayExamId) {
-            return `/daily?exam_id=${todayExamId}`;
-        }
-        // Otherwise, use the most recent previous test if available
-        if (previousTests && previousTests.length > 0) {
-            return `/daily?exam_id=${previousTests[0].id}`;
-        }
-        // Fallback to daily page without exam_id
         return "/daily";
     };
 

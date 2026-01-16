@@ -330,7 +330,7 @@ const DailyVAPage: React.FC = () => {
                 commitPendingAttempt({
                     questionId: currentQuestion.id,
                     userId: session.user_id,
-                    passageId: currentQuestion.passage_id,
+                    passageId: currentQuestion.passage_id ? currentQuestion.passage_id : null,
                     markForReview: false,
                 })
             );
@@ -345,7 +345,7 @@ const DailyVAPage: React.FC = () => {
                 commitPendingAttempt({
                     questionId: currentQuestion.id,
                     userId: session.user_id,
-                    passageId: currentQuestion.passage_id,
+                    passageId: currentQuestion.passage_id ? currentQuestion.passage_id : null,
                     markForReview: true,
                 })
             );

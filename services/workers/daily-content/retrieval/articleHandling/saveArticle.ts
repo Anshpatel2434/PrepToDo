@@ -5,7 +5,7 @@ import { ArticleOutput } from "./searchWebForArticles";
 /**
  * Saves article metadata into the database
  */
-export async function saveArticleToDB(article: ArticleOutput, genre) {
+export async function saveArticleToDB(article: ArticleOutput, genre: string) {
     const date = new Date()
     const { data, error } = await supabase.from("articles").insert([
         {
@@ -22,7 +22,7 @@ export async function saveArticleToDB(article: ArticleOutput, genre) {
             last_used_at: date.toISOString(),
             daily_usage_count: 1
         },
-    ]);
+    ]).select().single();
 
     if (error) {
         // Handle duplicate URL gracefully

@@ -135,7 +135,8 @@ export async function runDailyContent() {
             passageData: finalizedData["passageData"],
             rcQuestions: rcQuestionsFinal,
             vaQuestions: vaQuestionsFinal,
-            genreData: genre
+            genreData: genre,
+            articleData: articleMeta,
         });
 
         // Validate output

@@ -173,6 +173,19 @@ HOW PASSAGES ARE ADAPTED FOR CAT:
 
 ---
 
+### VOCABULARY DIFFICULTY REQUIREMENT (CRITICAL):
+- Use MEDIUM-LEVEL vocabulary appropriate for CAT previous year papers
+- Avoid overly complex, obscure, or technical jargon that would require specialized knowledge
+- The vocabulary should be challenging but accessible to well-read candidates
+- Use words that appear in quality journalism and academic writing (The Economist, Atlantic, academic journals)
+- Avoid archaic, highly specialized, or unnecessarily ornate vocabulary
+- Examples of appropriate vocabulary level: "nuanced", "paradigm", "empirical", "inherent", "substantive", "ambiguous"
+- Examples of TOO COMPLEX vocabulary to AVOID: "recondite", "abstruse", "prolix", "sesquipedalian", "obfuscate"
+- The passage should test comprehension and reasoning, NOT vocabulary knowledge
+- Match the vocabulary difficulty level observed in the reference passages provided
+
+---
+
 ### AUTHORIAL VOICE REQUIREMENT:
 - Write as if an informed author is advancing a position, not summarizing literature
 - The passage must critique at least one commonly held assumption

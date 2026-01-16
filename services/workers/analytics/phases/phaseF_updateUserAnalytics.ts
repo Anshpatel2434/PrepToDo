@@ -5,12 +5,11 @@ import { PassageArraySchema, QuestionArraySchema, QuestionSchema, UserAnalyticsA
 
 export interface PhaseFResult {
     user_id: string;
-    date: string;
     minutes_practiced: number;
     questions_attempted: number;
     questions_correct: number;
     accuracy_percentage: number;
-    is_active_day: boolean;
+    last_active_date: string;
     points_earned_today: number;
     genre_performance: Record<string, number>;
     difficulty_performance: Record<string, number>;
@@ -35,8 +34,8 @@ export async function phaseF_updateUserAnalytics(
         ? new Date(sessionData.completed_at).toISOString().split('T')[0]
         : new Date().toISOString().split('T')[0];
 
-        console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% today : ", today)
-    
+    console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% today : ", today)
+
     // Determine if this is a real session or just a streak update
     const isStreakUpdateOnly = session_id === null || dataset.length === 0;
 
@@ -49,7 +48,7 @@ export async function phaseF_updateUserAnalytics(
         ? Math.round((questions_correct / questions_attempted) * 10000) / 100
         : 0;
     const minutes_practiced = Math.round(sessionData.time_spent_seconds / 60);
-    const points_earned_today = sessionData.points_earned || 0;
+    const points_earned_session = sessionData.points_earned || 0;
 
     // 2. Calculate reading speed WPM
     const reading_speed_wpm = await calculateReadingSpeedWpm(supabase, dataset);
@@ -59,10 +58,10 @@ export async function phaseF_updateUserAnalytics(
     console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% session_id : ", session_id)
     if (reading_speed_wpm > 0 && session_id) {
         await updateReadingSpeedProficiency(
-            supabase, 
-            user_id, 
-            session_id, 
-            reading_speed_wpm, 
+            supabase,
+            user_id,
+            session_id,
+            reading_speed_wpm,
             accuracy_percentage,
             sessionData.completed_at
         );
@@ -77,17 +76,14 @@ export async function phaseF_updateUserAnalytics(
     // 6. Calculate question type performance
     const questionTypePerformance = calculateQuestionTypePerformance(dataset);
 
-    // 8. Fetch existing analytics for today to handle multiple sessions
-    const { data: existingAnalyticsList } = await supabase
+    // 7. Fetch existing analytics for this user (single row)
+    const { data: existingAnalytics } = await supabase
         .from('user_analytics')
         .select('*')
         .eq('user_id', user_id)
-        .eq('date', today)
-        .order('created_at', { ascending: false });
+        .maybeSingle();
 
-    const existingAnalytics = existingAnalyticsList?.[0] || null;
-
-    // 9. Determine if user has any completed sessions for this date (streak criteria)
+    // 8. Check if user practiced today for streak calculation
     const dayStart = `${today}T00:00:00.000Z`;
     const dayEndDate = new Date(dayStart);
     dayEndDate.setUTCDate(dayEndDate.getUTCDate() + 1);
@@ -108,40 +104,30 @@ export async function phaseF_updateUserAnalytics(
 
     const hasSessionToday = (!isStreakUpdateOnly) || ((daySessions?.length || 0) > 0);
 
-    // 7. Build the analytics data
-    const analyticsData: PhaseFResult = {
-        user_id,
-        date: today,
-        minutes_practiced,
-        questions_attempted,
-        questions_correct,
-        accuracy_percentage,
-        is_active_day: hasSessionToday,
-        points_earned_today,
-        genre_performance: genrePerformance,
-        difficulty_performance: difficultyPerformance,
-        question_type_performance: questionTypePerformance,
-        reading_speed_wpm,
-    };
+    // 9. Calculate streaks
+    const streakData = await calculateStreaks(supabase, user_id, today, hasSessionToday, existingAnalytics);
 
-    // 10. Calculate streaks
-    const streakData = await calculateStreaks(supabase, user_id, today, hasSessionToday);
+    // 10. Determine if we need to reset daily stats (new day)
+    const lastActiveDate = existingAnalytics?.last_active_date;
+    const isNewDay = !lastActiveDate || lastActiveDate !== today;
 
-    // 10. Fetch total points
-    const { data: allAnalytics } = await supabase
-        .from('user_analytics')
-        .select('total_points')
-        .eq('user_id', user_id)
-        .order('created_at', { ascending: false })
-        .limit(1);
+    // 11. Calculate points earned today
+    let points_earned_today: number;
+    if (isNewDay) {
+        // New day - reset daily points
+        points_earned_today = points_earned_session;
+    } else {
+        // Same day - accumulate points
+        points_earned_today = (existingAnalytics?.points_earned_today || 0) + points_earned_session;
+    }
 
-    const previousTotalPoints = allAnalytics?.[0]?.total_points || 0;
-    const total_points = previousTotalPoints + points_earned_today;
+    // 12. Calculate total points
+    const total_points = (existingAnalytics?.total_points || 0) + points_earned_session;
 
-    // 11. Prepare final upsert data
+    // 13. Prepare final upsert data
     const upsertData = {
         user_id,
-        date: today,
+        last_active_date: today,
         minutes_practiced: (existingAnalytics?.minutes_practiced || 0) + minutes_practiced,
         questions_attempted: (existingAnalytics?.questions_attempted || 0) + questions_attempted,
         questions_correct: (existingAnalytics?.questions_correct || 0) + questions_correct,
@@ -151,10 +137,9 @@ export async function phaseF_updateUserAnalytics(
             questions_attempted,
             accuracy_percentage
         ),
-        is_active_day: hasSessionToday,
         current_streak: streakData.currentStreak,
         longest_streak: streakData.longestStreak,
-        points_earned_today: (existingAnalytics?.points_earned_today || 0) + points_earned_today,
+        points_earned_today,
         total_points,
         genre_performance: mergePerformance(
             (existingAnalytics?.genre_performance as Record<string, number>) || {},
@@ -173,11 +158,11 @@ export async function phaseF_updateUserAnalytics(
         updated_at: new Date().toISOString(),
     };
 
-    // 12. Upsert into user_analytics table
+    // 14. Upsert into user_analytics table (single row per user)
     const { error: upsertError } = await supabase
         .from('user_analytics')
         .upsert(upsertData, {
-            onConflict: 'user_id,date',
+            onConflict: 'user_id',
         });
 
     if (upsertError) {
@@ -186,12 +171,28 @@ export async function phaseF_updateUserAnalytics(
     }
 
     console.log('✅ [Phase F] User analytics updated successfully');
-    console.log(`   - Date: ${today}`);
+    console.log(`   - Last Active: ${today}`);
     console.log(`   - Questions: ${questions_attempted}/${questions_correct} (${accuracy_percentage}%)`);
     console.log(`   - Minutes: ${minutes_practiced}`);
     console.log(`   - WPM: ${reading_speed_wpm}`);
-    console.log(`   - Points: ${points_earned_today}`);
+    console.log(`   - Points Today: ${points_earned_today}`);
+    console.log(`   - Total Points: ${total_points}`);
     console.log(`   - Streak: ${streakData.currentStreak} days`);
+
+    // Build the analytics data for return
+    const analyticsData: PhaseFResult = {
+        user_id,
+        minutes_practiced,
+        questions_attempted,
+        questions_correct,
+        accuracy_percentage,
+        last_active_date: today,
+        points_earned_today,
+        genre_performance: genrePerformance,
+        difficulty_performance: difficultyPerformance,
+        question_type_performance: questionTypePerformance,
+        reading_speed_wpm,
+    };
 
     return analyticsData;
 }
@@ -239,22 +240,22 @@ async function updateReadingSpeedProficiency(
     // Update speed_vs_accuracy_data with aggregated daily averages
     // Use the session's completed_at date, not today's date
     const sessionDate = new Date(completed_at).toISOString().split('T')[0];
-    
+
     let speedVsAccuracyData: Array<{ date: string; wpm: number; accuracy: number; sessions_count: number }> = [];
-    
+
     if (existing?.speed_vs_accuracy_data) {
         // Parse existing data and handle backward compatibility
-        const rawData = Array.isArray(existing.speed_vs_accuracy_data) 
-            ? existing.speed_vs_accuracy_data 
+        const rawData = Array.isArray(existing.speed_vs_accuracy_data)
+            ? existing.speed_vs_accuracy_data
             : [];
-            
+
         // Handle old format (with session_id) vs new format (with sessions_count)
         if (rawData.length > 0 && 'session_id' in rawData[0]) {
             // Old format - convert to new aggregated format
             console.log('   - Converting old session-based format to new aggregated format');
-            
+
             const dateAggregates = new Map<string, { totalWpm: number; totalAccuracy: number; count: number }>();
-            
+
             for (const record of rawData as Array<{ date: string; wpm: number; accuracy: number; session_id: string }>) {
                 const existing = dateAggregates.get(record.date);
                 if (existing) {
@@ -269,7 +270,7 @@ async function updateReadingSpeedProficiency(
                     });
                 }
             }
-            
+
             // Convert to new format
             speedVsAccuracyData = Array.from(dateAggregates.entries())
                 .map(([date, aggregate]) => ({
@@ -283,10 +284,10 @@ async function updateReadingSpeedProficiency(
             speedVsAccuracyData = rawData;
         }
     }
-    
+
     // Group existing data by date and calculate aggregates
     const dateAggregates = new Map<string, { totalWpm: number; totalAccuracy: number; count: number }>();
-    
+
     // Process existing aggregated data
     for (const record of speedVsAccuracyData) {
         const existing = dateAggregates.get(record.date);
@@ -302,7 +303,7 @@ async function updateReadingSpeedProficiency(
             });
         }
     }
-    
+
     // Add or update the current session
     const currentSession = dateAggregates.get(sessionDate);
     if (currentSession) {
@@ -320,7 +321,7 @@ async function updateReadingSpeedProficiency(
         });
         console.log(`   - Added new aggregated data for date ${sessionDate}`);
     }
-    
+
     // Convert back to array format with averaged values
     speedVsAccuracyData = Array.from(dateAggregates.entries())
         .map(([date, aggregate]) => ({
@@ -330,7 +331,7 @@ async function updateReadingSpeedProficiency(
             sessions_count: aggregate.count
         }))
         .sort((a, b) => a.date.localeCompare(b.date)); // Sort by date (oldest to newest)
-    
+
     // Keep only the last 60 days of data
     if (speedVsAccuracyData.length > 60) {
         speedVsAccuracyData = speedVsAccuracyData.slice(-60);
@@ -614,75 +615,59 @@ function calculateQuestionTypePerformance(dataset: AttemptDatum[]): Record<strin
 
 /**
  * Calculate current and longest streaks
- * Fixed to properly check if user actually has sessions for today
+ * Updated to work with single-row user_analytics table
  */
 async function calculateStreaks(
     supabase: any,
     user_id: string,
     today: string,
-    hasSessionToday: boolean
+    hasSessionToday: boolean,
+    existingAnalytics: any
 ): Promise<{ currentStreak: number; longestStreak: number }> {
     try {
-        // Fetch all active days for this user (including today if it exists)
-        const { data: analytics, error } = await supabase
-            .from('user_analytics')
-            .select('date, longest_streak')
-            .eq('user_id', user_id)
-            .eq('is_active_day', true)
-            .order('date', { ascending: false });
-
-        if (error) {
-            console.error('⚠️ Error fetching analytics for streak calculation:', error);
-            // Return safe defaults
+        // If no existing analytics, this is the first session
+        if (!existingAnalytics) {
             return { currentStreak: hasSessionToday ? 1 : 0, longestStreak: hasSessionToday ? 1 : 0 };
         }
 
-        // If no analytics exist yet and user has a session today, this is their first day
-        if (!analytics || analytics.length === 0) {
-            return { currentStreak: hasSessionToday ? 1 : 0, longestStreak: hasSessionToday ? 1 : 0 };
-        }
+        const lastActiveDate = existingAnalytics.last_active_date;
+        const previousStreak = existingAnalytics.current_streak || 0;
+        const previousLongestStreak = existingAnalytics.longest_streak || 0;
 
-        // Build set of active dates (excluding today initially to avoid counting it twice)
-        const activeDates = new Set<string>(
-            analytics.map((a: any) => a.date).filter((d: string) => d !== today)
-        );
-
-        // Calculate current streak
-        // Per product criteria: streak counts ONLY if the user has any session on this date.
-        // If user has no session today, current streak must be 0.
         let currentStreak = 0;
-        const todayDate = new Date(today + 'T00:00:00Z');
 
         if (hasSessionToday) {
-            currentStreak = 1;
+            if (!lastActiveDate) {
+                // First time user is active
+                currentStreak = 1;
+            } else {
+                const lastDate = new Date(lastActiveDate + 'T00:00:00Z');
+                const todayDate = new Date(today + 'T00:00:00Z');
+                const daysDiff = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
 
-            // Count consecutive active days backwards starting from yesterday
-            const checkDate = new Date(todayDate);
-            checkDate.setUTCDate(checkDate.getUTCDate() - 1);
-
-            while (true) {
-                const checkDateStr = checkDate.toISOString().split('T')[0];
-                if (!activeDates.has(checkDateStr)) break;
-                currentStreak++;
-                checkDate.setUTCDate(checkDate.getUTCDate() - 1);
+                if (daysDiff === 0) {
+                    // Same day - maintain current streak
+                    currentStreak = previousStreak;
+                } else if (daysDiff === 1) {
+                    // Consecutive day - increment streak
+                    currentStreak = previousStreak + 1;
+                } else {
+                    // Streak broken - start new streak
+                    currentStreak = 1;
+                }
             }
+        } else {
+            // No session today - streak is 0
+            currentStreak = 0;
         }
 
-        // Find longest streak from historical data
-        let maxPreviousStreak = 0;
-        for (const a of analytics) {
-            if (a.longest_streak && a.longest_streak > maxPreviousStreak) {
-                maxPreviousStreak = a.longest_streak;
-            }
-        }
-
-        // Longest streak is max of current and previous
-        const longestStreak = Math.max(maxPreviousStreak, currentStreak);
+        // Longest streak is max of current and previous longest
+        const longestStreak = Math.max(previousLongestStreak, currentStreak);
 
         console.log(`   - Streak calculation: current=${currentStreak}, longest=${longestStreak}, hasSessionToday=${hasSessionToday}`);
 
         return { currentStreak, longestStreak };
-        
+
     } catch (error) {
         console.error('❌ Error in calculateStreaks:', error);
         // Return safe defaults

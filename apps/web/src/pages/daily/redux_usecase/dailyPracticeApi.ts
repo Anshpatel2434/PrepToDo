@@ -182,7 +182,7 @@ export const dailyPracticeApi = createApi({
 
                     // Calculate range for pagination (skip the first (latest) exam and start from index 1)
                     const offset = (page - 1) * limit;
-                    const from = offset + 1; // +1 to skip the latest exam
+                    const from = offset;
                     const to = from + limit - 1;
 
                     // Step 2: Get previous daily practice exams with pagination
@@ -202,8 +202,13 @@ export const dailyPracticeApi = createApi({
                             },
                         };
                     }
+                    // --- Filter out today's exam ---
+                    // const filteredExamInfo = examInfo?.filter(exam => {
+                    //     const examDate = exam.created_at; // Assuming 'created_at' is the field name
+                    //     return examDate < startOfToday || examDate > endOfToday;
+                    // });
 
-                    console.log('[DailyPracticeApi] Fetched', examInfo?.length || 0, 'previous exams for page', page);
+                    console.log('[DailyPracticeApi] Fetched', examInfo?.length || 0, 'previous exams (excluding today) for page', page);
 
                     return {
                         data: examInfo || [],

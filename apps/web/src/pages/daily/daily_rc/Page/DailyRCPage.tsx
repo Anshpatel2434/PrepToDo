@@ -349,7 +349,7 @@ const DailyRCPage: React.FC = () => {
                 commitPendingAttempt({
                     questionId: currentQuestion.id,
                     userId: session.user_id,
-                    passageId: currentQuestion.passage_id,
+                    passageId: currentQuestion.passage_id ? currentQuestion.passage_id : null,
                     markForReview: false,
                 })
             );
@@ -364,7 +364,7 @@ const DailyRCPage: React.FC = () => {
                 commitPendingAttempt({
                     questionId: currentQuestion.id,
                     userId: session.user_id,
-                    passageId: currentQuestion.passage_id,
+                    passageId: currentQuestion.passage_id ? currentQuestion.passage_id : null,
                     markForReview: true,
                 })
             );
@@ -378,14 +378,6 @@ const DailyRCPage: React.FC = () => {
             dispatch(resetDailyPractice());
         };
     }, [dispatch]);
-
-    //Just to check the updated attempts on each change if happenning or not
-    useEffect(() => {
-        console.log(
-            "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%changes in attempts%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-        );
-        console.log(attempts);
-    }, [attempts]);
 
     // --- 5. Render ---
     if (isLoading || !currentQuestion) {

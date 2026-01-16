@@ -27,7 +27,7 @@ export const dashboardApi = createApi({
         "UserProfile",
     ],
     endpoints: (builder) => ({
-        fetchUserAnalytics: builder.query<UserAnalytics[], UUID>({
+        fetchUserAnalytics: builder.query<UserAnalytics | null, UUID>({
             queryFn: async (userId) => {
                 console.log("📊 [DashboardApi] fetchUserAnalytics", { userId });
 
@@ -36,8 +36,7 @@ export const dashboardApi = createApi({
                         .from("user_analytics")
                         .select("*")
                         .eq("user_id", userId)
-                        .gte("date", getDateDaysAgo(DASHBOARD_DAYS_LOOKBACK))
-                        .order("date", { ascending: true });
+                        .maybeSingle();
 
                     if (error) {
                         return {
@@ -48,7 +47,7 @@ export const dashboardApi = createApi({
                         };
                     }
 
-                    return { data: (data ?? []) as UserAnalytics[] };
+                    return { data: (data ?? null) as UserAnalytics | null };
                 } catch (err) {
                     const e = err as { message?: string };
                     return {

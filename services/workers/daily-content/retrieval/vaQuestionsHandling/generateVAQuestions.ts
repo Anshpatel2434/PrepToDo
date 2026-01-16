@@ -6,7 +6,7 @@ import { Question, QuestionSchema, Passage, SemanticIdeas, AuthorialPersona } fr
 
 // Simple UUID generator to avoid additional dependencies
 function generateUUID(): string {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         const r = Math.random() * 16 | 0;
         const v = c === 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
@@ -147,7 +147,7 @@ export async function generateVAQuestions(params: GenerateVAQuestionsParams) {
         }
 
         console.log(`✅ [VA Questions] Total VA questions generated: ${allQuestions.length}`);
-        
+
         // Final pass to ensure all questions have fresh UUIDs
         const finalQuestions = allQuestions.map(q => ({
             ...q,
@@ -573,6 +573,16 @@ The question should:
 
 ---
 
+## CRITICAL JUMBLING REQUIREMENT:
+- The sentences MUST NOT be presented in sequential order (1-2-3-4)
+- You MUST randomize the sentence positions so the correct answer is NOT "1234"
+- Example: If the logical order is A→B→C→D, present them as: 1:C, 2:A, 3:D, 4:B (correct answer would be "2143")
+- The jumbled_sentences object should contain sentences in a SCRAMBLED order
+- Avoid patterns like "1234", "4321", or any obvious sequence
+- The correct answer should require careful analysis of logical connections
+
+---
+
 ## SENTENCE DESIGN RULES
 
 - Each sentence should be self-contained and meaningful
@@ -738,20 +748,33 @@ The question should:
 
 ---
 
+## CRITICAL RANDOMIZATION REQUIREMENT:
+- The odd one out sentence MUST NOT always be in position 5
+- You MUST randomize which position (1, 2, 3, 4, or 5) contains the odd sentence
+- The 4 coherent sentences should be distributed across the remaining positions
+- Avoid the pattern where sentences 1-4 always form a paragraph and 5 is always odd
+- Example distributions:
+  * Odd one at position 2: sentences 1,3,4,5 form paragraph, 2 is odd
+  * Odd one at position 3: sentences 1,2,4,5 form paragraph, 3 is odd
+  * Odd one at position 1: sentences 2,3,4,5 form paragraph, 1 is odd
+- The correct answer should vary across questions (not always "5")
+
+---
+
 ## OPTION DESIGN RULES
 
 Similar sentences (4 sentences):
 - Should share a clear common theme or structure
 - Should be thematically or logically coherent together
 - Should derive from semantic ideas
-- These will be placed in jumbled_sentences with keys "1" through "4"
+- These 4 sentences should be RANDOMLY distributed across positions 1-5
 
 Odd one out (correct answer):
 - Should seem similar at first glance
 - Should have a subtle but meaningful difference
 - The difference should be identifiable through careful analysis
 - Could differ in: stance, assumption, logical direction, or conclusion
-- This will be the 5th sentence placed in jumbled_sentences with key "5"
+- This sentence should be placed in a RANDOM position (not always position 5)
 
 ---
 

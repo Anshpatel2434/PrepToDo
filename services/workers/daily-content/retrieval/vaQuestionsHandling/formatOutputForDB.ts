@@ -1,12 +1,13 @@
 // formatOutputForDB.ts
-import { Exam, Passage, Question } from "../../schemas/types";
+import { Article, Exam, Passage, Question } from "../../schemas/types";
 import { v4 as uuidv4 } from 'uuid';
 
 interface FormatOutputParams {
     passageData: Passage;
     rcQuestions: Question[];
     vaQuestions: Question[];
-    genreData: any
+    genreData: any;
+    articleData: Article;
 }
 
 /**
@@ -17,10 +18,10 @@ export function formatOutputForDB(params: FormatOutputParams): {
     exam: Exam;
     passage: Passage;
     questions: Question[];
-    genreData: any
+    genreData: any;
 } {
     try {
-        const { passageData, rcQuestions, vaQuestions, genreData } = params;
+        const { passageData, rcQuestions, vaQuestions, genreData, articleData } = params;
         const now = new Date().toISOString();
         const currentYear = new Date().getFullYear();
 
@@ -33,6 +34,7 @@ export function formatOutputForDB(params: FormatOutputParams): {
             slot: null,
             is_official: false,
             created_at: now,
+            used_articles_id: [articleData.id],
         };
 
         // 2. Create Passage data
