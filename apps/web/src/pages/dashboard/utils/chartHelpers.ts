@@ -47,19 +47,6 @@ export function transformHeatmapData(genres: UserMetricProficiency[]) {
     });
 }
 
-export function calculateWPMAccuracyData(analytics: UserAnalytics[]) {
-    const AVG_WORDS_PER_QUESTION = 300;
-
-    return analytics.map((a) => ({
-        date: a.date,
-        wpm:
-            a.minutes_practiced > 0
-                ? (a.questions_attempted * AVG_WORDS_PER_QUESTION) /
-                  a.minutes_practiced
-                : 0,
-        accuracy: a.accuracy_percentage ?? 0,
-    }));
-}
 
 export function clamp(n: number, min: number, max: number) {
     return Math.max(min, Math.min(max, n));
