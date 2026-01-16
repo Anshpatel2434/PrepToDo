@@ -156,8 +156,9 @@ export async function phaseF_updateUserAnalytics(
     // 14. Upsert into user_analytics table (single row per user)
     const { error: upsertError } = await supabase
         .from('user_analytics')
-        .upsert(upsertData)
-        .eq('user_id', user_id);
+        .upsert(upsertData, {
+            onConflict: 'user_id',
+        });
 
     if (upsertError) {
         console.error('❌ [Phase F] Failed to upsert user_analytics:', upsertError);
