@@ -122,7 +122,6 @@ export async function phaseF_updateUserAnalytics(
     // 13. Prepare final upsert data
     const upsertData = {
         user_id,
-        date: today,
         last_active_date: today,
         minutes_practiced: (existingAnalytics?.minutes_practiced || 0) + minutes_practiced,
         questions_attempted: (existingAnalytics?.questions_attempted || 0) + questions_attempted,
