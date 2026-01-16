@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MdNewspaper, MdExpandMore, MdExpandLess, MdOpenInNew, MdPerson, MdCalendarToday, MdLabel } from "react-icons/md";
+import { MdNewspaper, MdExpandMore, MdOpenInNew, MdPerson, MdCalendarToday, MdLabel } from "react-icons/md";
 import { useTheme } from "../../../context/ThemeContext";
 import type { Article } from "../../../types";
 

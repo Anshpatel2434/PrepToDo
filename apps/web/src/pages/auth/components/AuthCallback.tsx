@@ -5,12 +5,12 @@ import { supabase } from "../../../services/apiClient";
 
 export default function AuthCallback() {
     const navigate = useNavigate();
-    const timeoutRef = useRef<NodeJS.Timeout>();
+    const timeoutRef = useRef<number | null>(null);
 
     useEffect(() => {
         // Set a timeout to handle failed/cancelled authentication
         // If no SIGNED_IN event within 5 seconds, redirect to home
-        timeoutRef.current = setTimeout(async () => {
+        timeoutRef.current = window.setTimeout(async () => {
             console.log("Authentication timeout - redirecting to home");
             localStorage.removeItem("post_auth_redirect");
             navigate("/home", { replace: true });

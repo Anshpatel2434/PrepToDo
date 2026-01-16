@@ -1,20 +1,24 @@
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useTheme } from "../../../context/ThemeContext";
 import { FloatingNavigation } from "../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
-import { MdMenuBook, MdSpellcheck, MdHistory, MdCalendarToday } from "react-icons/md";
+import { MdMenuBook, MdSpellcheck, MdHistory, MdCalendarToday, MdLeaderboard, MdViewList } from "react-icons/md";
 import type { Exam } from "../../../types";
 import { useFetchDailyTestDataQuery, useFetchPreviousDailyTestsQuery, useFetchArticlesByIdsQuery } from "../redux_usecase/dailyPracticeApi";
 import PreviousTestsContainer from "../components/PreviousTestsContainer";
 import ArticleInfoPanel from "../components/ArticleInfoPanel";
+import LeaderboardView from "../components/LeaderboardView";
 
 const DailyPage: React.FC = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const { isDark } = useTheme();
+    
+    // Toggle state for Daily Test vs Leaderboard view
+    const [viewMode, setViewMode] = useState<"daily" | "leaderboard">("daily");
 
     // Fetch today's daily test data
     const { data: todayData, isLoading: isLoadingToday } = useFetchDailyTestDataQuery();
@@ -137,7 +141,7 @@ const DailyPage: React.FC = () => {
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="text-center mb-12"
+                    className="text-center mb-8"
                 >
                     <h1
                         className={`
@@ -153,7 +157,7 @@ const DailyPage: React.FC = () => {
                     </h1>
                     <p
                         className={`
-                            text-base md:text-lg max-w-2xl mx-auto
+                            text-base md:text-lg max-w-2xl mx-auto mb-6
                             ${
                                 isDark
                                     ? "text-text-secondary-dark"
@@ -164,245 +168,335 @@ const DailyPage: React.FC = () => {
                         Sharpen your skills with focused daily practice sessions. Choose
                         your area of focus below.
                     </p>
+
+                    {/* View Toggle */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.3, duration: 0.5 }}
+                        className="inline-flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1"
+                    >
+                        <button
+                            onClick={() => setViewMode("daily")}
+                            className={`
+                                flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300
+                                ${viewMode === "daily"
+                                    ? (isDark
+                                        ? "bg-white text-gray-900 shadow-sm"
+                                        : "bg-white text-gray-900 shadow-sm")
+                                    : (isDark
+                                        ? "text-gray-400 hover:text-gray-200"
+                                        : "text-gray-600 hover:text-gray-800")
+                                }
+                            `}
+                        >
+                            <MdViewList className="w-4 h-4" />
+                            Daily Test
+                        </button>
+                        <button
+                            onClick={() => setViewMode("leaderboard")}
+                            className={`
+                                flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300
+                                ${viewMode === "leaderboard"
+                                    ? (isDark
+                                        ? "bg-white text-gray-900 shadow-sm"
+                                        : "bg-white text-gray-900 shadow-sm")
+                                    : (isDark
+                                        ? "text-gray-400 hover:text-gray-200"
+                                        : "text-gray-600 hover:text-gray-800")
+                                }
+                            `}
+                        >
+                            <MdLeaderboard className="w-4 h-4" />
+                            Leaderboard
+                        </button>
+                    </motion.div>
                 </motion.div>
 
-                {/* Selected Exam Info */}
-                {selectedExam && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2, duration: 0.5 }}
-                        className={`
-                            max-w-4xl mx-auto mb-8 p-6 rounded-xl border-2
-                            ${isTodayExam(selectedExam)
-                                ? (isDark
-                                    ? "bg-linear-to-r from-amber-900/20 to-orange-900/20 border-amber-500/50"
-                                    : "bg-linear-to-r from-amber-50 to-orange-50 border-amber-300")
-                                : (isDark
-                                    ? "bg-bg-secondary-dark border-border-dark"
-                                    : "bg-bg-secondary-light border-border-light")
-                            }
-                        `}
-                    >
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <h3
-                                        className={`
-                                            text-lg font-semibold
-                                            ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
-                                        `}
-                                    >
-                                        {isTodayExam(selectedExam) ? "Today's Challenge" : "Practice Test"}
-                                    </h3>
-                                    {isTodayExam(selectedExam) && (
-                                        <span className="px-2 py-1 bg-amber-500 text-white text-xs rounded-full font-medium">
-                                            TODAY
-                                        </span>
-                                    )}
-                                </div>
-                                <p
-                                    className={`
-                                        text-sm
-                                        ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
-                                    `}
-                                >
-                                    {formatDate(selectedExam.created_at)}
-                                </p>
-                            </div>
-                            <div className={`
-                                w-12 h-12 rounded-full flex items-center justify-center
-                                ${isTodayExam(selectedExam)
-                                    ? "bg-amber-500 text-white"
-                                    : (isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light")
-                                }
-                            `}>
-                                <MdHistory size={24} />
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-
-                {/* Article Info Panel - Show when exam is selected */}
-                {selectedExam && (
-                    <ArticleInfoPanel
-                        articles={articles}
-                        isLoading={isLoadingArticles}
-                    />
-                )}
-
-                {/* No Test For Today Message - Only show when no test today and no exam selected */}
-                {!hasTodayTest && !isLoadingToday && !selectedExam && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2, duration: 0.5 }}
-                        className={`
-                            max-w-4xl mx-auto mb-8 p-6 rounded-xl border-2
-                            ${isDark
-                                ? "bg-red-900/10 border-red-500/30"
-                                : "bg-red-50 border-red-200"}
-                        `}
-                    >
-                        <div className="flex items-center gap-4">
-                            <div className={`
-                                w-12 h-12 rounded-full flex items-center justify-center
-                                ${isDark ? "bg-red-500/20" : "bg-red-100"}
-                            `}>
-                                <MdCalendarToday size={24} className={isDark ? "text-red-400" : "text-red-600"} />
-                            </div>
-                            <div>
-                                <h3 className={`
-                                    text-lg font-semibold mb-1
-                                    ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
-                                `}>
-                                    No Test Generated Today
-                                </h3>
-                                <p className={`
-                                    text-sm
-                                    ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
-                                `}>
-                                    Today's daily test hasn't been generated yet. Please check back later or practice with previous tests below.
-                                </p>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-
-                {/* Practice Options Grid - Show when there's a selected exam (today's or previous) */}
-                {selectedExam && (
-                    <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-6 mb-12">
-                        {practiceOptions.map((option, index) => {
-                            const Icon = option.icon;
-                            return (
-                                <motion.button
-                                    key={option.id}
-                                    onClick={() => handleStartPractice(option.id as "rc" | "va")}
-                                    disabled={!selectedExamId}
+                {/* Main Content with Smooth Transition */}
+                <AnimatePresence mode="wait">
+                    {viewMode === "daily" ? (
+                        <motion.div
+                            key="daily-view"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            {/* Selected Exam Info */}
+                            {selectedExam && (
+                                <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.3 + index * 0.1, duration: 0.5 }}
+                                    transition={{ delay: 0.2, duration: 0.5 }}
                                     className={`
-                                        relative overflow-hidden p-8 rounded-2xl
-                                        border-2 text-left group
-                                        ${!selectedExamId ? 'opacity-50 cursor-not-allowed' : 'hover:cursor-pointer'}
-                                        ${
-                                            selectedExamId
-                                                ? (isDark
-                                                    ? "bg-bg-secondary-dark border-border-dark hover:border-brand-primary-dark"
-                                                    : "bg-bg-secondary-light border-border-light hover:border-brand-primary-light")
-                                                : (isDark
-                                                    ? "bg-bg-secondary-dark border-border-dark"
-                                                    : "bg-bg-secondary-light border-border-light")
+                                        max-w-4xl mx-auto mb-8 p-6 rounded-xl border-2
+                                        ${isTodayExam(selectedExam)
+                                            ? (isDark
+                                                ? "bg-linear-to-r from-amber-900/20 to-orange-900/20 border-amber-500/50"
+                                                : "bg-linear-to-r from-amber-50 to-orange-50 border-amber-300")
+                                            : (isDark
+                                                ? "bg-bg-secondary-dark border-border-dark"
+                                                : "bg-bg-secondary-light border-border-light")
                                         }
                                     `}
                                 >
-                                    {/* Gradient Background */}
-                                    <div
-                                        className={`
-                                            absolute inset-0 bg-linear-to-br ${option.gradient}
-                                            opacity-0 group-hover:opacity-100 transition-opacity duration-300
-                                        `}
-                                    />
-
-                                    {/* Content */}
-                                    <div className="relative z-10">
-                                        <div className="flex items-center gap-4 mb-4">
-                                            <div
-                                                className={`
-                                                    p-3 rounded-xl
-                                                    ${isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"}
-                                                `}
-                                            >
-                                                <Icon className={`w-8 h-8 ${option.iconColor}`} />
-                                            </div>
-                                            <h2
-                                                className={`
-                                                    font-serif font-bold text-xl md:text-2xl
-                                                    ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
-                                                `}
-                                            >
-                                                {option.title}
-                                            </h2>
-                                        </div>
-                                        <p
-                                            className={`
-                                                leading-relaxed mb-4
-                                                ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
-                                            `}
-                                        >
-                                            {option.description}
-                                        </p>
-
-                                        {/* Arrow indicator or Loading */}
-                                        <div className="flex items-center gap-2">
-                                            <span
-                                                className={`text-sm font-medium ${
-                                                    isDark
-                                                        ? "text-brand-primary-dark"
-                                                        : "text-brand-primary-light"
-                                                }`}
-                                            >
-                                                {selectedExamId ? "Start Practice" : "Select an exam first"}
-                                            </span>
-                                            {selectedExamId && (
-                                                <motion.span
-                                                    className={`${
-                                                        isDark
-                                                            ? "text-brand-primary-dark"
-                                                            : "text-brand-primary-light"
-                                                    }`}
-                                                    animate={{ x: [0, 4, 0] }}
-                                                    transition={{ repeat: Infinity, duration: 1.5 }}
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <h3
+                                                    className={`
+                                                        text-lg font-semibold
+                                                        ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
+                                                    `}
                                                 >
-                                                    →
-                                                </motion.span>
-                                            )}
+                                                    {isTodayExam(selectedExam) ? "Today's Challenge" : "Practice Test"}
+                                                </h3>
+                                                {isTodayExam(selectedExam) && (
+                                                    <span className="px-2 py-1 bg-amber-500 text-white text-xs rounded-full font-medium">
+                                                        TODAY
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p
+                                                className={`
+                                                    text-sm
+                                                    ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
+                                                `}
+                                            >
+                                                {formatDate(selectedExam.created_at)}
+                                            </p>
+                                        </div>
+                                        <div className={`
+                                            w-12 h-12 rounded-full flex items-center justify-center
+                                            ${isTodayExam(selectedExam)
+                                                ? "bg-amber-500 text-white"
+                                                : (isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light")
+                                            }
+                                        `}>
+                                            <MdHistory size={24} />
                                         </div>
                                     </div>
-                                </motion.button>
-                            );
-                        })}
-                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* Article Info Panel - Show when exam is selected */}
+                            {selectedExam && (
+                                <ArticleInfoPanel
+                                    articles={articles}
+                                    isLoading={isLoadingArticles}
+                                />
+                            )}
+
+                            {/* No Test For Today Message - Only show when no test today and no exam selected */}
+                            {!hasTodayTest && !isLoadingToday && !selectedExam && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.2, duration: 0.5 }}
+                                    className={`
+                                        max-w-4xl mx-auto mb-8 p-6 rounded-xl border-2
+                                        ${isDark
+                                            ? "bg-red-900/10 border-red-500/30"
+                                            : "bg-red-50 border-red-200"}
+                                    `}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className={`
+                                            w-12 h-12 rounded-full flex items-center justify-center
+                                            ${isDark ? "bg-red-500/20" : "bg-red-100"}
+                                        `}>
+                                            <MdCalendarToday size={24} className={isDark ? "text-red-400" : "text-red-600"} />
+                                        </div>
+                                        <div>
+                                            <h3 className={`
+                                                text-lg font-semibold mb-1
+                                                ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
+                                            `}>
+                                                No Test Generated Today
+                                            </h3>
+                                            <p className={`
+                                                text-sm
+                                                ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
+                                            `}>
+                                                Today's daily test hasn't been generated yet. Please check back later or practice with previous tests below.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* Practice Options Grid - Show when there's a selected exam (today's or previous) */}
+                            {selectedExam && (
+                                <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-6 mb-12">
+                                    {practiceOptions.map((option, index) => {
+                                        const Icon = option.icon;
+                                        return (
+                                            <motion.button
+                                                key={option.id}
+                                                onClick={() => handleStartPractice(option.id as "rc" | "va")}
+                                                disabled={!selectedExamId}
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: 0.3 + index * 0.1, duration: 0.5 }}
+                                                className={`
+                                                    relative overflow-hidden p-8 rounded-2xl
+                                                    border-2 text-left group
+                                                    ${!selectedExamId ? 'opacity-50 cursor-not-allowed' : 'hover:cursor-pointer'}
+                                                    ${
+                                                        selectedExamId
+                                                            ? (isDark
+                                                                ? "bg-bg-secondary-dark border-border-dark hover:border-brand-primary-dark"
+                                                                : "bg-bg-secondary-light border-border-light hover:border-brand-primary-light")
+                                                            : (isDark
+                                                                ? "bg-bg-secondary-dark border-border-dark"
+                                                                : "bg-bg-secondary-light border-border-light")
+                                                    }
+                                                `}
+                                            >
+                                                {/* Gradient Background */}
+                                                <div
+                                                    className={`
+                                                        absolute inset-0 bg-linear-to-br ${option.gradient}
+                                                        opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                                                    `}
+                                                />
+
+                                                {/* Content */}
+                                                <div className="relative z-10">
+                                                    <div className="flex items-center gap-4 mb-4">
+                                                        <div
+                                                            className={`
+                                                                p-3 rounded-xl
+                                                                ${isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"}
+                                                            `}
+                                                        >
+                                                            <Icon className={`w-8 h-8 ${option.iconColor}`} />
+                                                        </div>
+                                                        <h2
+                                                            className={`
+                                                                font-serif font-bold text-xl md:text-2xl
+                                                                ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
+                                                            `}
+                                                        >
+                                                            {option.title}
+                                                        </h2>
+                                                    </div>
+                                                    <p
+                                                        className={`
+                                                            leading-relaxed mb-4
+                                                            ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
+                                                        `}
+                                                    >
+                                                        {option.description}
+                                                    </p>
+
+                                                    {/* Arrow indicator or Loading */}
+                                                    <div className="flex items-center gap-2">
+                                                        <span
+                                                            className={`text-sm font-medium ${
+                                                                isDark
+                                                                    ? "text-brand-primary-dark"
+                                                                    : "text-brand-primary-light"
+                                                            }`}
+                                                        >
+                                                            {selectedExamId ? "Start Practice" : "Select an exam first"}
+                                                        </span>
+                                                        {selectedExamId && (
+                                                            <motion.span
+                                                                className={`${
+                                                                    isDark
+                                                                        ? "text-brand-primary-dark"
+                                                                        : "text-brand-primary-light"
+                                                                }`}
+                                                                animate={{ x: [0, 4, 0] }}
+                                                                transition={{ repeat: Infinity, duration: 1.5 }}
+                                                            >
+                                                                →
+                                                            </motion.span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </motion.button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="leaderboard-view"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            {/* Leaderboard View */}
+                            {selectedExam && selectedExamId ? (
+                                <LeaderboardView
+                                    examId={selectedExamId}
+                                    isDark={isDark}
+                                />
+                            ) : (
+                                <div className={`max-w-4xl mx-auto text-center py-12 ${
+                                    isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                                }`}>
+                                    <MdLeaderboard className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                                    <h3 className="text-lg font-semibold mb-2">Select a Daily Test</h3>
+                                    <p>Choose a daily test from the list below to view its leaderboard.</p>
+                                </div>
+                            )}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Previous Tests Section - Always Displayed but only in daily view */}
+                {viewMode === "daily" && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5, duration: 0.5 }}
+                    >
+                        <PreviousTestsContainer
+                            onExamSelect={handleExamSelect}
+                            selectedExamId={selectedExamId}
+                            todayExamId={todayData?.examInfo?.id || null}
+                        />
+                    </motion.div>
                 )}
 
-                {/* Previous Tests Section - Always Displayed */}
-                <PreviousTestsContainer
-                    onExamSelect={handleExamSelect}
-                    selectedExamId={selectedExamId}
-                    todayExamId={todayData?.examInfo?.id || null}
-                />
-
-                {/* Info Section */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.7, duration: 0.5 }}
-                    className={`
-                        mt-12 max-w-2xl mx-auto p-6 rounded-xl border
-                        ${isDark ? "bg-bg-secondary-dark border-border-dark" : "bg-bg-secondary-light border-border-light"}
-                    `}
-                >
-                    <h3
+                {/* Info Section - Only in daily view */}
+                {viewMode === "daily" && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.7, duration: 0.5 }}
                         className={`
-                            font-semibold mb-3
-                            ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
+                            mt-12 max-w-2xl mx-auto p-6 rounded-xl border
+                            ${isDark ? "bg-bg-secondary-dark border-border-dark" : "bg-bg-secondary-light border-border-light"}
                         `}
                     >
-                        📊 Practice Features
-                    </h3>
-                    <ul
-                        className={`
-                            space-y-2 text-sm
-                            ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
-                        `}
-                    >
-                        <li>✓ Practice sessions with time tracking</li>
-                        <li>✓ Detailed solutions after completion</li>
-                        <li>✓ Mark questions for review</li>
-                        <li>✓ Track your progress and improve accuracy</li>
-                    </ul>
-                </motion.div>
+                        <h3
+                            className={`
+                                font-semibold mb-3
+                                ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
+                            `}
+                        >
+                            📊 Practice Features
+                        </h3>
+                        <ul
+                            className={`
+                                space-y-2 text-sm
+                                ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
+                            `}
+                        >
+                            <li>✓ Practice sessions with time tracking</li>
+                            <li>✓ Detailed solutions after completion</li>
+                            <li>✓ Mark questions for review</li>
+                            <li>✓ Track your progress and improve accuracy</li>
+                        </ul>
+                    </motion.div>
+                )}
             </div>
         </div>
     );
