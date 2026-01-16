@@ -244,6 +244,7 @@ The question should:
 - Present a short paragraph (3-5 sentences) derived from the semantic ideas
 - This paragraph should embody the authorial persona and logical flow
 - Ask for the best summary of the paragraph
+- There should be no mentionning of the article source or context
 
 ---
 
