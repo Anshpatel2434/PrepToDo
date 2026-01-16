@@ -282,8 +282,7 @@ export const dailyPracticeApi = createApi({
                     console.log('[DailyPracticeApi] User authenticated:', user.id);
 
                     // Get today's date range for filtering
-                    const today = new Date().toISOString().split('T')[0];
-                    const startOfToday = `${today}T00:00:00.000Z`;
+                    // const today = new Date().toISOString().split('T')[0];
 
                     // Calculate range for pagination
                     const offset = (page - 1) * limit;

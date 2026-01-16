@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MdNewspaper, MdExpandMore, MdExpandLess, MdOpenInNew, MdPerson, MdCalendarToday, MdLabel } from "react-icons/md";
+import { MdNewspaper, MdExpandMore, MdOpenInNew, MdPerson, MdCalendarToday, MdLabel } from "react-icons/md";
 import { useTheme } from "../../../context/ThemeContext";
 import type { Article } from "../../../types";
 
@@ -165,7 +165,7 @@ const ArticleInfoPanel: React.FC<ArticleInfoPanelProps> = ({ articles, isLoading
                                         {article.source_name && (
                                             <div className="flex items-center gap-2">
                                                 <MdNewspaper
-                                                    className={`w-4 h-4 flex-shrink-0 ${
+                                                    className={`w-4 h-4 shrink-0 ${
                                                         isDark ? "text-text-muted-dark" : "text-text-muted-light"
                                                     }`}
                                                 />
@@ -184,7 +184,7 @@ const ArticleInfoPanel: React.FC<ArticleInfoPanelProps> = ({ articles, isLoading
                                         {article.author && (
                                             <div className="flex items-center gap-2">
                                                 <MdPerson
-                                                    className={`w-4 h-4 flex-shrink-0 ${
+                                                    className={`w-4 h-4 shrink-0 ${
                                                         isDark ? "text-text-muted-dark" : "text-text-muted-light"
                                                     }`}
                                                 />
@@ -203,7 +203,7 @@ const ArticleInfoPanel: React.FC<ArticleInfoPanelProps> = ({ articles, isLoading
                                         {article.published_at && (
                                             <div className="flex items-center gap-2">
                                                 <MdCalendarToday
-                                                    className={`w-4 h-4 flex-shrink-0 ${
+                                                    className={`w-4 h-4 shrink-0 ${
                                                         isDark ? "text-text-muted-dark" : "text-text-muted-light"
                                                     }`}
                                                 />
@@ -222,7 +222,7 @@ const ArticleInfoPanel: React.FC<ArticleInfoPanelProps> = ({ articles, isLoading
                                         {article.genre && (
                                             <div className="flex items-center gap-2">
                                                 <MdLabel
-                                                    className={`w-4 h-4 flex-shrink-0 ${
+                                                    className={`w-4 h-4 shrink-0 ${
                                                         isDark ? "text-text-muted-dark" : "text-text-muted-light"
                                                     }`}
                                                 />

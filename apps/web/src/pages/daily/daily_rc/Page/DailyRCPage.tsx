@@ -11,7 +11,6 @@ import {
     selectViewMode,
     selectCurrentQuestionIndex,
     selectAttempts,
-    selectIsLastQuestion,
     selectCurrentQuestionId,
     selectProgressStats,
     selectSession,
@@ -21,7 +20,6 @@ import {
     initializeSession,
     clearResponse,
     goToNextQuestion,
-    goToPreviousQuestion,
     setViewMode,
     incrementElapsedTime,
     resetDailyPractice,
@@ -105,7 +103,6 @@ const DailyRCPage: React.FC = () => {
     const session = useSelector(selectSession);
     const elapsedTime = useSelector(selectElapsedTime);
     const startTime = useSelector(selectStartTime);
-    const isLastQuestion = useSelector(selectIsLastQuestion);
 
     // Toast logic for AI Insights
     const [showToast, setShowToast] = React.useState(false);

@@ -1,4 +1,4 @@
-import type { UserAnalytics, UserMetricProficiency } from "../../../types";
+import type { UserMetricProficiency } from "../../../types";
 
 export function transformRadarData(metrics: UserMetricProficiency[]) {
     return metrics.map((m) => ({
