@@ -8,14 +8,6 @@ import type {
     UUID,
 } from "../../../types";
 
-const DASHBOARD_DAYS_LOOKBACK = 30;
-
-function getDateDaysAgo(days: number): string {
-    const date = new Date();
-    date.setDate(date.getDate() - days);
-    return date.toISOString().split("T")[0];
-}
-
 export const dashboardApi = createApi({
     reducerPath: "dashboardApi",
     baseQuery: fakeBaseQuery(),

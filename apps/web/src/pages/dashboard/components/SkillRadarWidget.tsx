@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { MdInsights, MdTrendingUp, MdTrendingDown, MdTrendingFlat, MdArrowForward } from "react-icons/md";
+import { MdInsights,  MdArrowForward } from "react-icons/md";
 import {
     PolarAngleAxis,
     PolarGrid,
@@ -69,11 +69,6 @@ function CustomDot(props: any) {
     );
 }
 
-function getMetricDescription(metricKey: string): string {
-    const metric = coreMetricsDefinition.metrics.find(m => m.metric_key === metricKey);
-    return metric?.description || "No description available";
-}
-
 function getCognitiveFailureReason(metricKey: string): string {
     const steps = metricMappingJson.metrics[metricKey as keyof typeof metricMappingJson.metrics];
     if (!steps || !steps.reasoning_steps || steps.reasoning_steps.length === 0) {
@@ -136,14 +131,6 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
             color: isDark ? "#fafafa" : "#18181b",
         };
     }, [isDark]);
-
-    // Find cognitive gaps (metrics with proficiency < 65)
-    const cognitiveGaps = React.useMemo(() => {
-        return validCoreMetrics
-            .filter(m => m.proficiency_score < 65)
-      .sort((a, b) => a.proficiency_score - b.proficiency_score)
-       .slice(0, 3);
-    }, [validCoreMetrics]);
 
     const weakestMetrics = React.useMemo(() => {
         return [...validCoreMetrics]
