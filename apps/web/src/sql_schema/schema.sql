@@ -122,7 +122,10 @@ CREATE TABLE public.exam_papers (
   slot text,
   is_official boolean DEFAULT true,
   created_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT exam_papers_pkey PRIMARY KEY (id)
+  used_articles_id ARRAY,
+  genereted_by_user_id uuid,
+  CONSTRAINT exam_papers_pkey PRIMARY KEY (id),
+  CONSTRAINT exam_papers_genereted_by_user_id_fkey FOREIGN KEY (genereted_by_user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.feature_flags (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -354,8 +357,8 @@ CREATE TABLE public.questions (
   updated_at timestamp with time zone DEFAULT now(),
   paper_id uuid,
   CONSTRAINT questions_pkey PRIMARY KEY (id),
-  CONSTRAINT questions_passage_id_fkey FOREIGN KEY (passage_id) REFERENCES public.passages(id),
-  CONSTRAINT questions_paper_id_fkey FOREIGN KEY (paper_id) REFERENCES public.exam_papers(id)
+  CONSTRAINT questions_paper_id_fkey FOREIGN KEY (paper_id) REFERENCES public.exam_papers(id),
+  CONSTRAINT questions_passage_id_fkey FOREIGN KEY (passage_id) REFERENCES public.passages(id)
 );
 CREATE TABLE public.reasoning_steps (
   key text NOT NULL,
@@ -440,8 +443,7 @@ CREATE TABLE public.theory_chunks (
 );
 CREATE TABLE public.user_analytics (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  user_id uuid NOT NULL,
-  date date NOT NULL,
+  user_id uuid NOT NULL UNIQUE,
   minutes_practiced integer DEFAULT 0,
   questions_attempted integer DEFAULT 0,
   questions_correct integer DEFAULT 0,
@@ -458,6 +460,7 @@ CREATE TABLE public.user_analytics (
   words_reviewed integer DEFAULT 0,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  last_active_date date,
   CONSTRAINT user_analytics_pkey PRIMARY KEY (id),
   CONSTRAINT user_analytics_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.user_profiles(id)
 );
