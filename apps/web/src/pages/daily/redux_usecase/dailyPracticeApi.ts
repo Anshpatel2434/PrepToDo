@@ -730,20 +730,6 @@ export const dailyPracticeApi = createApi({
             queryFn: async ({ article_ids }) => {
                 console.log('[DailyPracticeApi] fetchArticlesByIds called with IDs:', article_ids);
                 try {
-                    // Step 1: Get current user
-                    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-                    if (userError || !user) {
-                        console.log('[DailyPracticeApi] User is not authenticated');
-                        return {
-                            error: {
-                                status: "UNAUTHORIZED",
-                                data: "User not authenticated",
-                            },
-                        };
-                    }
-
-                    console.log('[DailyPracticeApi] User authenticated:', user.id);
 
                     // If no article IDs provided, return empty array
                     if (!article_ids || article_ids.length === 0) {
