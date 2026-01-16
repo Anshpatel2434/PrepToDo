@@ -186,6 +186,8 @@ export const dailyPracticeApi = createApi({
                         };
                     }
 
+                    console.log("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ ", examInfo)
+
                     // Check if there's an exam for today
                     if (!examInfo || examInfo.length === 0) {
                         console.log('[DailyPracticeApi] No exam found for today');
@@ -279,12 +281,16 @@ export const dailyPracticeApi = createApi({
 
                     console.log('[DailyPracticeApi] User authenticated:', user.id);
 
-                    // Calculate range for pagination (skip the first (latest) exam and start from index 1)
+                    // Get today's date range for filtering
+                    const today = new Date().toISOString().split('T')[0];
+                    const startOfToday = `${today}T00:00:00.000Z`;
+
+                    // Calculate range for pagination
                     const offset = (page - 1) * limit;
                     const from = offset;
                     const to = from + limit - 1;
 
-                    // Step 2: Get previous daily practice exams with pagination
+                    // Step 2: Get previous daily practice exams with pagination, excluding today's exam
                     const { data: examInfo, error: examInfoError } = await supabase
                         .from("exam_papers")
                         .select("*")
@@ -301,11 +307,6 @@ export const dailyPracticeApi = createApi({
                             },
                         };
                     }
-                    // --- Filter out today's exam ---
-                    // const filteredExamInfo = examInfo?.filter(exam => {
-                    //     const examDate = exam.created_at; // Assuming 'created_at' is the field name
-                    //     return examDate < startOfToday || examDate > endOfToday;
-                    // });
 
                     console.log('[DailyPracticeApi] Fetched', examInfo?.length || 0, 'previous exams (excluding today) for page', page);
 

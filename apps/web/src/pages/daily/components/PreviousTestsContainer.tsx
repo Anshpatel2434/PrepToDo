@@ -34,7 +34,17 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
     };
 
     const isTodayExam = (examId: string) => {
-        return todayExamId === examId;
+        if (!todayExamId) return false;
+
+        // Find the exam in the list
+        const exam = previousTests?.find(e => e.id === examId);
+        if (!exam) return todayExamId === examId;
+
+        // Compare both exam ID and date to ensure it's actually today's exam
+        const today = new Date().toISOString().split('T')[0];
+        const examDate = new Date(exam.created_at).toISOString().split('T')[0];
+
+        return todayExamId === examId && examDate === today;
     };
 
     const getTestNumber = (index: number) => {
@@ -67,20 +77,17 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
             {/* Header */}
             <div className="flex items-center gap-3 mb-6">
                 <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                        isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"
-                    }`}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"
+                        }`}
                 >
                     <MdHistory
-                        className={`w-6 h-6 ${
-                            isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
-                        }`}
+                        className={`w-6 h-6 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                            }`}
                     />
                 </div>
                 <h2
-                    className={`text-2xl font-serif font-bold ${
-                        isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                    }`}
+                    className={`text-2xl font-serif font-bold ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                        }`}
                 >
                     Previous Daily Tests
                 </h2>
@@ -89,14 +96,13 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
             {/* Tests Container */}
             {previousTests && previousTests.length > 0 ? (
                 <div
-                    className={`rounded-2xl border-2 ${
-                        isDark
-                            ? "bg-bg-secondary-dark border-border-dark"
-                            : "bg-bg-secondary-light border-border-light"
-                    }`}
+                    className={`rounded-2xl border-2 ${isDark
+                        ? "bg-bg-secondary-dark border-border-dark"
+                        : "bg-bg-secondary-light border-border-light"
+                        }`}
                 >
                     {/* Test List */}
-                    <div className="divide-y divide-y-2">
+                    <div className="divide-y-2">
                         {previousTests.map((exam, index) => (
                             <motion.button
                                 key={exam.id}
@@ -107,19 +113,17 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
                                 className={`
                                     w-full px-6 py-4 flex items-center justify-between
                                     transition-all duration-200
-                                    ${
-                                        selectedExamId === exam.id
-                                            ? isDark
-                                                ? "bg-brand-primary-dark/20"
-                                                : "bg-brand-primary-light/20"
-                                            : isDark
+                                    ${selectedExamId === exam.id
+                                        ? isDark
+                                            ? "bg-brand-primary-dark/20"
+                                            : "bg-brand-primary-light/20"
+                                        : isDark
                                             ? "hover:bg-bg-tertiary-dark/50"
                                             : "hover:bg-bg-tertiary-light/50"
                                     }
-                                    ${
-                                        isTodayExam(exam.id)
-                                            ? "border-l-4 border-amber-500"
-                                            : ""
+                                    ${isTodayExam(exam.id)
+                                        ? "border-l-4 border-amber-500"
+                                        : ""
                                     }
                                 `}
                             >
@@ -127,10 +131,9 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
                                     <div
                                         className={`
                                             w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold
-                                            ${
-                                                isTodayExam(exam.id)
-                                                    ? "bg-amber-500 text-white"
-                                                    : isDark
+                                            ${isTodayExam(exam.id)
+                                                ? "bg-amber-500 text-white"
+                                                : isDark
                                                     ? "bg-bg-tertiary-dark text-text-primary-dark"
                                                     : "bg-bg-tertiary-light text-text-primary-light"
                                             }
@@ -140,20 +143,18 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
                                     </div>
                                     <div className="text-left">
                                         <h3
-                                            className={`font-semibold ${
-                                                isDark
-                                                    ? "text-text-primary-dark"
-                                                    : "text-text-primary-light"
-                                            }`}
+                                            className={`font-semibold ${isDark
+                                                ? "text-text-primary-dark"
+                                                : "text-text-primary-light"
+                                                }`}
                                         >
                                             Daily Test #{getTestNumber(index)}
                                         </h3>
                                         <p
-                                            className={`text-sm ${
-                                                isDark
-                                                    ? "text-text-secondary-dark"
-                                                    : "text-text-secondary-light"
-                                            }`}
+                                            className={`text-sm ${isDark
+                                                ? "text-text-secondary-dark"
+                                                : "text-text-secondary-light"
+                                                }`}
                                         >
                                             {formatDate(exam.created_at)}
                                         </p>
@@ -166,11 +167,10 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
                                         </span>
                                     )}
                                     <MdHistory
-                                        className={`w-5 h-5 ${
-                                            isDark
-                                                ? "text-text-secondary-dark"
-                                                : "text-text-secondary-light"
-                                        }`}
+                                        className={`w-5 h-5 ${isDark
+                                            ? "text-text-secondary-dark"
+                                            : "text-text-secondary-light"
+                                            }`}
                                     />
                                 </div>
                             </motion.button>
@@ -179,14 +179,12 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
 
                     {/* Pagination Controls */}
                     <div
-                        className={`px-6 py-4 border-t-2 flex items-center justify-between ${
-                            isDark ? "border-border-dark" : "border-border-light"
-                        }`}
+                        className={`px-6 py-4 border-t-2 flex items-center justify-between ${isDark ? "border-border-dark" : "border-border-light"
+                            }`}
                     >
                         <span
-                            className={`text-sm ${
-                                isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
-                            }`}
+                            className={`text-sm ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                                }`}
                         >
                             Page {currentPage}
                         </span>
@@ -198,17 +196,15 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
                                 whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
                                 className={`
                                     px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-200
-                                    ${
-                                        currentPage === 1
-                                            ? "opacity-50 cursor-not-allowed"
-                                            : isDark
+                                    ${currentPage === 1
+                                        ? "opacity-50 cursor-not-allowed"
+                                        : isDark
                                             ? "hover:bg-bg-tertiary-dark"
                                             : "hover:bg-bg-tertiary-light"
                                     }
-                                    ${
-                                        isDark
-                                            ? "bg-bg-secondary-dark text-text-primary-dark border-border-dark border-2"
-                                            : "bg-bg-secondary-light text-text-primary-light border-border-light border-2"
+                                    ${isDark
+                                        ? "bg-bg-secondary-dark text-text-primary-dark border-border-dark border-2"
+                                        : "bg-bg-secondary-light text-text-primary-light border-border-light border-2"
                                     }
                                 `}
                             >
@@ -222,17 +218,15 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
                                 whileTap={{ scale: previousTests.length < itemsPerPage ? 1 : 0.95 }}
                                 className={`
                                     px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-200
-                                    ${
-                                        previousTests.length < itemsPerPage
-                                            ? "opacity-50 cursor-not-allowed"
-                                            : isDark
+                                    ${previousTests.length < itemsPerPage
+                                        ? "opacity-50 cursor-not-allowed"
+                                        : isDark
                                             ? "hover:bg-bg-tertiary-dark"
                                             : "hover:bg-bg-tertiary-light"
                                     }
-                                    ${
-                                        isDark
-                                            ? "bg-bg-secondary-dark text-text-primary-dark border-border-dark border-2"
-                                            : "bg-bg-secondary-light text-text-primary-light border-border-light border-2"
+                                    ${isDark
+                                        ? "bg-bg-secondary-dark text-text-primary-dark border-border-dark border-2"
+                                        : "bg-bg-secondary-light text-text-primary-light border-border-light border-2"
                                     }
                                 `}
                             >
@@ -250,21 +244,18 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
                     `}
                 >
                     <MdHistory
-                        className={`w-16 h-16 mx-auto mb-4 ${
-                            isDark ? "text-text-muted-dark" : "text-text-muted-light"
-                        }`}
+                        className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                            }`}
                     />
                     <p
-                        className={`text-lg font-medium mb-2 ${
-                            isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                        }`}
+                        className={`text-lg font-medium mb-2 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                            }`}
                     >
                         No Previous Tests
                     </p>
                     <p
-                        className={`text-sm ${
-                            isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
-                        }`}
+                        className={`text-sm ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                            }`}
                     >
                         Complete today's challenge to see it here!
                     </p>

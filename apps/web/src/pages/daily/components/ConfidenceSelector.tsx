@@ -35,14 +35,12 @@ export const ConfidenceSelector: React.FC<ConfidenceSelectorProps> = ({
 
     // Get confidence from current attempt (pending or saved)
     const currentConfidence = currentAttempt?.confidence_level || 0;
-    const [confidenceLevel, setConfidenceLevel] = useState<number>(currentConfidence);
+    const [confidenceLevel, setConfidenceLevel] = useState<number>(0);
 
-    // Update local state when Redux state changes
+    // Reset confidence when question changes or update from Redux state
     React.useEffect(() => {
-        if (currentConfidence > 0) {
-            setConfidenceLevel(currentConfidence);
-        }
-    }, [currentConfidence]);
+        setConfidenceLevel(currentConfidence);
+    }, [currentQuestionId, currentConfidence]);
 
     const options = [
         {
@@ -84,8 +82,8 @@ export const ConfidenceSelector: React.FC<ConfidenceSelectorProps> = ({
         }
 
         return `${baseStyles} ${isDark
-                ? "bg-bg-tertiary-dark border-border-dark text-text-muted-dark"
-                : "bg-bg-tertiary-light border-border-light text-text-muted-light"
+            ? "bg-bg-tertiary-dark border-border-dark text-text-muted-dark"
+            : "bg-bg-tertiary-light border-border-light text-text-muted-light"
             } hover:border-brand-primary-${isDark ? "dark" : "light"}`;
     };
 

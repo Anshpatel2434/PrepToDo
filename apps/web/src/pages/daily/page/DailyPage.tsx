@@ -61,7 +61,13 @@ const DailyPage: React.FC = () => {
     };
 
     const isTodayExam = (exam: Exam) => {
-        return todayData?.examInfo?.id === exam.id;
+        if (!todayData?.examInfo) return false;
+
+        // Compare both exam ID and date to ensure it's actually today's exam
+        const today = new Date().toISOString().split('T')[0];
+        const examDate = new Date(exam.created_at).toISOString().split('T')[0];
+
+        return todayData.examInfo.id === exam.id && examDate === today;
     };
 
     // Handle exam selection with toast notification for previous exams
