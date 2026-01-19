@@ -1,90 +1,38 @@
 // formatOutputForDB.ts
-import { Article, Exam, Passage, Question } from "../../schemas/types";
-import { v4 as uuidv4 } from 'uuid';
-
-interface FormatOutputParams {
-    passageData: Passage;
-    rcQuestions: Question[];
-    vaQuestions: Question[];
-    genreData: any;
-    articleData: Article;
-}
+import { DataManager } from "./dataManager";
+import { Exam, Passage, Question } from "../schemas/types";
 
 /**
- * Formats output for database upload.
- * Returns 3 data sets: Exam, Passage, Questions
+ * Simplified formatter that works with DataManager
+ * No ID generation - just formats data that's already been created
  */
-export function formatOutputForDB(params: FormatOutputParams): {
+export function formatOutputForDB(
+    dataManager: DataManager,
+    genreData: any
+): {
     exam: Exam;
     passage: Passage;
     questions: Question[];
     genreData: any;
 } {
     try {
-        const { passageData, rcQuestions, vaQuestions, genreData, articleData } = params;
-        const now = new Date().toISOString();
-        const currentYear = new Date().getFullYear();
+        // Get all data from DataManager (IDs already assigned)
+        const exam = dataManager.getExamForDB();
+        const passage = dataManager.getPassageForDB();
+        const questions = dataManager.getQuestionsForDB();
 
-        // 1. Create Exam data
-        const exam: Exam = {
-            id: uuidv4(),
-            name: "Daily Practice",
-            year: currentYear,
-            exam_type: "CAT",
-            slot: null,
-            is_official: false,
-            created_at: now,
-            used_articles_id: [articleData.id],
-        };
+        const stats = dataManager.getStats();
 
-        // 2. Create Passage data
-        const passage: Passage = {
-            id: uuidv4(),
-            title: passageData.title,
-            content: passageData.content,
-            word_count: passageData.word_count,
-            genre: genreData.name,
-            difficulty: passageData.difficulty,
-            source: passageData.source,
-            paper_id: exam.id, // Link passage to exam
-            is_daily_pick: true,
-            is_featured: false,
-            is_archived: false,
-            created_at: now,
-            updated_at: now,
-        };
-
-        // 3. Process all questions
-        const allQuestions: Question[] = [];
-
-        // Add RC questions (tag to passage)
-        const rcQuestionsWithPassage = rcQuestions.map(q => ({
-            ...q,
-            id: uuidv4(),
-            passage_id: passage.id,
-            paper_id: exam.id
-        }));
-        allQuestions.push(...rcQuestionsWithPassage);
-
-        // Add VA questions (no passage, different question types)
-        const vaQuestionsNoPassage = vaQuestions.map(q => ({
-            ...q,
-            id: uuidv4(),
-            passage_id: null, 
-            paper_id: exam.id
-        }));
-        allQuestions.push(...vaQuestionsNoPassage);
-
-        console.log(`✅ [Output Formatter] Created data for DB upload`);
-        console.log(`   - Exam: ${exam.name} (${currentYear})`);
+        console.log(`✅ [Output Formatter] Formatted data for DB upload`);
+        console.log(`   - Exam: ${exam.name} (${exam.year})`);
         console.log(`   - Passage: ${passage.word_count} words, ${passage.genre}`);
-        console.log(`   - Questions: ${allQuestions.length} total (RC: ${rcQuestions.length}, VA: ${vaQuestions.length})`);
+        console.log(`   - Questions: ${stats.totalQuestions} total (RC: ${stats.rcQuestions}, VA: ${stats.vaQuestions})`);
 
         return {
             exam,
             passage,
-            questions: allQuestions,
-            genreData
+            questions,
+            genreData,
         };
     } catch (error) {
         console.error("❌ [Output Formatter] Error formatting output:", error);

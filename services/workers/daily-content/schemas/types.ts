@@ -1,5 +1,5 @@
 // types.ts
-import {z} from "zod"
+import { z } from "zod"
 
 export const UUIDSchema = z.string().uuid();
 export const TimestampSchema = z.string(); // ISO string from Supabase
@@ -100,7 +100,8 @@ const JumbledSentencesSchema = z.object({
 
 export const QuestionSchema = z.object({
     id: UUIDSchema,
-    passage_id: UUIDSchema,
+    passage_id: UUIDSchema.nullish(), // Made nullable for VA questions
+    paper_id: UUIDSchema.nullish(), // Added missing paper_id field
     question_text: z.string(),
     question_type: z.enum([
         "rc_question",

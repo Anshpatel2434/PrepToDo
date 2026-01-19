@@ -1,5 +1,6 @@
 import OpenAI from "openai";
-import { AuthorialPersona, SemanticIdeas } from "./extractSemanticIdeas";
+import { AuthorialPersona, SemanticIdeas } from "../../schemas/types";
+import { CostTracker } from "../utils/CostTracker";
 
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
@@ -25,19 +26,21 @@ const MODEL = "gpt-4o-mini";
  * - Syntactic friction: semicolons, em-dashes, qualifying clauses
  * - No neat conclusions, leave conceptual tension unresolved
  */
-export async function generatePassage(params: {
-    // semanticIdeas: SemanticIdeas;
-    semanticIdeas: SemanticIdeas;
-    authorialPersona: AuthorialPersona;
-    referencePassages: string[]; // exactly 5 passages
-}) {
+export async function generatePassage(
+    params: {
+        semanticIdeas: SemanticIdeas;
+        authorialPersona: AuthorialPersona;
+        referencePassages: string[]; // exactly 3 passages
+    },
+    costTracker?: CostTracker
+) {
     const { semanticIdeas, authorialPersona, referencePassages } = params;
 
     console.log(`✍️ [Passage Gen] Starting passage generation (referencePassages=${referencePassages.length})`);
 
-    if (referencePassages.length !== 5) {
+    if (referencePassages.length !== 3) {
         throw new Error(
-            `generatePassage expects exactly 5 reference passages, received ${referencePassages.length}`
+            `generatePassage expects exactly 3 reference passages, received ${referencePassages.length}`
         );
     }
 
@@ -125,14 +128,6 @@ ${referencePassages[1]}
 ---
 3.
 ${referencePassages[2]}
-
----
-4.
-${referencePassages[3]}
-
----
-5.
-${referencePassages[4]}
 </REFERENCE_PASSAGES>
 
 ---
@@ -314,6 +309,15 @@ If not, expand the analysis until it is.
 
     if (!passage) {
         throw new Error("Failed to generate passage from LLM");
+    }
+
+    // Log token usage to cost tracker
+    if (costTracker && completion.usage) {
+        costTracker.logCall(
+            "generatePassage",
+            completion.usage.prompt_tokens,
+            completion.usage.completion_tokens
+        );
     }
 
     console.log(`✅ [Passage Gen] Passage generated (length=${passage.length} chars)`);

@@ -4,6 +4,7 @@ import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import { Question, QuestionSchema, Passage, SemanticIdeas, AuthorialPersona } from "../../schemas/types";
 import { user_core_metrics_definition_v1 } from "../../../../config/user_core_metrics_definition_v1";
+import { CostTracker } from "../utils/CostTracker";
 
 // Simple UUID generator to avoid additional dependencies
 function generateUUID(): string {
@@ -46,7 +47,10 @@ const VAQuestionsResponseSchema = z.object({
 /**
  * Generates all VA question types based on distribution specified.
  */
-export async function generateVAQuestions(params: GenerateVAQuestionsParams) {
+export async function generateVAQuestions(
+    params: GenerateVAQuestionsParams,
+    costTracker?: CostTracker
+) {
     try {
         const { semanticIdeas, authorialPersona, referenceData, passageText, questionDistribution, personalization } = params;
 
@@ -107,7 +111,7 @@ export async function generateVAQuestions(params: GenerateVAQuestionsParams) {
                     passageText,
                     count: distribution.para_summary,
                     personalization
-                });
+                }, costTracker);
                 allQuestions.push(...summaryQuestions);
                 console.log(`✅ [VA Questions] Generated ${summaryQuestions.length} para_summary questions`);
             } catch (error) {
@@ -125,7 +129,7 @@ export async function generateVAQuestions(params: GenerateVAQuestionsParams) {
                     passageText,
                     count: distribution.para_completion,
                     personalization
-                });
+                }, costTracker);
                 allQuestions.push(...completionQuestions);
                 console.log(`✅ [VA Questions] Generated ${completionQuestions.length} para_completion questions`);
             } catch (error) {
@@ -143,7 +147,7 @@ export async function generateVAQuestions(params: GenerateVAQuestionsParams) {
                     passageText,
                     count: distribution.para_jumble,
                     personalization
-                });
+                }, costTracker);
                 allQuestions.push(...jumbleQuestions);
                 console.log(`✅ [VA Questions] Generated ${jumbleQuestions.length} para_jumble questions`);
             } catch (error) {
@@ -161,7 +165,7 @@ export async function generateVAQuestions(params: GenerateVAQuestionsParams) {
                     passageText,
                     count: distribution.odd_one_out,
                     personalization
-                });
+                }, costTracker);
                 allQuestions.push(...oddOneOutQuestions);
                 console.log(`✅ [VA Questions] Generated ${oddOneOutQuestions.length} odd_one_out questions`);
             } catch (error) {
@@ -193,14 +197,17 @@ export async function generateVAQuestions(params: GenerateVAQuestionsParams) {
 /**
  * Generates para_summary questions
  */
-async function generateParaSummaryQuestions(params: {
-    semanticIdeas: SemanticIdeas;
-    authorialPersona: AuthorialPersona;
-    referenceData: ReferenceDataSchema[];
-    passageText: string;
-    count: number;
-    personalization?: any;
-}) {
+async function generateParaSummaryQuestions(
+    params: {
+        semanticIdeas: SemanticIdeas;
+        authorialPersona: AuthorialPersona;
+        referenceData: ReferenceDataSchema[];
+        passageText: string;
+        count: number;
+        personalization?: any;
+    },
+    costTracker?: CostTracker
+) {
     const { semanticIdeas, authorialPersona, referenceData, passageText, count, personalization } = params;
     const now = new Date().toISOString();
 
@@ -373,6 +380,15 @@ IMPORTANT:
         throw new Error("Invalid para-summary question generation output");
     }
 
+    // Log token usage to cost tracker
+    if (costTracker && completion.usage) {
+        costTracker.logCall(
+            "generateVAQuestions[para_summary]",
+            completion.usage.prompt_tokens,
+            completion.usage.completion_tokens
+        );
+    }
+
     console.log(`✅ [Para Summary] Generated ${parsed.questions.length} questions`);
 
     return parsed.questions.map(q => ({
@@ -385,14 +401,17 @@ IMPORTANT:
 /**
  * Generates para_completion questions
  */
-async function generateParaCompletionQuestions(params: {
-    semanticIdeas: SemanticIdeas;
-    authorialPersona: AuthorialPersona;
-    referenceData: ReferenceDataSchema[];
-    passageText: string;
-    count: number;
-    personalization?: any;
-}) {
+async function generateParaCompletionQuestions(
+    params: {
+        semanticIdeas: SemanticIdeas;
+        authorialPersona: AuthorialPersona;
+        referenceData: ReferenceDataSchema[];
+        passageText: string;
+        count: number;
+        personalization?: any;
+    },
+    costTracker?: CostTracker
+) {
     const { semanticIdeas, authorialPersona, referenceData, passageText, count, personalization } = params;
     const now = new Date().toISOString();
 
@@ -492,7 +511,7 @@ The question text should be:
 "There is a sentence that is missing in the paragraph below. Look at the paragraph and decide in which blank (option 1, 2, 3, or 4) the following sentence would best fit.\nSentence: [The missing sentence]\nParagraph: [The paragraph with blanks]"
 
     Additional:  questions should mix between these categories.
-        ${ personalizationInstructions }
+        ${personalizationInstructions}
 ---
 
 ## OPTION DESIGN RULES
@@ -561,20 +580,32 @@ IMPORTANT:
         throw new Error("Invalid para-completion question generation output");
     }
 
+    // Log token usage to cost tracker
+    if (costTracker && completion.usage) {
+        costTracker.logCall(
+            "generateVAQuestions[para_completion]",
+            completion.usage.prompt_tokens,
+            completion.usage.completion_tokens
+        );
+    }
+
     return parsed.questions.map(q => ({ ...q, created_at: now, updated_at: now }));
 }
 
 /**
  * Generates para_jumble questions
  */
-async function generateParaJumbleQuestions(params: {
-    semanticIdeas: SemanticIdeas;
-    authorialPersona: AuthorialPersona;
-    referenceData: ReferenceDataSchema[];
-    passageText: string;
-    count: number;
-    personalization?: any;
-}) {
+async function generateParaJumbleQuestions(
+    params: {
+        semanticIdeas: SemanticIdeas;
+        authorialPersona: AuthorialPersona;
+        referenceData: ReferenceDataSchema[];
+        passageText: string;
+        count: number;
+        personalization?: any;
+    },
+    costTracker?: CostTracker
+) {
     const { semanticIdeas, authorialPersona, referenceData, count, personalization } = params;
     const now = new Date().toISOString();
 
@@ -688,7 +719,7 @@ The question should:
 - Create "false starts" that seem logical but lead to dead ends
 
     Additional:  questions should mix between these categories.
-        ${ personalizationInstructions }
+        ${personalizationInstructions}
 
 ---
 
@@ -754,20 +785,32 @@ IMPORTANT:
         throw new Error("Invalid para-jumble question generation output");
     }
 
+    // Log token usage to cost tracker
+    if (costTracker && completion.usage) {
+        costTracker.logCall(
+            "generateVAQuestions[para_jumble]",
+            completion.usage.prompt_tokens,
+            completion.usage.completion_tokens
+        );
+    }
+
     return parsed.questions.map(q => ({ ...q, created_at: now, updated_at: now }));
 }
 
 /**
  * Generates odd_one_out questions
  */
-async function generateOddOneOutQuestions(params: {
-    semanticIdeas: SemanticIdeas;
-    authorialPersona: AuthorialPersona;
-    referenceData: ReferenceDataSchema[];
-    passageText: string;
-    count: number;
-    personalization?: any;
-}) {
+async function generateOddOneOutQuestions(
+    params: {
+        semanticIdeas: SemanticIdeas;
+        authorialPersona: AuthorialPersona;
+        referenceData: ReferenceDataSchema[];
+        passageText: string;
+        count: number;
+        personalization?: any;
+    },
+    costTracker?: CostTracker
+) {
     const { semanticIdeas, authorialPersona, referenceData, count, personalization } = params;
     const now = new Date().toISOString();
 
@@ -893,7 +936,7 @@ Odd one out (correct answer):
 
 
     Additional:  questions should mix between these categories.
-        ${ personalizationInstructions }
+        ${personalizationInstructions}
 
 ---
 
@@ -956,7 +999,16 @@ IMPORTANT:
     const parsed = completion.choices[0].message.parsed;
 
     if (!parsed || parsed.questions.length === 0) {
-        throw new Error("Invalid odd_one_out question generation output");
+        throw new Error("Invalid odd-one-out question generation output");
+    }
+
+    // Log token usage to cost tracker
+    if (costTracker && completion.usage) {
+        costTracker.logCall(
+            "generateVAQuestions[odd_one_out]",
+            completion.usage.prompt_tokens,
+            completion.usage.completion_tokens
+        );
     }
 
     return parsed.questions.map(q => ({ ...q, created_at: now, updated_at: now }));

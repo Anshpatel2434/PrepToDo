@@ -94,7 +94,6 @@ async function updateGenreUsageCount(passages: Passage[]): Promise<void> {
                 .from('genres')
                 .update({
                     custom_exam_usage_count: (genreData.custom_exam_usage_count || 0) + 1,
-                    total_usage_count: (genreData.daily_usage_count || 0) + (genreData.custom_exam_usage_count || 0) + 1,
                     last_used_custom_exam_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
                 })

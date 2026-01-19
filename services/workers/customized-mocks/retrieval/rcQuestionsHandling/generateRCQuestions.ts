@@ -4,6 +4,7 @@ import { z } from "zod";
 import { Passage, Question, QuestionSchema } from "../../schemas/types";
 import { user_core_metrics_definition_v1 } from "../../../../config/user_core_metrics_definition_v1";
 import { v4 as uuidv4 } from 'uuid';
+import { CostTracker } from "../utils/CostTracker";
 
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
@@ -61,15 +62,18 @@ function ensureDifficultyVariety(questions: Question[], questionCount: number): 
     return questions;
 }
 
-export async function generateRCQuestions(params: {
-    passageData: any;
-    referenceData: ReferenceDataSchema[];
-    questionCount: number;
-    personalization?: {
-        targetMetrics?: string[];
-        weakAreas?: string[];
-    };
-}) {
+export async function generateRCQuestions(
+    params: {
+        passageData: any;
+        referenceData: ReferenceDataSchema[];
+        questionCount: number;
+        personalization?: {
+            targetMetrics?: string[];
+            weakAreas?: string[];
+        };
+    },
+    costTracker?: CostTracker
+) {
     const { passageData, referenceData, questionCount, personalization } = params;
 
     console.log(`🧩 [RC Questions] Starting generation (${questionCount} questions)`);
@@ -119,7 +123,7 @@ USER:
 Your task is to generate CAT-style RC questions for the NEW passage.
 
 You are given REFERENCE MATERIAL from actual CAT papers (PYQs):
-- Three past CAT passages with their questions
+- Two past CAT passages with their questions
 
 These references are your training data.
 You must ANALYZE them to understand:
@@ -149,7 +153,7 @@ B) Inference / suggestion (evidence exists, but answer is not directly stated)
 
 C) Information/data-based (answer is in the passage, but may need careful interpretation)
 - The author is likely to agree with all EXCEPT
-- Reason why something is ineffective
+- Reason why something is ineffect ive
 - A specific factual/argument-detail check (not a verbatim scan)
 
 RULE:
@@ -169,11 +173,6 @@ PASSAGE 2 + QUESTIONS:
 ${referenceData[1].passage.content}
 Questions:
 ${JSON.stringify(referenceData[1].questions.slice(0, 4), null, 2)}
-
-PASSAGE 3 + QUESTIONS:
-${referenceData[2].passage.content}
-Questions:
-${JSON.stringify(referenceData[2].questions.slice(0, 4), null, 2)}
 
 ANALYSIS FOCUS:
 - Question wording patterns
@@ -308,6 +307,15 @@ IMPORTANT:
 
     if (!parsed || parsed.questions.length !== questionCount) {
         throw new Error("Invalid RC question generation output");
+    }
+
+    // Log token usage to cost tracker
+    if (costTracker && completion.usage) {
+        costTracker.logCall(
+            "generateRCQuestions",
+            completion.usage.prompt_tokens,
+            completion.usage.completion_tokens
+        );
     }
 
     console.log(`✅ [RC Questions] Generated ${parsed.questions.length} questions`);

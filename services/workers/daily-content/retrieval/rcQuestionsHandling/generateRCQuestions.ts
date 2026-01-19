@@ -3,6 +3,7 @@ import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import { Passage, Question, QuestionSchema } from "../../schemas/types";
 import { user_core_metrics_definition_v1 } from "../../../../config/user_core_metrics_definition_v1";
+import { CostTracker } from "../utils/CostTracker";
 
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
@@ -76,18 +77,21 @@ function ensureDifficultyVariety(questions: Question[], questionCount: number): 
 
 // Simple UUID generator
 function generateUUID(): string {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         const r = Math.random() * 16 | 0;
         const v = c === 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
     });
 }
 
-export async function generateRCQuestions(params: {
-    passageText: string;
-    referenceData: ReferenceDataSchema[];
-    questionCount: number;
-}) {
+export async function generateRCQuestions(
+    params: {
+        passageText: string;
+        referenceData: ReferenceDataSchema[];
+        questionCount: number;
+    },
+    costTracker?: CostTracker
+) {
     const { passageText, referenceData, questionCount } = params;
 
     console.log(`🧩 [RC Questions] Starting generation (${questionCount} questions)`);
@@ -110,7 +114,7 @@ USER:
 Your task is to generate CAT-style RC questions for the NEW passage.
 
 You are given REFERENCE MATERIAL from actual CAT papers (PYQs):
-- Three past CAT passages with their questions
+- Two past CAT passages with their questions
 
 These references are your training data.
 You must ANALYZE them to understand:
@@ -160,11 +164,6 @@ PASSAGE 2 + QUESTIONS:
 ${referenceData[1].passage.content}
 Questions:
 ${JSON.stringify(referenceData[1].questions.slice(0, 4), null, 2)}
-
-PASSAGE 3 + QUESTIONS:
-${referenceData[2].passage.content}
-Questions:
-${JSON.stringify(referenceData[2].questions.slice(0, 4), null, 2)}
 
 ANALYSIS FOCUS:
 - Question wording patterns
@@ -295,6 +294,15 @@ IMPORTANT:
 
     if (!parsed || parsed.questions.length !== questionCount) {
         throw new Error("Invalid RC question generation output");
+    }
+
+    // Log token usage to cost tracker
+    if (costTracker && completion.usage) {
+        costTracker.logCall(
+            "generateRCQuestions",
+            completion.usage.prompt_tokens,
+            completion.usage.completion_tokens
+        );
     }
 
     // const now = new Date().toISOString();

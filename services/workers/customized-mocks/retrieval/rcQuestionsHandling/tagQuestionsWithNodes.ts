@@ -93,5 +93,25 @@ Return STRICT JSON only.
 
     console.log(`✅ [Metric Tagging] Tags generated for ${parsed.questionsTagged.length} questions`);
 
+    // Validate that we got tags for ALL questions
+    if (parsed.questionsTagged.length !== questions.length) {
+        console.warn(`⚠️ [Metric Tagging] Expected ${questions.length} tagged questions, got ${parsed.questionsTagged.length}`);
+
+        // Find which questions are missing tags
+        const taggedIds = new Set(parsed.questionsTagged.map(q => q.question_id));
+        const missingQuestions = questions.filter(q => !taggedIds.has(q.id));
+
+        console.warn(`⚠️ [Metric Tagging] Missing tags for ${missingQuestions.length} questions:`,
+            missingQuestions.map(q => q.id));
+
+        // Add default tags for missing questions
+        const defaultTags = missingQuestions.map(q => ({
+            question_id: q.id,
+            metric_keys: ["inference", "critical_reasoning"] // default fallback metrics
+        }));
+
+        return [...parsed.questionsTagged, ...defaultTags];
+    }
+
     return parsed.questionsTagged;
 }

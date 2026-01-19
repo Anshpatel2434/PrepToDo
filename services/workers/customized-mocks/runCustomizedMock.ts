@@ -5,23 +5,24 @@ import { generateEmbedding } from "./retrieval/generateEmbedding";
 import { generatePassage } from "./retrieval/passageHandling/generatePassage";
 import { searchPassageAndQuestionEmbeddings } from "./retrieval/searchPassageAndQuestionEmbeddings";
 import { fetchArticleForUsage } from "./retrieval/articleHandling/fetchArticleForUsage";
-import { evaluateCATLikeness } from "./retrieval/passageHandling/evaluateCATLikeness";
-import { sharpenToCATStyle } from "./retrieval/passageHandling/sharpenToCATStyle";
 import { generateRCQuestions } from "./retrieval/rcQuestionsHandling/generateRCQuestions";
 import { selectCorrectAnswers } from "./retrieval/rcQuestionsHandling/selectCorrectAnswers";
 import { fetchNodes } from "./graph/fetchNodes";
 import { tagQuestionsWithNodes } from "./retrieval/rcQuestionsHandling/tagQuestionsWithNodes";
 import { getQuestionGraphContext } from "./graph/createReasoningGraphContext";
-import { generateRationalesWithEdges } from "./retrieval/rcQuestionsHandling/generateRationaleWithEdges";
+import { generateBatchRCRationales } from "./retrieval/rcQuestionsHandling/generateBatchRCRationales";
 
 // VA specific imports
 import { generateVAQuestions } from "./retrieval/vaQuestionsHandling/generateVAQuestions";
 import { selectVAAnswers } from "./retrieval/vaQuestionsHandling/selectVAAnswers";
 import { tagVAQuestionsWithNodes } from "./retrieval/vaQuestionsHandling/tagVAQuestionsWithNodes";
-import { generateVARationalesWithEdges } from "./retrieval/vaQuestionsHandling/generateVARationales";
+import { generateBatchVARationales } from "./retrieval/vaQuestionsHandling/generateBatchVARationales";
 import { formatOutputForDB, generateOutputReport, validateOutputForDB } from "./retrieval/formatOutputForDB";
 import { saveAllDataToDB } from "./retrieval/saveAllDataToDB";
 import { CustomizedMockRequest, CustomizedMockResult } from "./schemas/types";
+
+// Cost tracking
+import { CostTracker } from "./retrieval/utils/CostTracker";
 
 // NEW: Import DataManager and EntityBuilder
 import { DataManager } from "./retrieval/dataManager";
@@ -57,6 +58,10 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
         // Initialize DataManager - central source of truth for all IDs
         const dataManager = new DataManager();
         console.log(`✅ [DataManager] Initialized with Exam ID: ${dataManager.getExamId()}`);
+
+        // Initialize Cost Tracker (Strategy 14)
+        const costTracker = new CostTracker();
+        console.log("💰 [CostTracker] Initialized for monitoring AI costs");
 
         // --- PHASE 1: PREPARATION & RETRIEVAL ---
 
@@ -103,7 +108,8 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
         // Generate embeddings and fetch PYQ references ONCE
         console.log(`\n🧠 [Step 3/X] Generating embedding and fetching PYQ references`);
         const embedding = await generateEmbedding(genres.join(" "));
-        const matches = await searchPassageAndQuestionEmbeddings(embedding, 5);
+        // Strategy 6: Reduce from 5 to 3 references
+        const matches = await searchPassageAndQuestionEmbeddings(embedding, 3);
 
         // Fetch full data for matches
         const passages = await fetchPassagesData(matches.passages.map(m => m.passage_id));
@@ -114,13 +120,15 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
         const passagesContent = passages.map(({ content }) => content);
 
         // Format reference data for RC (Questions linked to specific passages)
-        const referenceDataRC = passages.slice(0, 3).map(p => ({
+        // Strategy 6: Reduce from 3 to 2 references
+        const referenceDataRC = passages.slice(0, 2).map(p => ({
             passage: p,
             questions: questions.filter(q => q.passage_id === p.id)
         }));
 
         // Format reference data for VA (Standalone questions/PYQs)
-        const referenceDataVA = passages.slice(0, 3).map(p => ({
+        // Strategy 6: Reduce from 3 to 2 references
+        const referenceDataVA = passages.slice(0, 2).map(p => ({
             passage: p,
             questions: questions.filter(q => q.passage_id === null || q.passage_id === undefined)
         }));
@@ -151,22 +159,11 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
                     difficultyTarget: difficulty_target,
                     weakAreas: weak_areas_to_address,
                 },
-            });
-
-            // Evaluate CAT-likeness
-            console.log(`   📊 [Passage ${i + 1}] Evaluating CAT-likeness`);
-            const evaluation = await evaluateCATLikeness(draftPassage);
-            console.log(`   📊 [Passage ${i + 1}] CAT-likeness score: ${evaluation.overall_score}`);
-
-            console.log(`   ⚡ [Passage ${i + 1}] Sharpening passage (score: ${evaluation.overall_score})`);
-            const improvedPassageData = await sharpenToCATStyle({
-                passage: draftPassage,
-                deficiencies: evaluation.key_deficiencies,
-            });
+            }, costTracker);
 
             // Register passage in DataManager (this assigns ID automatically)
             const passageId = createPassage(dataManager, {
-                content: improvedPassageData.content,
+                content: draftPassage,
                 genre: genre,
                 articleId: articleMeta.id,
                 articleSource: articleMeta.source_name,
@@ -174,7 +171,7 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
 
             passageIds.push(passageId);
 
-            const wordCount = improvedPassageData.content.split(/\s+/).length;
+            const wordCount = draftPassage.split(/\s+/).length;
             console.log(`   ✅ [Passage ${i + 1}] Created with ID: ${passageId.substring(0, 8)}... (${wordCount} words)`);
         }
 
@@ -204,7 +201,7 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
                         targetMetrics: target_metrics,
                         weakAreas: weak_areas_to_address,
                     },
-                });
+                }, costTracker);
 
                 // Register questions in DataManager
                 const questionIds = createRCQuestions(dataManager, passageId, rcQuestions);
@@ -242,7 +239,7 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
                 targetMetrics: target_metrics,
                 weakAreas: weak_areas_to_address,
             },
-        });
+        }, costTracker);
 
         createVAQuestions(dataManager, vaQuestionsSummary);
 
@@ -262,7 +259,7 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
                 targetMetrics: target_metrics,
                 weakAreas: weak_areas_to_address,
             },
-        });
+        }, costTracker);
 
         createVAQuestions(dataManager, vaQuestionsParaCompletion);
 
@@ -282,7 +279,7 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
                 targetMetrics: target_metrics,
                 weakAreas: weak_areas_to_address,
             },
-        });
+        }, costTracker);
 
         createVAQuestions(dataManager, vaQuestionsParaJumble);
 
@@ -302,7 +299,7 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
                 targetMetrics: target_metrics,
                 weakAreas: weak_areas_to_address,
             },
-        });
+        }, costTracker);
 
         createVAQuestions(dataManager, vaQuestionsOddOneOut);
 
@@ -360,8 +357,11 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
         const updatedVAQuestions = getQuestionsForProcessing(dataManager).filter(q => q.passage_id === null);
 
         // Tag RC questions
+        // Note: For multi-passage scenarios, we concatenate all passage texts for tagging
+        // This ensures questions from all passages can be properly tagged
+        const allPassageTexts = dataManager.getPassagesForDB("").map(p => p.content).join("\n\n---\n\n");
         const rcTagged = await tagQuestionsWithNodes({
-            passageText: dataManager.getPassagesForDB("")[0]?.content || "",
+            passageText: allPassageTexts,
             questions: updatedRCQuestions,
         });
 
@@ -381,12 +381,12 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
             const filteredRCQuestions = updatedRCQuestions.filter(q => q.passage_id === passageId);
 
             if (filteredRCQuestions.length > 0) {
-                const rcQuestionsWithRationales = await generateRationalesWithEdges({
+                const rcQuestionsWithRationales = await generateBatchRCRationales({
                     passageText: passageText,
                     questions: filteredRCQuestions,
                     reasoningContexts: rcContext,
                     referenceData: referenceDataRC,
-                });
+                }, costTracker);
 
                 // Update questions with rationales and tags
                 for (const q of rcQuestionsWithRationales) {
@@ -400,11 +400,11 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
 
         // Generate rationales for VA questions
         console.log(`\n🧾 [Step 11/X] Generating rationales for VA questions`);
-        const vaQuestionsFinal = await generateVARationalesWithEdges({
+        const vaQuestionsFinal = await generateBatchVARationales({
             questions: updatedVAQuestions,
             reasoningContexts: vaContext,
             referenceData: referenceDataVA,
-        });
+        }, costTracker);
 
         for (const q of vaQuestionsFinal) {
             dataManager.updateQuestion(q.id, {
@@ -439,10 +439,10 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
         console.log(`   Total Questions: ${stats.totalQuestions} (RC: ${stats.rcQuestions}, VA: ${stats.vaQuestions})`);
 
         // Save to file for review
-        const fs = require('fs');
-        const outputPath = './justReadingOutputCustom.json';
-        fs.writeFileSync(outputPath, JSON.stringify(output, null, 2));
-        console.log(`\n💾 Output saved to: ${outputPath}`);
+        // const fs = require('fs');
+        // const outputPath = './justReadingOutputCustom.json';
+        // fs.writeFileSync(outputPath, JSON.stringify(output, null, 2));
+        // console.log(`\n💾 Output saved to: ${outputPath}`);
 
         console.log(`\n📋 [Step 13/X] Uploading to database`);
         await saveAllDataToDB({
@@ -452,6 +452,7 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
         });
 
         console.log("\n✅ [COMPLETE] Customized Mock Generation finished successfully");
+        costTracker.printReport();
 
         return {
             success: true,
@@ -463,7 +464,6 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
             time_limit_minutes: time_limit_minutes,
             message: `Successfully generated custom mock with ${output.passages.length} passages and ${output.questions.length} questions`,
         };
-
     } catch (error) {
         console.error("\n❌ [ERROR] Customized Mock Generation failed:");
         console.error(error);
