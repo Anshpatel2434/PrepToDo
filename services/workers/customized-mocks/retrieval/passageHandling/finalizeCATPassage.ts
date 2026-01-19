@@ -4,13 +4,14 @@ import { v4 as uuidv4 } from 'uuid';
  * Finalizes the CAT passage with metadata.
  * Calculates word count and assigns difficulty.
  */
-export async function finalizeCATPassage(passageText: string): Promise<{
+export async function finalizeCATPassage(passageText: string, genre:string): Promise<{
     passageData: {
         id: string;
         title: string;
         content: string;
         word_count: number;
         difficulty: "easy" | "medium" | "hard";
+        genre:string;
     };
 }> {
     console.log("📝 [Passage Finalize] Finalizing passage metadata");
@@ -33,6 +34,7 @@ export async function finalizeCATPassage(passageText: string): Promise<{
         content: passageText,
         word_count: wordCount,
         difficulty: difficulty,
+        genre: genre,
     };
 
     console.log(`✅ [Passage Finalize] Finalized: ${wordCount} words, ${difficulty} difficulty`);

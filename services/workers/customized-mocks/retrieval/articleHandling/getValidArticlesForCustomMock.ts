@@ -46,7 +46,7 @@ export async function getValidArticlesForCustomMock(params: {
                 console.log(`✅ [Existing Article] Found valid article: ${existingArticle.title}`);
 
                 // Mark as used by this user for custom exam
-                await markArticleUsedForCustomExam(existingArticle.id, userId);
+                await markArticleUsedForCustomMock(existingArticle.id, userId);
 
                 fetchedArticles.push({
                     articleMeta: existingArticle,
@@ -84,7 +84,7 @@ export async function getValidArticlesForCustomMock(params: {
 
             // Step 4: Save article with proper flags
             console.log(`💾 [Article Save] Saving to database...`);
-            const articleDataWithId = await saveArticleForCustomMock(articleMeta, genre, userId);
+            const articleDataWithId = await saveArticleForCustomMock(articleMeta, genre);
 
             const articleParsed = ArticleSchema.safeParse(articleDataWithId);
             if (!articleParsed.success) {
@@ -241,7 +241,7 @@ async function markArticleUsedForCustomMock(articleId: string, userId: string): 
 /**
  * Saves a new article for custom mock with proper flags.
  */
-async function saveArticleForCustomMock(articleMeta: ArticleOutput, genre: string, userId: string): Promise<any> {
+async function saveArticleForCustomMock(articleMeta: ArticleOutput, genre: string,): Promise<any> {
     const now = new Date().toISOString();
 
     const articleData = {

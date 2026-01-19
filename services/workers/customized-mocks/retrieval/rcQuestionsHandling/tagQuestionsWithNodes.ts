@@ -1,92 +1,97 @@
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
-import { z } from "zod";
-import { Question, QuestionMetricTag } from "../../schemas/types";
+import { QuestionMetricTagArraySchema } from "../../schemas/types";
+import z from "zod";
+import { user_core_metrics_definition_v1 } from "../../../../config/user_core_metrics_definition_v1";
 
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
-const QuestionMetricTagSchema = z.object({
-    question_id: z.string().uuid(),
-    metric_keys: z.array(z.string()).max(2),
-});
-
-const ResponseSchema = z.object({
-    question_tags: z.array(QuestionMetricTagSchema),
-});
+// Read metrics definition
+const metricsData = user_core_metrics_definition_v1
+const metricsCatalog = metricsData.metrics.map((m: any) => ({
+    metric_key: m.metric_key,
+    description: m.description
+}));
 
 /**
- * Tags RC questions with reasoning graph node metrics.
+ * Tags each question with up to 2 metric_keys from the user core metrics definition.
  */
+
+const ResponseSchema = z.object({
+    questionsTagged: QuestionMetricTagArraySchema
+})
+
 export async function tagQuestionsWithNodes(params: {
     passageText: string;
-    questions: Question[];
-}): Promise<QuestionMetricTag[]> {
+    questions: any[];
+}) {
     const { passageText, questions } = params;
 
-    console.log(`🏷️ [Tagging] Tagging ${questions.length} questions with metrics`);
+    console.log(
+        `🏷️ [Metric Tagging] Tagging ${questions.length} questions`
+    );
 
-    const prompt = `You are a CAT reasoning graph expert. Tag questions with core metrics.
+    const prompt = `
+You are a CAT diagnostic engine.
 
-PASSAGE:
-${passageText}
+Your task is to identify which cognitive metrics are assessed by each question.
 
-QUESTIONS:
-${questions.map((q, i) => `
-Q${i + 1} (${q.id}): ${q.question_text}
-`).join("\n")}
+RULES:
+- Do NOT explain
+- Do NOT justify
+- Choose up to TWO metric_keys that best suit the question from the provided catalog.
 
-For each question, identify the 1-2 core metrics from "user_core_metrics_definition_v1.json" that best describe the reasoning being tested.
+--------------------------------
+METRICS CATALOG
+--------------------------------
+${JSON.stringify(metricsCatalog, null, 2)}
 
-Available metric categories (examples):
-- inference
-- synthesis
-- evaluation
-- analysis
-- comprehension
-- logical_reasoning
-- critical_thinking
-- textual_evidence
-- assumption_detection
-- tone_analysis
+--------------------------------
+QUESTIONS
+--------------------------------
+${JSON.stringify(
+        questions.map(q => ({
+            id: q.id,
+            question_text: q.question_text,
+            options: q.options,
+            correct_answer: q.correct_answer,
+        })),
+        null,
+        2
+    )}
 
-Return JSON:
-{
-  "question_tags": [
-    { "question_id": "...", "metric_keys": ["metric1", "metric2"] }
-  ]
-}
-
-Rules:
-- Assign 1-2 metrics per question (max 2)
-- Choose the most relevant metrics for each question
-- Use metric keys from the standard list
+Return STRICT JSON only.
 `;
 
-    console.log("⏳ [Tagging] Waiting for LLM to tag questions");
+    console.log("⏳ [Metric Tagging] Waiting for LLM response (metric tags)");
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
-        temperature: 0.2,
+        temperature: 0.1,
         messages: [
             {
                 role: "system",
-                content: "You are a CAT reasoning graph expert. Tag questions with core metrics.",
+                content:
+                    "You classify cognitive metrics. You do not explain or reason.",
             },
             {
                 role: "user",
                 content: prompt,
             },
         ],
-        response_format: zodResponseFormat(ResponseSchema, "question_tags"),
+        response_format: zodResponseFormat(
+            ResponseSchema,
+            "metric_tags"
+        ),
     });
 
     const parsed = completion.choices[0].message.parsed;
-
-    if (!parsed || parsed.question_tags.length !== questions.length) {
-        console.warn(`⚠️ [Tagging] Got ${parsed?.question_tags.length || 0} tags for ${questions.length} questions`);
+    if (!parsed) {
+        throw new Error("Metric tagging failed");
     }
 
-    console.log(`✅ [Tagging] Tagged ${parsed?.question_tags.length || 0} questions`);
-    return parsed?.question_tags || [];
+    console.log(`✅ [Metric Tagging] Tags generated for ${parsed.questionsTagged.length} questions`);
+
+    return parsed.questionsTagged;
 }

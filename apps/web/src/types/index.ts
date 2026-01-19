@@ -99,6 +99,7 @@ export const ExamSchema = z.object({
     created_at: TimestampSchema,
     used_articles_id: z.array(UUIDSchema).nullish(),
     generate_by_user_id: UUIDSchema.nullish(),
+    time_limit_minutes: z.number().int().nullish(),
 })
 
 export type Exam = z.infer<typeof ExamSchema>

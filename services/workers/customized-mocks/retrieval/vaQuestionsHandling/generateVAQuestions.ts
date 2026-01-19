@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import { Question, QuestionSchema, Passage, SemanticIdeas, AuthorialPersona } from "../../schemas/types";
+import { user_core_metrics_definition_v1 } from "../../../../config/user_core_metrics_definition_v1";
 
 // Simple UUID generator to avoid additional dependencies
 function generateUUID(): string {
@@ -51,10 +52,10 @@ export async function generateVAQuestions(params: GenerateVAQuestionsParams) {
 
         // Set default distribution
         const distribution = questionDistribution || {
-            para_summary: 1,
-            para_completion: 1,
-            para_jumble: 1,
-            odd_one_out: 1,
+            para_summary: 0,
+            para_completion: 0,
+            para_jumble: 0,
+            odd_one_out: 0,
         };
 
         console.log(`🧩 [VA Questions] Starting generation`);
@@ -170,11 +171,13 @@ export async function generateVAQuestions(params: GenerateVAQuestionsParams) {
 
         console.log(`✅ [VA Questions] Total VA questions generated: ${allQuestions.length}`);
 
-        // Final pass to ensure all questions have fresh UUIDs
+        // Final pass to ensure all questions have fresh UUIDs and proper field initialization
         const finalQuestions = allQuestions.map(q => ({
             ...q,
             id: generateUUID(),
-            passage_id: "", // VA questions are standalone
+            passage_id: null, // VA questions are standalone
+            jumbled_sentences: q.jumbled_sentences || { "1": "", "2": "", "3": "", "4": "", "5": "" },
+            options: q.options || { "A": "", "B": "", "C": "", "D": "" },
             created_at: now,
             updated_at: now
         }));
@@ -205,8 +208,27 @@ async function generateParaSummaryQuestions(params: {
 
     let personalizationInstructions = "";
     if (personalization) {
+        const instructions = [];
+
         if (personalization.targetMetrics && personalization.targetMetrics.length > 0) {
-            personalizationInstructions = `\n\nPERSONALIZATION: Target these metrics - ${personalization.targetMetrics.join(", ")}`;
+            instructions.push(`Target Metrics: Design questions to specifically test these core metrics - ${personalization.targetMetrics.join(", ")}`);
+        }
+
+        if (personalization.weakAreas && personalization.weakAreas.length > 0) {
+            instructions.push(`Weak Areas: Include question types that challenge these areas - ${personalization.weakAreas.join(", ")}`);
+        }
+
+        if (instructions.length > 0) {
+            personalizationInstructions = `
+
+### PERSONALIZATION INSTRUCTIONS
+
+The following user-specific customization should guide question generation:
+
+${instructions.map((instr, i) => `${i + 1}. ${instr}`).join("\n")}
+
+IMPORTANT: Apply personalization naturally while maintaining CAT quality.
+`;
         }
     }
 
@@ -292,6 +314,9 @@ Distractors (wrong options):
 - Distorts: misrepresents the author's stance or argument
 - Adds external knowledge: brings in information not in the paragraph
 
+Additional :  questions should mix between these categories.
+${personalizationInstructions}
+
 ---
 
 ## OUTPUT FORMAT
@@ -368,30 +393,148 @@ async function generateParaCompletionQuestions(params: {
     count: number;
     personalization?: any;
 }) {
-    const { semanticIdeas, authorialPersona, referenceData, passageText, count } = params;
+    const { semanticIdeas, authorialPersona, referenceData, passageText, count, personalization } = params;
     const now = new Date().toISOString();
 
     console.log(`🧩 [Para Completion] Starting generation (${count} questions)`);
 
-    // Simplified prompt for brevity - similar structure to para_summary
-    const prompt = `Generate ${count} CAT-style para-completion question(s) based on semantic ideas and authorial persona.
+    let personalizationInstructions = "";
+    if (personalization) {
+        const instructions = [];
 
-SEMANTIC IDEAS:
+        if (personalization.targetMetrics && personalization.targetMetrics.length > 0) {
+            instructions.push(`Target Metrics: Design questions to specifically test these core metrics - ${personalization.targetMetrics.join(", ")}`);
+        }
+
+        if (personalization.weakAreas && personalization.weakAreas.length > 0) {
+            instructions.push(`Weak Areas: Include question types that challenge these areas - ${personalization.weakAreas.join(", ")}`);
+        }
+
+        if (instructions.length > 0) {
+            personalizationInstructions = `
+
+### PERSONALIZATION INSTRUCTIONS
+
+The following user-specific customization should guide question generation:
+
+${instructions.map((instr, i) => `${i + 1}. ${instr}`).join("\n")}
+
+IMPORTANT: Apply personalization naturally while maintaining CAT quality.
+`;
+        }
+    }
+
+    const prompt = `SYSTEM:
+You are a CAT VARC examiner with 15+ years of experience.
+You design para-completion questions that test understanding of logical flow and coherence.
+
+CRITICAL MINDSET:
+- You are NOT creating simple fill-in-the-blank exercises
+- You are creating questions that require understanding the argument's direction
+- Every option must be deliberately designed to test a specific reasoning weakness
+
+---
+
+USER:
+Your task is to generate CAT-style para-completion questions.
+
+You are given REFERENCE MATERIAL from actual CAT papers (PYQs):
+${referenceData.slice(0, 3).map((rd, i) => `
+PASSAGE ${i + 1}:
+${rd.passage.content}
+
+QUESTIONS:
+${rd.questions.slice(0, 2).map((q, j) => `
+Q${j + 1}: ${q.question_text}
+Options:
+A) ${q.options["A"]}
+B) ${q.options["B"]}
+C) ${q.options["C"]}
+D) ${q.options["D"]}
+
+Correct: ${q.correct_answer.answer}
+
+Rationale: ${q.rationale}
+`).join("\n")}
+`).join("\n---\n")}
+
+These references are your training data. Analyze them to understand:
+1) How CAT para-completion questions are framed
+2) Where the blank is typically placed (end of paragraph)
+3) What makes a sentence complete the argument logically
+4) How distractors are designed
+
+---
+
+## SEMANTIC IDEAS (CONTENT SOURCE)
+
+<SEMANTIC_IDEAS>
 ${JSON.stringify(semanticIdeas, null, 2)}
+</SEMANTIC_IDEAS>
 
-AUTHORIAL PERSONA:
+## AUTHORIAL PERSONA (STYLE GUIDE)
+
+<AUTHORIAL_PERSONA>
 ${JSON.stringify(authorialPersona, null, 2)}
+</AUTHORIAL_PERSONA>
 
-REFERENCE MATERIAL:
-${referenceData.slice(0, 2).map(rd => rd.passage.content).join("\n\n---\n\n")}
+---
 
-Each question should have:
-- A sentence that was removed from a paragraph
-- A paragraph with 4 blanks marked as ___(1)___, ___(2)___, ___(3)___, ___(4)___
-- Question text format: "There is a sentence that is missing in the paragraph below. Look at paragraph and decide in which blank (option 1, 2, 3, or 4) following sentence would best fit.\\nSentence: [sentence]\\nParagraph: [paragraph with blanks]"
-- Options A, B, C, D correspond to blank 1, 2, 3, 4
+## GENERATION REQUIREMENTS
 
-Return STRICT JSON with ${count} question(s), question_type "para_completion", empty correct_answer and rationale.
+Generate ${count} para-completion question based on the semantic ideas and authorial persona.
+
+The question should follow this exact format:
+1. "Sentence": A single sentence that has been removed from a paragraph.
+2. "Paragraph": A paragraph (4-5 sentences) where the sentence was removed from, with 4 possible blanks marked as ___(1)___, ___(2)___, ___(3)___, and ___(4)___.
+
+The question text should be:
+"There is a sentence that is missing in the paragraph below. Look at the paragraph and decide in which blank (option 1, 2, 3, or 4) the following sentence would best fit.\nSentence: [The missing sentence]\nParagraph: [The paragraph with blanks]"
+
+    Additional:  questions should mix between these categories.
+        ${ personalizationInstructions }
+---
+
+## OPTION DESIGN RULES
+
+Correct option:
+- The blank where the sentence fits most logically based on coherence and flow.
+
+Options:
+- A: Option 1
+- B: Option 2
+- C: Option 3
+- D: Option 4
+
+---
+
+## OUTPUT FORMAT
+
+Return STRICT JSON only in this format:
+{
+  "questions": [
+    {
+      "id": "<UUID>",
+      "passage_id": "",
+      "question_text": "There is a sentence that is missing in the paragraph below. Look at the paragraph and decide in which blank (option 1, 2, 3, or 4) the following sentence would best fit.\\nSentence: <sentence>\\nParagraph: <paragraph with blanks ___(1)___, ___(2)___, ___(3)___, ___(4)___>",
+      "question_type": "para_completion",
+      "options": { "A": "Option 1", "B": "Option 2", "C": "Option 3", "D": "Option 4" },
+      "jumbled_sentences": { "1": "", "2": "", "3": "", "4": "", "5": "" },
+      "correct_answer": { "answer": "" },
+      "rationale": "",
+      "difficulty": "easy|medium|hard",
+      "tags": [],
+      "created_at": "<ISO timestamp>",
+      "updated_at": "<ISO timestamp>"
+    }
+  ]
+}
+
+IMPORTANT:
+- Leave correct_answer.answer empty
+- Leave rationale empty
+- Generate EXACTLY ${count} questions
+- No additional text or commentary
 `;
 
     console.log("⏳ [Para Completion] Waiting for LLM to generate questions");
@@ -432,25 +575,159 @@ async function generateParaJumbleQuestions(params: {
     count: number;
     personalization?: any;
 }) {
-    const { semanticIdeas, authorialPersona, referenceData, count } = params;
+    const { semanticIdeas, authorialPersona, referenceData, count, personalization } = params;
     const now = new Date().toISOString();
 
     console.log(`🧩 [Para Jumble] Starting generation (${count} questions)`);
 
-    const prompt = `Generate ${count} CAT-style para-jumble question(s) based on semantic ideas and authorial persona.
+    let personalizationInstructions = "";
+    if (personalization) {
+        const instructions = [];
 
-SEMANTIC IDEAS:
+        if (personalization.targetMetrics && personalization.targetMetrics.length > 0) {
+            instructions.push(`Target Metrics: Design questions to specifically test these core metrics - ${personalization.targetMetrics.join(", ")}`);
+        }
+
+        if (personalization.weakAreas && personalization.weakAreas.length > 0) {
+            instructions.push(`Weak Areas: Include question types that challenge these areas - ${personalization.weakAreas.join(", ")}`);
+        }
+
+        if (instructions.length > 0) {
+            personalizationInstructions = `
+
+### PERSONALIZATION INSTRUCTIONS
+
+The following user-specific customization should guide question generation:
+
+${instructions.map((instr, i) => `${i + 1}. ${instr}`).join("\n")}
+
+IMPORTANT: Apply personalization naturally while maintaining CAT quality.
+`;
+        }
+    }
+
+    const prompt = `SYSTEM:
+You are a CAT VARC examiner with 15+ years of experience.
+You design para-jumble questions that test understanding of logical flow and coherence.
+
+CRITICAL MINDSET:
+- You are NOT creating simple ordering exercises
+- You are creating questions that require understanding logical connections
+- The sentences must have meaningful but non-obvious connections
+
+---
+
+USER:
+Your task is to generate CAT-style para-jumble questions.
+
+You are given REFERENCE MATERIAL from actual CAT papers (PYQs):
+${referenceData.slice(0, 3).map((rd, i) => `
+
+QUESTIONS:
+${rd.questions.slice(0, 2).map((q, j) => `
+Q${j + 1}: ${q.question_text}
+Jumbled Sentences:
+${JSON.stringify(q.jumbled_sentences, null, 2)}
+
+Correct: ${q.correct_answer.answer}
+
+Rationale: ${q.rationale}
+`).join("\n")}
+`).join("\n---\n")}
+
+These references are your training data. Analyze them to understand:
+1) How sentences are constructed for para-jumble
+2) How logical connections are established
+3) How distractor orderings are plausible but wrong
+4) What makes the correct ordering unique
+
+---
+
+## SEMANTIC IDEAS (CONTENT SOURCE)
+
+<SEMANTIC_IDEAS>
 ${JSON.stringify(semanticIdeas, null, 2)}
+</SEMANTIC_IDEAS>
 
-Sentence ideas: ${semanticIdeas.sentence_ideas.join(", ")}
+## AUTHORIAL PERSONA (STYLE GUIDE)
 
-Each question should:
-- Have 5 jumbled sentences related to the semantic ideas
-- Question text should ask user to arrange sentences in correct order
-- jumbled_sentences field should contain the 5 sentences with keys "1", "2", "3", "4", "5"
-- Options A, B, C, D should be different orderings (e.g., "ABDEC", "BCADE", etc.)
+<AUTHORIAL_PERSONA>
+${JSON.stringify(authorialPersona, null, 2)}
+</AUTHORIAL_PERSONA>
 
-Return STRICT JSON with ${count} question(s), question_type "para_jumble", populated jumbled_sentences and options, empty correct_answer and rationale.
+---
+
+## GENERATION REQUIREMENTS
+
+Generate ${count} para-jumble question based on the semantic ideas and authorial persona.
+
+The question should:
+- Present 4 sentences that can form a coherent paragraph
+- Sentences should use the semantic ideas and logical transitions
+- The correct ordering should create a logical argument or narrative flow
+- Multiple orderings should seem plausible, but only one is truly logical
+
+---
+
+## CRITICAL JUMBLING REQUIREMENT:
+- The sentences MUST NOT be presented in sequential order (1-2-3-4)
+- You MUST randomize the sentence positions so the correct answer is NOT "1234"
+- Example: If the logical order is A→B→C→D, present them as: 1:C, 2:A, 3:D, 4:B (correct answer would be "2143")
+- The jumbled_sentences object should contain sentences in a SCRAMBLED order
+- Avoid patterns like "1234", "4321", or any obvious sequence
+- The correct answer should require careful analysis of logical connections
+
+---
+
+## SENTENCE DESIGN RULES
+
+- Each sentence should be self-contained and meaningful
+- Sentences should have logical connectors (from semantic_ideas.logical_transitions)
+- The correct order should follow: introduction → development → elaboration → conclusion
+- Avoid sentences that can only go in one position (too obvious)
+- Create "false starts" that seem logical but lead to dead ends
+
+    Additional:  questions should mix between these categories.
+        ${ personalizationInstructions }
+
+---
+
+## OUTPUT FORMAT
+
+Return STRICT JSON only in this format:
+{
+  "questions": [
+    {
+      "id": "<UUID>",
+      "passage_id": "",
+      "question_text": "The four sentences (labelled 1, 2, 3 and 4) below, when properly sequenced would yield a coherent paragraph. Decide on the proper sequencing of the order of the sentences and key in the sequence of the four numbers as your answer: ",
+      "question_type": "para_jumble",
+      "options": { "A": "", "B": "", "C": "", "D": "" },
+      "jumbled_sentences": {
+        "1": "<sentence for position 1>",
+        "2": "<sentence for position 2>",
+        "3": "<sentence for position 3>",
+        "4": "<sentence for position 4>",
+        "5": "no 5th sentence for para jumble"
+      },
+      "correct_answer": { "answer": "" },
+      "rationale": "",
+      "difficulty": "easy|medium|hard",
+      "tags": [],
+      "created_at": "<ISO timestamp>",
+      "updated_at": "<ISO timestamp>"
+    }
+  ]
+}
+
+IMPORTANT:
+- Fill jumbled_sentences with the 4 sentences in keys 1-4, leave key 5 as empty string
+- Leave options as empty strings for keys A-D
+- Leave correct_answer.answer empty
+- Leave rationale empty
+- Generate EXACTLY ${count} question
+- No additional text or commentary
+- The question should be able to assess the metrics from ${user_core_metrics_definition_v1} file.
 `;
 
     console.log("⏳ [Para Jumble] Waiting for LLM to generate questions");
@@ -491,25 +768,171 @@ async function generateOddOneOutQuestions(params: {
     count: number;
     personalization?: any;
 }) {
-    const { semanticIdeas, count } = params;
+    const { semanticIdeas, authorialPersona, referenceData, count, personalization } = params;
     const now = new Date().toISOString();
 
     console.log(`🧩 [Odd One Out] Starting generation (${count} questions)`);
 
-    const prompt = `Generate ${count} CAT-style odd_one_out question(s) based on semantic ideas.
+    let personalizationInstructions = "";
+    if (personalization) {
+        const instructions = [];
 
-SEMANTIC IDEAS:
+        if (personalization.targetMetrics && personalization.targetMetrics.length > 0) {
+            instructions.push(`Target Metrics: Design questions to specifically test these core metrics - ${personalization.targetMetrics.join(", ")}`);
+        }
+
+        if (personalization.weakAreas && personalization.weakAreas.length > 0) {
+            instructions.push(`Weak Areas: Include question types that challenge these areas - ${personalization.weakAreas.join(", ")}`);
+        }
+
+        if (instructions.length > 0) {
+            personalizationInstructions = `
+
+### PERSONALIZATION INSTRUCTIONS
+
+The following user-specific customization should guide question generation:
+
+${instructions.map((instr, i) => `${i + 1}. ${instr}`).join("\n")}
+
+IMPORTANT: Apply personalization naturally while maintaining CAT quality.
+`;
+        }
+    }
+
+    const prompt = `SYSTEM:
+You are a CAT VARC examiner with 15+ years of experience.
+You design odd-one-out questions that test understanding of thematic coherence and logical consistency.
+
+CRITICAL MINDSET:
+- You are NOT creating simple "find the different category" questions
+- You are creating questions that require understanding subtle logical or thematic differences
+- The "odd one" should be subtly different, not obviously so
+
+---
+
+USER:
+Your task is to generate CAT-style odd-one-out questions.
+
+You are given REFERENCE MATERIAL from actual CAT papers (PYQs):
+${referenceData.slice(0, 3).map((rd, i) => `
+
+QUESTIONS:
+${rd.questions.slice(0, 2).map((q, j) => `
+Q${j + 1}: ${q.question_text}
+Jumbled Sentences:
+${JSON.stringify(q.jumbled_sentences, null, 2)}
+
+Correct: ${q.correct_answer.answer}
+
+Rationale: ${q.rationale}
+`).join("\n")}
+`).join("\n---\n")}
+
+These references are your training data. Analyze them to understand:
+1) How CAT odd-one-out questions are framed
+2) What makes four sentences/three similar and one different
+3) How the difference is subtle but identifiable
+4) How distractors are designed to confuse
+
+---
+
+## SEMANTIC IDEAS (CONTENT SOURCE)
+
+<SEMANTIC_IDEAS>
 ${JSON.stringify(semanticIdeas, null, 2)}
+</SEMANTIC_IDEAS>
 
-Conceptual pairs: ${semanticIdeas.conceptual_pairs.map(p => `${p.idea_a} - ${p.idea_b} (${p.relationship})`).join(", ")}
+## AUTHORIAL PERSONA (STYLE GUIDE)
 
-Each question should:
-- Present 4 options where 3 share a common theme/logic and 1 is different
-- The different option is the correct answer
-- Options should be in A, B, C, D format
-- jumbled_sentences field should be empty
+<AUTHORIAL_PERSONA>
+${JSON.stringify(authorialPersona, null, 2)}
+</AUTHORIAL_PERSONA>
 
-Return STRICT JSON with ${count} question(s), question_type "odd_one_out", populated options, empty jumbled_sentences, empty correct_answer and rationale.
+---
+
+## GENERATION REQUIREMENTS
+
+Generate ${count} odd-one-out questions based on the semantic ideas and conceptual pairs.
+
+The question should:
+- Present 5 jumbled sentences in jumbled_sentences object (keys "1" through "5")
+- 4 sentences should share a common theme, logical structure, or conceptual relationship
+- 1 sentence (the "odd one") should differ in a subtle but meaningful way
+- Use the conceptual_pairs from semantic ideas to create the 4 similar ones
+- The difference should be in: tone, logical flow, underlying assumption, or argumentative approach
+
+---
+
+## CRITICAL RANDOMIZATION REQUIREMENT:
+- The odd one out sentence MUST NOT always be in position 5
+- You MUST randomize which position (1, 2, 3, 4, or 5) contains the odd sentence
+- The 4 coherent sentences should be distributed across the remaining positions
+- Avoid the pattern where sentences 1-4 always form a paragraph and 5 is always odd
+- Example distributions:
+  * Odd one at position 2: sentences 1,3,4,5 form paragraph, 2 is odd
+  * Odd one at position 3: sentences 1,2,4,5 form paragraph, 3 is odd
+  * Odd one at position 1: sentences 2,3,4,5 form paragraph, 1 is odd
+- The correct answer should vary across questions (not always "5")
+
+---
+
+## OPTION DESIGN RULES
+
+Similar sentences (4 sentences):
+- Should share a clear common theme or structure
+- Should be thematically or logically coherent together
+- Should derive from semantic ideas
+- These 4 sentences should be RANDOMLY distributed across positions 1-5
+
+Odd one out (correct answer):
+- Should seem similar at first glance
+- Should have a subtle but meaningful difference
+- The difference should be identifiable through careful analysis
+- Could differ in: stance, assumption, logical direction, or conclusion
+- This sentence should be placed in a RANDOM position (not always position 5)
+
+
+    Additional:  questions should mix between these categories.
+        ${ personalizationInstructions }
+
+---
+
+## OUTPUT FORMAT
+
+Return STRICT JSON only in this format:
+{
+  "questions": [
+    {
+      "id": "<UUID>",
+      "passage_id": "",
+      "question_text": "Five jumbled up sentences, related to a topic, are given below. Four of them can be put together to form a coherent paragraph. Identify the odd one out and key in the number of the sentence as your answer: ",
+      "question_type": "odd_one_out",
+      "options": { "A": "", "B": "", "C": "", "D": "" },
+      "jumbled_sentences": {
+        "1": "<sentence 1>",
+        "2": "<sentence 2>",
+        "3": "<sentence 3>",
+        "4": "<sentence 4>",
+        "5": "<sentence 5>"
+      },
+      "correct_answer": { "answer": "" },
+      "rationale": "",
+      "difficulty": "easy|medium|hard",
+      "tags": [],
+      "created_at": "<ISO timestamp>",
+      "updated_at": "<ISO timestamp>"
+    }
+  ]
+}
+
+IMPORTANT:
+- Fill jumbled_sentences with 5 sentences in ANY order (4 that form a paragraph + 1 odd one out)
+- Leave options as empty strings for keys A-D
+- Leave correct_answer.answer empty
+- Leave rationale empty
+- Generate EXACTLY ${count} questions
+- No additional text or commentary
+- The question should be able to assess the metrics from ${user_core_metrics_definition_v1} file and try to divide all the metrics across 4 questions.
 `;
 
     console.log("⏳ [Odd One Out] Waiting for LLM to generate questions");

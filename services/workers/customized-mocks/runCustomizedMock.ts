@@ -1,12 +1,12 @@
-import { extractSemanticIdeasAndPersona } from "./retrieval/passageHandling/extractSemanticIdeas";
-import { fetchGenreByName } from "./retrieval/fetchGenre";
-import { fetchPassagesData } from "./retrieval/fetchPassagesData";
+import { updateGenres } from "./retrieval/updateGenre";
+import { fetchPassagesData } from "./retrieval/passageHandling/fetchPassagesData";
 import { fetchQuestionsData } from "./retrieval/fetchQuestionsData";
 import { generateEmbedding } from "./retrieval/generateEmbedding";
 import { generatePassage } from "./retrieval/passageHandling/generatePassage";
 import { searchPassageAndQuestionEmbeddings } from "./retrieval/searchPassageAndQuestionEmbeddings";
-import { getValidArticlesForCustomMock } from "./retrieval/articleHandling/getValidArticlesForCustomMock";
-import { finalizeCATPassage } from "./retrieval/passageHandling/finalizeCATPassage";
+import { fetchArticleForUsage } from "./retrieval/articleHandling/fetchArticleForUsage";
+import { evaluateCATLikeness } from "./retrieval/passageHandling/evaluateCATLikeness";
+import { sharpenToCATStyle } from "./retrieval/passageHandling/sharpenToCATStyle";
 import { generateRCQuestions } from "./retrieval/rcQuestionsHandling/generateRCQuestions";
 import { selectCorrectAnswers } from "./retrieval/rcQuestionsHandling/selectCorrectAnswers";
 import { fetchNodes } from "./graph/fetchNodes";
@@ -19,13 +19,17 @@ import { generateVAQuestions } from "./retrieval/vaQuestionsHandling/generateVAQ
 import { selectVAAnswers } from "./retrieval/vaQuestionsHandling/selectVAAnswers";
 import { tagVAQuestionsWithNodes } from "./retrieval/vaQuestionsHandling/tagVAQuestionsWithNodes";
 import { generateVARationalesWithEdges } from "./retrieval/vaQuestionsHandling/generateVARationales";
-import { formatOutputForDB, generateOutputReport } from "./retrieval/formatOutputForDB";
+import { formatOutputForDB, generateOutputReport, validateOutputForDB } from "./retrieval/formatOutputForDB";
 import { saveAllDataToDB } from "./retrieval/saveAllDataToDB";
 import { CustomizedMockRequest, CustomizedMockResult } from "./schemas/types";
 
+// NEW: Import DataManager and EntityBuilder
+import { DataManager } from "./retrieval/dataManager";
+import { createPassage, createRCQuestions, createVAQuestions, getQuestionsForProcessing } from "./retrieval/entityBuilder";
+
 /**
  * Main workflow for generating customized CAT mock test.
- * Based on daily-content workflow but with personalization and multiple passages.
+ * Refactored to use centralized DataManager for clean ID management.
  */
 export async function runCustomizedMock(params: CustomizedMockRequest): Promise<CustomizedMockResult> {
     const {
@@ -50,25 +54,51 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
     console.log(`   Total Questions: ${total_questions}`);
 
     try {
+        // Initialize DataManager - central source of truth for all IDs
+        const dataManager = new DataManager();
+        console.log(`✅ [DataManager] Initialized with Exam ID: ${dataManager.getExamId()}`);
+
         // --- PHASE 1: PREPARATION & RETRIEVAL ---
 
         // Determine genres (use defaults if not specified)
         const genres = target_genres && target_genres.length > 0
             ? target_genres
-            : ["Philosophy", "History", "Economics", "Science", "Literature"];
+            : ["Philosophy", "History", "Economics"];
 
         console.log(`\n🎯 [Step 1/X] Genres: ${genres.join(", ")}`);
+        await updateGenres(genres);
 
-        // Fetch multiple articles with smart article usage checking
-        console.log(`\n📄 [Step 2/X] Fetching ${num_passages} valid articles`);
-        const { articles, genreNames } = await getValidArticlesForCustomMock({
-            userId: user_id,
-            genres: genres,
-            numArticles: num_passages,
-            maxAttempts: 10,
-        });
+        // Fetch articles using fetchArticleForUsage for each genre
+        console.log(`\n📄 [Step 2/X] Fetching ${num_passages} articles with semantic data`);
 
-        console.log(`✅ [Article Fetch] Fetched ${articles.length} articles`);
+        const articlesData: Array<{
+            articleMeta: any;
+            semantic_ideas: any;
+            authorial_persona: any;
+            genre: string;
+        }> = [];
+
+        // Fetch one article per passage from the genres
+        for (let i = 0; i < num_passages; i++) {
+            const genre = genres[i % genres.length]; // Cycle through genres
+            console.log(`\n📘 [Article ${i + 1}/${num_passages}] Fetching for genre: ${genre}`);
+
+            const { articleMeta, semantic_ideas, authorial_persona } = await fetchArticleForUsage({
+                genre: genre,
+                usageType: "mock"
+            });
+
+            articlesData.push({
+                articleMeta,
+                semantic_ideas,
+                authorial_persona,
+                genre
+            });
+
+            console.log(`✅ [Article ${i + 1}] Fetched: ${articleMeta.title}`);
+        }
+
+        console.log(`\n✅ [Article Fetch] Successfully fetched ${articlesData.length} articles with semantic data`);
 
         // Generate embeddings and fetch PYQ references ONCE
         console.log(`\n🧠 [Step 3/X] Generating embedding and fetching PYQ references`);
@@ -97,33 +127,18 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
 
         // --- PHASE 2: PASSAGE GENERATION (for each article) ---
 
-        const allPassagesData: Array<{
-            passageData: {
-                id: string;
-                title: string;
-                content: string;
-                word_count: number;
-                difficulty: "easy" | "medium" | "hard";
-            };
-            articleData: any;
-            semanticIdeas: any;
-            authorialPersona: any;
-        }> = [];
+        console.log(`\n✍️ [Step 4/X] Generating ${articlesData.length} CAT-style passages`);
 
-        console.log(`\n✍️ [Step 4/X] Generating ${articles.length} CAT-style passages`);
+        // Store passage IDs for later use
+        const passageIds: string[] = [];
 
-        for (let i = 0; i < articles.length; i++) {
-            const { articleMeta, articleText } = articles[i];
-            const genre = genreNames[i];
+        for (let i = 0; i < articlesData.length; i++) {
+            const { articleMeta, semantic_ideas, authorial_persona, genre } = articlesData[i];
 
-            console.log(`\n📝 [Passage ${i + 1}/${articles.length}] Genre: ${genre}`);
+            console.log(`\n📝 [Passage ${i + 1}/${articlesData.length}] Genre: ${genre}`);
 
-            // Extract semantic ideas and persona
-            console.log(`   🧠 [Passage ${i + 1}] Extracting semantic ideas and persona`);
-            const { semantic_ideas, authorial_persona } = await extractSemanticIdeasAndPersona(
-                articleText,
-                genre
-            );
+            // Use semantic ideas and persona from database (no extraction needed)
+            console.log(`   🧠 [Passage ${i + 1}] Using pre-computed semantic ideas and persona from database`);
 
             // Generate CAT-style passage
             console.log(`   ✍️ [Passage ${i + 1}] Generating CAT-style passage`);
@@ -138,34 +153,51 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
                 },
             });
 
-            // Finalize passage
-            const finalizedData = await finalizeCATPassage(draftPassage);
-            const passageText = finalizedData["passageData"].content;
+            // Evaluate CAT-likeness
+            console.log(`   📊 [Passage ${i + 1}] Evaluating CAT-likeness`);
+            const evaluation = await evaluateCATLikeness(draftPassage);
+            console.log(`   📊 [Passage ${i + 1}] CAT-likeness score: ${evaluation.overall_score}`);
 
-            console.log(`   ✅ [Passage ${i + 1}] Generated: ${finalizedData["passageData"].word_count} words`);
-
-            allPassagesData.push({
-                passageData: finalizedData["passageData"],
-                articleData: articleMeta,
-                semanticIdeas: semantic_ideas,
-                authorialPersona: authorial_persona,
+            console.log(`   ⚡ [Passage ${i + 1}] Sharpening passage (score: ${evaluation.overall_score})`);
+            const improvedPassageData = await sharpenToCATStyle({
+                passage: draftPassage,
+                deficiencies: evaluation.key_deficiencies,
             });
+
+            // Register passage in DataManager (this assigns ID automatically)
+            const passageId = createPassage(dataManager, {
+                content: improvedPassageData.content,
+                genre: genre,
+                articleId: articleMeta.id,
+                articleSource: articleMeta.source_name,
+            });
+
+            passageIds.push(passageId);
+
+            const wordCount = improvedPassageData.content.split(/\s+/).length;
+            console.log(`   ✅ [Passage ${i + 1}] Created with ID: ${passageId.substring(0, 8)}... (${wordCount} words)`);
         }
 
         // --- PHASE 3: RC QUESTIONS ---
 
-        const allRCQuestions: any[] = [];
+        console.log(`\n❓ [Step 5/X] Generating RC Questions`);
 
-        for (let i = 0; i < allPassagesData.length; i++) {
-            const passageData = allPassagesData[i];
-            const passageText = passageData.passageData.content;
+        for (let i = 0; i < passageIds.length; i++) {
+            const passageId = passageIds[i];
+            const articleData = articlesData[i];
 
             const rcQuestionsCount = question_type_distribution?.rc_questions || 4;
             if (rcQuestionsCount > 0) {
                 console.log(`\n❓ [RC Questions Passage ${i + 1}] Generating ${rcQuestionsCount} questions`);
 
+                // Generate questions (LLM returns raw question data)
                 const rcQuestions = await generateRCQuestions({
-                    passageText,
+                    passageData: {
+                        passageData: {
+                            id: passageId,
+                            content: dataManager.getPassagesForDB("")[i].content,
+                        }
+                    },
                     referenceData: referenceDataRC,
                     questionCount: rcQuestionsCount,
                     personalization: {
@@ -174,96 +206,226 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
                     },
                 });
 
-                console.log(`✅ [RC Answers Passage ${i + 1}] Selecting correct answers`);
-                const rcQuestionsWithAnswers = await selectCorrectAnswers({
-                    passageText,
-                    questions: rcQuestions,
-                });
-
-                allRCQuestions.push(...rcQuestionsWithAnswers);
+                // Register questions in DataManager
+                const questionIds = createRCQuestions(dataManager, passageId, rcQuestions);
+                console.log(`✅ [RC Questions Passage ${i + 1}] Created ${questionIds.length} questions`);
             }
         }
 
         // --- PHASE 4: VA QUESTIONS ---
 
-        console.log(`\n🔮 [Step 5/X] Generating VA questions`);
+        console.log(`\n🔮 [Step 6/X] Generating VA questions`);
 
-        const vaQuestions = await generateVAQuestions({
-            semanticIdeas: allPassagesData[0].semanticIdeas, // Use first passage's ideas
-            authorialPersona: allPassagesData[0].authorialPersona,
+        // Generate VA questions using available passages (with fallback to first passage)
+        const getArticleData = (index: number) => {
+            return articlesData[index] || articlesData[0];
+        };
+
+        const getPassageContent = (index: number) => {
+            const passages = dataManager.getPassagesForDB("");
+            return passages[index]?.content || passages[0]?.content || "";
+        };
+
+        // Para summary
+        const vaQuestionsSummary = await generateVAQuestions({
+            semanticIdeas: getArticleData(0).semantic_ideas,
+            authorialPersona: getArticleData(0).authorial_persona,
             referenceData: referenceDataVA,
-            passageText: allPassagesData[0].passageData.content,
-            questionDistribution: question_type_distribution,
+            passageText: getPassageContent(0),
+            questionDistribution: {
+                para_summary: 2,
+                para_completion: 0,
+                para_jumble: 0,
+                odd_one_out: 0,
+            },
             personalization: {
                 targetMetrics: target_metrics,
                 weakAreas: weak_areas_to_address,
             },
         });
 
-        console.log(`✅ [VA Answers] Selecting correct answers`);
-        const vaQuestionsWithAnswers = await selectVAAnswers({
-            questions: vaQuestions,
+        createVAQuestions(dataManager, vaQuestionsSummary);
+
+        // Para completion
+        const vaQuestionsParaCompletion = await generateVAQuestions({
+            semanticIdeas: getArticleData(1).semantic_ideas,
+            authorialPersona: getArticleData(1).authorial_persona,
+            referenceData: referenceDataVA,
+            passageText: getPassageContent(1),
+            questionDistribution: {
+                para_summary: 0,
+                para_completion: 2,
+                para_jumble: 0,
+                odd_one_out: 0,
+            },
+            personalization: {
+                targetMetrics: target_metrics,
+                weakAreas: weak_areas_to_address,
+            },
         });
 
-        // --- PHASE 5: GRAPH & RATIONALES ---
+        createVAQuestions(dataManager, vaQuestionsParaCompletion);
 
-        console.log(`\n🏷️ [Step 6/X] Fetching reasoning graph nodes`);
+        // Para jumble
+        const vaQuestionsParaJumble = await generateVAQuestions({
+            semanticIdeas: getArticleData(2).semantic_ideas,
+            authorialPersona: getArticleData(2).authorial_persona,
+            referenceData: referenceDataVA,
+            passageText: getPassageContent(2),
+            questionDistribution: {
+                para_summary: 0,
+                para_completion: 0,
+                para_jumble: 2,
+                odd_one_out: 0,
+            },
+            personalization: {
+                targetMetrics: target_metrics,
+                weakAreas: weak_areas_to_address,
+            },
+        });
+
+        createVAQuestions(dataManager, vaQuestionsParaJumble);
+
+        // Odd one out
+        const vaQuestionsOddOneOut = await generateVAQuestions({
+            semanticIdeas: getArticleData(3 % articlesData.length).semantic_ideas,
+            authorialPersona: getArticleData(3 % articlesData.length).authorial_persona,
+            referenceData: referenceDataVA,
+            passageText: getPassageContent(3 % passageIds.length),
+            questionDistribution: {
+                para_summary: 0,
+                para_completion: 0,
+                para_jumble: 0,
+                odd_one_out: 2,
+            },
+            personalization: {
+                targetMetrics: target_metrics,
+                weakAreas: weak_areas_to_address,
+            },
+        });
+
+        createVAQuestions(dataManager, vaQuestionsOddOneOut);
+
+        console.log(`✅ [VA Questions] Generated all VA questions`);
+
+        // --- PHASE 5: ANSWER SELECTION ---
+
+        console.log(`\n✅ [Step 7/X] Selecting correct answers`);
+
+        // Get all questions for answer selection
+        const allRCQuestions = getQuestionsForProcessing(dataManager).filter(q => q.passage_id !== null);
+        const allVAQuestions = getQuestionsForProcessing(dataManager).filter(q => q.passage_id === null);
+
+        // Select RC answers
+        for (let i = 0; i < passageIds.length; i++) {
+            const passageId = passageIds[i];
+            const passageContent = dataManager.getPassagesForDB("")[i].content;
+            const rcQuestions = allRCQuestions.filter(q => q.passage_id === passageId);
+
+            if (rcQuestions.length > 0) {
+                const rcQuestionsWithAnswers = await selectCorrectAnswers({
+                    passageText: passageContent,
+                    questions: rcQuestions,
+                });
+
+                // Update questions in DataManager
+                for (const q of rcQuestionsWithAnswers) {
+                    dataManager.updateQuestion(q.id, {
+                        correctAnswer: q.correct_answer,
+                    });
+                }
+            }
+        }
+
+        // Select VA answers
+        const vaQuestionsWithAnswers = await selectVAAnswers({
+            questions: allVAQuestions,
+        });
+
+        for (const q of vaQuestionsWithAnswers) {
+            dataManager.updateQuestion(q.id, {
+                correctAnswer: q.correct_answer,
+            });
+        }
+
+        // --- PHASE 6: GRAPH & RATIONALES ---
+
+        console.log(`\n🏷️ [Step 8/X] Fetching reasoning graph nodes`);
         const nodes = await fetchNodes();
 
-        console.log(`🕸️ [Step 7/X] Tagging questions and building graph context`);
+        console.log(`🕸️ [Step 9/X] Tagging questions and building graph context`);
+
+        // Get updated questions after answer selection
+        const updatedRCQuestions = getQuestionsForProcessing(dataManager).filter(q => q.passage_id !== null);
+        const updatedVAQuestions = getQuestionsForProcessing(dataManager).filter(q => q.passage_id === null);
 
         // Tag RC questions
         const rcTagged = await tagQuestionsWithNodes({
-            passageText: allPassagesData[0].passageData.content,
-            questions: allRCQuestions,
+            passageText: dataManager.getPassagesForDB("")[0]?.content || "",
+            questions: updatedRCQuestions,
         });
 
         // Tag VA questions
         const vaTagged = await tagVAQuestionsWithNodes({
-            questions: vaQuestionsWithAnswers,
+            questions: updatedVAQuestions,
         });
 
         const rcContext = await getQuestionGraphContext(rcTagged, nodes);
         const vaContext = await getQuestionGraphContext(vaTagged, nodes);
 
-        console.log(`\n🧾 [Step 8/X] Generating rationales for RC`);
-        const rcQuestionsFinal = await generateRationalesWithEdges({
-            passageText: allPassagesData[0].passageData.content,
-            questions: allRCQuestions,
-            reasoningContexts: rcContext,
-            referenceData: referenceDataRC,
-        });
+        // Generate rationales for RC questions
+        console.log(`\n🧾 [Step 10/X] Generating rationales for RC questions`);
+        for (let i = 0; i < passageIds.length; i++) {
+            const passageId = passageIds[i];
+            const passageText = dataManager.getPassagesForDB("")[i].content;
+            const filteredRCQuestions = updatedRCQuestions.filter(q => q.passage_id === passageId);
 
-        console.log(`\n🧾 [Step 9/X] Generating rationales for VA`);
+            if (filteredRCQuestions.length > 0) {
+                const rcQuestionsWithRationales = await generateRationalesWithEdges({
+                    passageText: passageText,
+                    questions: filteredRCQuestions,
+                    reasoningContexts: rcContext,
+                    referenceData: referenceDataRC,
+                });
+
+                // Update questions with rationales and tags
+                for (const q of rcQuestionsWithRationales) {
+                    dataManager.updateQuestion(q.id, {
+                        rationale: q.rationale,
+                        tags: q.tags,
+                    });
+                }
+            }
+        }
+
+        // Generate rationales for VA questions
+        console.log(`\n🧾 [Step 11/X] Generating rationales for VA questions`);
         const vaQuestionsFinal = await generateVARationalesWithEdges({
-            questions: vaQuestionsWithAnswers,
+            questions: updatedVAQuestions,
             reasoningContexts: vaContext,
             referenceData: referenceDataVA,
         });
 
-        // --- PHASE 6: FINALIZATION ---
+        for (const q of vaQuestionsFinal) {
+            dataManager.updateQuestion(q.id, {
+                rationale: q.rationale,
+                tags: q.tags,
+            });
+        }
 
-        console.log(`\n📋 [Step 10/X] Formatting output for database upload`);
+        // --- PHASE 7: FINALIZATION ---
 
-        // Calculate actual question counts
-        const actualRCCount = allRCQuestions.length;
-        const actualVACount = vaQuestionsFinal.length;
-        const actualTotal = actualRCCount + actualVACount;
+        console.log(`\n📋 [Step 12/X] Formatting output for database upload`);
 
-        const output = formatOutputForDB({
-            passagesData: allPassagesData.map(pd => ({
-                passageData: pd.passageData,
-                articleData: pd.articleData,
-            })),
-            rcQuestions: rcQuestionsFinal,
-            vaQuestions: vaQuestionsFinal,
+        // Format output using DataManager
+        const output = formatOutputForDB(dataManager, {
             userId: user_id,
-            mockName: mock_name || "Custom Mock Test",
+            mockName: mock_name || "Customized Test",
             timeLimitMinutes: time_limit_minutes,
         });
 
         // Validate output
-        if (!formatOutputForDB.validateOutputForDB(output)) {
+        if (!validateOutputForDB(output)) {
             throw new Error("Output validation failed");
         }
 
@@ -271,11 +433,18 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
         const report = generateOutputReport(output);
         console.log(report);
 
+        const stats = dataManager.getStats();
         console.log("\nBreakdown:");
-        console.log(`   Total Passages: ${output.passages.length}`);
-        console.log(`   Total Questions: ${output.questions.length} (RC: ${actualRCCount}, VA: ${actualVACount})`);
+        console.log(`   Total Passages: ${stats.passageCount}`);
+        console.log(`   Total Questions: ${stats.totalQuestions} (RC: ${stats.rcQuestions}, VA: ${stats.vaQuestions})`);
 
-        console.log(`\n📋 [Step 11/X] Uploading to database`);
+        // Save to file for review
+        const fs = require('fs');
+        const outputPath = './justReadingOutputCustom.json';
+        fs.writeFileSync(outputPath, JSON.stringify(output, null, 2));
+        console.log(`\n💾 Output saved to: ${outputPath}`);
+
+        console.log(`\n📋 [Step 13/X] Uploading to database`);
         await saveAllDataToDB({
             examData: output.exam,
             passagesData: output.passages,

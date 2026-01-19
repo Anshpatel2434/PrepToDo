@@ -1,6 +1,6 @@
 import { metricMappingJson } from "../../../config/core_metric_reasoning_map_v1_0";
 import { supabase } from "../../../config/supabase";
-import { Edge, Node, QuestionMetricTag, ReasoningGraphContext } from "../schemas/types";
+import { Node, QuestionMetricTag, ReasoningGraphContext } from "../schemas/types";
 
 /**
  * Assembles reasoning graph context for each question using metric_keys and their mapped reasoning nodes.

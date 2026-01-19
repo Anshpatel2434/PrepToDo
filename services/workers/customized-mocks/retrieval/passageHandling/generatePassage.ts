@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { AuthorialPersona, SemanticIdeas } from "./extractSemanticIdeas";
+import { AuthorialPersona, SemanticIdeas } from "../../schemas/types";
 
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
@@ -10,7 +10,7 @@ const MODEL = "gpt-4o-mini";
  * For custom mocks, this includes personalized touches based on user analytics
  * (weak areas, target metrics, difficulty preferences).
  */
-export async function generatePassage(params: {
+export async function   generatePassage(params: {
     semanticIdeas: SemanticIdeas;
     authorialPersona: AuthorialPersona;
     referencePassages: string[];
@@ -168,7 +168,7 @@ CAT RC passages are typically sourced from:
 - Technical and policy reports (think-tank briefs, white papers)
 
 PASSAGE CHARACTERISTICS:
-- Length: 500-800 words
+- Length: 500-600 words
 - Complexity: high lexical density, multiple clauses, low redundancy
 - Structure: layered argumentation (definitions, premises, evidence, objections, conclusions)
 - Viewpoint: expository or argumentative, presenting a thesis plus counter-arguments
@@ -182,7 +182,7 @@ HOW PASSAGES ARE ADAPTED FOR CAT:
 
 ### GENERATION CONSTRAINTS (MANDATORY)
 
-- Word count: 500-800 words (optimal range for CAT)
+- Word count: 500-600 words (optimal range for CAT)
 - Paragraphs: 3 to 5
 - Tone: neutral, analytical, academic
 - No storytelling

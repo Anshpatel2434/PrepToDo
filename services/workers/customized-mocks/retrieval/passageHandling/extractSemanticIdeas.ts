@@ -1,112 +1,165 @@
+// extractSemanticIdeas.ts
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
-import { z } from "zod";
-import { AuthorialPersona, SemanticIdeas } from "../../schemas/types";
+import { SemanticExtractionOutput, SemanticExtractionOutputSchema } from "../../schemas/types";
+
+/* =========================================================
+   2. LLM Setup
+   ========================================================= */
 
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
-export const SemanticIdeasSchema = z.object({
-    core_topic: z.string(),
-    subtopics: z.array(z.string()).min(2),
-    key_arguments: z.array(z.string()).min(3),
-    implicit_assumptions: z.array(z.string()).min(1),
-    areas_of_ambiguity: z.array(z.string()).min(1),
-    sentence_ideas: z.array(z.string()).min(5).describe("Key sentence-level ideas for VA questions"),
-    conceptual_pairs: z.array(z.object({
-        idea_a: z.string(),
-        idea_b: z.string(),
-        relationship: z.string()
-    })).min(3).describe("Pairs for odd_one_out questions"),
-    logical_transitions: z.array(z.string()).min(3).describe("Logical connectors"),
-});
-
-export const AuthorialPersonaSchema = z.object({
-    stance_type: z.enum([
-        "critical",
-        "revisionist",
-        "skeptical",
-        "corrective",
-        "warning-driven",
-    ]),
-    evaluative_intensity: z.enum(["low", "medium", "high"]),
-    typical_moves: z.array(z.string()).min(2),
-    syntactic_traits: z.array(z.string()).min(2),
-    closure_style: z.enum(["open-ended", "cautionary", "unresolved"]),
-});
-
-export const SemanticExtractionOutputSchema = z.object({
-    semantic_ideas: SemanticIdeasSchema,
-    authorial_persona: AuthorialPersonaSchema,
-});
+/* =========================================================
+   3. Extraction Function
+   ========================================================= */
 
 /**
- * Extracts semantic ideas and authorial persona from source article.
- * This provides content structure (not content) and writing style guide.
+ * Extracts:
+ * 1) Abstract semantic ideas (WHAT is being argued)
+ * 2) Authorial persona (HOW the argument is advanced)
+ *
+ * IMPORTANT:
+ * - Article text must NEVER be stored
+ * - Persona extraction must be meta-style only
  */
 export async function extractSemanticIdeasAndPersona(
     articleText: string,
     genre: string
-): Promise<{ semantic_ideas: SemanticIdeas; authorial_persona: AuthorialPersona }> {
-    console.log(`🧠 [Semantic Extraction] Extracting from article (${articleText.length} chars)`);
+): Promise<SemanticExtractionOutput> {
+    console.log(`🧠 [Semantic Extract] Extracting semantic ideas + persona (genre=${genre})`);
 
-    const prompt = `You are a CAT content analyst. Extract semantic ideas and authorial persona from the article below.
+    const prompt = `
+You are an extraction engine for exam content creation.
 
-ARTICLE:
-${articleText}
+THIS TASK HAS THREE DISTINCT PARTS.
+DO NOT MIX THEM.
 
-GENRE: ${genre}
+--------------------------------------------------
+PART 1: SEMANTIC IDEAS (CONTENT)
+--------------------------------------------------
+
+RULES:
+- You are NOT summarizing
+- You are NOT rewriting
+- You are NOT paraphrasing
+- Extract IDEAS ONLY
+
+ABSOLUTE CONSTRAINTS:
+- Do NOT preserve wording
+- Do NOT preserve sentence order
+- Do NOT preserve paragraph structure
+- Do NOT use metaphors
+- Do NOT include examples
+- Do NOT include author opinions
 
 Extract:
-1) Semantic Ideas (WHAT the article discusses)
-   - core_topic
-   - subtopics (2-4 key themes)
-   - key_arguments (3-5 main claims)
-   - implicit_assumptions (1-2 unstated premises)
-   - areas_of_ambiguity (1-2 deliberately vague concepts)
-   - sentence_ideas (5-7 key sentences for VA questions)
-   - conceptual_pairs (3-5 related idea pairs)
-   - logical_transitions (3-5 connectors used)
+1. Core topic - Be DESCRIPTIVE and COMPREHENSIVE (2-3 sentences explaining the central theme, not just a label)
+2. Subtopics discussed - Each subtopic should be a DETAILED description (1-2 sentences each), not just keywords
+3. Key arguments or positions (abstracted) - Provide FULL, NUANCED descriptions of each argument with context and implications
+4. Implicit assumptions - Articulate the UNDERLYING BELIEFS or PREMISES in complete, explanatory sentences
+5. Areas of ambiguity or debate - Describe SPECIFIC TENSIONS, UNRESOLVED QUESTIONS, or COMPETING INTERPRETATIONS in detail
 
-2) Authorial Persona (HOW arguments are made, NOT what)
-   - stance_type (critical|revisionist|skeptical|corrective|warning-driven)
-   - evaluative_intensity (low|medium|high)
-   - typical_moves (2-3 argumentative techniques)
-   - syntactic_traits (2-3 sentence patterns)
-   - closure_style (open-ended|cautionary|unresolved)
+DESCRIPTIVE FORMAT REQUIREMENT:
+- Each extracted idea should be a complete, self-explanatory statement
+- Provide sufficient context so the idea stands alone without the original text
+- Use full sentences with proper explanations, not bullet points or fragments
+- Capture the DEPTH and NUANCE of the argument, not just surface-level labels
 
-CRITICAL: Extract the IDEAS (content structure), not the content itself. This is for copyright-safe content generation.
+--------------------------------------------------
+PART 2: SENTENCE-LEVEL IDEAS (FOR VA QUESTIONS)
+--------------------------------------------------
+
+These ideas will be used to generate:
+- Para jumble questions (ordering of sentences)
+- Para summary questions (identifying the best summary)
+- Para completion questions (completing a sentence/paragraph)
+- Odd one out questions (identifying the sentence that doesn't belong)
+
+Extract:
+1. sentence_ideas: 5-10 distinct, self-contained sentence-level ideas from the text
+   - Each should be a COMPLETE, DETAILED, STANDALONE thought (2-3 sentences)
+   - They should represent key logical steps or arguments WITH FULL CONTEXT
+   - Avoid preserving exact wording but maintain the DEPTH of the idea
+   - Include enough detail so each idea is independently comprehensible
+
+2. conceptual_pairs: 3-5 pairs of related ideas
+   - For each pair: idea_a, idea_b, relationship (how they connect)
+   - Make idea_a and idea_b DESCRIPTIVE and DETAILED (1-2 sentences each)
+   - Describe the relationship with SPECIFICITY (explain HOW and WHY they connect)
+   - These will be used for odd_one_out questions
+
+3. logical_transitions: 3-5 key logical connectors used
+   - Examples: "however", "therefore", "consequently", "in contrast"
+   - For each transition, provide CONTEXT: what it connects and why it's significant
+   - These help identify sentence order and paragraph structure
+
+--------------------------------------------------
+PART 3: AUTHORIAL PERSONA (STYLE META-DATA)
+--------------------------------------------------
+
+This is NOT about content.
+
+Extract ONLY the author's RHETORICAL POSTURE.
+
+RULES:
+- Do NOT quote the article
+- Do NOT imitate phrases
+- Do NOT copy sentence structures
+- Do NOT include metaphors
+- Describe patterns, not expressions
+
+Identify:
+- stance_type (overall argumentative posture)
+- evaluative_intensity (degree of judgment)
+- typical_moves (recurring argumentative strategies) - Be SPECIFIC and DESCRIPTIVE about each move (full sentences explaining the strategy)
+- syntactic_traits (sentence-level tendencies) - Provide DETAILED descriptions of patterns (e.g., "Uses long, complex sentences with multiple subordinate clauses to build layered arguments")
+- closure_style (how the author typically ends arguments)
+
+DESCRIPTIVE FORMAT FOR PERSONA:
+- typical_moves: Each move should be a COMPLETE DESCRIPTION of the rhetorical strategy with examples of its effect
+- syntactic_traits: Each trait should FULLY EXPLAIN the pattern and its purpose in the author's style
+
+--------------------------------------------------
+
+TARGET GENRE: ${genre}
+
+<Article>
+${articleText}
+</Article>
+
+Return STRICT JSON only in the required schema.
 `;
 
-    console.log("⏳ [Semantic Extraction] Waiting for LLM response");
+    console.log("⏳ [Semantic Extract] Waiting for LLM response (extraction)");
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
-        temperature: 0.3,
+        temperature: 0.1,
         messages: [
             {
                 role: "system",
-                content: "You are a CAT content analyst. Extract semantic structure, not verbatim content.",
+                content:
+                    "You extract abstract ideas and meta-level authorial persona only. Any stylistic or textual copying is a failure.",
             },
             {
                 role: "user",
                 content: prompt,
             },
         ],
-        response_format: zodResponseFormat(SemanticExtractionOutputSchema, "semantic_extraction"),
+        response_format: zodResponseFormat(
+            SemanticExtractionOutputSchema,
+            "semantic_and_persona"
+        ),
     });
-
-    console.log("✅ [Semantic Extraction] LLM response received");
 
     const parsed = completion.choices[0].message.parsed;
 
     if (!parsed) {
-        throw new Error("Failed to extract semantic ideas from article");
+        throw new Error("Failed to extract semantic ideas and authorial persona");
     }
 
-    console.log(`✅ [Semantic Extraction] Extracted ${parsed.semantic_ideas.subtopics.length} subtopics`);
-    return {
-        semantic_ideas: parsed.semantic_ideas,
-        authorial_persona: parsed.authorial_persona,
-    };
+    console.log("✅ [Semantic Extract] Extraction complete");
+
+    return parsed;
 }

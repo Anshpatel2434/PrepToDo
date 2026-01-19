@@ -74,7 +74,7 @@ export async function saveAllDataToDB(params: {
 async function updateGenreUsageCount(passages: Passage[]): Promise<void> {
     try {
         // Get unique genres
-        const uniqueGenres = [...new Set(passages.map(p => p.genre))];
+        const uniqueGenres = Array.from(new Set(passages.map(p => p.genre)));
 
         for (const genreName of uniqueGenres) {
             // Get current genre data

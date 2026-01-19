@@ -2,6 +2,8 @@ import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import { Passage, Question, QuestionSchema } from "../../schemas/types";
+import { user_core_metrics_definition_v1 } from "../../../../config/user_core_metrics_definition_v1";
+import { v4 as uuidv4 } from 'uuid';
 
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
@@ -59,17 +61,8 @@ function ensureDifficultyVariety(questions: Question[], questionCount: number): 
     return questions;
 }
 
-// Simple UUID generator
-function generateUUID(): string {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-}
-
 export async function generateRCQuestions(params: {
-    passageText: string;
+    passageData: any;
     referenceData: ReferenceDataSchema[];
     questionCount: number;
     personalization?: {
@@ -77,7 +70,7 @@ export async function generateRCQuestions(params: {
         weakAreas?: string[];
     };
 }) {
-    const { passageText, referenceData, questionCount, personalization } = params;
+    const { passageData, referenceData, questionCount, personalization } = params;
 
     console.log(`🧩 [RC Questions] Starting generation (${questionCount} questions)`);
 
@@ -194,7 +187,7 @@ ANALYSIS FOCUS:
 ## STEP 2: GENERATE QUESTIONS FOR NEW PASSAGE
 
 NEW PASSAGE (TARGET):
-${passageText}
+${passageData.passageData.content}
 
 ---
 
@@ -286,7 +279,8 @@ IMPORTANT:
 - Leave rationale empty
 - Generate EXACTLY ${questionCount} questions
 - No additional text or commentary
-- The question should be able to assess the metrics from "user_core_metrics_definition_v1.json" file and try to divide all the metrics across all questions.
+- The question should be able to assess the metrics from
+- The question should be able to assess the metrics from ${JSON.stringify(user_core_metrics_definition_v1)} file and try to divide all the metrics across 4 questions. file and try to divide all the metrics across all questions.
 `;
 
     console.log("⏳ [RC Questions] Waiting for LLM to generate questions");
@@ -321,7 +315,8 @@ IMPORTANT:
     const now = new Date().toISOString();
     return parsed.questions.map(q => ({
         ...q,
-        id: generateUUID(),
+        id: uuidv4(),
+        passage_id: passageData.passageData.id,
         created_at: now,
         updated_at: now
     }));

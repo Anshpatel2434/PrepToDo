@@ -2,15 +2,13 @@ import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { QuestionMetricTagArraySchema } from "../../schemas/types";
 import z from "zod";
-import * as fs from "fs";
-import * as path from "path";
+import { user_core_metrics_definition_v1 } from "../../../../config/user_core_metrics_definition_v1";
 
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
 // Read metrics definition
-const metricsPath = path.join(process.cwd(), "config/user_core_metrics_definition_v1.json");
-const metricsData = JSON.parse(fs.readFileSync(metricsPath, "utf-8"));
+const metricsData = user_core_metrics_definition_v1
 const metricsCatalog = metricsData.metrics.map((m: any) => ({
     metric_key: m.metric_key,
     description: m.description

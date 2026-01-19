@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import { Passage, Question, QuestionSchema } from "../../schemas/types";
+import { user_core_metrics_definition_v1 } from "../../../../config/user_core_metrics_definition_v1";
 
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
@@ -185,19 +186,19 @@ ${passageText}
 
 Generate EXACTLY ${questionCount} questions in this order:
 
-1) INFERENCE / SUGGESTION (1)
+1) INFERENCE / SUGGESTION (≥1)
 - Derive an unstated conclusion OR relationship OR assumption (taxonomy bucket B)
 - Correct option requires multi-step reasoning
 
-2) TONE / PURPOSE (1)
+2) TONE / PURPOSE (≥1)
 - Either tone OR purpose (taxonomy bucket A)
 - Distractors: opposite tone, too neutral, too extreme, wrong target (author vs. a group in passage)
 
-3) INFORMATION/DETAIL (1)
+3) INFORMATION/DETAIL (≥1)
 - Evidence in the passage but requires careful interpretation (taxonomy bucket C)
 - Avoid verbatim lifting; require understanding of what a line/claim implies
 
-4) MAIN IDEA / IMPLICATION / TITLE-LIKE (1)
+4) MAIN IDEA / IMPLICATION / TITLE-LIKE (≥1)
 - Passage-level synthesis (taxonomy bucket A)
 - Can be framed as central idea, main purpose, implication, suitable title, or author-likely-to-be
 
@@ -266,7 +267,7 @@ IMPORTANT:
 - Leave rationale empty
 - Generate EXACTLY ${questionCount} questions
 - No additional text or commentary
-- The question should be able to assess the metrics from "user_core_metrics_definition_v1.json" file and try to divide all the metrics across 4 questions.
+- The question should be able to assess the metrics from ${JSON.stringify(user_core_metrics_definition_v1)} file and try to divide all the metrics across 4 questions.
 `;
 
     console.log("⏳ [RC Questions] Waiting for LLM to generate questions");

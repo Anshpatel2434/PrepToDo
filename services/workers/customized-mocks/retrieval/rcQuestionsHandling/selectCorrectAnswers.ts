@@ -1,85 +1,144 @@
 import OpenAI from "openai";
-import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
-import { Question } from "../../schemas/types";
+import { zodResponseFormat } from "openai/helpers/zod";
 
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
-const AnswerSchema = z.object({
-    answers: z.array(z.object({
-        question_id: z.string(),
-        correct_answer: z.string(), // "A", "B", "C", or "D"
-    })),
+/**
+ * Selects the correct answer for each question using the passage.
+ *
+ * This is a deterministic pass with temperature=0 to ensure consistency.
+ * The LLM acts as a strict answer key verifier, not an explainer.
+ *
+ * Key aspects:
+ * - Low temperature (0.0) for consistent results
+ * - No explanations or justifications required
+ * - Only selects the correct option letter (A/B/C/D)
+ * - Handles ambiguous questions by choosing the best alignment with author's intent
+ */
+
+/* =========================================
+   Schema: Only what we expect back
+   ========================================= */
+
+const CorrectAnswerSchema = z.object({
+    id: z.string().uuid(),
+    correct_answer: z.object({
+        answer: z.enum(["A", "B", "C", "D"]),
+    }),
 });
 
-/**
- * Selects correct answers for RC questions.
- */
+const ResponseSchema = z.object({
+    questionsWithAnswer: z.array(CorrectAnswerSchema)
+})
+
+/* =========================================
+   Pass-2 Function
+   ========================================= */
+
 export async function selectCorrectAnswers(params: {
     passageText: string;
-    questions: Question[];
-}): Promise<Question[]> {
+    questions: any[]; // already schema-valid Question objects
+}) {
     const { passageText, questions } = params;
 
-    console.log(`✅ [RC Answers] Selecting correct answers for ${questions.length} questions`);
+    console.log(`🧠 [Answer Key] Selecting correct answers for ${questions.length} questions`);
 
-    const prompt = `You are a CAT VARC examiner. Select the correct answer for each question.
+    const prompt = `SYSTEM:
+You are a strict CAT answer key verifier.
+You select the correct option.
+You do NOT explain.
+You do NOT justify.
+You do NOT rewrite.
 
-PASSAGE:
+USER:
+Determine the correct answer for each question below
+based ONLY on the passage.
+
+STRICT RULES:
+- Exactly ONE option must be correct per question
+- Do NOT modify question text
+- Do NOT modify options
+- Do NOT add explanations
+- If a question is ambiguous, choose the option
+  that best aligns with the author’s intent
+
+--------------------------------
+PASSAGE
+--------------------------------
 ${passageText}
 
-QUESTIONS:
-${questions.map((q, i) => `
-Q${i + 1}: ${q.question_text}
-A) ${q.options.A}
-B) ${q.options.B}
-C) ${q.options.C}
-D) ${q.options.D}
-`).join("\n")}
+--------------------------------
+QUESTIONS
+--------------------------------
+${JSON.stringify(
+        questions.map(q => ({
+            id: q.id,
+            question_text: q.question_text,
+            options: q.options,
+        })),
+        null,
+        2
+    )}
 
-For each question, select the single best answer (A, B, C, or D).
+--------------------------------
+OUTPUT FORMAT
+--------------------------------
+Return STRICT JSON array with objects:
 
-Return JSON:
 {
-  "answers": [
-    { "question_id": "...", "correct_answer": "A|B|C|D" }
-  ]
+  "id": "<question_id>",
+  "correct_answer": { "answer": "A|B|C|D" }
 }
+
 `;
 
-    console.log("⏳ [RC Answers] Waiting for LLM response");
+    console.log("⏳ [Answer Key] Waiting for LLM response (answer key)");
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
-        temperature: 0.1,
+        temperature: 0.0, // very important
         messages: [
             {
                 role: "system",
-                content: "You are a CAT VARC examiner. Select correct answers based on passage text.",
+                content:
+                    "You are a CAT answer key verifier. You select answers only.",
             },
             {
                 role: "user",
                 content: prompt,
             },
         ],
-        response_format: zodResponseFormat(AnswerSchema, "rc_answers"),
+        response_format: zodResponseFormat(
+            ResponseSchema,
+            "answer_key"
+        ),
     });
 
     const parsed = completion.choices[0].message.parsed;
 
-    if (!parsed) {
-        throw new Error("Failed to select RC answers");
+    if (!parsed || parsed.questionsWithAnswer.length !== questions.length) {
+        throw new Error("Answer key generation failed or incomplete");
     }
 
-    // Merge answers into questions
-    const answerMap = new Map(parsed.answers.map(a => [a.question_id, a.correct_answer]));
+    console.log("✅ [Answer Key] Answer key received");
 
-    const questionsWithAnswers = questions.map(q => ({
+    /* =========================================
+       Merge back into questions
+       ========================================= */
+
+    const answerMap = new Map(
+        parsed.questionsWithAnswer.map(a => [a.id, a.correct_answer])
+    );
+
+    const updatedQuestions = questions.map(q => ({
         ...q,
-        correct_answer: { answer: answerMap.get(q.id) || "" },
+        correct_answer: answerMap.get(q.id),
+        updated_at: new Date().toISOString(),
     }));
 
-    console.log(`✅ [RC Answers] Selected answers for all questions`);
-    return questionsWithAnswers;
+    console.log("✅ [Answer Key] Answers merged into question objects");
+
+    return updatedQuestions;
 }

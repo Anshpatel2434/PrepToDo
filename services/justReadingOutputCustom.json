@@ -1,0 +1,331 @@
+{
+  "exam": {
+    "id": "783cf169-77ae-4561-956e-d865c1de2e11",
+    "name": "Customized Mock",
+    "year": 2026,
+    "exam_type": "CAT",
+    "slot": "Custom",
+    "is_official": false,
+    "created_at": "2026-01-17T22:15:24.556Z",
+    "used_articles_id": [
+      "64bca2bf-0ead-44b6-b5cc-91a34c3d0e38",
+      "65965138-b761-41a9-bea0-75bb6378c754",
+      "a88b6c65-099e-4c3a-9a80-cc8be2c7af4d",
+      "c6e8b5ab-c0fd-4d96-9b9e-0ca82f7169de"
+    ],
+    "generated_by_user_id": "1962e072-bcc0-48f4-8376-6c968d406cbe",
+    "time_limit_minutes": 40
+  },
+  "passages": [
+    {
+      "id": "4b64f8da-538d-4ad8-910e-3d64b5456b2d",
+      "title": "Passage 1",
+      "content": "The emerging field of network neuroscience represents a profound paradigm shift in our understanding of the brain; it fundamentally challenges the entrenched belief that cognitive functions can be attributed solely to discrete regions. Instead, it posits that the brain operates as a complex network of interconnected neurons, where the interactions among various regions are not merely important—they are crucial for mental activity. This perspective, employing graph theory to model brain interactions, underscores the significance of connectivity over isolated functions, thereby offering a more nuanced understanding of both normal cognitive processes and mental disorders.\n\nA foundational principle of network neuroscience is the concept of modularity, which refers to the organization of the brain into distinct modules specializing in different functions. These modules do not operate in isolation; rather, they interact dynamically to facilitate cognitive tasks such as memory, decision-making, and learning. This interdependence suggests that cognitive efficiency is not merely a product of individual modules; it arises from the intricate interplay between them. However, this raises an essential question: to what extent does modularity enhance cognitive flexibility, particularly in the context of mental health disorders? The relationship between structural and functional connectivity remains complex and not fully understood, indicating an urgent need for further exploration in this area.\n\nMoreover, research indicates that individual differences in brain connectivity patterns can serve as a \"fingerprint\" reflecting cognitive abilities and personality traits. This notion challenges the traditional view that cognitive functions are uniformly distributed across individuals; instead, it suggests that our neural architecture plays a pivotal role in defining who we are. Such findings have profound implications for understanding mental health, as variations in connectivity patterns have been linked to disorders like depression and schizophrenia. However, the assumption that these neural fingerprints can be easily mapped and interpreted may be overly simplistic, given the myriad factors influencing brain connectivity, including environmental experiences and developmental stages.\n\nThe evolution of brain networks over time, particularly during critical periods such as childhood and adolescence, further complicates our understanding of cognitive functioning. As individuals grow, their brain networks develop larger hubs that facilitate communication across modules, enabling more complex cognitive functions. This evolutionary perspective raises questions about the adaptability of brain networks and their capacity to respond to environmental changes. While it is tempting to view these developments as inherently advantageous for survival, one must consider the potential downsides—such as the increased vulnerability to mental health issues that may arise from connectivity abnormalities.\n\nIn light of these complexities, it becomes evident that understanding the structural and functional connectivity of the brain is essential for developing effective interventions for mental health disorders. Abnormalities in these networks can lead to various psychological conditions; yet, the path from understanding connectivity to implementing therapeutic strategies is fraught with challenges. The implicit assumption that advancements in neuroscience will seamlessly translate into practical applications—such as improved artificial intelligence or targeted therapies—may overlook the ethical implications and feasibility of such interventions. As we delve deeper into the intricacies of brain networks, we must remain cautious about the narratives we construct around these advancements.\n\nFurthermore, the interplay between cognitive functioning and mental health invites a critical examination of the dominant narratives in neuroscience. The prevailing focus on individual brain regions risks oversimplifying the complexities of mental processes, potentially leading to misguided interventions that fail to account for the networked nature of cognition. This critique is particularly pertinent in the context of emerging technologies that promise to alter brain networks; while the potential benefits are enticing, the ethical ramifications of such interventions warrant careful consideration. The question remains: how do we balance the pursuit of knowledge with the responsibility to ensure that our understanding of the brain does not lead to unintended consequences?\n\nAs we navigate the evolving landscape of network neuroscience, it is imperative to acknowledge the limitations of our current understanding. The relationship between brain connectivity and cognitive functioning is not merely a matter of mapping neural pathways; it involves grappling with the complexities of human experience, identity, and the myriad factors that shape our mental lives. The potential for future technologies to enhance our understanding of the brain is tempered by the recognition that such advancements must be approached with caution, ensuring that they do not reinforce existing inequities or ethical dilemmas.\n\nIn summary, while network neuroscience offers a promising framework for understanding the brain's intricate workings, it also compels us to reconsider our assumptions about cognition and mental health. The interplay between structural and functional connectivity, the implications of modularity, and the evolving nature of brain networks all contribute to a rich tapestry of inquiry that demands further exploration. As we continue to unravel the complexities of the brain, we must remain vigilant in questioning the narratives we construct and the ethical considerations that accompany our advancements in understanding human cognition.",
+      "word_count": 798,
+      "genre": "Neuroscience",
+      "difficulty": "hard",
+      "source": "Scientific American",
+      "paper_id": "783cf169-77ae-4561-956e-d865c1de2e11",
+      "is_daily_pick": false,
+      "is_featured": false,
+      "is_archived": false,
+      "created_at": "2026-01-17T22:15:24.556Z",
+      "updated_at": "2026-01-17T22:15:24.556Z"
+    },
+    {
+      "id": "2e614848-4eb6-4684-a999-1aae53ff3b26",
+      "title": "Passage 2",
+      "content": "The exploration of touch within modern British society, particularly in urban environments, reveals a complex interplay between tactile interactions and social dynamics; however, this examination must confront the counter-narrative that not all tactile experiences are inherently positive. Historically, societal attitudes towards touch have undergone significant transformation, moving from the Victorian era's aversion to a contemporary acceptance that is often superficial—yet this shift does not equate to genuine emotional connection. This evolution reflects broader societal changes, suggesting that our understanding of touch is not merely a personal preference but a cultural construct shaped by historical context; thus, the implications of this evolution are particularly pronounced in urban settings, where the density of human interaction creates a paradox: increased physical proximity does not necessarily foster deeper connections among individuals.\n\nIn urban environments, the sensory experiences associated with touch are often complicated by the phenomenon of sensory overload; the bustling nature of city life can lead to a chaotic sensory landscape, where the sheer volume of stimuli overwhelms individual perception. This raises critical questions about the psychological well-being of urban dwellers, who may find themselves navigating a world that is both physically close yet emotionally distant. The notion of the \"blasé\" urban dweller emerges as a coping mechanism; individuals become desensitized to their surroundings, leading to a form of disengagement that complicates social interactions. However, this perspective may overlook the active role individuals play in negotiating their sensory environments, suggesting that agency persists even amid overwhelming stimuli—yet, one must question whether this agency is truly effective in fostering meaningful connections.\n\nMoreover, the regulation of touch in public spaces serves as a reflection of societal norms and power dynamics; authorities often impose restrictions on physical contact to maintain social order, yet these regulations can inadvertently reinforce existing inequalities. The societal discourse surrounding touch is laden with implications for personal autonomy and consent, particularly in relation to gender dynamics. Norms dictate who can touch whom, often privileging certain bodies over others and perpetuating a cycle of control and compliance. This regulatory framework raises questions about the extent to which individuals can assert their boundaries in a society that simultaneously encourages and restricts tactile interactions; thus, the very act of touching becomes a site of contention, revealing deeper societal fractures.\n\nThe historical narrative surrounding touch also invites scrutiny regarding its implications for race, class, and sexuality; the evolution of tactile interactions is not a linear progression from avoidance to acceptance but rather a nuanced tapestry woven with threads of power and privilege. The complexities of urban life necessitate a reevaluation of how touch is experienced and understood. For instance, while some may argue that modernity has ushered in an era of greater acceptance of physical contact, this perspective fails to account for the underlying tensions that persist. The regulation of touch is not merely a top-down imposition; it involves intricate negotiations between individuals and their environments, leading to diverse behaviors that reflect a spectrum of comfort and discomfort—yet, this diversity does not negate the overarching societal pressures that shape these interactions.\n\nFurthermore, the implications of sensory overload extend beyond individual experiences to encompass broader societal concerns; the chaotic nature of urban environments can exacerbate feelings of isolation, as individuals grapple with the dissonance between physical closeness and emotional distance. This phenomenon challenges the assumption that urban living inherently fosters community and connection; instead, it suggests that the very fabric of urban life may contribute to a sense of alienation, complicating the narrative of modernity as a progressive force. The interplay between sensory experiences and social dynamics thus becomes a critical area of inquiry, inviting further exploration into how individuals navigate their tactile realities—yet, the question remains whether such navigation can lead to authentic connections.\n\nIn light of these complexities, it becomes evident that the historical discourse surrounding touch is not merely an academic exercise but a vital lens through which to examine contemporary societal values. The evolution of touch reflects deeper cultural attitudes that shape individual behaviors and interactions; as urban spaces continue to evolve, so too must our understanding of how touch is regulated and experienced. The challenge lies in recognizing the multifaceted nature of tactile interactions and the ways in which they are influenced by broader societal structures—yet, this recognition often eludes those entrenched in conventional narratives.\n\nUltimately, the exploration of touch in modern British society reveals a landscape fraught with contradictions; while the narrative of progress suggests a movement towards greater acceptance of physical contact, the realities of urban life complicate this assumption. The interplay between sensory overload, regulatory practices, and individual agency underscores the need for a nuanced understanding of touch that transcends simplistic binaries. As we navigate the complexities of urban environments, the question remains: how do we reconcile the inherent tensions between proximity and meaningful connection in a world that often prioritizes efficiency over intimacy?",
+      "word_count": 805,
+      "genre": "Urban Studies",
+      "difficulty": "hard",
+      "source": "London Review of Books",
+      "paper_id": "783cf169-77ae-4561-956e-d865c1de2e11",
+      "is_daily_pick": false,
+      "is_featured": false,
+      "is_archived": false,
+      "created_at": "2026-01-17T22:15:24.556Z",
+      "updated_at": "2026-01-17T22:15:24.556Z"
+    },
+    {
+      "id": "bd251425-6b0e-4abb-8879-30de588c692f",
+      "title": "Passage 3",
+      "content": "The emerging field of cancer neuroscience signifies a pivotal transformation in our comprehension of the intricate relationship between the brain and cancer tumors. Historically, the interplay between neurological activity and tumor growth has been largely disregarded in oncology; research has predominantly concentrated on molecular and genetic factors. This oversight has created a substantial void in our understanding of how tumors engage with the nervous system, thereby constraining the development of effective therapeutic strategies. The advent of cancer neuroscience seeks to bridge this void by amalgamating insights from both cancer biology and neuroscience, positing that the brain's activity may be instrumental in tumor progression.\n\nA particularly compelling argument within this new paradigm is the role of neuroligin-3, a protein that facilitates communication between neurons and glioma cells. Recent research by Assistant Professor Humsa Venkatesh reveals that heightened neural activity can propel the growth of gliomas through the production of neuroligin-3, which incites tumor cell division. This finding fundamentally challenges the entrenched belief that tumor growth is predominantly governed by genetic mutations and environmental factors; instead, it suggests that targeting neural activity could unveil a novel therapeutic pathway for combating aggressive brain cancers. The ramifications of this research extend beyond gliomas; the potential for translating these findings to other cancer types, such as small-cell lung cancer, underscores a broader applicability of cancer neuroscience.\n\nNonetheless, the assumptions underpinning this interdisciplinary approach merit rigorous scrutiny. There exists an implicit conviction that grasping the neurological dimensions of cancer will yield more effective treatments, which prompts critical questions regarding the sufficiency of traditional cancer research methodologies. By concentrating predominantly on molecular and genetic factors, the field may have inadvertently overlooked vital aspects of tumor biology. Furthermore, the presumption that collaboration between cancer biologists and neuroscientists is essential for advancing research signals a transformative shift in how scientific disciplines can inform one another; this interdisciplinary collaboration is not merely advantageous; it is increasingly imperative in the face of cancer's complexities.\n\nDespite the allure of cancer neuroscience, several areas of ambiguity remain. For instance, the extent to which findings from animal models, particularly those involving neuroligin-3, can be extrapolated to human patients is fraught with uncertainty. Clinical trials will be indispensable in assessing the viability of targeting neuroligin-3 as a therapeutic strategy; yet, the potential side effects of altering neural communication in cancer treatment are not fully elucidated. This uncertainty accentuates the necessity for caution in interpreting the findings of this nascent field. While the prospect of new treatment pathways is exhilarating, it is paramount to acknowledge that the intricacies of cancer biology cannot be resolved through simplistic solutions.\n\nMoreover, the potential for unintended consequences must be thoroughly considered. The emphasis on neuroligin-3 and its role in fostering tumor growth raises profound questions about the broader implications of manipulating neural activity. For instance, could interventions aimed at diminishing neuroligin-3 levels inadvertently disrupt normal brain functions? Such concerns illuminate the need for a nuanced understanding of the relationship between neural mechanisms and tumor biology. The complexities inherent in this relationship suggest that a one-size-fits-all approach to cancer treatment may be woefully inadequate.\n\nIn light of these considerations, the future of cancer neuroscience appears both promising and laden with challenges. The potential for innovative therapies that leverage insights from neural activity is tempered by the imperative for rigorous empirical validation. As researchers delve deeper into the bidirectional communication between neurons and cancer cells, it is crucial to remain vigilant about the assumptions that underpin this work. The historical neglect of the brain-cancer connection serves as a cautionary tale; while the integration of neuroscience into oncology may yield groundbreaking insights, it is essential to approach this interdisciplinary endeavor with a discerning perspective.\n\nUltimately, the evolution of cancer research towards a more holistic understanding of tumor biology reflects a broader trend in scientific inquiry—one that acknowledges the interconnectedness of various biological systems. However, as we navigate this uncharted territory, the complexities of cancer biology demand that we exercise caution in our interpretations and applications of new findings. The interplay between neural activity and tumor growth is a multifaceted issue that invites further exploration, yet it also compels us to reconsider the frameworks through which we understand cancer. Thus, the journey into cancer neuroscience transcends mere academic pursuit; it emerges as a critical endeavor that may redefine our approach to one of humanity's most pressing health challenges.",
+      "word_count": 724,
+      "genre": "Neuroscience",
+      "difficulty": "hard",
+      "source": "Harvard Magazine",
+      "paper_id": "783cf169-77ae-4561-956e-d865c1de2e11",
+      "is_daily_pick": false,
+      "is_featured": false,
+      "is_archived": false,
+      "created_at": "2026-01-17T22:15:24.556Z",
+      "updated_at": "2026-01-17T22:15:24.556Z"
+    },
+    {
+      "id": "9d6d161c-1994-4746-8bab-f88a6da30f7e",
+      "title": "Passage 4",
+      "content": "Urban living has long been linked to a spectrum of mental health issues, particularly psychosis; yet, the mechanisms underlying this association remain fiercely debated. A substantial body of research indicates that urban environments—marked by high population density, social isolation, and various environmental stressors—significantly elevate the prevalence of mental health disorders. Epidemiological studies, especially those conducted in European contexts, consistently reveal that individuals raised in urban settings face a markedly higher risk of developing psychotic symptoms later in life. This correlation compels us to scrutinize the interplay between environmental factors and individual vulnerabilities, particularly genetic predispositions.\n\nThe historical context of this relationship is striking; early 20th-century studies first hinted at the potential link between urban living and schizophrenia. Since then, researchers have amassed considerable evidence supporting the assertion that urban upbringing is a critical factor in the emergence of mental health issues. However, while environmental stressors associated with urban life—such as crime, pollution, and social fragmentation—are often emphasized, the role of genetic factors cannot be dismissed. Some studies suggest that individuals predisposed to mental illness may gravitate toward urban areas, complicating the narrative surrounding causality. This raises an implicit assumption: that urban environments inherently possess characteristics detrimental to mental health, necessitating a closer examination of their specific impacts.\n\nMoreover, the debate surrounding the causal mechanisms linking urban living to mental health issues remains unresolved. Some researchers contend that prior studies may have overstated the environmental impact without adequately accounting for genetic confounding. This perspective challenges the prevailing narrative that urban environments are solely responsible for heightened mental health risks; it suggests that a more nuanced understanding is imperative—one that considers the intricate interplay between genetic predispositions and environmental influences. The assertion that urban living is a significant risk factor for mental health issues is, therefore, not as straightforward as it may seem; it is fraught with ambiguity and demands rigorous scrutiny.\n\nRecent longitudinal studies underscore the importance of early exposure to urban environments, indicating that children raised in cities are particularly vulnerable to developing mental health issues. Factors such as exposure to crime and social isolation emerge as key risk factors, suggesting that the urban experience during formative years can have lasting effects on mental well-being. However, this focus on environmental stressors raises further questions about the extent to which these factors interact with genetic vulnerabilities. The complexity of this interaction invites a critical evaluation of the assumptions underpinning current research; it implies that understanding mental health outcomes necessitates a comprehensive approach that integrates both genetic and environmental perspectives.\n\nFurthermore, the phenomenon of social drift—where individuals with pre-existing mental health issues may gravitate toward urban areas—adds another layer of complexity to the urban-mental health relationship. This phenomenon complicates the understanding of causality, raising questions about whether urban living exacerbates mental health issues or whether those with mental health challenges are simply more inclined to seek out urban environments. The implications of this are significant; they suggest that the relationship between urban living and mental health is not merely one of cause and effect but rather a dynamic interplay of various factors that warrants further exploration.\n\nIn light of these complexities, it becomes evident that addressing mental health risks associated with urban living is not a straightforward endeavor. While there is an urgent need for public health interventions aimed at mitigating these risks, the effectiveness of such interventions may hinge on a more nuanced understanding of the underlying dynamics. The assumption that environmental factors alone can account for the increased prevalence of mental health issues in urban populations is, at best, tenuous; it overlooks the intricate ways in which genetic predispositions and environmental influences interact, potentially leading to misguided policy responses.\n\nAs urban populations continue to swell, the urgency of comprehending these dynamics cannot be overstated. The implications for public health are profound; without a comprehensive approach that considers both genetic and environmental factors, interventions may fall short of addressing the root causes of mental health issues in urban settings. The challenge lies in reconciling the various strands of research that point to both environmental stressors and genetic vulnerabilities. This reconciliation is essential for developing effective strategies that can genuinely improve mental health outcomes for urban dwellers.\n\nUltimately, the relationship between urban living and mental health remains a complex and multifaceted issue. The ongoing debates surrounding the relative influence of environmental and genetic factors underscore the necessity for continued research and dialogue. As we strive to unravel the intricacies of this relationship, it is crucial to remain cautious about drawing definitive conclusions. The interplay of various factors—social, environmental, and genetic—demands a careful and nuanced approach, one that acknowledges the limitations of current understanding while remaining open to new insights. The path forward requires not only rigorous investigation but also a willingness to challenge prevailing assumptions and embrace the complexity inherent in the urban-mental health nexus.",
+      "word_count": 803,
+      "genre": "Urban Studies",
+      "difficulty": "hard",
+      "source": "Scientific American",
+      "paper_id": "783cf169-77ae-4561-956e-d865c1de2e11",
+      "is_daily_pick": false,
+      "is_featured": false,
+      "is_archived": false,
+      "created_at": "2026-01-17T22:15:24.556Z",
+      "updated_at": "2026-01-17T22:15:24.556Z"
+    }
+  ],
+  "questions": [
+    {
+      "id": "faa4d314-4c02-43dc-a25b-c1eaed7b16d6",
+      "passage_id": null,
+      "paper_id": "783cf169-77ae-4561-956e-d865c1de2e11",
+      "question_text": "The passage given below is followed by four alternate summaries. Choose the option that best captures the essence of the passage. \n\nNetwork neuroscience emphasizes the importance of understanding the brain as a complex network of interconnected neurons, rather than focusing solely on individual regions. This perspective reveals that cognitive functions arise from the intricate interactions among various brain areas, suggesting that our understanding of mental processes must account for both structural and functional connectivity. Furthermore, this approach highlights how individual differences in brain connectivity can influence cognitive abilities and personality traits.",
+      "question_type": "para_summary",
+      "options": {
+        "A": "Understanding the brain as a network of interconnected neurons provides insights into cognitive functions and individual differences in abilities.",
+        "B": "Cognitive functions are determined solely by individual brain regions, which operate independently of one another.",
+        "C": "Network neuroscience focuses on the structural aspects of the brain without considering functional connectivity.",
+        "D": "The brain's complexity can be understood by isolating individual regions and analyzing their functions separately."
+      },
+      "jumbled_sentences": {
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": ""
+      },
+      "correct_answer": {
+        "answer": "A"
+      },
+      "rationale": "The correct option is A, as it accurately reflects the passage's emphasis on understanding the brain as a network of interconnected neurons. This perspective is crucial for revealing how cognitive functions emerge from the interactions among various brain areas and how individual differences in brain connectivity can influence cognitive abilities and personality traits.\n\nOption B is tempting because it suggests a focus on individual brain regions, but it fundamentally misrepresents the passage's core idea. The passage clearly states that cognitive functions arise from the interactions among different brain areas, not from isolated regions.\n\nOption C is misleading as it implies that network neuroscience focuses solely on structural aspects without considering functional connectivity. However, the passage highlights the importance of both structural and functional connectivity in understanding cognitive processes.\n\nOption D incorrectly suggests that isolating individual regions is a valid approach to understanding the brain's complexity. This contradicts the passage's argument that emphasizes the interconnectedness of neurons and the necessity of considering their interactions.\n\nThus, option A is the only one that captures the essence of the passage effectively.",
+      "difficulty": "medium",
+      "tags": [
+        "inference_accuracy",
+        "detail_vs_structure_balance"
+      ],
+      "created_at": "2026-01-17T22:12:39.164Z",
+      "updated_at": "2026-01-17T22:14:36.720Z"
+    },
+    {
+      "id": "71a2d30b-4092-4baf-b21d-3f7d22edc637",
+      "passage_id": null,
+      "paper_id": "783cf169-77ae-4561-956e-d865c1de2e11",
+      "question_text": "The passage given below is followed by four alternate summaries. Choose the option that best captures the essence of the passage. \n\nThe critical theory of technology posits that technological design and development are influenced by social and political choices, which can lead to an authoritarian social order. It argues that technologies should be viewed as environments that shape human behavior, similar to laws and customs. This perspective emphasizes the need for a democratic approach to technology that acknowledges the social implications of technological advancements.",
+      "question_type": "para_summary",
+      "options": {
+        "A": "Technological advancements are purely objective and do not reflect social or political influences.",
+        "B": "The critical theory of technology suggests that technologies shape human behavior and must be approached democratically.",
+        "C": "Technological design is solely a technical process that does not involve social considerations.",
+        "D": "The development of technology is independent of human values and societal norms."
+      },
+      "jumbled_sentences": {
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": ""
+      },
+      "correct_answer": {
+        "answer": "B"
+      },
+      "rationale": "The correct option is B, as it accurately reflects the passage's main argument that technologies shape human behavior and should be approached democratically. The passage emphasizes the influence of social and political choices on technological design and the need for a democratic perspective that acknowledges these implications.\n\nOption A is tempting because it suggests a clear-cut view of technological advancements as objective. However, this contradicts the passage's assertion that social and political choices significantly influence technology, making this option incorrect.\n\nOption C misleads by implying that technological design is solely a technical process. The passage clearly states that social considerations are integral to technology, which this option overlooks.\n\nOption D incorrectly claims that technology development is independent of human values and societal norms. The passage explicitly argues against this notion, highlighting the importance of social implications in technological advancements.\n\nThus, option B stands out as the only choice that captures the essence of the passage effectively.",
+      "difficulty": "medium",
+      "tags": [
+        "inference_accuracy",
+        "argument_structure_analysis"
+      ],
+      "created_at": "2026-01-17T22:12:39.164Z",
+      "updated_at": "2026-01-17T22:14:40.640Z"
+    },
+    {
+      "id": "c4bc287f-21d3-43c7-b2cd-8d0b7470a401",
+      "passage_id": null,
+      "paper_id": "783cf169-77ae-4561-956e-d865c1de2e11",
+      "question_text": "There is a sentence that is missing in the paragraph below. Look at the paragraph and decide in which blank (option 1, 2, 3, or 4) the following sentence would best fit.\nSentence: The historical aversion to touch in Britain is contrasted with the reality of urban living, where individuals are often in close physical proximity to strangers, challenging preconceived notions of personal space.\nParagraph: The historical evolution of touch in Britain highlights a significant shift in societal norms. ___(1)___. This evolution reflects broader cultural changes that have influenced how individuals interact in crowded urban environments. The tension between increased physical proximity and diminished meaningful connections is particularly evident in modern cities. ___(2)___. As urban living becomes more prevalent, the need to navigate these complex social dynamics grows increasingly important. ___(3)___. Ultimately, understanding these shifts can help us better appreciate the role of touch in contemporary society. ___(4)___",
+      "question_type": "para_completion",
+      "options": {
+        "A": "Option 1",
+        "B": "Option 2",
+        "C": "Option 3",
+        "D": "Option 4"
+      },
+      "jumbled_sentences": {
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": ""
+      },
+      "correct_answer": {
+        "answer": "A"
+      },
+      "rationale": "The correct option is A. This option fits best in Blank 1 because it introduces the historical context of touch in Britain, setting the stage for the discussion that follows about societal norms and urban living. The sentence emphasizes the contrast between historical aversion and the realities of modern urban interactions, effectively linking the evolution of touch to the broader cultural changes mentioned in the paragraph.\n\nOption B can be eliminated because it appears to continue the discussion about urban environments, but it does not establish the necessary historical context that is crucial for understanding the subsequent points. It tempts by seeming relevant to the theme of urban living but misses the foundational aspect of historical evolution.\n\nOption C is also a tempting choice as it relates to the complexities of social dynamics in urban settings. However, it fails to connect back to the historical evolution of touch, which is essential for maintaining coherence in the argument. It disrupts the logical flow by diving into modern implications without first addressing the historical backdrop.\n\nOption D, while discussing the importance of understanding shifts in societal norms, does not serve as an appropriate fit for any blank as it lacks a direct connection to the preceding sentences. It does not introduce new ideas but rather summarizes the implications, making it less relevant for the initial setup of the paragraph.\n\nThus, the only option that effectively introduces the topic and aligns with the paragraph's structure is A.",
+      "difficulty": "medium",
+      "tags": [
+        "elimination_effectiveness",
+        "detail_vs_structure_balance"
+      ],
+      "created_at": "2026-01-17T22:12:53.933Z",
+      "updated_at": "2026-01-17T22:14:47.390Z"
+    },
+    {
+      "id": "8c20d86c-26da-4522-b82a-248769e65be9",
+      "passage_id": null,
+      "paper_id": "783cf169-77ae-4561-956e-d865c1de2e11",
+      "question_text": "There is a sentence that is missing in the paragraph below. Look at the paragraph and decide in which blank (option 1, 2, 3, or 4) the following sentence would best fit.\nSentence: Consequently, the evolution of urban spaces necessitates a reevaluation of how individuals experience and negotiate touch, highlighting the complexity of social interactions in crowded environments.\nParagraph: Urban living has transformed the way individuals perceive and engage with their surroundings. ___(1)___. The sensory overload experienced in modern cities creates a chaotic environment that complicates individual perception. This complexity often leads to a paradox where increased physical proximity does not equate to deeper connections. ___(2)___. As a result, individuals must adapt their behaviors to navigate these intricate social dynamics. ___(3)___. Understanding these interactions is crucial for fostering meaningful connections in urban settings. ___(4)___",
+      "question_type": "para_completion",
+      "options": {
+        "A": "Option 1",
+        "B": "Option 2",
+        "C": "Option 3",
+        "D": "Option 4"
+      },
+      "jumbled_sentences": {
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": ""
+      },
+      "correct_answer": {
+        "answer": "A"
+      },
+      "rationale": "The correct option is A. This choice seamlessly fits into the first blank, as it introduces the theme of urban living and its impact on individual perception and engagement with surroundings. The sentence establishes a foundation for the subsequent discussion about sensory overload and social dynamics, making it a logical starting point for the paragraph.\n\nOption B is tempting because it follows the mention of the paradox of proximity and connection, but it misplaces the focus. It assumes that the discussion should immediately delve into the complexities of social interactions, which is better suited for later in the paragraph after establishing the context of urban living.\n\nOption C is also appealing as it relates to adapting behaviors, but it disrupts the flow by jumping ahead in the argument. The paragraph first needs to set the stage for why these adaptations are necessary, which is not achieved if this option is placed too early.\n\nOption D, while relevant to the overall theme of understanding interactions, does not logically connect to the preceding sentences. It would be more appropriate as a concluding thought rather than an initial statement, as it assumes a level of understanding that has yet to be established in the paragraph.\n\nThus, the only option that effectively sets the stage for the discussion on urban living and its complexities is A.",
+      "difficulty": "medium",
+      "tags": [
+        "elimination_effectiveness",
+        "detail_vs_structure_balance"
+      ],
+      "created_at": "2026-01-17T22:12:53.933Z",
+      "updated_at": "2026-01-17T22:14:53.386Z"
+    },
+    {
+      "id": "5f8f0d93-9b72-4b8a-ba96-d1eff7a9bda2",
+      "passage_id": null,
+      "paper_id": "783cf169-77ae-4561-956e-d865c1de2e11",
+      "question_text": "The four sentences (labelled 1, 2, 3 and 4) below, when properly sequenced would yield a coherent paragraph. Decide on the proper sequencing of the order of the sentences and key in the sequence of the four numbers as your answer: ",
+      "question_type": "para_jumble",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": "",
+        "D": ""
+      },
+      "jumbled_sentences": {
+        "1": "The potential for a drug that targets neuroligin-3 to inhibit tumor growth is currently being tested in clinical trials, raising hopes for new treatment options for aggressive brain cancers.",
+        "2": "Venkatesh's research demonstrates that increased neural activity can promote glioma growth through the production of the protein neuroligin-3, which stimulates tumor cell division.",
+        "3": "The discovery that neuroligin-3 facilitates communication between cancer cells and neurons suggests a novel mechanism by which tumors can exploit normal brain functions for their growth.",
+        "4": "The article highlights a significant decline in cancer mortality rates in the U.S. over the past two decades, attributed to advancements in precision medicine and early detection techniques.",
+        "5": ""
+      },
+      "correct_answer": {
+        "answer": "3214"
+      },
+      "rationale": "The anchor for this sequence is found in sentences 3 and 2. Sentence 3 introduces the concept of neuroligin-3 facilitating communication between cancer cells and neurons, which is crucial for understanding its role in tumor growth. This sets the stage for sentence 2, which elaborates on how increased neural activity promotes glioma growth through the production of neuroligin-3. The logical connection between these two sentences is essential for establishing the context of the discussion.\n\nOne potential trap lies in considering sentences 1 and 4 together. At first glance, sentence 1 discusses the potential of a drug targeting neuroligin-3, which seems to follow logically from the previous sentences. However, the flaw here is that sentence 1 introduces a new topic—clinical trials for a drug—without adequately linking it to the preceding discussion about the mechanisms of tumor growth. This creates a logical break, as the introduction of a treatment option should follow a thorough understanding of the underlying biological mechanisms.\n\nAdditionally, starting with sentence 4 would disrupt the flow of the paragraph. While it discusses advancements in cancer treatment, it does not relate directly to the specific mechanisms of tumor growth discussed in the other sentences. This would lead to a disjointed introduction that lacks the necessary context.\n\nThe golden key that locks the order is the word **\"suggests\"** in sentence 3, which indicates a transition to the implications of neuroligin-3's role in tumor growth, seamlessly leading into the explanation of how this protein is linked to glioma growth in sentence 2. Thus, the correct sequence is 3214.",
+      "difficulty": "medium",
+      "tags": [
+        "argument_structure_analysis",
+        "trap_avoidance_rate"
+      ],
+      "created_at": "2026-01-17T22:13:09.768Z",
+      "updated_at": "2026-01-17T22:15:00.672Z"
+    },
+    {
+      "id": "9956739f-6d14-4dd2-97ba-75478b83bae7",
+      "passage_id": null,
+      "paper_id": "783cf169-77ae-4561-956e-d865c1de2e11",
+      "question_text": "The four sentences (labelled 1, 2, 3 and 4) below, when properly sequenced would yield a coherent paragraph. Decide on the proper sequencing of the order of the sentences and key in the sequence of the four numbers as your answer: ",
+      "question_type": "para_jumble",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": "",
+        "D": ""
+      },
+      "jumbled_sentences": {
+        "1": "The concept of cancer neuroscience is introduced as a novel approach that integrates principles from both cancer biology and neuroscience, aiming to leverage insights from neural activity to inform cancer treatment strategies.",
+        "2": "This oversight has limited the understanding of how tumors interact with the nervous system.",
+        "3": "The historical neglect of the brain-cancer connection highlights a gap in oncology, where traditional cancer research has focused primarily on molecular and genetic factors rather than the neurological aspects of tumor growth.",
+        "4": "Consequently, the findings suggest that addressing these neurological aspects could lead to more effective treatments.",
+        "5": ""
+      },
+      "correct_answer": {
+        "answer": "1324"
+      },
+      "rationale": "The anchor for this sequence is found in the relationship between sentences 1 and 3. Sentence 1 introduces the concept of cancer neuroscience, which is essential for understanding the context of the discussion. Sentence 3 follows with a critique of traditional cancer research, emphasizing the historical neglect of the brain-cancer connection. The use of \"where\" in Sentence 3 indicates a direct connection to the preceding idea, making it crucial that these two sentences remain together.\n\nExamining the sequences reveals potential traps. For instance, a sequence starting with Sentence 2 might seem plausible because it discusses the oversight in understanding tumor interactions with the nervous system. However, this creates a logical break since it does not establish the foundational context provided by Sentence 1. Without the introduction of cancer neuroscience, the critique in Sentence 3 lacks clarity and relevance.\n\nOther sequences, such as starting with Sentence 4, also falter structurally. This sequence would begin with a conclusion about effective treatments without first establishing the necessary background on the neurological aspects of cancer, leading to confusion about the basis for such claims.\n\nThe golden key that locks the correct order is the word **\"Consequently,\"** found in Sentence 4. This transition indicates a result stemming from the preceding discussion, reinforcing the need for the logical flow established in the correct sequence of 1, 3, 2, and 4.",
+      "difficulty": "medium",
+      "tags": [
+        "argument_structure_analysis",
+        "trap_avoidance_rate"
+      ],
+      "created_at": "2026-01-17T22:13:09.768Z",
+      "updated_at": "2026-01-17T22:15:09.958Z"
+    },
+    {
+      "id": "39b3e73f-4664-4937-9422-1357b678493a",
+      "passage_id": null,
+      "paper_id": "783cf169-77ae-4561-956e-d865c1de2e11",
+      "question_text": "Five jumbled up sentences, related to a topic, are given below. Four of them can be put together to form a coherent paragraph. Identify the odd one out and key in the number of the sentence as your answer: ",
+      "question_type": "odd_one_out",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": "",
+        "D": ""
+      },
+      "jumbled_sentences": {
+        "1": "Research indicates that urban environments are associated with higher rates of mental health issues, particularly psychosis, due to a combination of social and environmental stressors.",
+        "2": "The evidence suggests that growing up in urban settings is particularly detrimental to mental health, with studies showing a significant correlation between urban upbringing and the development of psychotic symptoms in children.",
+        "3": "While genetic predispositions are acknowledged as significant contributors to mental health disorders, the interaction between genetic and environmental factors is complex.",
+        "4": "Urban living offers unique opportunities for social engagement, which can mitigate some of the mental health risks associated with city life.",
+        "5": "Epidemiological studies indicate that genetic factors play a crucial role in the relationship between urban living and mental health, suggesting that individuals predisposed to mental illness may be more likely to reside in urban areas."
+      },
+      "correct_answer": {
+        "answer": "4"
+      },
+      "rationale": "The common thread among the sentences revolves around the relationship between urban living and mental health, particularly focusing on the implications of environmental factors and their interaction with mental health issues.\n\nExamining the sentences, option 3 discusses the complexity of genetic predispositions and their interaction with environmental factors. This could seem relevant as it touches upon mental health, but it primarily emphasizes genetics rather than the urban environment's direct impact. However, it does connect to the overall theme by acknowledging that both genetics and environment play roles in mental health.\n\nOn the other hand, option 4 presents a contrasting perspective by suggesting that urban living can offer unique opportunities for social engagement, which may mitigate mental health risks. This sentence introduces a positive aspect of urban life, diverging from the predominantly negative focus of the other sentences, which highlight the detrimental effects of urban environments on mental health. While it discusses mental health, it shifts the narrative towards a beneficial angle, making it less coherent with the overall theme.\n\nThus, option 4 is the misfit, as it introduces a **positive perspective** on urban living, contrasting sharply with the other sentences that focus on the **negative consequences** of urban environments on mental health.",
+      "difficulty": "medium",
+      "tags": [
+        "evidence_evaluation",
+        "tone_and_intent_sensitivity"
+      ],
+      "created_at": "2026-01-17T22:13:34.069Z",
+      "updated_at": "2026-01-17T22:15:16.801Z"
+    },
+    {
+      "id": "e5e943c5-0106-4030-bb90-6db5cf61b0a3",
+      "passage_id": null,
+      "paper_id": "783cf169-77ae-4561-956e-d865c1de2e11",
+      "question_text": "Five jumbled up sentences, related to a topic, are given below. Four of them can be put together to form a coherent paragraph. Identify the odd one out and key in the number of the sentence as your answer: ",
+      "question_type": "odd_one_out",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": "",
+        "D": ""
+      },
+      "jumbled_sentences": {
+        "1": "The debate surrounding the causal mechanisms linking urban living to mental health issues remains unresolved.",
+        "2": "Some researchers argue that environmental factors have been overstated in previous studies, suggesting a need for more nuanced approaches.",
+        "3": "Growing up in urban settings is associated with an increased risk of developing psychotic symptoms in childhood.",
+        "4": "Urban environments are often celebrated for their vibrant culture and diversity, which can enhance overall well-being.",
+        "5": "Understanding the interplay between genetic and environmental factors is essential for developing effective public health strategies."
+      },
+      "correct_answer": {
+        "answer": "4"
+      },
+      "rationale": "The common thread among the sentences revolves around the relationship between urban living and mental health, particularly focusing on the complexities and nuances of this connection. The first three sentences discuss the unresolved debate, the potential risks associated with urban upbringing, and the need for a deeper understanding of environmental factors. The fifth sentence emphasizes the importance of understanding both genetic and environmental influences in public health strategies.\n\nOption 4 presents a trap as it mentions the positive aspects of urban environments, such as vibrant culture and diversity. This could mislead one to think it contributes to the overall discussion on mental health. However, while it touches on urban living, it shifts the focus to the benefits rather than the mental health challenges associated with urban settings. Thus, it does not align with the primary concern of the other sentences.\n\nThe remaining sentences cohesively discuss the risks and complexities of urban living in relation to mental health issues. They collectively emphasize the need for a nuanced understanding of these factors, making them integral to the main theme.\n\nThe misfit factor in option 4 is the **shift from discussing mental health issues to celebrating urban advantages**, which diverges from the focus on the potential negative impacts of urban environments on mental health.",
+      "difficulty": "medium",
+      "tags": [
+        "evidence_evaluation",
+        "tone_and_intent_sensitivity"
+      ],
+      "created_at": "2026-01-17T22:13:34.069Z",
+      "updated_at": "2026-01-17T22:15:24.555Z"
+    }
+  ]
+}

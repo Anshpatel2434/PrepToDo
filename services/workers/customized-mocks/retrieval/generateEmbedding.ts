@@ -1,21 +1,16 @@
-import OpenAI from "openai";
 import { openai } from "../../../config/openai";
 
-const client = openai;
-const MODEL = "text-embedding-3-small";
+export async function generateEmbedding(text: string) {
+    console.log("🧠 [Embedding] Generating query embedding");
 
-/**
- * Generates an embedding for the given text.
- */
-export async function generateEmbedding(text: string): Promise<number[]> {
-    console.log("⏳ [Embedding] Generating vector for search query");
+    console.log("⏳ [Embedding] Waiting for OpenAI embeddings response");
 
-    const response = await client.embeddings.create({
-        model: MODEL,
+    const response = await openai.embeddings.create({
+        model: "text-embedding-3-small",
         input: text,
     });
 
-    const embedding = response.data[0].embedding;
-    console.log(`✅ [Embedding] Generated ${embedding.length} dimensions`);
-    return embedding;
+    console.log("✅ [Embedding] Vector generated");
+
+    return response.data[0].embedding;
 }

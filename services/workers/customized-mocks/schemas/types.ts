@@ -1,5 +1,5 @@
 // types.ts
-import {z} from "zod"
+import { z } from "zod"
 
 export const UUIDSchema = z.string().uuid();
 export const TimestampSchema = z.string(); // ISO string from Supabase
@@ -31,8 +31,8 @@ export const ArticleSchema = z.object({
     is_safe_source: z.boolean().default(true),
     is_archived: z.boolean().default(false),
     notes: z.string().nullish(),
-    created_at: z.coerce.date().optional(),
-    updated_at: z.coerce.date().optional(),
+    created_at: z.coerce.date().nullish(),
+    updated_at: z.coerce.date().nullish(),
 });
 
 export type Article = z.infer<typeof ArticleSchema>;
@@ -46,11 +46,12 @@ export const ExamSchema = z.object({
     name: z.string(),
     year: z.number(),
     exam_type: z.string(),
-    slot: z.string(),
+    slot: z.string().nullish(),
     is_official: z.boolean(),
     created_at: TimestampSchema,
     used_articles_id: z.array(UUIDSchema).nullish(),
-    generate_by_user_id: UUIDSchema.nullish(),
+    generated_by_user_id: UUIDSchema.nullish(), // Fixed field name
+    time_limit_minutes: z.number().int().nullish(),
 })
 
 export type Exam = z.infer<typeof ExamSchema>;
@@ -100,7 +101,8 @@ const JumbledSentencesSchema = z.object({
 
 export const QuestionSchema = z.object({
     id: UUIDSchema,
-    passage_id: UUIDSchema,
+    passage_id: UUIDSchema.nullish(), // Made nullable for VA questions
+    paper_id: UUIDSchema.nullish(), // Added missing paper_id field
     question_text: z.string(),
     question_type: z.enum([
         "rc_question",
@@ -117,7 +119,7 @@ export const QuestionSchema = z.object({
         "odd_one_out",
     ]),
     options: OptionsSchema,
-    jumbled_sentences: JumbledSentencesSchema,
+    jumbled_sentences: JumbledSentencesSchema.nullish(), // Made nullable for non-jumble questions
     correct_answer: z.object({
         answer: z.string()
     }), //{"answer" : "answer"}
@@ -212,9 +214,9 @@ export type SemanticExtractionOutput = z.infer<
 
 export const CustomizedMockRequestSchema = z.object({
     user_id: UUIDSchema,
-    mock_name: z.string().optional().default("Custom Mock Test"),
+    mock_name: z.string().nullish().default("Custom Mock Test"),
     // Content specifications
-    target_genres: z.array(z.string()).optional(),
+    target_genres: z.array(z.string()).nullish(),
     num_passages: z.number().int().min(1).max(5).default(1),
     total_questions: z.number().int().min(5).max(50).default(15),
     // Question type distribution
@@ -224,23 +226,23 @@ export const CustomizedMockRequestSchema = z.object({
         para_completion: z.number().int().nonnegative().default(1),
         para_jumble: z.number().int().nonnegative().default(1),
         odd_one_out: z.number().int().nonnegative().default(1),
-    }).optional(),
+    }).nullish(),
     // Difficulty targeting
     difficulty_target: z.enum(["easy", "medium", "hard", "mixed"]).default("mixed"),
     // Personalization parameters
-    target_metrics: z.array(z.string()).optional(), // Specific core metrics to target
-    weak_areas_to_address: z.array(z.string()).optional(), // Weak question types/genres to focus on
+    target_metrics: z.array(z.string()).nullish(), // Specific core metrics to target
+    weak_areas_to_address: z.array(z.string()).nullish(), // Weak question types/genres to focus on
     // Time constraints
-    time_limit_minutes: z.number().int().min(10).max(180).optional(), // Optional time limit for the entire mock
-    per_question_time_limit: z.number().int().min(30).max(300).optional(), // Optional per-question time limit
+    time_limit_minutes: z.number().int().min(10).max(180).nullish(), // nullish time limit for the entire mock
+    per_question_time_limit: z.number().int().min(30).max(300).nullish(), // nullish per-question time limit
     // User analytics (for personalization)
     user_analytics: z.object({
-        accuracy_percentage: z.number().optional(),
-        genre_performance: z.record(z.any()).optional(),
-        question_type_performance: z.record(z.any()).optional(),
-        weak_topics: z.array(z.string()).optional(),
-        weak_question_types: z.array(z.string()).optional(),
-    }).optional(),
+        accuracy_percentage: z.number().nullish(),
+        genre_performance: z.any().nullish(),
+        question_type_performance: z.any().nullish(),
+        weak_topics: z.array(z.string()).nullish(),
+        weak_question_types: z.array(z.string()).nullish(),
+    }).nullish(),
 });
 
 export type CustomizedMockRequest = z.infer<typeof CustomizedMockRequestSchema>;
@@ -251,12 +253,12 @@ export type CustomizedMockRequest = z.infer<typeof CustomizedMockRequestSchema>;
 
 export const CustomizedMockResultSchema = z.object({
     success: z.boolean(),
-    exam_id: UUIDSchema.optional(),
-    mock_name: z.string().optional(),
+    exam_id: UUIDSchema.nullish(),
+    mock_name: z.string().nullish(),
     passage_count: z.number(),
     question_count: z.number(),
     user_id: UUIDSchema,
-    time_limit_minutes: z.number().optional(),
+    time_limit_minutes: z.number().nullish(),
     message: z.string(),
 });
 

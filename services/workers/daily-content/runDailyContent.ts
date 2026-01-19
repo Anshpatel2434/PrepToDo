@@ -1,11 +1,9 @@
-import { extractSemanticIdeasAndPersona } from "./retrieval/passageHandling/extractSemanticIdeas";
 import { fetchGenreForToday } from "./retrieval/fetchGenre";
 import { fetchPassagesData } from "./retrieval/passageHandling/fetchPassagesData";
 import { fetchQuestionsData } from "./retrieval/fetchQuestionsData";
 import { generateEmbedding } from "./retrieval/generateEmbedding";
 import { generatePassage } from "./retrieval/passageHandling/generatePassage";
 import { searchPassageAndQuestionEmbeddings } from "./retrieval/searchPassageAndQuestionEmbeddings";
-import { getValidArticleWithText } from "./retrieval/articleHandling/getValidArticleWithText";
 import { finalizeCATPassage } from "./retrieval/passageHandling/finalizeCATPassage";
 import { generateRCQuestions } from "./retrieval/rcQuestionsHandling/generateRCQuestions";
 import { selectCorrectAnswers } from "./retrieval/rcQuestionsHandling/selectCorrectAnswers";
@@ -21,6 +19,7 @@ import { tagVAQuestionsWithNodes } from "./retrieval/vaQuestionsHandling/tagVAQu
 import { generateVARationalesWithEdges } from "./retrieval/vaQuestionsHandling/generateVARationales";
 import { formatOutputForDB, generateOutputReport } from "./retrieval/vaQuestionsHandling/formatOutputForDB";
 import { saveAllDataToDB } from "./retrieval/saveAllDataToDB";
+import { fetchArticleForUsage } from "./retrieval/articleHandling/fetchArticleForUsage";
 
 /**
  * Main workflow for generating daily CAT practice content.
@@ -34,12 +33,8 @@ export async function runDailyContent() {
         console.log("\n🎯 [Step 1/15] Selecting genre");
         const genre = await fetchGenreForToday();
 
-        console.log("\n📄 [Step 2,3/15] Fetching valid article with text and saving to database");
-        const { articleMeta, articleText } = await getValidArticleWithText(genre.name);
-
-
-        console.log("\n🧠 [Step 4/15] Extracting semantic ideas and persona");
-        const { semantic_ideas, authorial_persona } = await extractSemanticIdeasAndPersona(articleText, genre.name);
+        console.log("\n🧠 [Step 4/15] Extracting semantic ideas and persona from database");
+        const { articleMeta ,semantic_ideas, authorial_persona } = await fetchArticleForUsage({genre: genre.name, usageType: "daily"});
 
         console.log("\n🧠 [Step 5/15] Generating embedding and fetching PYQ references");
         const embedding = await generateEmbedding(genre.name);

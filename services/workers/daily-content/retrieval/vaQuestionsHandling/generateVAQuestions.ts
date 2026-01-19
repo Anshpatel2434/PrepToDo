@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import { Question, QuestionSchema, Passage, SemanticIdeas, AuthorialPersona } from "../../schemas/types";
+import { user_core_metrics_definition_v1 } from "../../../../config/user_core_metrics_definition_v1";
 
 // Simple UUID generator to avoid additional dependencies
 function generateUUID(): string {
@@ -290,7 +291,7 @@ IMPORTANT:
 - Leave rationale empty
 - Generate EXACTLY 1 question
 - No additional text or commentary
-- The question should be able to assess the metrics from "user_core_metrics_definition_v1.json" file.
+- The question should be able to assess the metrics from ${user_core_metrics_definition_v1} file.
 `;
 
         console.log("⏳ [Para Summary] Waiting for LLM to generate questions");
@@ -455,7 +456,7 @@ IMPORTANT:
 - Leave rationale empty
 - Generate EXACTLY 1 question
 - No additional text or commentary
-- The question should be able to assess the metrics from "user_core_metrics_definition_v1.json" file.
+- The question should be able to assess the metrics from ${user_core_metrics_definition_v1}.
 `;
 
         console.log("⏳ [Para Completion] Waiting for LLM to generate questions");
@@ -629,7 +630,7 @@ IMPORTANT:
 - Leave rationale empty
 - Generate EXACTLY 1 question
 - No additional text or commentary
-- The question should be able to assess the metrics from "user_core_metrics_definition_v1.json" file.
+- The question should be able to assess the metrics from ${user_core_metrics_definition_v1} file.
 `;
 
         console.log("⏳ [Para Jumble] Waiting for LLM to generate questions");
@@ -814,7 +815,7 @@ IMPORTANT:
 - Leave rationale empty
 - Generate EXACTLY 1 question
 - No additional text or commentary
-- The question should be able to assess the metrics from "user_core_metrics_definition_v1.json" file and try to divide all the metrics across 4 questions.
+- The question should be able to assess the metrics from ${user_core_metrics_definition_v1} file and try to divide all the metrics across 4 questions.
 `;
 
         console.log("⏳ [Odd One Out] Waiting for LLM to generate questions");

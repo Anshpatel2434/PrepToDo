@@ -1,100 +1,42 @@
 // formatOutputForDB.ts
-import { Article, Exam, Passage, Question } from "../../schemas/types";
-import { v4 as uuidv4 } from 'uuid';
-
-interface FormatOutputParams {
-    passagesData: Array<{ passageData: any; articleData: Article }>;
-    rcQuestions: Question[];
-    vaQuestions: Question[];
-    userId: string;
-    mockName: string;
-    timeLimitMinutes?: number;
-}
+import { DataManager } from "./dataManager";
+import { Exam, Passage, Question } from "../schemas/types";
 
 /**
- * Formats output for database upload for custom mock.
- * Returns 3 data sets: Exam, Passages, Questions
+ * Simplified formatter that works with DataManager
+ * No ID generation - just formats data that's already been created
  */
-export function formatOutputForDB(params: FormatOutputParams): {
+export function formatOutputForDB(
+    dataManager: DataManager,
+    params: {
+        userId: string;
+        mockName: string;
+        timeLimitMinutes?: number;
+    }
+): {
     exam: Exam;
     passages: Passage[];
     questions: Question[];
 } {
     try {
-        const { passagesData, rcQuestions, vaQuestions, userId, mockName, timeLimitMinutes } = params;
-        const now = new Date().toISOString();
-        const currentYear = new Date().getFullYear();
+        const { userId, mockName, timeLimitMinutes } = params;
 
-        // Collect all article IDs
-        const articleIds = passagesData.map(p => p.articleData.id);
-
-        // 1. Create Exam data
-        const exam: Exam = {
-            id: uuidv4(),
-            name: mockName || "Custom Mock Test",
-            year: currentYear,
-            exam_type: "CAT",
-            slot: null,
-            is_official: false,
-            created_at: now,
-            used_articles_id: articleIds,
-            generate_by_user_id: userId,
-        };
-
-        // 2. Create Passage data for each passage
-        const passages: Passage[] = passagesData.map((pd, index) => {
-            const passageData = pd.passageData;
-            const articleData = pd.articleData;
-
-            return {
-                id: passageData.id,
-                title: `Passage ${index + 1}`,
-                content: passageData.content,
-                word_count: passageData.word_count,
-                genre: articleData.genre,
-                difficulty: passageData.difficulty,
-                source: articleData.source_name,
-                paper_id: exam.id, // Link passage to exam
-                is_daily_pick: false,
-                is_featured: false,
-                is_archived: false,
-                created_at: now,
-                updated_at: now,
-            };
+        // Get all data from DataManager (IDs already assigned)
+        const exam = dataManager.getExamForDB({
+            mockName,
+            userId,
+            timeLimitMinutes,
         });
 
-        // 3. Process all questions
-        const allQuestions: Question[] = [];
+        const passages = dataManager.getPassagesForDB(mockName);
+        const questions = dataManager.getQuestionsForDB();
 
-        // Add RC questions (link to respective passages)
-        let rcIndex = 0;
-        for (let i = 0; i < rcQuestions.length; i++) {
-            const q = rcQuestions[i];
-            const passageIndex = i % passages.length; // Distribute RC questions across passages
-            const passage = passages[passageIndex];
+        const stats = dataManager.getStats();
 
-            allQuestions.push({
-                ...q,
-                id: uuidv4(),
-                passage_id: passage.id,
-                paper_id: exam.id
-            });
-            rcIndex++;
-        }
-
-        // Add VA questions (no passage, different question types)
-        const vaQuestionsNoPassage = vaQuestions.map(q => ({
-            ...q,
-            id: uuidv4(),
-            passage_id: null,
-            paper_id: exam.id
-        }));
-        allQuestions.push(...vaQuestionsNoPassage);
-
-        console.log(`✅ [Output Formatter] Created data for DB upload`);
-        console.log(`   - Exam: ${exam.name} (${currentYear})`);
-        console.log(`   - Passages: ${passages.length}`);
-        console.log(`   - Questions: ${allQuestions.length} total (RC: ${rcQuestions.length}, VA: ${vaQuestions.length})`);
+        console.log(`✅ [Output Formatter] Formatted data for DB upload`);
+        console.log(`   - Exam: ${exam.name} (${exam.year})`);
+        console.log(`   - Passages: ${stats.passageCount}`);
+        console.log(`   - Questions: ${stats.totalQuestions} total (RC: ${stats.rcQuestions}, VA: ${stats.vaQuestions})`);
         console.log(`   - User: ${userId}`);
         if (timeLimitMinutes) {
             console.log(`   - Time Limit: ${timeLimitMinutes} minutes`);
@@ -103,7 +45,7 @@ export function formatOutputForDB(params: FormatOutputParams): {
         return {
             exam,
             passages,
-            questions: allQuestions,
+            questions,
         };
     } catch (error) {
         console.error("❌ [Output Formatter] Error formatting output:", error);
@@ -227,7 +169,7 @@ export function generateOutputReport(data: {
 ║     Name: ${exam.name.padEnd(50)} ║
 ║     Year: ${exam.year.toString().padEnd(54)} ║
 ║     Type: ${exam.exam_type.padEnd(54)} ║
-║     User ID: ${exam.generate_by_user_id?.substring(0, 36)}... ║
+║     User ID: ${exam.generated_by_user_id?.substring(0, 36)}... ║
 ║                                                                  ║
 ║  📄 PASSAGE INFO                                                  ║
 ║     Count: ${passages.length.toString().padEnd(52)} ║

@@ -1,4 +1,4 @@
-{
+export const user_core_metrics_definition_v1 = {
 	"version": "v1.0",
 	"philosophy": "Metrics are cognition-first, exam-agnostic, and graph-derived. Each metric maps to multiple ReasoningStep nodes and avoids semantic overlap with others.",
 	"metrics": [
