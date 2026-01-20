@@ -23,6 +23,7 @@ CREATE TABLE public.articles (
   notes text,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  semantic_ideas_and_persona jsonb,
   CONSTRAINT articles_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.content_appeals (
@@ -123,9 +124,10 @@ CREATE TABLE public.exam_papers (
   is_official boolean DEFAULT true,
   created_at timestamp with time zone DEFAULT now(),
   used_articles_id ARRAY,
-  genereted_by_user_id uuid,
+  generated_by_user_id uuid,
+  time_limit_minutes integer,
   CONSTRAINT exam_papers_pkey PRIMARY KEY (id),
-  CONSTRAINT exam_papers_genereted_by_user_id_fkey FOREIGN KEY (genereted_by_user_id) REFERENCES auth.users(id)
+  CONSTRAINT exam_papers_generated_by_user_id_fkey FOREIGN KEY (generated_by_user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.feature_flags (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),

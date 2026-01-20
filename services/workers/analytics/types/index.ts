@@ -120,10 +120,10 @@ export const QuestionAttemptSchema = z.object({
     session_id: z.string(),
     question_id: z.string(),
     passage_id: z.string().nullish(),
-    user_answer: z.any(), // {"user_answer" : "answer"}
+    user_answer: z.any().nullish(), // {"user_answer" : "answer"}
     is_correct: z.boolean(),
     time_spent_seconds: z.number(),
-    confidence_level: z.number().min(1).max(5),
+    confidence_level: z.number().min(1).max(5).nullish(),
     marked_for_review: z.boolean(),
     rationale_viewed: z.boolean(),
     rationale_helpful: z.boolean().nullish(),

@@ -14,6 +14,8 @@ import TeachConceptPage from "./pages/teach-concept/page/TeachConceptPage";
 import DailyRCPage from "./pages/daily/daily_rc/Page/DailyRCPage";
 import DailyVAPage from "./pages/daily/daily_va/Page/DailyVAPage";
 import DailyPage from "./pages/daily/page/DailyPage";
+import CustomizedMocksPage from "./pages/customized-mocks/page/CustomizedMocksPage";
+import MockTestPage from "./pages/customized-mocks/page/MockTestPage";
 
 import { ThemeProvider } from "./context/ThemeContext";
 import { SafeAuthRoute } from "./ui_components/SafeAuthRoute";
@@ -70,6 +72,22 @@ const router = createBrowserRouter([
         element: (
             <SafeAuthRoute>
                 <DailyVAPage />
+            </SafeAuthRoute>
+        ),
+    },
+    {
+        path: "/customized-mocks",
+        element: (
+            <SafeAuthRoute>
+                <CustomizedMocksPage />
+            </SafeAuthRoute>
+        ),
+    },
+    {
+        path: "/mock",
+        element: (
+            <SafeAuthRoute>
+                <MockTestPage />
             </SafeAuthRoute>
         ),
     },
@@ -139,7 +157,7 @@ function AppContent() {
 function App() {
     return (
         <ThemeProvider>
-                <AppContent />
+            <AppContent />
         </ThemeProvider>
     );
 }

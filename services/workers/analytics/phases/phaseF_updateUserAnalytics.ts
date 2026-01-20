@@ -97,7 +97,11 @@ export async function phaseF_updateUserAnalytics(
         console.error('⚠️ Failed to check sessions for streak calculation:', daySessionsError.message);
     }
 
-    const hasSessionToday = (!isStreakUpdateOnly) || ((daySessions?.length || 0) > 0);
+    // For streak calculation: if we're processing a real session, that counts as today's session
+    // If we're just updating streaks (no session), check database for any sessions today
+    const hasSessionToday = !isStreakUpdateOnly || ((daySessions?.length || 0) > 0);
+
+    console.log(`   - Streak calculation inputs: isStreakUpdateOnly=${isStreakUpdateOnly}, daySessions=${daySessions?.length || 0}, hasSessionToday=${hasSessionToday}`);
 
     // 9. Calculate streaks
     const streakData = await calculateStreaks(supabase, user_id, today, hasSessionToday, existingAnalytics);
@@ -629,6 +633,8 @@ async function calculateStreaks(
         const previousStreak = existingAnalytics.current_streak || 0;
         const previousLongestStreak = existingAnalytics.longest_streak || 0;
 
+        console.log(`   - Previous analytics: lastActiveDate=${lastActiveDate}, previousStreak=${previousStreak}, previousLongestStreak=${previousLongestStreak}`);
+
         let currentStreak = 0;
 
         if (hasSessionToday) {
@@ -640,15 +646,20 @@ async function calculateStreaks(
                 const todayDate = new Date(today + 'T00:00:00Z');
                 const daysDiff = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
 
+                console.log(`   - Date comparison: lastDate=${lastActiveDate}, today=${today}, daysDiff=${daysDiff}`);
+
                 if (daysDiff === 0) {
                     // Same day - maintain current streak
                     currentStreak = previousStreak;
+                    console.log(`   - Same day: maintaining streak at ${currentStreak}`);
                 } else if (daysDiff === 1) {
                     // Consecutive day - increment streak
                     currentStreak = previousStreak + 1;
+                    console.log(`   - Consecutive day: incrementing streak to ${currentStreak}`);
                 } else {
                     // Streak broken - start new streak
                     currentStreak = 1;
+                    console.log(`   - Streak broken (gap of ${daysDiff} days): starting new streak at ${currentStreak}`);
                 }
             }
         } else {

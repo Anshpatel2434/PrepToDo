@@ -266,6 +266,7 @@ export const dailyPracticeApi = createApi({
                         .from("exam_papers")
                         .select("*")
                         .eq("year", 2026)
+                        .eq("name", "Daily Practice")
                         .order("created_at", { ascending: false }) // Sorts by newest first
                         .range(from, to)
 

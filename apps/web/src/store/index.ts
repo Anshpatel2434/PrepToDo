@@ -6,6 +6,8 @@ import { conceptTeachingApi } from "../pages/teach-concept/redux_usecases/teachC
 import dailyPracticeReducer from "../pages/daily/redux_usecase/dailyPracticeSlice";
 import { dailyPracticeApi } from "../pages/daily/redux_usecase/dailyPracticeApi";
 import { dashboardApi } from "../pages/dashboard/redux_usecases/dashboardApi";
+import { customizedMocksApi } from "../pages/customized-mocks/redux_usecase/customizedMocksApi";
+import customizedMockReducer from "../pages/customized-mocks/redux_usecase/customizedMockSlice";
 
 export const store = configureStore({
     reducer: {
@@ -24,6 +26,12 @@ export const store = configureStore({
 
         // Dashboard api (analytics overview)
         [dashboardApi.reducerPath]: dashboardApi.reducer,
+
+        // Customized Mocks api
+        [customizedMocksApi.reducerPath]: customizedMocksApi.reducer,
+
+        // Customized Mock state
+        customizedMock: customizedMockReducer,
     },
     // Adding the api middleware enables caching, invalidation, polling,
     // and other useful features of RTK Query
@@ -32,7 +40,8 @@ export const store = configureStore({
             authApi.middleware,
             conceptTeachingApi.middleware,
             dailyPracticeApi.middleware,
-            dashboardApi.middleware
+            dashboardApi.middleware,
+            customizedMocksApi.middleware
         ),
 });
 

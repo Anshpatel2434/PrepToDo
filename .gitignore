@@ -22,3 +22,5 @@ logs
 
 # Local tooling
 dev_server.log
+
+.agent

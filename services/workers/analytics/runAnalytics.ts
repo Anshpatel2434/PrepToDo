@@ -120,7 +120,7 @@ export async function runAnalytics(params: {
 
                 // --- PHASE C: LLM DIAGNOSTICS ---
                 console.log("\n🧠 [Phase C/6] Running LLM diagnostics on incorrect attempts");
-                const incorrectAttempts = dataset.filter(a => !a.correct);
+                const incorrectAttempts = dataset.filter(a => (!a.correct && a.user_answer.user_answer) );
                 console.log(`   - Incorrect attempts: ${incorrectAttempts.length}`);
 
                 const diagnostics = await phaseC_llmDiagnostics(incorrectAttempts);

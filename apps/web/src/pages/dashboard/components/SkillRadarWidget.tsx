@@ -75,32 +75,7 @@ function getCognitiveFailureReason(metricKey: string): string {
         return "Insufficient practice data to identify specific reasoning patterns.";
     }
     
-    // Extract common failure patterns from reasoning steps
-    const commonPatterns = [
-        "difficulty recognizing logical connections",
-        "struggling with implicit information",
-        "challenges in evaluating evidence strength",
-        "inconsistent strategy application",
-        "vulnerability to common traps and distractors"
-    ];
-    
-    return commonPatterns[Math.floor(Math.random() * commonPatterns.length)];
-}
-
-function getPracticeStrategy(metricKey: string): string {
-    const strategies: Record<string, string> = {
-        'inference_accuracy': 'Practice identifying unstated assumptions and drawing logical conclusions from limited information.',
-        'argument_structure_analysis': 'Focus on mapping premises to conclusions and identifying logical dependencies.',
-        'trap_avoidance_rate': 'Study common CAT trap patterns and practice eliminating extreme/opposite answer choices.',
-        'elimination_effectiveness': 'Practice systematic option evaluation and learn to recognize valid elimination criteria.',
-        'strategic_efficiency': 'Work on strategy selection and sequencing - know when to use each approach.',
-        'detail_vs_structure_balance': 'Practice distinguishing main ideas from supporting details in complex passages.',
-        'tone_and_intent_sensitivity': 'Focus on author attitude, tone markers, and communicative intent analysis.',
-        'evidence_evaluation': 'Practice assessing relevance, sufficiency, and strength of supporting evidence.',
-        'time_pressure_stability': 'Work on maintaining accuracy under timed conditions with progressive difficulty.'
-    };
-    
-    return strategies[metricKey] || 'Focus on targeted practice with immediate feedback and strategy refinement.';
+    return steps.reasoning_steps[0].label;
 }
 
 export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
@@ -312,8 +287,6 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
                                                 <div className={`text-xs font-medium flex items-center gap-1 ${
                                                     isDark ? "text-rose-300" : "text-rose-700"
                                                 }`}>
-                                                    <MdArrowForward size={12} />
-                                                    Practice Strategy: {getPracticeStrategy(metric.dimension_key)}
                                                 </div>
                                             </div>
                                         );
