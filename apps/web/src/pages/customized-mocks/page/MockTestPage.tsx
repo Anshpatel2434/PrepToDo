@@ -31,6 +31,8 @@ import {
     submitAnswer,
     selectSolutionViewType,
     selectCurrentAttempt,
+    selectAnalysisViewType,
+    setAnalysisViewType,
 } from "../redux_usecase/customizedMockSlice";
 
 import {
@@ -42,6 +44,8 @@ import {
 } from "../redux_usecase/customizedMocksApi";
 
 import { MockQuestionPalette } from "../components/MockQuestionPalette";
+import { AnalysisToggle } from "../components/AnalysisToggle";
+import { MockAnalysisView } from "../components/MockAnalysisView";
 import { QuestionPanel } from "../../../ui_components/exam/QuestionPanel";
 import { DailyRCVAPageSkeleton } from "../../daily/components/DailySkeleton";
 import { SplitPaneLayout } from "../../../ui_components/exam/SplitPaneLayout";
@@ -97,6 +101,7 @@ const MockTestPage: React.FC = () => {
     const timeRemaining = useSelector(selectTimeRemaining);
     const currentAttempt = useSelector(selectCurrentAttempt);
     const solutionViewType = useSelector(selectSolutionViewType);
+    const analysisViewType = useSelector(selectAnalysisViewType);
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -424,6 +429,10 @@ const MockTestPage: React.FC = () => {
         dispatch(setSolutionViewType(val));
     }, [dispatch]);
 
+    const handleAnalysisViewChange = useCallback((val: "solution" | "analysis") => {
+        dispatch(setAnalysisViewType(val));
+    }, [dispatch]);
+
     useEffect(() => {
         return () => {
             dispatch(resetCustomizedMock());
@@ -451,6 +460,17 @@ const MockTestPage: React.FC = () => {
                     </h1>
                 </div>
 
+                {/* Analysis Toggle - shown in solution mode */}
+                {viewMode === "solution" && (
+                    <div className="hidden md:block">
+                        <AnalysisToggle
+                            value={analysisViewType}
+                            onChange={handleAnalysisViewChange}
+                            isDark={isDark}
+                        />
+                    </div>
+                )}
+
                 <div className={`absolute left-1/2 -translate-x-1/2 font-mono text-lg font-bold ${timeRemaining < 60 ? "text-red-500" : isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
                     {formatTime(timeRemaining)}
                 </div>
@@ -468,7 +488,9 @@ const MockTestPage: React.FC = () => {
             {/* Main Body */}
             <div className="flex-1 flex relative overflow-hidden">
                 <div className="flex-1 h-full overflow-hidden">
-                    {currentPassage ? (
+                    {viewMode === "solution" && analysisViewType === "analysis" ? (
+                        <MockAnalysisView isDark={isDark} questions={questions} />
+                    ) : currentPassage ? (
                         <SplitPaneLayout
                             isDark={isDark}
                             passage={currentPassage}

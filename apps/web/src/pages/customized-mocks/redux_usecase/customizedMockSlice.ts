@@ -9,6 +9,7 @@ import type { PracticeSession, QuestionAttempt, UUID } from "../../../types";
 interface CustomizedMockState {
     viewMode: "exam" | "solution";
     solutionViewType: "common" | "personalized";
+    analysisViewType: "solution" | "analysis";
 
     // Core Data
     currentQuestionIndex: number;
@@ -31,6 +32,7 @@ interface CustomizedMockState {
 const initialState: CustomizedMockState = {
     viewMode: "exam",
     solutionViewType: "common",
+    analysisViewType: "solution",
     currentQuestionIndex: 0,
     questionOrder: [],
     attempts: {},
@@ -388,6 +390,13 @@ const customizedMockSlice = createSlice({
             state.solutionViewType = action.payload;
         },
 
+        setAnalysisViewType: (
+            state,
+            action: PayloadAction<"solution" | "analysis">
+        ) => {
+            state.analysisViewType = action.payload;
+        },
+
         updateSessionAnalytics: (
             state,
             action: PayloadAction<{
@@ -510,6 +519,88 @@ export const selectTimeRemaining = createSelector(
     }
 );
 
+export const selectAnalysisViewType = (state: {
+    customizedMock: CustomizedMockState;
+}) => state.customizedMock.analysisViewType;
+
+// Analysis data selector - calculates score and time distribution
+export const selectAnalysisData = createSelector(
+    [selectAttempts, selectQuestionOrder],
+    (attempts, order) => {
+        let correctCount = 0;
+        let incorrectCount = 0;
+        let unattemptedCount = 0;
+        let correctMarks = 0;
+        let incorrectMarks = 0;
+        let timeOnCorrect = 0;
+        let timeOnIncorrect = 0;
+        let timeOnUnattempted = 0;
+
+        order.forEach(questionId => {
+            const attempt = attempts[questionId];
+            if (!attempt) return;
+
+            const timeSpent = attempt.time_spent_seconds || 0;
+
+            // Check if question was attempted by looking at user_answer field
+            const userAnswer = attempt.user_answer as any;
+            const isAttempted = userAnswer && userAnswer.user_answer != null;
+
+            if (!isAttempted) {
+                // Unattempted
+                unattemptedCount++;
+                timeOnUnattempted += timeSpent;
+            } else if (attempt.is_correct) {
+                // Correct
+                correctCount++;
+                correctMarks += 3;
+                timeOnCorrect += timeSpent;
+            } else {
+                // Incorrect - check question type for negative marking
+                incorrectCount++;
+
+                // For now, we'll apply -1 to all incorrect answers
+                // The question type check will be done when we have access to question data
+                // This will be refined in the component where we have access to questions
+                incorrectMarks -= 1;
+                timeOnIncorrect += timeSpent;
+            }
+        });
+
+        const totalQuestions = order.length;
+        const totalMarks = totalQuestions * 3;
+        const scoredMarks = correctMarks + incorrectMarks;
+        const percentage = totalMarks > 0 ? Math.round((scoredMarks / totalMarks) * 100) : 0;
+
+        const totalTime = timeOnCorrect + timeOnIncorrect + timeOnUnattempted;
+        const timeOnCorrectPercent = totalTime > 0 ? Math.round((timeOnCorrect / totalTime) * 100) : 0;
+        const timeOnIncorrectPercent = totalTime > 0 ? Math.round((timeOnIncorrect / totalTime) * 100) : 0;
+        const timeOnUnattemptedPercent = totalTime > 0 ? Math.round((timeOnUnattempted / totalTime) * 100) : 0;
+
+        return {
+            correctCount,
+            incorrectCount,
+            unattemptedCount,
+            correctMarks,
+            incorrectMarks,
+            totalMarks,
+            scoredMarks,
+            percentage,
+            timeDistribution: {
+                correct: timeOnCorrect,
+                incorrect: timeOnIncorrect,
+                unattempted: timeOnUnattempted,
+                total: totalTime,
+            },
+            timeDistributionPercent: {
+                correct: timeOnCorrectPercent,
+                incorrect: timeOnIncorrectPercent,
+                unattempted: timeOnUnattemptedPercent,
+            },
+        };
+    }
+);
+
 export const {
     initializeSession,
     submitAnswer,
@@ -521,6 +612,7 @@ export const {
     incrementElapsedTime,
     setViewMode,
     setSolutionViewType,
+    setAnalysisViewType,
     toggleQuestionPalette,
     resetCustomizedMock,
     updateConfidenceLevel,
