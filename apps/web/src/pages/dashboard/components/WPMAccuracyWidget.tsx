@@ -64,21 +64,19 @@ export const WPMAccuracyWidget: React.FC<WPMAccuracyWidgetProps> = ({
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1, duration: 0.5 }}
-            whileHover={{ scale: 1.02 }}
-            className={`rounded-2xl border p-6 overflow-hidden transition-colors ${
-                isDark
-                    ? "bg-bg-secondary-dark border-border-dark hover:border-zinc-700"
-                    : "bg-bg-secondary-light border-border-light hover:border-zinc-300"
-            } ${className}`}
+            whileHover={{ scale: 1.01 }}
+            className={`rounded-2xl border p-6 overflow-hidden transition-all duration-300 shadow-lg ${isDark
+                    ? "bg-bg-secondary-dark border-border-dark hover:border-brand-primary-dark/40 hover:shadow-brand-primary-dark/10"
+                    : "bg-bg-secondary-light border-border-light hover:border-brand-primary-light/40 hover:shadow-brand-primary-light/10"
+                } ${className}`}
         >
             <div className="flex items-start justify-between gap-4">
                 <div>
                     <h3
-                        className={`font-serif font-bold text-xl flex items-center gap-2 ${
-                            isDark
+                        className={`font-serif font-bold text-xl flex items-center gap-2 ${isDark
                                 ? "text-text-primary-dark"
                                 : "text-text-primary-light"
-                        }`}
+                            }`}
                     >
                         <MdShowChart
                             className={
@@ -90,11 +88,10 @@ export const WPMAccuracyWidget: React.FC<WPMAccuracyWidgetProps> = ({
                         WPM vs Accuracy
                     </h3>
                     <p
-                        className={`text-sm mt-1 ${
-                            isDark
+                        className={`text-sm mt-1 ${isDark
                                 ? "text-text-secondary-dark"
                                 : "text-text-secondary-light"
-                        }`}
+                            }`}
                     >
                         Speed–accuracy tradeoff over the last 60 sessions.
                     </p>
@@ -104,9 +101,8 @@ export const WPMAccuracyWidget: React.FC<WPMAccuracyWidgetProps> = ({
             <div className="mt-6">
                 {error ? (
                     <div
-                        className={`text-sm ${
-                            isDark ? "text-rose-300" : "text-rose-700"
-                        }`}
+                        className={`text-sm ${isDark ? "text-rose-300" : "text-rose-700"
+                            }`}
                     >
                         Error loading speed/accuracy.
                     </div>
@@ -117,11 +113,10 @@ export const WPMAccuracyWidget: React.FC<WPMAccuracyWidgetProps> = ({
                     </div>
                 ) : series.length === 0 ? (
                     <div
-                        className={`text-sm ${
-                            isDark
+                        className={`text-sm ${isDark
                                 ? "text-text-secondary-dark"
                                 : "text-text-secondary-light"
-                        }`}
+                            }`}
                     >
                         No recent analytics yet. Finish a few daily sessions to populate
                         this chart.
@@ -167,9 +162,10 @@ export const WPMAccuracyWidget: React.FC<WPMAccuracyWidgetProps> = ({
                                     type="monotone"
                                     dataKey="wpm"
                                     name="WPM"
-                                    stroke={isDark ? "#22c55e" : "#16a34a"}
-                                    strokeWidth={2}
+                                    stroke={isDark ? "#3b82f6" : "#0f4c81"}
+                                    strokeWidth={3}
                                     dot={false}
+                                    activeDot={{ r: 6 }}
                                 />
 
                                 <Line
@@ -177,9 +173,10 @@ export const WPMAccuracyWidget: React.FC<WPMAccuracyWidgetProps> = ({
                                     type="monotone"
                                     dataKey="accuracy"
                                     name="Accuracy %"
-                                    stroke={isDark ? "#60a5fa" : "#2563eb"}
-                                    strokeWidth={2}
+                                    stroke={isDark ? "#06b6d4" : "#0891b2"}
+                                    strokeWidth={3}
                                     dot={false}
+                                    activeDot={{ r: 6 }}
                                 />
                             </ComposedChart>
                         </ResponsiveContainer>
