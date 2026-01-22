@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import { motion } from "framer-motion";
-import type { Option, Question } from "../../types";
+import type { Option, Question } from "../../../types";
 import { ConfidenceSelector } from "./ConfidenceSelector";
 import type { SolutionViewType } from "./SolutionToggle";
 import { SolutionToggle } from "./SolutionToggle";
@@ -68,28 +68,28 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 
         if (isExamMode) {
             return `w-full p-4 rounded-xl border-2 text-left transition-all duration-200 ${isSelected
-                    ? isDark
-                        ? "bg-brand-primary-dark/20 border-brand-primary-dark text-text-primary-dark ring-2 ring-brand-accent-light"
-                        : "bg-brand-primary-light/10 border-brand-primary-light text-text-primary-light ring-2 ring-brand-accent-light"
-                    : isDark
-                        ? "bg-bg-tertiary-dark text-text-primary-dark border-border-dark hover:border-brand-primary-dark"
-                        : "bg-bg-tertiary-light text-text-primary-light border-border-light hover:border-brand-primary-light"
+                ? isDark
+                    ? "bg-brand-primary-dark/20 border-brand-primary-dark text-text-primary-dark ring-2 ring-brand-accent-light"
+                    : "bg-brand-primary-light/10 border-brand-primary-light text-text-primary-light ring-2 ring-brand-accent-light"
+                : isDark
+                    ? "bg-bg-tertiary-dark text-text-primary-dark border-border-dark hover:border-brand-primary-dark"
+                    : "bg-bg-tertiary-light text-text-primary-light border-border-light hover:border-brand-primary-light"
                 }`;
         }
         if (isCorrectOption)
             return `w-full p-4 rounded-xl border-2 text-left ${isDark
-                    ? "bg-success/20 border-success text-success"
-                    : "bg-success/10 border-success text-success"
+                ? "bg-success/20 border-success text-success"
+                : "bg-success/10 border-success text-success"
                 }`;
         if (isSelected && !isCorrectOption)
             return `w-full p-4 rounded-xl border-2 text-left ${isDark
-                    ? "bg-error/20 border-error text-error"
-                    : "bg-error/10 border-error text-error"
+                ? "bg-error/20 border-error text-error"
+                : "bg-error/10 border-error text-error"
                 }`;
 
         return `w-full p-4 rounded-xl border-2 text-left opacity-50 ${isDark
-                ? "bg-bg-tertiary-dark text-text-primary-dark border-border-dark"
-                : "bg-bg-tertiary-light text-text-primary-light border-border-light"
+            ? "bg-bg-tertiary-dark text-text-primary-dark border-border-dark"
+            : "bg-bg-tertiary-light text-text-primary-light border-border-light"
             }`;
     };
 
@@ -135,33 +135,90 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 
         return (
             <div className="space-y-6">
-                <div>
-                    <h5 className="text-sm font-bold uppercase tracking-wider mb-2 opacity-60">Trap Analysis</h5>
-                    <p className="leading-relaxed">{diagnostic.trap_analysis}</p>
-                </div>
-                <div>
-                    <h5 className="text-sm font-bold uppercase tracking-wider mb-2 opacity-60">Possible Reasoning Failures</h5>
-                    <div className="space-y-3">
-                        {diagnostic.dominant_reasoning_failures?.map((f: any, i: number) => (
-                            <div key={i} className={`p-3 rounded-lg ${isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"}`}>
-                                <div className="text-xs font-bold uppercase text-brand-primary-light mb-1">{f.reasoning_node_label}</div>
-                                <div className="text-sm">{f.failure_description}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-                {diagnostic.error_pattern_keys && (
+                {/* Personalized Analysis - Primary Focus */}
+                {diagnostic.personalized_analysis && (
                     <div>
-                        <h5 className="text-sm font-bold uppercase tracking-wider mb-2 opacity-60">Error Patterns</h5>
+                        <h5 className="text-sm font-bold uppercase tracking-wider mb-3 opacity-60">Why You Got This Wrong</h5>
+                        <p className="leading-relaxed text-base">{diagnostic.personalized_analysis}</p>
+                    </div>
+                )}
+
+                {/* Targeted Advice - Actionable Steps */}
+                {diagnostic.targeted_advice && (
+                    <div className={`p-4 rounded-lg border-l-4 ${isDark ? "bg-brand-primary-dark/10 border-brand-accent-light" : "bg-brand-primary-light/10 border-brand-accent-light"}`}>
+                        <h5 className="text-sm font-bold uppercase tracking-wider mb-3 text-brand-accent-light">What To Do Next</h5>
+                        <p className="leading-relaxed">{diagnostic.targeted_advice}</p>
+                    </div>
+                )}
+
+                {/* Strength Comparison - Encouragement */}
+                {diagnostic.strength_comparison && (
+                    <div className={`p-3 rounded-lg ${isDark ? "bg-success/10" : "bg-success/5"}`}>
+                        <p className="text-sm leading-relaxed italic opacity-90">{diagnostic.strength_comparison}</p>
+                    </div>
+                )}
+
+                {/* Related Weak Areas - Context */}
+                {diagnostic.related_weak_areas && diagnostic.related_weak_areas.length > 0 && (
+                    <div>
+                        <h5 className="text-sm font-bold uppercase tracking-wider mb-2 opacity-60">Areas To Focus On</h5>
                         <div className="flex flex-wrap gap-2">
-                            {diagnostic.error_pattern_keys.map((key: string) => (
-                                <span key={key} className="px-2 py-1 rounded-md bg-error/10 text-error text-xs font-medium">
-                                    {key.replace(/_/g, " ")}
+                            {diagnostic.related_weak_areas.map((area: any, i: number) => (
+                                <span
+                                    key={i}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium ${isDark ? "bg-warning/20 text-warning" : "bg-warning/10 text-warning"}`}
+                                >
+                                    {area.human_readable_description} ({area.proficiency_score}%)
                                 </span>
                             ))}
                         </div>
                     </div>
                 )}
+
+                {/* Divider */}
+                <div className={`border-t ${isDark ? "border-border-dark" : "border-border-light"} opacity-30`} />
+
+                {/* Supplementary Information */}
+                <details className="cursor-pointer">
+                    <summary className="text-sm font-bold uppercase tracking-wider mb-2 opacity-60 hover:opacity-100 transition-opacity">
+                        Technical Analysis (Optional)
+                    </summary>
+                    <div className="mt-4 space-y-4">
+                        {diagnostic.trap_analysis && (
+                            <div>
+                                <h6 className="text-xs font-bold uppercase tracking-wider mb-2 opacity-60">Trap Analysis</h6>
+                                <p className="text-sm leading-relaxed">{diagnostic.trap_analysis}</p>
+                            </div>
+                        )}
+
+                        {diagnostic.dominant_reasoning_failures && diagnostic.dominant_reasoning_failures.length > 0 && (
+                            <div>
+                                <h6 className="text-xs font-bold uppercase tracking-wider mb-2 opacity-60">Reasoning Failures</h6>
+                                <div className="space-y-2">
+                                    {diagnostic.dominant_reasoning_failures?.map((f: any, i: number) => (
+                                        <div key={i} className={`p-2 rounded-lg text-sm ${isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"}`}>
+                                            <div className="text-xs font-bold uppercase text-brand-primary-light mb-1">{f.reasoning_node_label}</div>
+                                            <div className="text-xs opacity-80">{f.failure_description}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {diagnostic.error_pattern_keys && diagnostic.error_pattern_keys.length > 0 && (
+                            <div>
+                                <h6 className="text-xs font-bold uppercase tracking-wider mb-2 opacity-60">Error Patterns</h6>
+                                <div className="flex flex-wrap gap-2">
+                                    {diagnostic.error_pattern_keys.map((key: string) => (
+                                        <span key={key} className="px-2 py-1 rounded-md bg-error/10 text-error text-xs font-medium">
+                                            {key.replace(/_/g, " ")}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </details>
             </div>
         );
     };

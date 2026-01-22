@@ -125,31 +125,101 @@ You must ANALYZE them to understand:
 
 ---
 
-## ADDITIONAL ANCHOR: CAT RC QUESTION TAXONOMY (Study + Compare to PYQs)
+## CAT RC QUESTION TYPES — COMPREHENSIVE TAXONOMY
 
-CAT RC questions commonly fall into these buckets:
+CAT RC questions test multiple cognitive modes within the same passage.
+You MUST generate a heterogeneous set—avoid repeating the same logical pattern.
 
-A) Broad understanding (answers not directly stated; requires passage-level grasp)
-- Central idea / Main purpose
-- Purpose of a paragraph / sentence
-- Tone of the author/entity
-- Suitable title
-- Source / author profession ("the author is most likely...")
+### CORE QUESTION TYPES (Use these as your primary toolkit):
 
-B) Inference / suggestion (evidence exists, but answer is not directly stated)
-- What can be inferred / implied?
-- What is suggested / assumed?
-- Relationship between X and Y
-- Analogy to the argument/issue in the passage
+**1. EXCEPT / NOT INFERABLE**
+- Form: "All of the following can be inferred EXCEPT:" or "Which CANNOT be inferred?"
+- 3 options are logically supported; 1 subtly violates scope/certainty/causality
+- Wrong option feels plausible but overreaches or reverses logic
 
-C) Information/data-based (answer is in the passage, but may need careful interpretation)
-- The author is likely to agree with all EXCEPT
-- Reason why something is ineffective
-- A specific factual/argument-detail check (not a verbatim scan)
+**2. CHARACTERISTIC / FOLLOWING FROM PASSAGE**
+- Form: "Following from the passage, which is a characteristic of X?"
+- Requires abstraction and synthesis across multiple ideas
+- Wrong options sound ideologically attractive but lack support
 
-RULE:
-- Use this taxonomy to generate question stems that are CAT-realistic.
-- Validate each question against BOTH (i) the PYQ references and (ii) the taxonomy above.
+**3. NARRATIVE / FLOW / SEQUENCE**
+- Form: "Which sequence best captures the narrative?"
+- Tests passage structure, not just content
+- Options rearrange same ideas in misleading orders
+
+**4. ARGUMENTS MADE / NOT MADE**
+- Form: "All of the following arguments are made EXCEPT:"
+- Tests authorial commitment vs mere mention
+- Wrong option sounds reasonable but is only implied or absent
+
+**5. COMPLEMENT / STRENGTHEN**
+- Form: "Which would best complement the passage's findings?"
+- Extends empirical/conceptual reach (not logical strengthening)
+- Often uses analogies from unrelated domains
+
+**6. EXPERIMENT / STUDY INFERENCE**
+- Form: "Which cannot be inferred from the experiment?" or "Which demonstrates X?"
+- Requires understanding experimental design and constraints
+- Wrong answers smuggle new assumptions or violate conditions
+
+**7. EXAMPLE FUNCTION / PURPOSE**
+- Form: "Which best explains the complexity illustrated by example X?"
+- Tests WHY an example exists, not WHAT it says
+- Wrong options restate content instead of rhetorical function
+
+**8. INVALIDATION / PURPOSE-BREAKING**
+- Form: "Which, if true, would invalidate the purpose of the example?"
+- Requires reverse reasoning
+- Correct option collapses the analogy or demonstration
+
+**9. WORLDVIEW / PHILOSOPHICAL ALIGNMENT**
+- Form: "Which worldview is closest to that of X?"
+- Highly abstract—mirrors belief structure, not surface similarity
+- Wrong options rely on superficial resemblance
+
+**10. ABSTRACT PROCESS / OPPOSITE**
+- Form: "Which comes closest to the opposite of democratization?"
+- Tests conceptual precision stripped of emotional valence
+- Wrong options use politically charged but logically incorrect terms
+
+**11. CENTRAL THEME / CHOICE BETWEEN**
+- Form: "The central theme is about the choice between:"
+- Requires collapsing passage into a tension or trade-off
+- Wrong options isolate only one side
+
+**12. AUTHORIAL OVEREMPHASIS / CRITICAL DISTANCE**
+- Form: "Regarding which could we argue the author overemphasizes X?"
+- Meta-critical—tests reader's ability to distance from author
+- Wrong options are descriptive, not evaluative
+
+**13. ASSUMPTION NECESSITY**
+- Form: "Which assumption is most necessary for the suggestion to hold?"
+- Tests causal dependency in argument chain
+- Correct option enables the chain; others are irrelevant or too strong
+
+**14. TAIL RISK / COMPLEX SYSTEMS**
+- Form: "Which observation would strengthen the claim that X leads to Y?"
+- Tests statistical reasoning
+- Correct option shows clustering or second-order effects
+
+**15. WORD / PHRASE IN CONTEXT**
+- Form: "The phrase 'sui generis' suggests:"
+- Meaning from usage, not dictionary
+- Wrong options are near-synonyms
+
+**16. FUNCTION OF A REFERENCE**
+- Form: "The mention of X does all the following EXCEPT:"
+- Tests multi-function references
+- Correct answer identifies the missing function
+
+**17. TONE / PURPOSE / MAIN IDEA**
+- Form: "The author's tone is best described as:" or "The main purpose is:"
+- Passage-level synthesis
+- Wrong options: opposite tone, too neutral, too extreme, wrong target
+
+CRITICAL RULES:
+- Do NOT repeat the same logical move twice
+- Validate each question against the PYQ references AND this taxonomy
 
 ---
 
@@ -183,23 +253,21 @@ ${passageText}
 
 ### GENERATION REQUIREMENTS
 
-Generate EXACTLY ${questionCount} questions in this order:
+Generate EXACTLY ${questionCount} questions with MAXIMUM DIVERSITY.
 
-1) INFERENCE / SUGGESTION (≥1)
-- Derive an unstated conclusion OR relationship OR assumption (taxonomy bucket B)
-- Correct option requires multi-step reasoning
+MANDATORY REQUIREMENTS:
+1. MUST include at least:
+   - One EXCEPT / NOT question (type 1, 4, or 16)
+   - One abstraction or worldview question (type 2, 9, 11, or 17)
+   - One assumption / inference chain question (type 5, 6, 8, or 13)
+2. Avoid repeating the same logical move twice
+3. Ensure heterogeneous question set—no uniform pattern across questions
 
-2) TONE / PURPOSE (≥1)
-- Either tone OR purpose (taxonomy bucket A)
-- Distractors: opposite tone, too neutral, too extreme, wrong target (author vs. a group in passage)
-
-3) INFORMATION/DETAIL (≥1)
-- Evidence in the passage but requires careful interpretation (taxonomy bucket C)
-- Avoid verbatim lifting; require understanding of what a line/claim implies
-
-4) MAIN IDEA / IMPLICATION / TITLE-LIKE (≥1)
-- Passage-level synthesis (taxonomy bucket A)
-- Can be framed as central idea, main purpose, implication, suitable title, or author-likely-to-be
+QUESTION SELECTION STRATEGY:
+- Choose question types that best fit the passage content and structure
+- Vary cognitive demands: some literal, some inferential, some meta-level
+- Mix passage-level questions with detail-oriented questions
+- Balance abstract reasoning with concrete evidence-based questions
 
 ---
 
@@ -216,26 +284,48 @@ ${difficultyTargets.map((d, i) => `- Q${i + 1}: ${d}`).join("\n")}
 
 ---
 
+### DIVERSITY ENFORCEMENT
+
+CRITICAL ANTI-PATTERNS TO AVOID:
+❌ DO NOT ask fact-recall questions
+❌ DO NOT ask vocabulary definition questions (unless passage-driven context is key)
+❌ DO NOT repeat "main idea" questions in different wording
+❌ DO NOT make the correct option obviously longer or more nuanced
+❌ DO NOT let all wrong options fail for the same reason
+
+INTERNAL QUALITY CHECK (do not output):
+- For each question, internally label the cognitive skill tested
+- Verify no two questions test the same skill in the same way
+- Ensure wrong options fail for DIFFERENT reasons across the question set
+
+---
+
 ### QUESTION CONSTRUCTION PRINCIPLES
 
 1) QUESTION PHRASING:
 - Use precise, academic language
 - Avoid clues in the stem
-- Prefer indirect phrasing ("best supported", "most strongly implied")
+- Prefer indirect phrasing ("best supported", "most strongly implied", "can be inferred")
+- Use EXCEPT/NOT formulations strategically to test comprehensive understanding
 
-2) OPTION DESIGN:
+2) OPTION DESIGN (CRITICAL):
 - All 4 options (A–D) must be plausibly attractive
 - No two options should be semantically identical
+- Each wrong option must be:
+  * Internally coherent
+  * Logically motivated
+  * Wrong for ONE precise reason (not obviously false)
 - Vary distractor types across options:
   * literal trap (sounds like a paraphrase but misses nuance)
-  * extreme trap (over-extends)
-  * narrow/broad trap (partial match)
+  * extreme trap (over-extends the claim)
+  * narrow/broad trap (partial match, wrong scope)
   * opposite trap (contradicts while borrowing vocabulary)
   * irrelevant-but-plausible trap (general truth, wrong for this passage)
 
 3) INFERENCE DEPTH:
 - Each question should require at least 2 logical steps
 - Wrong options should be reachable by common CAT-style reasoning errors
+- Correct option should reward careful, multi-step reasoning
 
 ---
 

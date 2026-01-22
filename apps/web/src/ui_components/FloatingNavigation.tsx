@@ -13,6 +13,7 @@ import {
     MdToday,
     MdMenu,
     MdPerson,
+    MdDashboardCustomize,
 } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import {
@@ -95,6 +96,15 @@ const navigationItems: NavigationItem[] = [
         iconColorDark: "text-rose-400",
         path: "/contact",
         description: "Get in touch",
+    },
+    {
+        id: "customized-mocks",
+        label: "Custom Mocks",
+        icon: <MdDashboardCustomize className="text-lg" />,
+        iconColorLight: "text-indigo-600",
+        iconColorDark: "text-indigo-400",
+        path: "/customized-mocks",
+        description: "Personalized mock tests",
     },
 ];
 
@@ -209,11 +219,10 @@ export const FloatingNavigation: React.FC = () => {
                     backdrop-blur-3xl 
                     hover:cursor-pointer focus:outline-none
                     ${isOpen ? "left-80 sm:left-96 md:left-80" : "left-6"}
-                    ${
-                                            isDark
-                                                ? "bg-bg-tertiary-dark/80 hover:shadow-[0_0_20px_rgba(0,103,71,0.4)] border border-border-dark/50 focus:ring-brand-accent-dark/30"
-                                                : "bg-bg-tertiary-light/80 hover:shadow-[0_0_20px_rgba(0,103,71,0.3)] border border-border-light/50 focus:ring-brand-accent-light/30"
-                                        }
+                    ${isDark
+                        ? "bg-bg-tertiary-dark/80 hover:shadow-[0_0_20px_rgba(0,103,71,0.4)] border border-border-dark/50 focus:ring-brand-accent-dark/30"
+                        : "bg-bg-tertiary-light/80 hover:shadow-[0_0_20px_rgba(0,103,71,0.3)] border border-border-light/50 focus:ring-brand-accent-light/30"
+                    }
                 `}
                 aria-label="Toggle sidebar"
                 variants={toggleButtonVariants}
@@ -227,9 +236,8 @@ export const FloatingNavigation: React.FC = () => {
                     transition={{ duration: 0.3 }}
                 >
                     <MdMenu
-                        className={`text-2xl sm:text-2xl ${
-                            isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                        }`}
+                        className={`text-2xl sm:text-2xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                            }`}
                     />
                 </motion.div>
             </motion.button>
@@ -241,11 +249,10 @@ export const FloatingNavigation: React.FC = () => {
                     fixed left-0 top-0 h-full z-40
                     backdrop-blur-xl border-r shadow-2xl
                     ${isOpen ? "w-80 sm:w-96" : "w-0 overflow-hidden"}
-                    ${
-                                            isDark
-                                                ? "bg-bg-primary-dark/95 border-border-dark"
-                                                : "bg-bg-primary-light/95 border-border-light"
-                                        }
+                    ${isDark
+                        ? "bg-bg-primary-dark/95 border-border-dark"
+                        : "bg-bg-primary-light/95 border-border-light"
+                    }
                 `}
                 variants={sidebarVariants}
                 initial="hidden"
@@ -259,11 +266,10 @@ export const FloatingNavigation: React.FC = () => {
                                 <motion.div
                                     className={`
                                                         w-12 h-12 rounded-xl flex items-center justify-center shadow-lg border
-                                                        ${
-                                                                                                                    isDark
-                                                                                                                        ? "bg-bg-secondary-dark border-border-dark"
-                                                                                                                        : "bg-bg-secondary-light border-border-light"
-                                                                                                                }
+                                                        ${isDark
+                                            ? "bg-bg-secondary-dark border-border-dark"
+                                            : "bg-bg-secondary-light border-border-light"
+                                        }
                                                     `}
                                     whileHover={{ scale: 1.05 }}
                                     transition={{ duration: 0.2 }}
@@ -277,20 +283,18 @@ export const FloatingNavigation: React.FC = () => {
                             </div>
                             <div>
                                 <h1
-                                    className={`text-2xl font-serif font-bold ${
-                                        isDark
+                                    className={`text-2xl font-serif font-bold ${isDark
                                             ? "text-text-primary-dark"
                                             : "text-text-primary-light"
-                                    }`}
+                                        }`}
                                 >
                                     PrepToDo
                                 </h1>
                                 <p
-                                    className={`text-sm ${
-                                        isDark
+                                    className={`text-sm ${isDark
                                             ? "text-text-secondary-dark"
                                             : "text-text-secondary-light"
-                                    }`}
+                                        }`}
                                 >
                                     AI Study Platform
                                 </p>
@@ -302,11 +306,10 @@ export const FloatingNavigation: React.FC = () => {
                     <div
                         className={`
                                         mb-6 p-4 rounded-xl border-2
-                                        ${
-                                                                                    isDark
-                                                                                        ? "bg-bg-secondary-dark/50 border-border-dark"
-                                                                                        : "bg-bg-secondary-light/50 border-border-light"
-                                                                                }
+                                        ${isDark
+                                ? "bg-bg-secondary-dark/50 border-border-dark"
+                                : "bg-bg-secondary-light/50 border-border-light"
+                            }
                                     `}
                     >
                         {isAuthenticated && user ? (
@@ -314,11 +317,10 @@ export const FloatingNavigation: React.FC = () => {
                                 <div
                                     className={`
                                                     w-10 h-10 rounded-full flex items-center justify-center
-                                                    ${
-                                                                                                            isDark
-                                                                                                                ? "bg-brand-primary-dark"
-                                                                                                                : "bg-brand-primary-light"
-                                                                                                        }
+                                                    ${isDark
+                                            ? "bg-brand-primary-dark"
+                                            : "bg-brand-primary-light"
+                                        }
                                                 `}
                                 >
                                     <MdPerson className="text-white" size={20} />
@@ -327,11 +329,10 @@ export const FloatingNavigation: React.FC = () => {
                                     <div
                                         className={`
                                                         font-medium
-                                                        ${
-                                                                                                                    isDark
-                                                                                                                        ? "text-text-primary-dark"
-                                                                                                                        : "text-text-primary-light"
-                                                                                                                }
+                                                        ${isDark
+                                                ? "text-text-primary-dark"
+                                                : "text-text-primary-light"
+                                            }
                                                     `}
                                     >
                                         Welcome back!
@@ -339,11 +340,10 @@ export const FloatingNavigation: React.FC = () => {
                                     <div
                                         className={`
                                                         text-sm
-                                                        ${
-                                                                                                                    isDark
-                                                                                                                        ? "text-text-secondary-dark"
-                                                                                                                        : "text-text-secondary-light"
-                                                                                                                }
+                                                        ${isDark
+                                                ? "text-text-secondary-dark"
+                                                : "text-text-secondary-light"
+                                            }
                                                     `}
                                     >
                                         {user.email ?? ""}
@@ -355,11 +355,10 @@ export const FloatingNavigation: React.FC = () => {
                                 <div
                                     className={`
                                                     mb-3
-                                                    ${
-                                                                                                            isDark
-                                                                                                                ? "text-text-primary-dark"
-                                                                                                                : "text-text-primary-light"
-                                                                                                        }
+                                                    ${isDark
+                                            ? "text-text-primary-dark"
+                                            : "text-text-primary-light"
+                                        }
                                                 `}
                                 >
                                     Join PrepToDo
@@ -369,11 +368,10 @@ export const FloatingNavigation: React.FC = () => {
                                         onClick={() => handleAuthAction?.("signin")}
                                         className={`
                                                             flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors hover:cursor-pointer
-                                                            ${
-                                                                                                                            isDark
-                                                                                                                                ? "bg-brand-primary-dark hover:bg-brand-primary-hover-dark text-white"
-                                                                                                                                : "bg-brand-primary-light hover:bg-brand-primary-hover-light text-white"
-                                                                                                                        }
+                                                            ${isDark
+                                                ? "bg-brand-primary-dark hover:bg-brand-primary-hover-dark text-white"
+                                                : "bg-brand-primary-light hover:bg-brand-primary-hover-light text-white"
+                                            }
                                                         `}
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
@@ -384,11 +382,10 @@ export const FloatingNavigation: React.FC = () => {
                                         onClick={() => handleAuthAction?.("signup")}
                                         className={`
                                                             flex-1 py-2 px-3 rounded-lg text-sm font-medium border-2 transition-colors hover:cursor-pointer
-                                                            ${
-                                                                                                                            isDark
-                                                                                                                                ? "border-brand-primary-dark text-brand-primary-dark hover:bg-brand-primary-dark hover:text-white"
-                                                                                                                                : "border-brand-primary-light text-brand-primary-light hover:bg-brand-primary-light hover:text-white"
-                                                                                                                        }
+                                                            ${isDark
+                                                ? "border-brand-primary-dark text-brand-primary-dark hover:bg-brand-primary-dark hover:text-white"
+                                                : "border-brand-primary-light text-brand-primary-light hover:bg-brand-primary-light hover:text-white"
+                                            }
                                                         `}
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
@@ -419,29 +416,26 @@ export const FloatingNavigation: React.FC = () => {
                                     className={`
                                         w-full flex items-center gap-4 p-4 rounded-xl
                                         hover:cursor-pointer
-                                        ${
-                                                                                    isDark
-                                                                                        ? "hover:bg-bg-tertiary-dark/50 text-text-secondary-dark hover:text-text-primary-dark"
-                                                                                        : "hover:bg-bg-tertiary-light/50 text-text-secondary-light hover:text-text-primary-light"
-                                                                                }
+                                        ${isDark
+                                            ? "hover:bg-bg-tertiary-dark/50 text-text-secondary-dark hover:text-text-primary-dark"
+                                            : "hover:bg-bg-tertiary-light/50 text-text-secondary-light hover:text-text-primary-light"
+                                        }
                                     `}
                                 >
                                     <motion.div
                                         className={`
                                             w-10 h-10 rounded-xl flex items-center justify-center
-                                            ${
-                                                                                            isDark
-                                                                                                ? "bg-bg-tertiary-dark/50 group-hover:bg-bg-tertiary-dark/80"
-                                                                                                : "bg-bg-tertiary-light/50 group-hover:bg-bg-tertiary-light/80"
-                                                                                        }
+                                            ${isDark
+                                                ? "bg-bg-tertiary-dark/50 group-hover:bg-bg-tertiary-dark/80"
+                                                : "bg-bg-tertiary-light/50 group-hover:bg-bg-tertiary-light/80"
+                                            }
                                             
                                         `}
                                         whileHover={{ scale: 1.05 }}
                                     >
                                         <div
-                                            className={`text-lg ${
-                                                isDark ? item.iconColorDark : item.iconColorLight
-                                            }`}
+                                            className={`text-lg ${isDark ? item.iconColorDark : item.iconColorLight
+                                                }`}
                                         >
                                             {item.icon}
                                         </div>
@@ -449,11 +443,10 @@ export const FloatingNavigation: React.FC = () => {
                                     <div className="text-left">
                                         <div className="font-medium">{item.label}</div>
                                         <div
-                                            className={`text-xs ${
-                                                isDark
+                                            className={`text-xs ${isDark
                                                     ? "text-text-muted-dark"
                                                     : "text-text-muted-light"
-                                            }`}
+                                                }`}
                                         >
                                             {item.description}
                                         </div>
@@ -467,11 +460,10 @@ export const FloatingNavigation: React.FC = () => {
                                             className={`
                                                 absolute left-full top-1/2 -translate-y-1/2 ml-4 px-3 py-2 rounded-lg
                                                 text-sm font-medium shadow-lg z-50
-                                                ${
-                                                                                                    isDark
-                                                                                                        ? "bg-bg-secondary-dark text-text-primary-dark border border-border-dark"
-                                                                                                        : "bg-bg-secondary-light text-text-primary-light border border-border-light"
-                                                                                                }
+                                                ${isDark
+                                                    ? "bg-bg-secondary-dark text-text-primary-dark border border-border-dark"
+                                                    : "bg-bg-secondary-light text-text-primary-light border border-border-light"
+                                                }
                                             `}
                                             initial={{ opacity: 0, x: -10 }}
                                             animate={{ opacity: 1, x: 0 }}
@@ -482,11 +474,10 @@ export const FloatingNavigation: React.FC = () => {
                                             <div
                                                 className={`
                                                     absolute right-full top-1/2 -translate-y-1/2 w-2 h-2 rotate-45
-                                                    ${
-                                                                                                            isDark
-                                                                                                                ? "bg-bg-secondary-dark border-l border-b border-border-dark"
-                                                                                                                : "bg-bg-secondary-light border-l border-b border-border-light"
-                                                                                                        }
+                                                    ${isDark
+                                                        ? "bg-bg-secondary-dark border-l border-b border-border-dark"
+                                                        : "bg-bg-secondary-light border-l border-b border-border-light"
+                                                    }
                                                 `}
                                             />
                                         </motion.div>
@@ -499,9 +490,8 @@ export const FloatingNavigation: React.FC = () => {
                     {/* Bottom section */}
                     {isAuthenticated && (
                         <div
-                            className={`border-t flex flex-col justify-center${
-                                isDark ? "border-border-dark" : "border-border-light"
-                            }`}
+                            className={`border-t flex flex-col justify-center${isDark ? "border-border-dark" : "border-border-light"
+                                }`}
                         >
                             <motion.button
                                 type="submit"
@@ -509,11 +499,10 @@ export const FloatingNavigation: React.FC = () => {
                                 onClick={handleLogout}
                                 className={`
               flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 hover:cursor-pointer
-              ${
-                                isLogoutLoading
-                                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                    : "bg-brand-primary-light hover:bg-brand-primary-hover-light dark:bg-brand-primary-dark dark:hover:bg-brand-primary-hover-dark text-white shadow-lg hover:shadow-xl"
-                            }
+              ${isLogoutLoading
+                                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                        : "bg-brand-primary-light hover:bg-brand-primary-hover-light dark:bg-brand-primary-dark dark:hover:bg-brand-primary-hover-dark text-white shadow-lg hover:shadow-xl"
+                                    }
             `}
                             >
                                 {isLogoutLoading ? "Logging out..." : "Log out"}
@@ -529,11 +518,10 @@ export const FloatingNavigation: React.FC = () => {
                     fixed left-6 top-20 sm:top-24 z-30 
                     flex flex-col gap-4 sm:gap-6
                     hover:cursor-pointer
-                    ${
-                                            isOpen
-                                                ? "translate-x-20 opacity-0 pointer-events-none"
-                                                : "translate-x-0 opacity-100 pointer-events-auto"
-                                        }
+                    ${isOpen
+                        ? "translate-x-20 opacity-0 pointer-events-none"
+                        : "translate-x-0 opacity-100 pointer-events-auto"
+                    }
                 `}
             >
                 {navigationItems.map((item, index) => {
@@ -555,11 +543,10 @@ export const FloatingNavigation: React.FC = () => {
                                     flex items-center justify-center
                                     backdrop-blur-3xl 
                                     hover:cursor-pointer focus:outline-none
-                                    ${
-                                                                            isDark
-                                                                                ? "bg-bg-tertiary-dark/80 hover:shadow-[0_0_20px_rgba(0,103,71,0.4)] border border-border-dark/50 focus:ring-brand-accent-dark/30"
-                                                                                : "bg-bg-tertiary-light/80 hover:shadow-[0_0_20px_rgba(0,103,71,0.3)] border border-border-light/50 focus:ring-brand-accent-light/30"
-                                                                        }
+                                    ${isDark
+                                        ? "bg-bg-tertiary-dark/80 hover:shadow-[0_0_20px_rgba(0,103,71,0.4)] border border-border-dark/50 focus:ring-brand-accent-dark/30"
+                                        : "bg-bg-tertiary-light/80 hover:shadow-[0_0_20px_rgba(0,103,71,0.3)] border border-border-light/50 focus:ring-brand-accent-light/30"
+                                    }
                                 `}
                                 aria-label={item.label}
                                 whileHover={{ scale: 1.1 }}
@@ -582,11 +569,10 @@ export const FloatingNavigation: React.FC = () => {
                                         className={`
                                             absolute left-full top-1/2 -translate-y-1/2 ml-4 px-3 py-2 rounded-lg
                                             text-sm font-medium shadow-lg z-50 whitespace-nowrap
-                                            ${
-                                                                                            isDark
-                                                                                                ? "bg-bg-secondary-dark text-text-primary-dark border border-border-dark"
-                                                                                                : "bg-bg-secondary-light text-text-primary-light border border-border-light"
-                                                                                        }
+                                            ${isDark
+                                                ? "bg-bg-secondary-dark text-text-primary-dark border border-border-dark"
+                                                : "bg-bg-secondary-light text-text-primary-light border border-border-light"
+                                            }
                                         `}
                                         initial={{ opacity: 0, x: -10, scale: 0.8 }}
                                         animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -597,11 +583,10 @@ export const FloatingNavigation: React.FC = () => {
                                         <div
                                             className={`
                                                 absolute right-full top-1/2 -translate-y-1/2 w-2 h-2 rotate-45
-                                                ${
-                                                                                                    isDark
-                                                                                                        ? "bg-bg-secondary-dark border-l border-b border-border-dark"
-                                                                                                        : "bg-bg-secondary-light border-l border-b border-border-light"
-                                                                                                }
+                                                ${isDark
+                                                    ? "bg-bg-secondary-dark border-l border-b border-border-dark"
+                                                    : "bg-bg-secondary-light border-l border-b border-border-light"
+                                                }
                                             `}
                                         />
                                     </motion.div>

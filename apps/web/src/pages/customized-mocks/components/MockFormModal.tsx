@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { MdClose, MdExpandMore, MdExpandLess } from "react-icons/md";
-import { useCreateCustomizedMockMutation } from "../redux_usecase/customizedMocksApi";
+import { useCreateCustomizedMockMutation, useFetchUserMetricProficiencyQuery, useFetchAvailableGenresQuery } from "../redux_usecase/customizedMocksApi";
+import { useFetchUserQuery } from "../../auth/redux_usecases/authApi";
 import { supabase } from "../../../services/apiClient";
+import { MdClose, MdExpandMore, MdExpandLess, MdTimer, MdLibraryBooks, MdAssignment, MdRecommend } from "react-icons/md";
 
 interface MockFormModalProps {
     isOpen: boolean;
@@ -12,16 +13,6 @@ interface MockFormModalProps {
     isDark: boolean;
 }
 
-const AVAILABLE_GENRES = [
-    "Philosophy",
-    "History",
-    "Economics",
-    "Science",
-    "Politics",
-    "Sociology",
-    "Literature",
-    "Art & Culture",
-];
 
 const MockFormModal: React.FC<MockFormModalProps> = ({
     isOpen,
@@ -31,23 +22,57 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
 }) => {
     const [createMock, { isLoading }] = useCreateCustomizedMockMutation();
 
-    // Form state
-    const [mockName, setMockName] = useState("Custom Mock Test");
-    const [numPassages, setNumPassages] = useState(3);
-    const [totalQuestions, setTotalQuestions] = useState(15);
-    const [timeLimitMinutes, setTimeLimitMinutes] = useState(60);
-    const [selectedGenres, setSelectedGenres] = useState<string[]>(["Philosophy", "History"]);
-    const [difficultyTarget, setDifficultyTarget] = useState<"easy" | "medium" | "hard" | "mixed">("mixed");
+    const { data: user } = useFetchUserQuery();
+    const { data: proficiencyData } = useFetchUserMetricProficiencyQuery(
+        user?.id || "" as any,
+        { skip: !user?.id }
+    );
+    const { data: genresData, isLoading: isLoadingGenres } = useFetchAvailableGenresQuery();
 
-    // Question type distribution
-    const [rcQuestions, setRcQuestions] = useState(4);
-    const [paraSummary, setParaSummary] = useState(3);
-    const [paraCompletion, setParaCompletion] = useState(3);
-    const [paraJumble, setParaJumble] = useState(3);
-    const [oddOneOut, setOddOneOut] = useState(2);
+    // Form state
+    const mockName = "Customized Mock";
+
+    // Fixed values (no longer in input fields)
+    const numPassages = 4;
+    const totalQuestions = 24;
+    const timeLimitMinutes = 40;
+
+    // Fixed question distribution
+    const rcQuestions = 16;
+    const paraSummary = 2;
+    const paraCompletion = 2;
+    const paraJumble = 2;
+    const oddOneOut = 2;
+
+    const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+    const [difficultyTarget, setDifficultyTarget] = useState<"easy" | "medium" | "hard" | "mixed">("mixed");
+    const [targetMetrics, setTargetMetrics] = useState<string[]>([]);
 
     // Advanced options
     const [showAdvanced, setShowAdvanced] = useState(false);
+
+    // Get recommendations from proficiency
+    const weakestGenres = proficiencyData
+        ?.filter(p => p.dimension_type === "genre")
+        ?.sort((a, b) => (a.proficiency_score || 0) - (b.proficiency_score || 0))
+        ?.slice(0, 4)
+        ?.map(p => p.dimension_key) || [];
+
+    const weakestMetrics = proficiencyData
+        ?.filter(p => p.dimension_type === "core_metric")
+        ?.sort((a, b) => (a.proficiency_score || 0) - (b.proficiency_score || 0))
+        ?.slice(0, 4)
+        ?.map(p => p.dimension_key) || [];
+
+    // Auto-select recommendations if empty
+    React.useEffect(() => {
+        if (selectedGenres.length === 0 && weakestGenres.length > 0) {
+            setSelectedGenres(weakestGenres);
+        }
+        if (targetMetrics.length === 0 && weakestMetrics.length > 0) {
+            setTargetMetrics(weakestMetrics);
+        }
+    }, [proficiencyData]);
 
     const questionDistributionTotal = rcQuestions + paraSummary + paraCompletion + paraJumble + oddOneOut;
 
@@ -55,7 +80,11 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
         if (selectedGenres.includes(genre)) {
             setSelectedGenres(selectedGenres.filter(g => g !== genre));
         } else {
-            setSelectedGenres([...selectedGenres, genre]);
+            if (selectedGenres.length < 4) {
+                setSelectedGenres([...selectedGenres, genre]);
+            } else {
+                toast.error("You can select exactly 4 genres");
+            }
         }
     };
 
@@ -63,13 +92,8 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
         e.preventDefault();
 
         // Validation
-        if (selectedGenres.length === 0) {
-            toast.error("Please select at least one genre");
-            return;
-        }
-
-        if (questionDistributionTotal !== totalQuestions) {
-            toast.error(`Question distribution (${questionDistributionTotal}) must equal total questions (${totalQuestions})`);
+        if (selectedGenres.length !== 4) {
+            toast.error("Please select exactly 4 genres");
             return;
         }
 
@@ -107,6 +131,7 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
                 },
                 difficulty_target: difficultyTarget,
                 time_limit_minutes: timeLimitMinutes,
+                target_metrics: targetMetrics,
             };
 
             console.log("[MockFormModal] Creating mock with params:", params);
@@ -130,17 +155,9 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
     };
 
     const resetForm = () => {
-        setMockName("Custom Mock Test");
-        setNumPassages(3);
-        setTotalQuestions(15);
-        setTimeLimitMinutes(60);
-        setSelectedGenres(["Philosophy", "History"]);
+        setSelectedGenres([]);
+        setTargetMetrics([]);
         setDifficultyTarget("mixed");
-        setRcQuestions(4);
-        setParaSummary(3);
-        setParaCompletion(3);
-        setParaJumble(3);
-        setOddOneOut(2);
         setShowAdvanced(false);
     };
 
@@ -206,134 +223,95 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
 
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                        {/* Mock Name */}
-                        <div>
-                            <label className={`
-                                block text-sm font-medium mb-2
-                                ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
-                            `}>
-                                Mock Test Name
-                            </label>
-                            <input
-                                type="text"
-                                value={mockName}
-                                onChange={(e) => setMockName(e.target.value)}
-                                className={`
-                                    w-full px-4 py-2 rounded-lg border-2 transition-colors
-                                    ${isDark
-                                        ? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark focus:border-brand-primary-dark"
-                                        : "bg-white border-border-light text-text-primary-light focus:border-brand-primary-light"}
-                                    outline-none
-                                `}
-                                required
-                            />
-                        </div>
 
-                        {/* Basic Configuration Grid */}
+                        {/* Fixed Metadata Display */}
                         <div className="grid grid-cols-3 gap-4">
-                            <div>
-                                <label className={`
-                                    block text-sm font-medium mb-2
-                                    ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
-                                `}>
-                                    Passages
-                                </label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="5"
-                                    value={numPassages}
-                                    onChange={(e) => setNumPassages(parseInt(e.target.value))}
-                                    className={`
-                                        w-full px-4 py-2 rounded-lg border-2 transition-colors
-                                        ${isDark
-                                            ? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark focus:border-brand-primary-dark"
-                                            : "bg-white border-border-light text-text-primary-light focus:border-brand-primary-light"}
-                                        outline-none
-                                    `}
-                                    required
-                                />
+                            <div className={`
+                                p-4 rounded-xl border flex flex-col items-center justify-center text-center
+                                ${isDark ? "bg-bg-tertiary-dark/50 border-border-dark" : "bg-bg-tertiary-light/50 border-border-light"}
+                            `}>
+                                <MdLibraryBooks className={`w-6 h-6 mb-2 ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}`} />
+                                <span className={`text-xs uppercase tracking-wider font-semibold ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>Passages</span>
+                                <span className={`text-xl font-bold ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>{numPassages}</span>
                             </div>
-
-                            <div>
-                                <label className={`
-                                    block text-sm font-medium mb-2
-                                    ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
-                                `}>
-                                    Total Questions
-                                </label>
-                                <input
-                                    type="number"
-                                    min="5"
-                                    max="50"
-                                    value={totalQuestions}
-                                    onChange={(e) => setTotalQuestions(parseInt(e.target.value))}
-                                    className={`
-                                        w-full px-4 py-2 rounded-lg border-2 transition-colors
-                                        ${isDark
-                                            ? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark focus:border-brand-primary-dark"
-                                            : "bg-white border-border-light text-text-primary-light focus:border-brand-primary-light"}
-                                        outline-none
-                                    `}
-                                    required
-                                />
+                            <div className={`
+                                p-4 rounded-xl border flex flex-col items-center justify-center text-center
+                                ${isDark ? "bg-bg-tertiary-dark/50 border-border-dark" : "bg-bg-tertiary-light/50 border-border-light"}
+                            `}>
+                                <MdAssignment className={`w-6 h-6 mb-2 ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}`} />
+                                <span className={`text-xs uppercase tracking-wider font-semibold ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>Questions</span>
+                                <span className={`text-xl font-bold ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>{totalQuestions}</span>
                             </div>
-
-                            <div>
-                                <label className={`
-                                    block text-sm font-medium mb-2
-                                    ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
-                                `}>
-                                    Time (minutes)
-                                </label>
-                                <input
-                                    type="number"
-                                    min="10"
-                                    max="180"
-                                    value={timeLimitMinutes}
-                                    onChange={(e) => setTimeLimitMinutes(parseInt(e.target.value))}
-                                    className={`
-                                        w-full px-4 py-2 rounded-lg border-2 transition-colors
-                                        ${isDark
-                                            ? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark focus:border-brand-primary-dark"
-                                            : "bg-white border-border-light text-text-primary-light focus:border-brand-primary-light"}
-                                        outline-none
-                                    `}
-                                    required
-                                />
+                            <div className={`
+                                p-4 rounded-xl border flex flex-col items-center justify-center text-center
+                                ${isDark ? "bg-bg-tertiary-dark/50 border-border-dark" : "bg-bg-tertiary-light/50 border-border-light"}
+                            `}>
+                                <MdTimer className={`w-6 h-6 mb-2 ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}`} />
+                                <span className={`text-xs uppercase tracking-wider font-semibold ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>Time</span>
+                                <span className={`text-xl font-bold ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>{timeLimitMinutes}m</span>
                             </div>
                         </div>
 
                         {/* Genre Selection */}
                         <div>
-                            <label className={`
-                                block text-sm font-medium mb-2
-                                ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
-                            `}>
-                                Select Genres
-                            </label>
-                            <div className="flex flex-wrap gap-2">
-                                {AVAILABLE_GENRES.map((genre) => (
-                                    <button
-                                        key={genre}
-                                        type="button"
-                                        onClick={() => handleGenreToggle(genre)}
-                                        className={`
-                                            px-4 py-2 rounded-lg text-sm font-medium transition-all
-                                            ${selectedGenres.includes(genre)
-                                                ? (isDark
-                                                    ? "bg-brand-primary-dark text-white"
-                                                    : "bg-brand-primary-light text-white")
-                                                : (isDark
-                                                    ? "bg-bg-tertiary-dark text-text-secondary-dark border-2 border-border-dark hover:border-brand-primary-dark"
-                                                    : "bg-white text-text-secondary-light border-2 border-border-light hover:border-brand-primary-light")
-                                            }
-                                        `}
-                                    >
-                                        {genre}
-                                    </button>
-                                ))}
+                            <div className="flex items-center justify-between mb-2">
+                                <label className={`
+                                    text-sm font-medium
+                                    ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
+                                `}>
+                                    Select Exactly 4 Genres
+                                </label>
+                                <span className={`
+                                    text-xs px-2 py-1 rounded-full
+                                    ${selectedGenres.length === 4
+                                        ? (isDark ? "bg-green-900/30 text-green-400" : "bg-green-100 text-green-700")
+                                        : (isDark ? "bg-amber-900/30 text-amber-400" : "bg-amber-100 text-amber-700")
+                                    }
+                                `}>
+                                    {selectedGenres.length} / 4 Selected
+                                </span>
                             </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                {isLoadingGenres ? (
+                                    <div className="col-span-4 text-center py-4 text-sm text-text-secondary-light italic">
+                                        Loading available genres...
+                                    </div>
+                                ) : (
+                                    genresData?.map((genreObj) => {
+                                        const genreName = genreObj.name;
+                                        const isSelected = selectedGenres.includes(genreName);
+                                        const isRecommended = weakestGenres.includes(genreName);
+                                        return (
+                                            <button
+                                                key={genreObj.id || genreName}
+                                                type="button"
+                                                onClick={() => handleGenreToggle(genreName)}
+                                                className={`
+                                                    relative px-3 py-2 rounded-lg text-xs font-medium transition-all text-left flex flex-col gap-1
+                                                    ${isSelected
+                                                        ? (isDark ? "bg-brand-primary-dark text-white shadow-lg" : "bg-brand-primary-light text-white shadow-lg")
+                                                        : (isDark ? "bg-bg-tertiary-dark text-text-secondary-dark border border-border-dark hover:border-brand-primary-dark" : "bg-gray-50 text-text-secondary-light border border-border-light hover:border-brand-primary-light")
+                                                    }
+                                                `}
+                                            >
+                                                <span className="flex items-center gap-2">
+                                                    {isRecommended && !isSelected && <MdRecommend className="text-amber-500" />}
+                                                    {genreName}
+                                                </span>
+                                                {isRecommended && (
+                                                    <span className={`text-[8px] px-1 rounded self-start ${isSelected ? "bg-white/20 text-white" : "bg-amber-50 text-white"}`}>REC</span>
+                                                )}
+                                            </button>
+                                        );
+                                    })
+                                )}
+                            </div>
+                            {weakestGenres.length > 0 && (
+                                <p className={`mt-2 text-xs flex items-center gap-1 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>
+                                    <MdRecommend className="text-amber-500" />
+                                    We recommended your weakest genres first.
+                                </p>
+                            )}
                         </div>
 
                         {/* Difficulty */}
@@ -368,176 +346,125 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
                             </div>
                         </div>
 
-                        {/* Question Distribution */}
+                        {/* Question Distribution (Fixed Info) */}
+                        <div className={`
+                            p-4 rounded-xl border
+                            ${isDark ? "bg-bg-tertiary-dark/30 border-border-dark" : "bg-gray-50 border-border-light"}
+                        `}>
+                            <label className={`
+                                block text-sm font-medium mb-3
+                                ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
+                            `}>
+                                Question Type Distribution
+                            </label>
+                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                                {[
+                                    { label: "RC", count: rcQuestions },
+                                    { label: "Summary", count: paraSummary },
+                                    { label: "Completion", count: paraCompletion },
+                                    { label: "Jumble", count: paraJumble },
+                                    { label: "Odd One", count: oddOneOut },
+                                ].map((type) => (
+                                    <div key={type.label} className="flex flex-col items-center">
+                                        <span className={`text-[10px] uppercase font-semibold ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>{type.label}</span>
+                                        <span className={`text-sm font-bold ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>{type.count}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Target Metrics */}
                         <div>
                             <div className="flex items-center justify-between mb-2">
                                 <label className={`
                                     text-sm font-medium
                                     ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
                                 `}>
-                                    Question Distribution
+                                    Target Performance Metrics
                                 </label>
-                                <span className={`
-                                    text-xs px-2 py-1 rounded-full
-                                    ${questionDistributionTotal === totalQuestions
-                                        ? (isDark ? "bg-green-900/30 text-green-400" : "bg-green-100 text-green-700")
-                                        : (isDark ? "bg-red-900/30 text-red-400" : "bg-red-100 text-red-700")
-                                    }
-                                `}>
-                                    {questionDistributionTotal} / {totalQuestions}
-                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAdvanced(!showAdvanced)}
+                                    className={`
+                                        text-xs flex items-center gap-1 font-medium transition-colors
+                                        ${isDark ? "text-brand-primary-dark hover:text-brand-primary-dark/80" : "text-brand-primary-light hover:text-brand-primary-light/80"}
+                                    `}
+                                >
+                                    {showAdvanced ? "Hide Options" : "Select Metrics"}
+                                    {showAdvanced ? <MdExpandLess /> : <MdExpandMore />}
+                                </button>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className={`
-                                        block text-xs mb-1
-                                        ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
-                                    `}>
-                                        RC Questions
-                                    </label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={rcQuestions}
-                                        onChange={(e) => setRcQuestions(parseInt(e.target.value) || 0)}
-                                        className={`
-                                            w-full px-3 py-2 rounded-lg border transition-colors text-sm
-                                            ${isDark
-                                                ? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark"
-                                                : "bg-white border-border-light text-text-primary-light"}
-                                            outline-none
-                                        `}
-                                    />
+
+                            {targetMetrics.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                    {targetMetrics.map(metric => (
+                                        <span key={metric} className={`
+                                            px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-2
+                                            ${isDark ? "bg-brand-primary-dark/20 text-brand-primary-dark border border-brand-primary-dark/30" : "bg-brand-primary-light/10 text-brand-primary-light border border-brand-primary-light/20"}
+                                        `}>
+                                            {metric.replace(/_/g, " ")}
+                                            <button
+                                                type="button"
+                                                onClick={() => setTargetMetrics(targetMetrics.filter(m => m !== metric))}
+                                                className="hover:text-red-500"
+                                            >
+                                                <MdClose />
+                                            </button>
+                                        </span>
+                                    ))}
                                 </div>
-                                <div>
-                                    <label className={`
-                                        block text-xs mb-1
-                                        ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
-                                    `}>
-                                        Para Summary
-                                    </label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={paraSummary}
-                                        onChange={(e) => setParaSummary(parseInt(e.target.value) || 0)}
-                                        className={`
-                                            w-full px-3 py-2 rounded-lg border transition-colors text-sm
-                                            ${isDark
-                                                ? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark"
-                                                : "bg-white border-border-light text-text-primary-light"}
-                                            outline-none
-                                        `}
-                                    />
-                                </div>
-                                <div>
-                                    <label className={`
-                                        block text-xs mb-1
-                                        ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
-                                    `}>
-                                        Para Completion
-                                    </label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={paraCompletion}
-                                        onChange={(e) => setParaCompletion(parseInt(e.target.value) || 0)}
-                                        className={`
-                                            w-full px-3 py-2 rounded-lg border transition-colors text-sm
-                                            ${isDark
-                                                ? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark"
-                                                : "bg-white border-border-light text-text-primary-light"}
-                                            outline-none
-                                        `}
-                                    />
-                                </div>
-                                <div>
-                                    <label className={`
-                                        block text-xs mb-1
-                                        ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
-                                    `}>
-                                        Para Jumble
-                                    </label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={paraJumble}
-                                        onChange={(e) => setParaJumble(parseInt(e.target.value) || 0)}
-                                        className={`
-                                            w-full px-3 py-2 rounded-lg border transition-colors text-sm
-                                            ${isDark
-                                                ? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark"
-                                                : "bg-white border-border-light text-text-primary-light"}
-                                            outline-none
-                                        `}
-                                    />
-                                </div>
-                                <div>
-                                    <label className={`
-                                        block text-xs mb-1
-                                        ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
-                                    `}>
-                                        Odd One Out
-                                    </label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={oddOneOut}
-                                        onChange={(e) => setOddOneOut(parseInt(e.target.value) || 0)}
-                                        className={`
-                                            w-full px-3 py-2 rounded-lg border transition-colors text-sm
-                                            ${isDark
-                                                ? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark"
-                                                : "bg-white border-border-light text-text-primary-light"}
-                                            outline-none
-                                        `}
-                                    />
-                                </div>
-                            </div>
+                            )}
+
+                            {showAdvanced && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className={`
+                                        p-4 rounded-xl border grid grid-cols-1 sm:grid-cols-2 gap-2
+                                        ${isDark ? "bg-bg-tertiary-dark border-border-dark" : "bg-gray-50 border-border-light"}
+                                    `}
+                                >
+                                    {proficiencyData?.filter(p => p.dimension_type === "core_metric").map(metric => {
+                                        const isSelected = targetMetrics.includes(metric.dimension_key);
+                                        const isRecommended = weakestMetrics.includes(metric.dimension_key);
+                                        return (
+                                            <button
+                                                key={metric.dimension_key}
+                                                type="button"
+                                                onClick={() => {
+                                                    if (isSelected) {
+                                                        setTargetMetrics(targetMetrics.filter(m => m !== metric.dimension_key));
+                                                    } else {
+                                                        setTargetMetrics([...targetMetrics, metric.dimension_key]);
+                                                    }
+                                                }}
+                                                className={`
+                                                    px-3 py-2 rounded-lg text-xs font-medium transition-all text-left flex items-center justify-between
+                                                    ${isSelected
+                                                        ? (isDark ? "bg-brand-primary-dark text-white" : "bg-brand-primary-light text-white")
+                                                        : (isDark ? "bg-bg-secondary-dark text-text-secondary-dark border border-border-dark hover:border-brand-primary-dark" : "bg-white text-text-secondary-light border border-border-light hover:border-brand-primary-light")
+                                                    }
+                                                `}
+                                            >
+                                                <span className="flex items-center gap-2">
+                                                    {isRecommended && !isSelected && <MdRecommend className="text-amber-500" />}
+                                                    {metric.dimension_key.replace(/_/g, " ")}
+                                                </span>
+                                                {isRecommended && (
+                                                    <span className={`text-[8px] px-1 rounded ${isSelected ? "bg-white/20 text-white" : "bg-amber-500 text-white"}`}>REC</span>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                    {(!proficiencyData || proficiencyData.filter(p => p.dimension_type === "core_metric").length === 0) && (
+                                        <p className="col-span-2 text-center text-xs text-text-muted-light py-2">
+                                            No explicit metrics found. Standard metrics will be used.
+                                        </p>
+                                    )}
+                                </motion.div>
+                            )}
                         </div>
-
-                        {/* Advanced Options Toggle */}
-                        <button
-                            type="button"
-                            onClick={() => setShowAdvanced(!showAdvanced)}
-                            className={`
-                                flex items-center gap-2 text-sm font-medium transition-colors
-                                ${isDark
-                                    ? "text-brand-primary-dark hover:text-brand-primary-dark/80"
-                                    : "text-brand-primary-light hover:text-brand-primary-light/80"}
-                            `}
-                        >
-                            {showAdvanced ? <MdExpandLess className="w-5 h-5" /> : <MdExpandMore className="w-5 h-5" />}
-                            Advanced Options (Optional)
-                        </button>
-
-                        {/* Advanced Options Content */}
-                        {showAdvanced && (
-                            <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: "auto" }}
-                                exit={{ opacity: 0, height: 0 }}
-                                className={`
-                                    p-4 rounded-lg border
-                                    ${isDark ? "bg-bg-tertiary-dark border-border-dark" : "bg-gray-50 border-border-light"}
-                                `}
-                            >
-                                <p className={`
-                                    text-xs mb-3
-                                    ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
-                                `}>
-                                    These options can be configured later for more personalized test generation.
-                                </p>
-                                <div className="space-y-2 text-sm">
-                                    <div className={isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}>
-                                        • Target specific core metrics
-                                    </div>
-                                    <div className={isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}>
-                                        • Address weak areas based on analytics
-                                    </div>
-                                </div>
-                            </motion.div>
-                        )}
 
                         {/* Submit Button */}
                         <div className="flex items-center gap-3 pt-4">

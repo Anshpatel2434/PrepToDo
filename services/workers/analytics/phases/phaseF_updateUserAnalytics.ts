@@ -39,7 +39,7 @@ export async function phaseF_updateUserAnalytics(
     const isStreakUpdateOnly = session_id === null || dataset.length === 0;
 
     // 1. Calculate basic session stats
-    const questions_attempted = dataset.length;
+    const questions_attempted = dataset.filter(a => a.user_answer.user_answer).length;
     const questions_correct = dataset.filter(d => d.correct).length;
     const accuracy_percentage = questions_attempted > 0
         ? Math.round((questions_correct / questions_attempted) * 10000) / 100
@@ -78,7 +78,7 @@ export async function phaseF_updateUserAnalytics(
         .eq('user_id', user_id)
         .maybeSingle();
 
-    // 8. Check if user practiced today for streak calculation
+    // 8. Check if user has >= 10 minutes of practice today for streak calculation
     const dayStart = `${today}T00:00:00.000Z`;
     const dayEndDate = new Date(dayStart);
     dayEndDate.setUTCDate(dayEndDate.getUTCDate() + 1);
@@ -86,22 +86,33 @@ export async function phaseF_updateUserAnalytics(
 
     const { data: daySessions, error: daySessionsError } = await supabase
         .from('practice_sessions')
-        .select('id')
+        .select('time_spent_seconds')
         .eq('user_id', user_id)
         .eq('status', 'completed')
         .gte('completed_at', dayStart)
-        .lt('completed_at', dayEnd)
-        .limit(1);
+        .lt('completed_at', dayEnd);
 
     if (daySessionsError) {
         console.error('⚠️ Failed to check sessions for streak calculation:', daySessionsError.message);
     }
 
-    // For streak calculation: if we're processing a real session, that counts as today's session
-    // If we're just updating streaks (no session), check database for any sessions today
-    const hasSessionToday = !isStreakUpdateOnly || ((daySessions?.length || 0) > 0);
+    // Calculate total time spent today (including current session if it's a real session)
+    let totalSecondsToday = 0;
 
-    console.log(`   - Streak calculation inputs: isStreakUpdateOnly=${isStreakUpdateOnly}, daySessions=${daySessions?.length || 0}, hasSessionToday=${hasSessionToday}`);
+    if (daySessions && daySessions.length > 0) {
+        totalSecondsToday = daySessions.reduce((sum, s) => sum + (s.time_spent_seconds || 0), 0);
+    }
+
+    // If we're processing a real session (not just a streak update), add its time
+    if (!isStreakUpdateOnly) {
+        totalSecondsToday += sessionData.time_spent_seconds;
+    }
+
+    // Streak continues only if user has >= 5 minutes (300 seconds) of practice today
+    const MINIMUM_SECONDS_FOR_STREAK = 300; // 5 minutes
+    const hasSessionToday = totalSecondsToday >= MINIMUM_SECONDS_FOR_STREAK;
+
+    console.log(`   - Streak calculation inputs: totalSecondsToday=${totalSecondsToday}, minimumRequired=${MINIMUM_SECONDS_FOR_STREAK}, hasSessionToday=${hasSessionToday}`);
 
     // 9. Calculate streaks
     const streakData = await calculateStreaks(supabase, user_id, today, hasSessionToday, existingAnalytics);
@@ -615,6 +626,12 @@ function calculateQuestionTypePerformance(dataset: AttemptDatum[]): Record<strin
 /**
  * Calculate current and longest streaks
  * Updated to work with single-row user_analytics table
+ * 
+ * Streak Rules:
+ * - User must have >= 10 minutes of practice on a day to maintain streak
+ * - Consecutive days with >= 10 minutes increase the streak
+ * - Any gap breaks the streak and resets to 0 (or 1 if today qualifies)
+ * - Works regardless of when function is called (new session or day change)
  */
 async function calculateStreaks(
     supabase: any,
@@ -638,9 +655,11 @@ async function calculateStreaks(
         let currentStreak = 0;
 
         if (hasSessionToday) {
+            // User has >= 5 minutes today
             if (!lastActiveDate) {
                 // First time user is active
                 currentStreak = 1;
+                console.log(`   - First active day: starting streak at ${currentStreak}`);
             } else {
                 const lastDate = new Date(lastActiveDate + 'T00:00:00Z');
                 const todayDate = new Date(today + 'T00:00:00Z');
@@ -649,7 +668,7 @@ async function calculateStreaks(
                 console.log(`   - Date comparison: lastDate=${lastActiveDate}, today=${today}, daysDiff=${daysDiff}`);
 
                 if (daysDiff === 0) {
-                    // Same day - maintain current streak
+                    // Same day - maintain current streak (no change)
                     currentStreak = previousStreak;
                     console.log(`   - Same day: maintaining streak at ${currentStreak}`);
                 } else if (daysDiff === 1) {
@@ -657,20 +676,21 @@ async function calculateStreaks(
                     currentStreak = previousStreak + 1;
                     console.log(`   - Consecutive day: incrementing streak to ${currentStreak}`);
                 } else {
-                    // Streak broken - start new streak
+                    // Gap detected - streak broken, start new streak
                     currentStreak = 1;
                     console.log(`   - Streak broken (gap of ${daysDiff} days): starting new streak at ${currentStreak}`);
                 }
             }
         } else {
-            // No session today - streak is 0
+            // User does NOT have >= 10 minutes today - streak is broken
             currentStreak = 0;
+            console.log(`   - No qualifying session today: streak broken (current=0)`);
         }
 
         // Longest streak is max of current and previous longest
         const longestStreak = Math.max(previousLongestStreak, currentStreak);
 
-        console.log(`   - Streak calculation: current=${currentStreak}, longest=${longestStreak}, hasSessionToday=${hasSessionToday}`);
+        console.log(`   - Streak calculation result: current=${currentStreak}, longest=${longestStreak}, hasSessionToday=${hasSessionToday}`);
 
         return { currentStreak, longestStreak };
 

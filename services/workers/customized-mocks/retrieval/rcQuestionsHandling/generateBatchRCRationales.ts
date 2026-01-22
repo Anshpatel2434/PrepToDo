@@ -181,7 +181,7 @@ ${questionBlocks}
 For each question, provide a rationale that:
 1) Explains briefly why the correct option is correct, anchored to the passage.
    - **CRITICAL: Quote the specific line(s) from the passage** that support the correct answer
-   - Format: "The passage states: '[exact quote]'"
+   - Format: "The passage states in paragraph [paragraph number]: '[exact quote]'"
    
 2) Eliminates at least TWO wrong options in a way that is clearly guided by the elimination cues.
    - For each eliminated option: 
@@ -189,7 +189,7 @@ For each question, provide a rationale that:
      * Why it tempts
      * What it gets wrong
      * **CRITICAL: Reference the specific passage line(s)** that contradict or don't support this option
-     * Format: "However, the passage says: '[exact quote]' which contradicts this"
+     * Format: "However, the passage says in paragraph [paragraph number]: '[exact quote]' which contradicts this"
    
 3) Briefly dismisses any remaining option(s) without over-explaining.
 
@@ -202,7 +202,7 @@ Hard constraints:
 - Do NOT use fixed section headers such as "PART 1" / "SYSTEMATIC ELIMINATION".
 - Keep the tone academic and exam-oriented.
 - Keep the structure flexible (2-6 short paragraphs OR compact bullets), similar to PYQs.
-- **ALWAYS quote relevant passage lines** to justify correct/incorrect options.
+- **ALWAYS quote relevant passage lines from [paragraph number]** to justify correct/incorrect options.
 
 ## OUTPUT FORMAT
 

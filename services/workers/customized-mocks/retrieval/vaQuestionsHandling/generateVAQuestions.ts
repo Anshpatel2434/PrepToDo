@@ -250,6 +250,20 @@ CRITICAL MINDSET:
 
 ---
 
+## CORE COGNITIVE INTENT
+
+Para Summary questions test the ability to:
+- Identify the author's CORE CLAIM (not topic restatement)
+- Suppress examples, tone flourishes, and metaphors
+- Preserve LOGICAL EMPHASIS, not wording
+
+Summaries are NOT:
+❌ Topic restatements
+❌ Shortened versions of one paragraph
+❌ Emotionally attractive paraphrases
+
+---
+
 USER:
 Your task is to generate CAT-style para-summary questions.
 
@@ -308,21 +322,63 @@ Each question should:
 
 ---
 
-## OPTION DESIGN RULES
+## GENERATION PROCESS
 
-Correct option (best summary):
-- Captures the main idea without distortion
-- Is concise but comprehensive
-- Avoids adding new information not in the paragraph
+Follow this process:
+1. First extract:
+   - Author's central claim
+   - Supporting logic (in one sentence)
+2. Explicitly discard:
+   - Illustrations
+   - Rhetorical flourishes
+3. Generate 4 summaries where:
+   - Exactly ONE captures logic + stance
+   - Others fail for DIFFERENT reasons
+4. Ensure no option is a paraphrase of a single sentence
 
-Distractors (wrong options):
-- Too broad/general: goes beyond the paragraph
-- Too narrow: focuses on a detail, missing the main idea
-- Distorts: misrepresents the author's stance or argument
-- Adds external knowledge: brings in information not in the paragraph
+---
 
-Additional :  questions should mix between these categories.
-${personalizationInstructions}
+## CORRECT OPTION CHARACTERISTICS
+
+The best summary must:
+- Cover the ENTIRE passage, not just the opening
+- Abstract without generalizing beyond scope
+- Avoid keywords that appear verbatim in the passage
+- Be neutral in tone even if passage is emotive
+- Capture central tension and authorial stance
+
+---
+
+## WRONG OPTION DESIGN PATTERNS
+
+Each distractor must fail for a DIFFERENT reason:
+
+1. TOO NARROW:
+   - Captures only one paragraph or detail
+   - Misses the overarching argument
+
+2. TOO BROAD:
+   - Introduces a conclusion not reached
+   - Generalizes beyond the passage's scope
+
+3. EMOTIONALLY EXAGGERATED:
+   - Adds moral judgment not present in passage
+   - Distorts tone or stance
+
+4. REPHRASES EXAMPLES:
+   - Focuses on illustrations instead of ideas
+   - Paraphrases surface content, not core logic
+
+---
+
+## EXPLICIT ANTI-PATTERNS
+
+DO NOT:
+- Let correct option be longest
+- Use moral judgment words unless author does
+- Repeat passage vocabulary excessively
+- Make all wrong options partially correct
+- Allow grammar alone to eliminate options
 
 ---
 
@@ -454,6 +510,17 @@ CRITICAL MINDSET:
 
 ---
 
+## CORE COGNITIVE INTENT
+
+Para Completion questions test:
+- Logical flow and discourse continuity
+- Cause-effect sequencing
+- Referent tracking (this, that, such, they)
+
+They are NOT grammar-fill exercises.
+
+---
+
 USER:
 Your task is to generate CAT-style para-completion questions.
 
@@ -508,10 +575,74 @@ The question should follow this exact format:
 2. "Paragraph": A paragraph (4-5 sentences) where the sentence was removed from, with 4 possible blanks marked as ___(1)___, ___(2)___, ___(3)___, and ___(4)___.
 
 The question text should be:
-"There is a sentence that is missing in the paragraph below. Look at the paragraph and decide in which blank (option 1, 2, 3, or 4) the following sentence would best fit.\nSentence: [The missing sentence]\nParagraph: [The paragraph with blanks]"
+"There is a sentence that is missing in the paragraph below. Look at the paragraph and decide in which blank (option 1, 2, 3, or 4) the following sentence would best fit.\\nSentence: [The missing sentence]\\nParagraph: [The paragraph with blanks]"
 
     Additional:  questions should mix between these categories.
         ${personalizationInstructions}
+
+---
+
+## GENERATION PROCESS
+
+Follow this process:
+1. First map paragraph as:
+   - Idea A → Idea B → Idea C
+2. Identify where:
+   - Explanation is missing
+   - Transition is required
+3. Ensure the inserted sentence:
+   - Is necessary, not decorative
+4. Wrong positions must:
+   - Feel tempting
+   - Fail for STRUCTURAL, not grammatical reasons
+
+---
+
+## CORRECT PLACEMENT CHARACTERISTICS
+
+The correct position must:
+- Resolve a logical gap
+- Explain or bridge surrounding ideas
+- Make the following sentence inevitable
+- Maintain conceptual continuity
+
+CAT para completion relies on:
+- Conceptual continuity, not sentence adjacency
+- Transitional logic (contrast, continuation, consequence)
+- Cohesive devices: pronouns, time markers, logical pivots
+
+---
+
+## WRONG PLACEMENT DESIGN PATTERNS
+
+Each wrong position must fail for a DIFFERENT reason:
+
+1. INTRODUCES CONCEPTS TOO EARLY:
+   - Mentions ideas not yet established
+   - Requires context not yet provided
+
+2. REPEATS INFORMATION:
+   - Restates what was already said
+   - Creates redundancy
+
+3. BREAKS CAUSE-EFFECT ORDER:
+   - Places effect before cause
+   - Disrupts logical progression
+
+4. CREATES REDUNDANCY:
+   - Makes surrounding sentences repetitive
+   - Adds no new logical value
+
+---
+
+## EXPLICIT ANTI-PATTERNS
+
+DO NOT:
+- Use grammar errors to eliminate options
+- Make only one blank "sound right"
+- Allow multiple plausible placements
+- Ignore discourse markers
+- Base elimination on grammar alone
 ---
 
 ## OPTION DESIGN RULES
@@ -648,6 +779,17 @@ CRITICAL MINDSET:
 
 ---
 
+## CORE COGNITIVE INTENT
+
+Para Jumbles test:
+- Logical sequencing
+- Idea dependency
+- Argument scaffolding
+
+They are NOT chronological puzzles.
+
+---
+
 USER:
 Your task is to generate CAT-style para-jumble questions.
 
@@ -710,6 +852,37 @@ The question should:
 
 ---
 
+## CORRECT SEQUENCE CHARACTERISTICS
+
+CAT para jumbles usually have:
+- One sentence that introduces context
+- One or two that elaborate
+- One that concludes or generalizes
+
+The correct sequence:
+- Makes each sentence necessary for the next
+- Follows: introduction → development → elaboration → conclusion
+
+Key ordering cues:
+- Pronouns require antecedents
+- Examples require prior claims
+- Conclusions cannot appear early
+
+---
+
+## WRONG SEQUENCE DESIGN PATTERNS
+
+Wrong sequences must:
+- Break referent clarity
+- Place conclusions prematurely
+- Separate example from claim
+
+Create traps using:
+- Thematic similarity (sentences seem to flow)
+- Chronological illusion (time-based false ordering)
+
+---
+
 ## SENTENCE DESIGN RULES
 
 - Each sentence should be self-contained and meaningful
@@ -720,6 +893,17 @@ The question should:
 
     Additional:  questions should mix between these categories.
         ${personalizationInstructions}
+
+---
+
+## EXPLICIT ANTI-PATTERNS
+
+DO NOT:
+- Make grammar the deciding factor
+- Use explicit sequence markers ("first", "finally")
+- Allow more than one valid order
+- Create independent sentences
+- Rely on surface connectors as sole cues
 
 ---
 
@@ -853,6 +1037,17 @@ CRITICAL MINDSET:
 
 ---
 
+## CORE COGNITIVE INTENT
+
+Odd One Out questions test:
+- Thematic coherence
+- Argument consistency
+- Scope discipline
+
+They are NOT about topic mismatch alone.
+
+---
+
 USER:
 Your task is to generate CAT-style odd-one-out questions.
 
@@ -919,24 +1114,66 @@ The question should:
 
 ---
 
-## OPTION DESIGN RULES
+## COHERENT GROUP CHARACTERISTICS (4 sentences)
 
-Similar sentences (4 sentences):
-- Should share a clear common theme or structure
-- Should be thematically or logically coherent together
-- Should derive from semantic ideas
-- These 4 sentences should be RANDOMLY distributed across positions 1-5
+In CAT:
+- Four sentences form a tight argumentative unit
+- All at same level of abstraction
+- All serve same argumentative purpose
 
-Odd one out (correct answer):
+Similar sentences should:
+- Share a clear common theme or structure
+- Be thematically or logically coherent together
+- Derive from semantic ideas
+- Be RANDOMLY distributed across positions 1-5
+
+---
+
+## ODD SENTENCE CHARACTERISTICS
+
+The odd sentence:
+- Is related but misaligned
+- Shifts scope, focus, or intent
+- Often sounds sophisticated
 - Should seem similar at first glance
-- Should have a subtle but meaningful difference
-- The difference should be identifiable through careful analysis
-- Could differ in: stance, assumption, logical direction, or conclusion
-- This sentence should be placed in a RANDOM position (not always position 5)
+- Has a subtle but meaningful difference
 
+Common oddity reasons:
+- Meta-commentary instead of argument
+- Evidence when others are claims
+- Different level of abstraction
+- Shift in subject or audience
+
+The difference should be identifiable through careful analysis.
+Could differ in: stance, assumption, logical direction, or conclusion.
+This sentence should be placed in a RANDOM position (not always position 5).
+
+---
+
+## GENERATION PROCESS
+
+Follow this process:
+1. First build a coherent paragraph (4 sentences)
+2. Then introduce ONE sentence that:
+   - Belongs to the topic
+   - But not to the argument
+3. Ensure odd sentence:
+   - Cannot be repositioned to fit
+4. Do NOT rely on stylistic difference alone
 
     Additional:  questions should mix between these categories.
         ${personalizationInstructions}
+
+---
+
+## EXPLICIT ANTI-PATTERNS
+
+DO NOT:
+- Make odd sentence obviously irrelevant
+- Change tense or tone as giveaway
+- Let odd sentence still fit logically
+- Base decision on vocabulary difficulty
+- Always place odd sentence in position 5
 
 ---
 

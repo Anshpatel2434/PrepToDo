@@ -3,6 +3,7 @@
 ## Overview
 
 The VARC Analytics System is a comprehensive user performance tracking and streak management system designed to:
+
 - Process practice session data for users
 - Calculate proficiency metrics across multiple dimensions
 - Perform LLM-based diagnostics on incorrect attempts
@@ -15,7 +16,7 @@ The VARC Analytics System is a comprehensive user performance tracking and strea
 
 1. **runAnalytics.ts** - Main orchestrator that processes all unanalyzed sessions for a user
 2. **Phase A** - Data collection and validation
-3. **Phase B** - Quantitative aggregation of proficiency metrics  
+3. **Phase B** - Quantitative aggregation of proficiency metrics
 4. **Phase C** - LLM diagnostics for incorrect attempts
 5. **Phase D** - Proficiency engine updates
 6. **Phase E** - Summary rollup to proficiency signals
@@ -24,27 +25,33 @@ The VARC Analytics System is a comprehensive user performance tracking and strea
 ### Key Changes (Latest Version)
 
 #### 1. User-Centric Processing
+
 - **Old**: Processed single session at a time
 - **New**: Processes ALL unanalyzed sessions for a given user
 - **Benefits**: Reduces redundant processing, ensures consistent state
 
 #### 2. Accurate Streak Calculation
-- **Streak Criteria**: User must have at least one completed session on a date to maintain streak
-- **Fix**: Corrected bug where streak showed 1 even when no sessions existed for the day
-- **Logic**: 
-  - If user has session(s) today → streak continues/increases
-  - If user has NO sessions today → streak breaks (current_streak = 0)
+
+- **Streak Criteria**: User must have at least 10 minutes (600 seconds) of completed practice time on a date to maintain streak
+- **Fix**: Corrected bug where streak showed 1 even when no sessions existed for the day, and now enforces minimum practice time
+- **Logic**:
+  - If user has >= 10 minutes of practice today → streak continues/increases
+  - If user has < 10 minutes of practice today → streak breaks (current_streak = 0)
+  - Multiple sessions on same day are aggregated (e.g., 5min + 6min = 11min qualifies)
   - Longest streak is preserved historically
 
 #### 3. Dual Trigger Scenarios
+
 The system supports two trigger scenarios:
 
 **A. Session Completion**
+
 - Triggered when user completes a new practice session
 - Processes all unanalyzed sessions for that user
 - Updates analytics and streaks
 
 **B. Day Change**
+
 - Can be triggered daily (via cron/scheduler)
 - Recalculates streaks without requiring new sessions
 - Updates analytics to reflect current streak status
@@ -55,28 +62,30 @@ The system supports two trigger scenarios:
 
 ```typescript
 export async function runAnalytics(params: {
-    user_id: string;
-}): Promise<AnalyticsResult>
+	user_id: string;
+}): Promise<AnalyticsResult>;
 ```
 
 **Parameters:**
+
 - `user_id` - UUID of the user to process analytics for
 
 **Returns:**
+
 ```typescript
 {
-    success: boolean;
-    user_id: string;
-    stats: {
-        sessions_processed: number;
-        total_attempts: number;
-        correct_attempts: number;
-        dimensions_updated: {
-            core_metrics: number;
-            genres: number;
-            question_types: number;
-        }
-    }
+	success: boolean;
+	user_id: string;
+	stats: {
+		sessions_processed: number;
+		total_attempts: number;
+		correct_attempts: number;
+		dimensions_updated: {
+			core_metrics: number;
+			genres: number;
+			question_types: number;
+		}
+	}
 }
 ```
 
@@ -103,6 +112,7 @@ supabase functions deploy user-analytics
 Execute the SQL in `/supabase/functions/user-analytics/setup-triggers.sql`
 
 **Requirements:**
+
 - pg_net extension enabled
 - Configure Supabase URL and service role key:
 
@@ -115,6 +125,7 @@ SELECT pg_reload_conf();
 ### 4. Configure Environment Variables
 
 Ensure these are set in your Supabase Edge Functions:
+
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `OPENAI_API_KEY` (for Phase C diagnostics)
@@ -134,15 +145,15 @@ Call the edge function from your application:
 ```typescript
 // After user completes session
 await fetch(`${SUPABASE_URL}/functions/v1/user-analytics`, {
-    method: 'POST',
-    headers: {
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-        user_id: userId,
-        trigger_type: 'session_completed'
-    })
+	method: "POST",
+	headers: {
+		Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+		"Content-Type": "application/json",
+	},
+	body: JSON.stringify({
+		user_id: userId,
+		trigger_type: "session_completed",
+	}),
 });
 ```
 
@@ -166,31 +177,47 @@ See setup-triggers.sql for full implementation.
 ## Streak Calculation Logic
 
 ### Rules
-1. **Active Day**: User must have at least ONE completed session on that date
-2. **Current Streak**: 
-   - Counts consecutive days with sessions, ending with today
-   - If no session today, current streak = 0
+
+1. **Active Day**: User must have at least 10 MINUTES (600 seconds) of completed practice time on that date
+2. **Current Streak**:
+   - Counts consecutive days with >= 10 minutes of practice, ending with today
+   - If no qualifying session today (< 10 minutes total), current streak = 0
 3. **Longest Streak**: Historical maximum, never decreases
 
 ### Examples
 
 **Example 1: Continuing Streak**
-- Yesterday: Had session ✓
-- Today: Had session ✓
+
+- Yesterday: Had 15 minutes of practice ✓
+- Today: Had 12 minutes of practice ✓
 - Result: current_streak increases by 1
 
-**Example 2: Broken Streak**
-- Yesterday: Had session ✓
+**Example 2: Broken Streak (Insufficient Time)**
+
+- Yesterday: Had 15 minutes of practice ✓
+- Today: Had only 5 minutes of practice ✗
+- Result: current_streak = 0 (streak broken - didn't meet 10-minute minimum)
+
+**Example 3: Broken Streak (No Session)**
+
+- Yesterday: Had 15 minutes of practice ✓
 - Today: NO session ✗
 - Result: current_streak = 0 (streak broken)
 
-**Example 3: Multiple Sessions Per Day**
-- Today: 3 sessions completed
-- Result: Counts as 1 active day (streak +1)
+**Example 4: Multiple Sessions Per Day**
+
+- Today: 3 sessions (5 min + 3 min + 8 min = 16 minutes total)
+- Result: Counts as 1 active day (streak +1) because total >= 10 minutes
+
+**Example 5: Multiple Sessions But Insufficient**
+
+- Today: 2 sessions (4 min + 5 min = 9 minutes total)
+- Result: Does NOT count as active day (streak breaks) because total < 10 minutes
 
 ## Error Handling
 
 The system includes comprehensive error handling:
+
 - Try-catch blocks around all database operations
 - Zod validation for data integrity
 - Graceful degradation (continues processing other sessions on individual failures)
@@ -214,9 +241,10 @@ npm start
 ```
 
 Update services/index.ts:
+
 ```typescript
-await runAnalytics({ 
-    user_id: "your-user-id-here" 
+await runAnalytics({
+	user_id: "your-user-id-here",
 });
 ```
 
@@ -252,8 +280,8 @@ LIMIT 20;
 
 ```sql
 -- View recent HTTP requests (from triggers)
-SELECT * FROM net._http_response 
-ORDER BY created_at DESC 
+SELECT * FROM net._http_response
+ORDER BY created_at DESC
 LIMIT 10;
 ```
 
@@ -266,6 +294,7 @@ LIMIT 10;
 ### Issue: Sessions not being processed
 
 **Check**:
+
 1. Trigger is installed and enabled
 2. pg_net extension is enabled
 3. Supabase URL and service key are configured
@@ -274,6 +303,7 @@ LIMIT 10;
 ### Issue: Analytics function times out
 
 **Solutions**:
+
 - Increase timeout in edge function settings
 - Process sessions in smaller batches
 - Optimize database queries
@@ -289,6 +319,7 @@ LIMIT 10;
 ## Support
 
 For issues or questions:
+
 1. Check logs in Supabase Edge Functions dashboard
 2. Review database trigger logs
 3. Verify environment variables are set correctly

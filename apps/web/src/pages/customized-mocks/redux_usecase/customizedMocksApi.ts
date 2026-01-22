@@ -1,7 +1,7 @@
 // customizedMocksApi.ts
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
 import { supabase } from "../../../services/apiClient";
-import type { Exam, PracticeSession, UUID, Question, Passage, QuestionAttempt } from "../../../types";
+import type { Exam, PracticeSession, UUID, Question, Passage, QuestionAttempt, UserMetricProficiency, Genre } from "../../../types";
 
 interface CustomizedMockRequest {
     user_id: UUID;
@@ -85,8 +85,79 @@ interface FetchExistingMockSessionQuery {
 export const customizedMocksApi = createApi({
     reducerPath: "customizedMocksApi",
     baseQuery: fakeBaseQuery(),
-    tagTypes: ["CustomizedMocks", "MockSessions"],
+    tagTypes: ["CustomizedMocks", "MockSessions", "UserMetricProficiency"],
     endpoints: (builder) => ({
+        // Fetch user metric proficiency for recommendations
+        fetchUserMetricProficiency: builder.query<UserMetricProficiency[], UUID>({
+            queryFn: async (userId) => {
+                console.log("📈 [CustomizedMocksApi] fetchUserMetricProficiency", { userId });
+
+                try {
+                    const { data, error } = await supabase
+                        .from("user_metric_proficiency")
+                        .select("*")
+                        .eq("user_id", userId)
+                        .order("dimension_type", { ascending: true })
+                        .order("dimension_key", { ascending: true });
+
+                    if (error) {
+                        return {
+                            error: {
+                                status: "CUSTOM_ERROR",
+                                data: error.message,
+                            },
+                        };
+                    }
+
+                    return { data: (data ?? []) as UserMetricProficiency[] };
+                } catch (err) {
+                    const e = err as { message?: string };
+                    return {
+                        error: {
+                            status: "CUSTOM_ERROR",
+                            data: e.message || "Error fetching metric proficiency",
+                        },
+                    };
+                }
+            },
+            providesTags: (_result, _error, userId) => [
+                { type: "UserMetricProficiency", id: userId },
+            ],
+        }),
+
+        // Fetch all available genres from the database
+        fetchAvailableGenres: builder.query<Genre[], void>({
+            queryFn: async () => {
+                console.log("🎭 [CustomizedMocksApi] fetchAvailableGenres");
+                try {
+                    const { data, error } = await supabase
+                        .from("genres")
+                        .select("*")
+                        .eq("is_active", true)
+                        .order("name", { ascending: true });
+
+                    if (error) {
+                        return {
+                            error: {
+                                status: "CUSTOM_ERROR",
+                                data: error.message,
+                            },
+                        };
+                    }
+
+                    return { data: (data ?? []) as Genre[] };
+                } catch (err) {
+                    const e = err as { message?: string };
+                    return {
+                        error: {
+                            status: "CUSTOM_ERROR",
+                            data: e.message || "Error fetching available genres",
+                        },
+                    };
+                }
+            },
+        }),
+
         // Fetch all customized mocks created by the current user
         fetchCustomizedMocks: builder.query<CustomizedMockWithSession[], void>({
             queryFn: async () => {
@@ -724,4 +795,6 @@ export const {
     useLazyFetchExistingMockSessionQuery,
     useSaveMockSessionDetailsMutation,
     useSaveMockQuestionAttemptsMutation,
+    useFetchUserMetricProficiencyQuery,
+    useFetchAvailableGenresQuery,
 } = customizedMocksApi;

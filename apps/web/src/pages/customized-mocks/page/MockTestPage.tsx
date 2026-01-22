@@ -46,10 +46,10 @@ import {
 import { MockQuestionPalette } from "../components/MockQuestionPalette";
 import { AnalysisToggle } from "../components/AnalysisToggle";
 import { MockAnalysisView } from "../components/MockAnalysisView";
-import { QuestionPanel } from "../../../ui_components/exam/QuestionPanel";
+import { QuestionPanel } from "../components/QuestionPanel";
 import { DailyRCVAPageSkeleton } from "../../daily/components/DailySkeleton";
-import { SplitPaneLayout } from "../../../ui_components/exam/SplitPaneLayout";
-import type { SolutionViewType } from "../../../ui_components/exam/SolutionToggle";
+import { SplitPaneLayout } from "../components/SplitPaneLayout";
+import type { SolutionViewType } from "../components/SolutionToggle";
 import type { UUID } from "../../../types";
 import { useExamNavigationGuard } from "../../daily/navigation_hook/useExamNavigation";
 
@@ -471,9 +471,12 @@ const MockTestPage: React.FC = () => {
                     </div>
                 )}
 
-                <div className={`absolute left-1/2 -translate-x-1/2 font-mono text-lg font-bold ${timeRemaining < 60 ? "text-red-500" : isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
-                    {formatTime(timeRemaining)}
-                </div>
+                {
+                    viewMode === "exam" && (
+                        <div className={`absolute left-1/2 -translate-x-1/2 font-mono text-lg font-bold ${timeRemaining < 60 ? "text-red-500" : isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                            {formatTime(timeRemaining)}
+                        </div>)
+                }
 
                 <div className="flex items-center gap-2 md:gap-4">
                     <div className="w-20 md:w-32 h-2 rounded-full bg-gray-200 overflow-hidden">
@@ -536,35 +539,39 @@ const MockTestPage: React.FC = () => {
                     )}
                 </div>
 
-                {/* Palette Toggle */}
-                <motion.button
-                    onClick={() => setShowPalette(!showPalette)}
-                    className={`absolute top-1/2 -translate-y-1/2 z-60 w-8 h-16 rounded-l-lg border border-r-0 transition-all duration-300 flex items-center justify-center ${isDark ? "bg-bg-secondary-dark border-border-dark hover:bg-bg-tertiary-dark" : "bg-bg-secondary-light border-border-light hover:bg-bg-tertiary-light"}`}
-                    style={{ right: showPalette ? paletteWidth : 0 }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                >
-                    {showPalette ? <MdChevronRight className={`w-5 h-5 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`} /> : <MdChevronLeft className={`w-5 h-5 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`} />}
-                </motion.button>
-
-                {/* Palette Drawer */}
-                <AnimatePresence>
-                    {showPalette && (
-                        <motion.div
-                            initial={{ x: 300 }}
-                            animate={{ x: 0 }}
-                            exit={{ x: 300 }}
-                            className={`fixed md:relative inset-y-0 right-0 z-50 md:z-auto w-72 md:w-64 border-l overflow-y-auto shadow-2xl md:shadow-none ${isDark ? "bg-bg-secondary-dark border-border-dark" : "bg-bg-secondary-light border-border-light"}`}
+                {analysisViewType !== "analysis" && (
+                    <>
+                        {/* Palette Toggle */}
+                        <motion.button
+                            onClick={() => setShowPalette(!showPalette)}
+                            className={`absolute top-1/2 -translate-y-1/2 z-60 w-8 h-16 rounded-l-lg border border-r-0 transition-all duration-300 flex items-center justify-center ${isDark ? "bg-bg-secondary-dark border-border-dark hover:bg-bg-tertiary-dark" : "bg-bg-secondary-light border-border-light hover:bg-bg-tertiary-light"}`}
+                            style={{ right: showPalette ? paletteWidth : 0 }}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                         >
-                            <MockQuestionPalette
-                                questions={questions}
-                                attempts={attempts}
-                                pendingAttempts={pendingAttempts}
-                                isDark={isDark}
-                            />
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                            {showPalette ? <MdChevronRight className={`w-5 h-5 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`} /> : <MdChevronLeft className={`w-5 h-5 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`} />}
+                        </motion.button>
+
+                        {/* Palette Drawer */}
+                        <AnimatePresence>
+                            {showPalette && (
+                                <motion.div
+                                    initial={{ x: 300 }}
+                                    animate={{ x: 0 }}
+                                    exit={{ x: 300 }}
+                                    className={`fixed md:relative inset-y-0 right-0 z-50 md:z-auto w-72 md:w-64 border-l overflow-y-auto shadow-2xl md:shadow-none ${isDark ? "bg-bg-secondary-dark border-border-dark" : "bg-bg-secondary-light border-border-light"}`}
+                                >
+                                    <MockQuestionPalette
+                                        questions={questions}
+                                        attempts={attempts}
+                                        pendingAttempts={pendingAttempts}
+                                        isDark={isDark}
+                                    />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </>
+                )}
             </div>
 
             {/* Footer */}

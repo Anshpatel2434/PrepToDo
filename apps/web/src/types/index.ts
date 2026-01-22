@@ -389,6 +389,18 @@ export const OptionSchema = z.object({
 });
 
 export type Option = z.infer<typeof OptionSchema>;
+/* =========================================================
+   🎭 Genres
+   ========================================================= */
+
+export const GenreSchema = z.object({
+    id: UUIDSchema,
+    name: z.string(),
+    description: z.string().nullish(),
+    is_active: z.boolean(),
+});
+
+export type Genre = z.infer<typeof GenreSchema>;
 
 
 

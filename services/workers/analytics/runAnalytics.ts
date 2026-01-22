@@ -44,7 +44,7 @@ export async function runAnalytics(params: {
                 points_earned: 0,
                 completed_at: new Date().toISOString(),
             });
-            
+
             return {
                 success: true,
                 message: "No sessions to analyze, streaks updated",
@@ -120,10 +120,10 @@ export async function runAnalytics(params: {
 
                 // --- PHASE C: LLM DIAGNOSTICS ---
                 console.log("\n🧠 [Phase C/6] Running LLM diagnostics on incorrect attempts");
-                const incorrectAttempts = dataset.filter(a => (!a.correct && a.user_answer.user_answer) );
+                const incorrectAttempts = dataset.filter(a => (!a.correct && a.user_answer.user_answer));
                 console.log(`   - Incorrect attempts: ${incorrectAttempts.length}`);
 
-                const diagnostics = await phaseC_llmDiagnostics(incorrectAttempts);
+                const diagnostics = await phaseC_llmDiagnostics(supabase, user_id, incorrectAttempts);
 
                 // Store diagnostics in session_data
                 if (diagnostics.diagnostics.length > 0) {

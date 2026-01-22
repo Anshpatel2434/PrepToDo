@@ -65,7 +65,7 @@ const CustomizedMocksPage: React.FC = () => {
                         `}
                     >
                         Create personalized mock tests tailored to your preparation needs.
-                        Choose your genres, difficulty, and question types.
+                        Choose your genres, difficulty, and weak areas to target.
                     </p>
                 </motion.div>
 

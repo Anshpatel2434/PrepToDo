@@ -179,24 +179,6 @@ export const MockQuestionPalette: React.FC<QuestionPaletteProps> = ({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
         >
-            {/* Header */}
-            <div
-                className={`p-4 border-b ${isDark ? "border-border-dark" : "border-border-light"
-                    }`}
-            >
-                <h3
-                    className={`font-semibold text-sm uppercase tracking-wide ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                        }`}
-                >
-                    Question Palette
-                </h3>
-                <div
-                    className={`mt-2 text-xs ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
-                        }`}
-                >
-                    {questions.length} Questions
-                </div>
-            </div>
 
             {/* Status Legend */}
             <div
