@@ -157,6 +157,7 @@ export const dailyPracticeApi = createApi({
                         .from("exam_papers")
                         .select("*")
                         .eq("year", 2026)
+                        .eq("name", "Daily Practice")
                         .gte("created_at", startOfToday)
                         .lte("created_at", endOfToday)
                         .order("created_at", { ascending: false })

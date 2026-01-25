@@ -62,16 +62,55 @@ Deno.serve(async (req: Request) => {
       },
     };
 
-    // 2. Import bundled customized-mocks service
-    const { runCustomizedMock } = await import("./bundled.ts");
+    // 2. Define the background task for heavy processing
+    const generateMockExamInBackground = async () => {
+      try {
+        console.log("🚀 [BACKGROUND] Starting mock generation in background task");
 
-    // Pass the entire payload to runCustomizedMock as it contains all parameters
-    const result = await runCustomizedMock(payload);
+        // Import bundled customized-mocks service
+        const { runCustomizedMock } = await import("./bundled.ts");
 
+        // Pass the entire payload to runCustomizedMock
+        const result = await runCustomizedMock(payload);
+
+        console.log("✅ [BACKGROUND] Mock generation completed successfully");
+        console.log("Result:", result);
+      } catch (err) {
+        console.error("❌ [BACKGROUND] Mock generation failed:", err);
+        console.error("Error details:", err instanceof Error ? err.message : String(err));
+        console.error("Stack trace:", err instanceof Error ? err.stack : "N/A");
+
+        // TODO: Update database to mark exam as "failed" status
+        // This would require creating a placeholder exam record first
+      }
+    };
+
+    // 3. Trigger background task using EdgeRuntime.waitUntil
+    // This keeps the function alive after the response is sent
+    console.log("⏳ [EDGE FUNCTION] Triggering background task");
+
+    // @ts-ignore - EdgeRuntime is available in Deno Deploy
+    if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
+      // @ts-ignore
+      EdgeRuntime.waitUntil(generateMockExamInBackground());
+      console.log("✅ [EDGE FUNCTION] Background task triggered successfully");
+    } else {
+      // Fallback for local development or if EdgeRuntime is not available
+      console.warn("⚠️ [EDGE FUNCTION] EdgeRuntime.waitUntil not available, running synchronously");
+      await generateMockExamInBackground();
+    }
+
+    // 4. Return success immediately to the frontend
     return new Response(
-      JSON.stringify(result),
+      JSON.stringify({
+        success: true,
+        message: "Mock generation started in background. Please refresh the page in 5-8 minutes to see your completed mock test.",
+        status: "processing",
+        user_id: userId,
+        mock_name: payload.mock_name || "Customized Mock"
+      }),
       {
-        status: 200,
+        status: 202, // 202 Accepted - indicates async processing
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       }
     )

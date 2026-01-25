@@ -5,15 +5,7 @@ import { z } from "zod";
 import { Question, QuestionSchema, Passage, SemanticIdeas, AuthorialPersona } from "../../schemas/types";
 import { user_core_metrics_definition_v1 } from "../../../../config/user_core_metrics_definition_v1";
 import { CostTracker } from "../utils/CostTracker";
-
-// Simple UUID generator to avoid additional dependencies
-function generateUUID(): string {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-}
+import { v4 as uuidv4 } from 'uuid';
 
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
@@ -178,7 +170,7 @@ export async function generateVAQuestions(
         // Final pass to ensure all questions have fresh UUIDs and proper field initialization
         const finalQuestions = allQuestions.map(q => ({
             ...q,
-            id: generateUUID(),
+            id: uuidv4(),
             passage_id: null, // VA questions are standalone
             jumbled_sentences: q.jumbled_sentences || { "1": "", "2": "", "3": "", "4": "", "5": "" },
             options: q.options || { "A": "", "B": "", "C": "", "D": "" },

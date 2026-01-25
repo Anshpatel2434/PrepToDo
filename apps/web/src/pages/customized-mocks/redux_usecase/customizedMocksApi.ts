@@ -2,6 +2,7 @@
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
 import { supabase } from "../../../services/apiClient";
 import type { Exam, PracticeSession, UUID, Question, Passage, QuestionAttempt, UserMetricProficiency, Genre } from "../../../types";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 interface CustomizedMockRequest {
     user_id: UUID;
@@ -41,6 +42,21 @@ interface CreateMockResponse {
     success: boolean;
     exam_id?: UUID;
     message: string;
+    mock_name?: string;
+}
+
+export interface OptimisticMock {
+    id: string; // temporary ID like "temp-1234567890" or real exam_id when available
+    name: string;
+    created_at: string;
+    generation_status: 'generating';
+    isOptimistic: true; // flag to identify temporary mocks
+    passages_count: 0;
+    questions_count: 0;
+    session_status: null;
+    time_limit_minutes?: number;
+    generated_by_user_id?: UUID;
+    exam_id?: UUID; // Real exam_id from backend response when available
 }
 
 interface CheckSessionResponse {
@@ -82,10 +98,112 @@ interface FetchExistingMockSessionQuery {
     paper_id: UUID;
 }
 
+// Real-time generation tracking types
+export interface ExamGenerationState {
+    exam_id: UUID;
+    status: GenerationStatus;
+    current_step: number;
+    total_steps: number;
+    error_message?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export type GenerationStatus =
+    | "initializing"
+    | "generating_passages"
+    | "generating_rc_questions"
+    | "generating_va_questions"
+    | "selecting_answers"
+    | "generating_rc_rationales"
+    | "generating_va_rationales"
+    | "completed"
+    | "failed";
+
+export interface GenerationStateResponse {
+    state: ExamGenerationState | null;
+    isGenerating: boolean;
+}
+
+// Utility function for mapping status codes to user-friendly messages
+export function getStatusMessage(
+    status: GenerationStatus,
+    step: number,
+    totalSteps: number
+): {
+    message: string;
+    shortMessage: string;
+} {
+    // Validate and provide sensible defaults for missing data
+    const safeStep = typeof step === 'number' && step > 0 ? step : 1;
+    const safeTotalSteps = typeof totalSteps === 'number' && totalSteps > 0 ? totalSteps : 7;
+
+    // Validate status is a known value
+    const validStatuses: GenerationStatus[] = [
+        "initializing",
+        "generating_passages",
+        "generating_rc_questions",
+        "generating_va_questions",
+        "selecting_answers",
+        "generating_rc_rationales",
+        "generating_va_rationales",
+        "completed",
+        "failed",
+    ];
+
+    const safeStatus = validStatuses.includes(status) ? status : "initializing";
+
+    const stepPrefix = `Step ${safeStep}/${safeTotalSteps}:`;
+
+    const messages: Record<
+        GenerationStatus,
+        { message: string; shortMessage: string }
+    > = {
+        initializing: {
+            message: `${stepPrefix} Initializing generation...`,
+            shortMessage: "Initializing...",
+        },
+        generating_passages: {
+            message: `${stepPrefix} Creating passages...`,
+            shortMessage: "Creating passages...",
+        },
+        generating_rc_questions: {
+            message: `${stepPrefix} Generating reading comprehension questions...`,
+            shortMessage: "Generating RC questions...",
+        },
+        generating_va_questions: {
+            message: `${stepPrefix} Generating verbal ability questions...`,
+            shortMessage: "Generating VA questions...",
+        },
+        selecting_answers: {
+            message: `${stepPrefix} Selecting answer choices...`,
+            shortMessage: "Selecting answers...",
+        },
+        generating_rc_rationales: {
+            message: `${stepPrefix} Writing explanations for RC questions...`,
+            shortMessage: "Writing RC explanations...",
+        },
+        generating_va_rationales: {
+            message: `${stepPrefix} Writing explanations for VA questions...`,
+            shortMessage: "Writing VA explanations...",
+        },
+        completed: {
+            message: "Ready to start",
+            shortMessage: "Ready",
+        },
+        failed: {
+            message: "Generation failed",
+            shortMessage: "Failed",
+        },
+    };
+
+    return messages[safeStatus] || messages.initializing;
+}
+
 export const customizedMocksApi = createApi({
     reducerPath: "customizedMocksApi",
     baseQuery: fakeBaseQuery(),
-    tagTypes: ["CustomizedMocks", "MockSessions", "UserMetricProficiency"],
+    tagTypes: ["CustomizedMocks", "MockSessions", "UserMetricProficiency", "GenerationState"],
     endpoints: (builder) => ({
         // Fetch user metric proficiency for recommendations
         fetchUserMetricProficiency: builder.query<UserMetricProficiency[], UUID>({
@@ -298,10 +416,10 @@ export const customizedMocksApi = createApi({
                         };
                     }
 
-                    console.log("[CustomizedMocksApi] Calling edge function: customized-mocks");
+                    console.log("[CustomizedMocksApi] Calling edge function: customized-mocks-init");
 
                     // Call the customized-mocks edge function
-                    const { data, error } = await supabase.functions.invoke("customized-mocks", {
+                    const { data, error } = await supabase.functions.invoke("customized-mocks-init", {
                         body: params
                     });
 
@@ -315,7 +433,6 @@ export const customizedMocksApi = createApi({
                         };
                     }
 
-
                     console.log("[CustomizedMocksApi] Edge function response:", data);
 
                     return { data: data };
@@ -328,6 +445,59 @@ export const customizedMocksApi = createApi({
                             data: e.message || "Error creating customized mock",
                         },
                     };
+                }
+            },
+            async onQueryStarted(params, { dispatch, queryFulfilled }) {
+                console.log("[CustomizedMocksApi] Optimistic update: Creating temporary mock card");
+
+                // Create optimistic mock with temporary ID
+                const tempId = `temp-${Date.now()}`;
+                const optimisticMock: OptimisticMock = {
+                    id: tempId,
+                    name: params.mock_name || "Customized Mock",
+                    created_at: new Date().toISOString(),
+                    generation_status: 'generating',
+                    isOptimistic: true,
+                    passages_count: 0,
+                    questions_count: 0,
+                    session_status: null,
+                    time_limit_minutes: params.time_limit_minutes,
+                    generated_by_user_id: params.user_id,
+                };
+
+                // Add optimistic mock to cache immediately
+                const patchResult = dispatch(
+                    customizedMocksApi.util.updateQueryData('fetchCustomizedMocks', undefined, (draft) => {
+                        // Add to beginning of list
+                        draft.unshift(optimisticMock as any);
+                    })
+                );
+
+                try {
+                    // Wait for the mutation to complete
+                    const { data: result } = await queryFulfilled;
+                    console.log("[CustomizedMocksApi] Mock generation completed successfully");
+
+                    // Update the optimistic mock with the real exam_id
+                    if (result.success && result.exam_id) {
+                        console.log("[CustomizedMocksApi] Updating optimistic mock with real exam_id:", result.exam_id);
+                        dispatch(
+                            customizedMocksApi.util.updateQueryData('fetchCustomizedMocks', undefined, (draft) => {
+                                const mockIndex = draft.findIndex(m => m.id === tempId);
+                                if (mockIndex !== -1) {
+                                    // Update the temporary mock with real exam_id
+                                    draft[mockIndex].id = result.exam_id ? result.exam_id : "";
+                                    (draft[mockIndex] as any).exam_id = result.exam_id;
+                                }
+                            })
+                        );
+                    }
+
+                    // Success - the invalidatesTags will trigger a refetch that replaces the optimistic mock
+                } catch (error) {
+                    console.log("[CustomizedMocksApi] Mock generation failed, removing optimistic mock");
+                    // Failed - remove the optimistic mock
+                    patchResult.undo();
                 }
             },
             invalidatesTags: ["CustomizedMocks"],
@@ -780,6 +950,206 @@ export const customizedMocksApi = createApi({
             },
             invalidatesTags: ["MockSessions"],
         }),
+
+        // Fetch generation state for real-time tracking
+        fetchGenerationState: builder.query<GenerationStateResponse, UUID>({
+            queryFn: async (examId) => {
+                console.log("[CustomizedMocksApi] fetchGenerationState called for exam_id:", examId);
+
+                // Validate examId
+                if (!examId || typeof examId !== 'string') {
+                    console.error("[CustomizedMocksApi] Invalid exam_id provided:", examId);
+                    return {
+                        error: {
+                            status: "CUSTOM_ERROR",
+                            data: "Invalid exam_id provided",
+                        },
+                    };
+                }
+
+                try {
+                    // Initial fetch from exam_generation_state table
+                    const { data, error } = await supabase
+                        .from("exam_generation_state")
+                        .select("*")
+                        .eq("exam_id", examId)
+                        .maybeSingle();
+
+                    if (error) {
+                        console.log("[CustomizedMocksApi] Error fetching generation state:", error);
+                        return {
+                            error: {
+                                status: "CUSTOM_ERROR",
+                                data: error.message,
+                            },
+                        };
+                    }
+
+                    // Validate the data structure if it exists
+                    if (data) {
+                        // Ensure required fields exist with sensible defaults
+                        const validatedData: ExamGenerationState = {
+                            exam_id: data.exam_id ?? examId,
+                            status: data.status ?? "initializing",
+                            current_step: typeof data.current_step === 'number' ? data.current_step : 1,
+                            total_steps: typeof data.total_steps === 'number' ? data.total_steps : 7,
+                            error_message: data.error_message ?? undefined,
+                            created_at: data.created_at ?? new Date().toISOString(),
+                            updated_at: data.updated_at ?? new Date().toISOString(),
+                        };
+
+                        // Determine if generation is in progress
+                        const isGenerating =
+                            validatedData.status !== "completed" &&
+                            validatedData.status !== "failed";
+
+                        console.log("[CustomizedMocksApi] Generation state:", {
+                            status: validatedData.status,
+                            isGenerating,
+                        });
+
+                        return {
+                            data: {
+                                state: validatedData,
+                                isGenerating,
+                            },
+                        };
+                    }
+
+                    // No data found - return null state
+                    console.log("[CustomizedMocksApi] No generation state found for exam_id:", examId);
+                    return {
+                        data: {
+                            state: null,
+                            isGenerating: false,
+                        },
+                    };
+                } catch (error) {
+                    console.log("[CustomizedMocksApi] Error in fetchGenerationState:", error);
+                    const e = error as { message?: string };
+                    return {
+                        error: {
+                            status: "CUSTOM_ERROR",
+                            data: e.message || "Error fetching generation state",
+                        },
+                    };
+                }
+            },
+
+            async onCacheEntryAdded(
+                examId,
+                { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch }
+            ) {
+                let subscription: RealtimeChannel | null = null;
+
+                try {
+                    console.log("[CustomizedMocksApi] Setting up real-time subscription for exam_id:", examId);
+
+                    // Wait for initial data to be loaded
+                    await cacheDataLoaded;
+
+                    // Set up Supabase real-time subscription with comprehensive error handling
+                    // We listen to ALL events (*) to catch INSERT, UPDATE, and DELETE
+                    subscription = supabase
+                        .channel(`exam_generation:${examId}`)
+                        .on(
+                            "postgres_changes",
+                            {
+                                event: "*",
+                                schema: "public",
+                                table: "exam_generation_state",
+                                // We filter manually in the callback to be safe and debug easier
+                                // filter: `exam_id=eq.${examId}`, 
+                            },
+                            (payload) => {
+                                try {
+                                    console.log("[CustomizedMocksApi] Received real-time update payload:", payload);
+
+                                    // Handle DELETE event (Generation Completed/Cleaned up)
+                                    if (payload.eventType === 'DELETE') {
+                                        if (payload.old && (payload.old as any).exam_id === examId) {
+                                            console.log("[CustomizedMocksApi] DELETE event detected for this exam. Generation presumably completed.");
+
+                                            // Update cache to stop loading
+                                            updateCachedData((draft) => {
+                                                draft.isGenerating = false;
+                                                // We keep the last known state or set to completed if we want
+                                                if (draft.state) {
+                                                    draft.state.status = "completed";
+                                                }
+                                            });
+
+                                            // Invalidate tags to refresh the list
+                                            console.log("[CustomizedMocksApi] Invalidating tags to refresh mock list...");
+                                            dispatch(customizedMocksApi.util.invalidateTags(["CustomizedMocks"]));
+
+                                            // Unsubscribe
+                                            subscription?.unsubscribe();
+                                        }
+                                        return;
+                                    }
+
+                                    // Handle INSERT / UPDATE
+                                    const newState = payload.new as ExamGenerationState;
+
+                                    // Check if this update is for our exam
+                                    if (newState && newState.exam_id === examId) {
+                                        console.log("[CustomizedMocksApi] Processing update for our exam:", newState.status);
+
+                                        // Update the cached data
+                                        updateCachedData((draft) => {
+                                            draft.state = newState;
+                                            draft.isGenerating =
+                                                newState.status !== "completed" &&
+                                                newState.status !== "failed";
+                                        });
+
+                                        // If generation completed or failed, we should refresh the main list
+                                        if (
+                                            newState.status === "completed" ||
+                                            newState.status === "failed"
+                                        ) {
+                                            console.log("[CustomizedMocksApi] Generation terminal state reached. Refreshing list.");
+                                            dispatch(customizedMocksApi.util.invalidateTags(["CustomizedMocks"]));
+
+                                            console.log("[CustomizedMocksApi] Unsubscribing...");
+                                            subscription?.unsubscribe();
+                                        }
+                                    }
+                                } catch (updateError) {
+                                    console.error("[CustomizedMocksApi] Error processing subscription update:", updateError);
+                                }
+                            }
+                        )
+                        .subscribe((status) => {
+                            console.log(`[CustomizedMocksApi] Subscription status for ${examId}:`, status);
+                            if (status === "CHANNEL_ERROR") {
+                                console.error("[CustomizedMocksApi] Channel error for exam:", examId);
+                            }
+                            if (status === "TIMED_OUT") {
+                                console.error("[CustomizedMocksApi] Subscription timed out for exam:", examId);
+                            }
+                        });
+                } catch (error) {
+                    console.error("[CustomizedMocksApi] Failed to set up subscription:", error);
+                }
+
+                // Cleanup on cache entry removal
+                try {
+                    await cacheEntryRemoved;
+                    console.log("[CustomizedMocksApi] Cache entry removed, cleaning up subscription for exam_id:", examId);
+                    if (subscription) {
+                        subscription.unsubscribe();
+                    }
+                } catch (cleanupError) {
+                    console.error("[CustomizedMocksApi] Error during subscription cleanup:", cleanupError);
+                }
+            },
+
+            providesTags: (result, error, examId) => [
+                { type: "GenerationState", id: examId },
+            ],
+        }),
     }),
 });
 
@@ -797,4 +1167,5 @@ export const {
     useSaveMockQuestionAttemptsMutation,
     useFetchUserMetricProficiencyQuery,
     useFetchAvailableGenresQuery,
+    useFetchGenerationStateQuery,
 } = customizedMocksApi;

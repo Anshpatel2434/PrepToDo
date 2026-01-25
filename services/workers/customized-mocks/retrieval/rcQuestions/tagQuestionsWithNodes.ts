@@ -14,26 +14,28 @@ const metricsCatalog = metricsData.metrics.map((m: any) => ({
     description: m.description
 }));
 
+/**
+ * Tags each question with up to 2 metric_keys from the user core metrics definition.
+ */
+
 const ResponseSchema = z.object({
     questionsTagged: QuestionMetricTagArraySchema
 })
 
-/**
- * Tags VA questions using metric_keys instead of reasoning graph nodes.
- */
-export async function tagVAQuestionsWithNodes(params: {
+export async function tagQuestionsWithNodes(params: {
+    passageText: string;
     questions: any[];
 }) {
-    const { questions } = params;
+    const { passageText, questions } = params;
 
     console.log(
-        `🏷️ [VA Metric Tagging] Tagging ${questions.length} questions`
+        `🏷️ [Metric Tagging] Tagging ${questions.length} questions`
     );
 
     const prompt = `
 You are a CAT diagnostic engine.
 
-Your task is to identify which cognitive metrics are assessed by each VA (Verbal Ability) question.
+Your task is to identify which cognitive metrics are assessed by each question.
 
 RULES:
 - Do NOT explain
@@ -51,11 +53,7 @@ QUESTIONS
 ${JSON.stringify(
         questions.map(q => ({
             id: q.id,
-            type: q.question_type,
-            // Logic to handle VA specific content types
-            content: (q.question_type === "para_jumble" || q.question_type === "odd_one_out")
-                ? q.jumbled_sentences
-                : q.question_text,
+            question_text: q.question_text,
             options: q.options,
             correct_answer: q.correct_answer,
         })),
@@ -66,7 +64,7 @@ ${JSON.stringify(
 Return STRICT JSON only.
 `;
 
-    console.log("⏳ [VA Metric Tagging] Waiting for LLM response (metric tags)");
+    console.log("⏳ [Metric Tagging] Waiting for LLM response (metric tags)");
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
@@ -74,7 +72,8 @@ Return STRICT JSON only.
         messages: [
             {
                 role: "system",
-                content: "You classify cognitive metrics. You do not explain or reason.",
+                content:
+                    "You classify cognitive metrics. You do not explain or reason.",
             },
             {
                 role: "user",
@@ -83,17 +82,34 @@ Return STRICT JSON only.
         ],
         response_format: zodResponseFormat(
             ResponseSchema,
-            "va_metric_tags"
+            "metric_tags"
         ),
     });
 
     const parsed = completion.choices[0].message.parsed;
     if (!parsed) {
-        throw new Error("VA Metric tagging failed");
+        throw new Error("Metric tagging failed");
     }
 
-    console.log(`✅ [VA Metric Tagging] Tags generated for ${parsed.questionsTagged.length} questions`);
+    console.log(`✅ [Metric Tagging] Tags generated for ${parsed.questionsTagged.length} questions`);
 
-    // Returns raw array matching QuestionMetricTagArraySchema, exactly like the RC function
+    // Validate that we got tags for ALL questions
+    const taggedIds = new Set(parsed.questionsTagged.map(q => q.question_id));
+    const missingQuestions = questions.filter(q => !taggedIds.has(q.id));
+
+    if (missingQuestions.length > 0) {
+        console.warn(`⚠️ [Metric Tagging] Missing tags for ${missingQuestions.length} questions:`,
+            missingQuestions.map(q => q.id));
+
+        // Add default tags for missing questions
+        const defaultTags = missingQuestions.map(q => ({
+            question_id: q.id,
+            metric_keys: ["inference", "critical_reasoning"] // default fallback metrics
+        }));
+
+        return [...parsed.questionsTagged, ...defaultTags];
+    }
+
     return parsed.questionsTagged;
+
 }

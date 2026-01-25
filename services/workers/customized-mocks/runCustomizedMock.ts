@@ -15,7 +15,7 @@ import { generateBatchRCRationales } from "./retrieval/rcQuestionsHandling/gener
 // VA specific imports
 import { generateVAQuestions } from "./retrieval/vaQuestionsHandling/generateVAQuestions";
 import { selectVAAnswers } from "./retrieval/vaQuestionsHandling/selectVAAnswers";
-import { tagVAQuestionsWithNodes } from "./retrieval/vaQuestionsHandling/tagVAQuestionsWithNodes";
+import { tagVAQuestionsWithNodes } from "./retrieval/vaQuestions/tagVAQuestionsWithNodes";
 import { generateBatchVARationales } from "./retrieval/vaQuestionsHandling/generateBatchVARationales";
 import { formatOutputForDB, generateOutputReport, validateOutputForDB } from "./retrieval/formatOutputForDB";
 import { saveAllDataToDB } from "./retrieval/saveAllDataToDB";
@@ -90,7 +90,8 @@ export async function runCustomizedMock(params: CustomizedMockRequest): Promise<
 
             const { articleMeta, semantic_ideas, authorial_persona } = await fetchArticleForUsage({
                 genre: genre,
-                usageType: "mock"
+                usageType: "mock",
+                user_id: user_id  // Pass user_id for user-specific article exclusion
             });
 
             articlesData.push({

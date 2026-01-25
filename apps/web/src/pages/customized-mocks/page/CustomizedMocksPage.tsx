@@ -18,10 +18,9 @@ const CustomizedMocksPage: React.FC = () => {
     const { data: mocks = [], isLoading, isError, error, refetch } = useFetchCustomizedMocksQuery();
 
     const handleCreateSuccess = () => {
-        console.log("[CustomizedMocksPage] Mock created successfully");
-        toast.success("Mock test created successfully!");
+        console.log("[CustomizedMocksPage] Mock creation started");
         setIsModalOpen(false);
-        refetch(); // Refresh the list
+        // No need to refetch - RTK Query's optimistic update and invalidatesTags handle this
     };
 
     if (error) {

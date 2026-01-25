@@ -7,6 +7,7 @@
         "test": "npm run start",
         "start": "ts-node index.ts",
         "bundle:edge": "node scripts/bundle-edge-function.js",
+        "bundle:customized-mocks": "node scripts/bundleCustomizedMocks.js",
         "deploy:edge": "npm run bundle:edge && supabase functions deploy daily-content",
         "dev:edge": "npm run bundle:edge && supabase functions serve daily-content"
     },
