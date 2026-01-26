@@ -158,6 +158,7 @@ export const dailyPracticeApi = createApi({
                         .select("*")
                         .eq("year", 2026)
                         .eq("name", "Daily Practice")
+                        .eq("generation_status", "completed")
                         .gte("created_at", startOfToday)
                         .lte("created_at", endOfToday)
                         .order("created_at", { ascending: false })
@@ -268,6 +269,7 @@ export const dailyPracticeApi = createApi({
                         .select("*")
                         .eq("year", 2026)
                         .eq("name", "Daily Practice")
+                        .eq("generation_status", "completed")
                         .order("created_at", { ascending: false }) // Sorts by newest first
                         .range(from, to)
 

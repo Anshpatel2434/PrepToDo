@@ -1,7 +1,7 @@
 // Reuse the customized-mocks reference data helpers pattern
 // But make them daily-content specific
 
-import { supabase } from '../../../../config/supabase';
+import { supabase } from '../../../config/supabase';
 
 export async function generateEmbedding(text: string) {
     console.log(`⏳ [Embedding] Waiting for LLM response...`);

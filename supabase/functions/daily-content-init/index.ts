@@ -31,11 +31,8 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    const payload = await req.json()
-    console.log("📥 Received request for daily-content-init")
-
     // Run step 1 handler
-    const result = await handleStep1Init(payload)
+    const result = await handleStep1Init()
 
     return new Response(
       JSON.stringify({

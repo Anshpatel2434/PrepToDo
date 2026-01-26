@@ -274,23 +274,14 @@ Generate exactly ${questions.length} rationale objects, one for each question IN
     const updatedQuestions = questions.map((q) => {
         // Check if this question had a reasoning context
         const context = reasoningContexts[q.id];
-        if (!context) {
-            return {
-                ...q,
-                rationale: "Rationale generation skipped - missing reasoning context.",
-                tags: [],
-                updated_at: new Date().toISOString(),
-            };
-        }
-
         // Get the rationale data for this question
         const rationaleData = rationaleMap.get(q.id) as { question_id: string; rationale: string; metric_keys?: string[] } | undefined;
-        if (!rationaleData) {
-            console.warn(`⚠️ [Batch RC Rationales] Missing rationale for question ${q.id}`);
+        if (!rationaleData || !context) {
+            console.warn(`⚠️ [Batch RC Rationales] Fallback for question ${q.id}`);
             return {
                 ...q,
-                rationale: "Rationale generation incomplete.",
-                tags: context.metric_keys,
+                rationale: rationaleData?.rationale || "Rationale generation incomplete.",
+                tags: context?.metric_keys || [],
                 updated_at: new Date().toISOString(),
             };
         }

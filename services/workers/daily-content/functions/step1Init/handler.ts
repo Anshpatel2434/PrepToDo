@@ -11,11 +11,7 @@ import { fetchPassagesData } from '../../retrieval/passageHandling/fetchPassages
 import { fetchQuestionsData } from '../../retrieval/fetchQuestionsData';
 import { StepResult } from '../../types/state';
 
-export interface Step1Params {
-    date?: string; // Optional date for testing, defaults to today
-}
-
-export async function handleStep1Init(params: Step1Params): Promise<StepResult> {
+export async function handleStep1Init(): Promise<StepResult> {
     const examId = uuidv4();
     console.log(`🚀 [Step 1] Daily content initialization: ${examId}`);
 
@@ -65,12 +61,13 @@ export async function handleStep1Init(params: Step1Params): Promise<StepResult> 
                 .from('exam_papers')
                 .insert({
                     id: examId,
-                    name: `Daily Practice - ${genre.name}`,
+                    name: `Daily Practice`,
+                    used_articles_id: [articleMeta.id],
                     year: new Date().getFullYear(),
-                    generated_by_user_id: 'system',
-                    time_limit_minutes: 30,
+                    exam_type: "CAT",
+                    slot: null,
+                    is_official: false,
                     generation_status: 'initializing',
-                    genre: genre.name,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 })
@@ -90,14 +87,14 @@ export async function handleStep1Init(params: Step1Params): Promise<StepResult> 
             // Step 1.6: Update state with all initial data
             console.log(`🗂️ [Step 1.6] Saving initial data to state`);
             await StateManager.update(examId, {
-                status: 'generating_passage',
+                status: 'initializing',
                 current_step: 2,
                 genre: genre.name,
-                article_data: {
+                articles_data: [{
                     articleMeta,
                     semantic_ideas,
                     authorial_persona
-                },
+                }],
                 reference_passages_content: passagesContent,
                 reference_data_rc: referenceDataRC,
                 reference_data_va: referenceDataVA

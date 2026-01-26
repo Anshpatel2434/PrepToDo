@@ -2,7 +2,6 @@ import { StateManager } from '../../shared/stateManager';
 import { FunctionInvoker } from '../../shared/functionInvoker';
 import { ErrorHandler } from '../../shared/errorHandler';
 import { supabase } from '../../../../config/supabase';
-import { CostTracker } from '../../retrieval/utils/CostTracker';
 import { selectCorrectAnswers } from '../../retrieval/rcQuestionsHandling/selectCorrectAnswers';
 import { StepResult } from '../../types/state';
 
@@ -19,16 +18,16 @@ export async function handleStep4RCAnswers(params: Step4Params): Promise<StepRes
             // Load state
             console.log(`📖 [Step 4] Loading state`);
             const state = await StateManager.load(exam_id);
-            const { passage_id, rc_question_ids } = state;
+            const { passages_ids, rc_question_ids } = state;
 
-            if (!passage_id || !rc_question_ids || rc_question_ids.length === 0) {
+            if (!passages_ids || passages_ids.length === 0 || !rc_question_ids || rc_question_ids.length === 0) {
                 throw new Error('Missing passage_id or rc_question_ids in state');
             }
 
             // Fetch passage content and RC questions
             const [{ data: passageData, error: passageError },
                   { data: questionsData, error: questionsError }] = await Promise.all([
-                supabase.from('passages').select('content').eq('id', passage_id).single(),
+                supabase.from('passages').select('content').eq('id', passages_ids[0]).single(),
                 supabase.from('questions').select('*').in('id', rc_question_ids)
             ]);
 
@@ -40,19 +39,18 @@ export async function handleStep4RCAnswers(params: Step4Params): Promise<StepRes
 
             // Select answers for RC questions
             console.log(`✅ [Step 4] Selecting correct answers for ${questions.length} RC questions`);
-            const costTracker = new CostTracker();
 
             const questionsWithAnswers = await selectCorrectAnswers({
                 passageText,
                 questions
-            }, costTracker);
+            });
 
             // Update questions with answers in database
             console.log(`💾 [Step 4] Saving answers`);
             for (const question of questionsWithAnswers) {
                 const { error } = await supabase
                     .from('questions')
-                    .update({ correct_option: question.correct_option })
+                    .update({ correct_answer: question.correct_answer })
                     .eq('id', question.id);
 
                 if (error) {
@@ -62,7 +60,7 @@ export async function handleStep4RCAnswers(params: Step4Params): Promise<StepRes
 
             // Update state
             await StateManager.update(exam_id, {
-                status: 'generating_va_questions',
+                status: 'initializing',
                 current_step: 5
             });
 
@@ -71,7 +69,6 @@ export async function handleStep4RCAnswers(params: Step4Params): Promise<StepRes
             await FunctionInvoker.invokeNext('step-5', { exam_id });
 
             console.log(`🎉 [Step 4] RC answers selected!`);
-            costTracker.printReport();
 
             return {
                 success: true,

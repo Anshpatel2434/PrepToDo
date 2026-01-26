@@ -1,4 +1,5 @@
-import { supabase } from '../../../../config/supabase';
+import { FunctionsHttpError } from '@supabase/supabase-js';
+import { supabase } from '../../../config/supabase';
 import { ExamGenerationState, GenerationStatus } from '../types/state';
 
 export class StateManager {
@@ -37,7 +38,12 @@ export class StateManager {
             .eq('exam_id', examId);
 
         if (error) {
-            throw new Error(`Failed to update state: ${error.message}`);
+            if (error instanceof FunctionsHttpError) {
+                const errorContext = await error.context.json();
+                throw new Error(`❌ [StateManager] Auth Error:`, errorContext);
+            } else {
+                throw new Error(`❌ [StateManager] Failed to update state: ${error.message}`);
+            }
         }
 
         console.log(`✅ [StateManager] State updated successfully`);
@@ -102,7 +108,6 @@ export class StateManager {
                 status: 'initializing' as GenerationStatus,
                 current_step: 1,
                 total_steps: totalSteps,
-                user_id: 'system',
                 params: {
                     genre_target: genre,
                     generation_type: 'daily'

@@ -20,9 +20,9 @@ export async function handleStep3RCQuestions(params: Step3Params): Promise<StepR
             // Load state
             console.log(`📖 [Step 3] Loading state`);
             const state = await StateManager.load(exam_id);
-            const { passage_id, reference_data_rc } = state;
+            const { passages_ids, reference_data_rc } = state;
 
-            if (!passage_id) {
+            if (!passages_ids || passages_ids.length === 0) {
                 throw new Error('No passage ID found in state');
             }
 
@@ -30,7 +30,7 @@ export async function handleStep3RCQuestions(params: Step3Params): Promise<StepR
             const { data: passageData, error: passageError } = await supabase
                 .from('passages')
                 .select('content')
-                .eq('id', passage_id)
+                .eq('id', passages_ids[0])
                 .single();
 
             if (passageError) {
@@ -60,13 +60,11 @@ export async function handleStep3RCQuestions(params: Step3Params): Promise<StepR
                 const { error: questionError } = await supabase
                     .from('questions')
                     .insert({
+                        ...questionData,
                         id: questionId,
-                        exam_id: exam_id,
-                        passage_id: passage_id,
-                        question_text: questionData.question_text,
-                        question_type: questionData.question_type,
-                        options: questionData.options,
-                        difficulty: questionData.difficulty,
+                        paper_id: exam_id,
+                        passage_id: passages_ids[0],
+                        difficulty: questionData.difficulty || 'medium',
                         created_at: new Date().toISOString(),
                         updated_at: new Date().toISOString()
                     });
@@ -80,7 +78,7 @@ export async function handleStep3RCQuestions(params: Step3Params): Promise<StepR
 
             // Update state
             await StateManager.update(exam_id, {
-                status: 'selecting_rc_answers',
+                status: 'initializing',
                 current_step: 4,
                 rc_question_ids: questionIds
             });

@@ -127,7 +127,8 @@ const customizedMockSlice = createSlice({
                 questionId: UUID;
                 userId: UUID;
                 passageId: UUID | null;
-                answer: Record<string, unknown> | null; // user_answer JSON
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                answer: any; // user_answer JSON
                 isCorrect: boolean;
             }>
         ) => {

@@ -20,17 +20,17 @@ export async function handleStep5VAQuestions(params: Step5Params): Promise<StepR
             // Load state
             console.log(`📖 [Step 5] Loading state`);
             const state = await StateManager.load(exam_id);
-            const { passage_id, article_data, reference_data_va } = state;
+            const { passages_ids, articles_data, reference_data_va } = state;
 
-            if (!passage_id || !article_data) {
-                throw new Error('Missing passage_id or article_data in state');
+            if (!passages_ids || passages_ids.length === 0 || !articles_data) {
+                throw new Error('Missing passage_id or articles_data in state');
             }
 
             // Fetch passage content from DB
             const { data: passageData, error: passageError } = await supabase
                 .from('passages')
                 .select('content')
-                .eq('id', passage_id)
+                .eq('id', passages_ids[0])
                 .single();
 
             if (passageError) {
@@ -44,8 +44,8 @@ export async function handleStep5VAQuestions(params: Step5Params): Promise<StepR
             const costTracker = new CostTracker();
 
             const vaQuestionsRaw = await generateAllVAQuestions({
-                semanticIdeas: article_data.semantic_ideas,
-                authorialPersona: article_data.authorial_persona,
+                semanticIdeas: articles_data[0].semantic_ideas,
+                authorialPersona: articles_data[0].authorial_persona,
                 referenceData: reference_data_va || [],
                 passageText
             }, costTracker);
@@ -61,13 +61,11 @@ export async function handleStep5VAQuestions(params: Step5Params): Promise<StepR
                 const { error: questionError } = await supabase
                     .from('questions')
                     .insert({
+                        ...questionData,
                         id: questionId,
-                        exam_id: exam_id,
+                        paper_id: exam_id,
                         passage_id: null, // VA questions have no passage
-                        question_text: questionData.question_text,
-                        question_type: questionData.question_type,
-                        options: questionData.options,
-                        difficulty: questionData.difficulty,
+                        difficulty: questionData.difficulty || 'medium',
                         created_at: new Date().toISOString(),
                         updated_at: new Date().toISOString()
                     });
@@ -81,7 +79,7 @@ export async function handleStep5VAQuestions(params: Step5Params): Promise<StepR
 
             // Update state
             await StateManager.update(exam_id, {
-                status: 'selecting_va_answers',
+                status: 'initializing',
                 current_step: 6,
                 va_question_ids: questionIds
             });

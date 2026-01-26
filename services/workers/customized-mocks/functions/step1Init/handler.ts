@@ -111,7 +111,17 @@ export async function handleStep1Init(params: Step1Params): Promise<StepResult> 
             }
 
             console.log(`✅ [Step 1.3] All articles fetched`);
+            
+            console.log(`📝 [Step 1.3.1] Updating the used articles ids in exam`);
+            const articleIds = articlesData.map(a => a.articleMeta.id);
+            const { error: articleIdsError } = await supabase
+                .from('exam_papers')
+                .update({ used_articles_id: articleIds })
+                .eq('id', examId);
 
+            if (articleIdsError) {
+                throw new Error(`Failed to update article IDs in exam: ${articleIdsError.message}`);
+            }
             // Step 1.4: Prepare reference data (PYQ passages and questions)
             console.log(`🧠 [Step 1.4] Preparing reference data for question generation`);
 

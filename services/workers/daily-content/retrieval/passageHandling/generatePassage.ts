@@ -142,7 +142,7 @@ CAT RC passages are typically sourced from:
 - Technical and policy reports (think-tank briefs, white papers)
 
 PASSAGE CHARACTERISTICS:
-- Length: 500-800 words
+- Length: 400-500 words
 - Complexity: high lexical density, multiple clauses, low redundancy
 - Structure: layered argumentation (definitions, premises, evidence, objections, conclusions)
 - Viewpoint: expository or argumentative, presenting a thesis plus counter-arguments
@@ -156,8 +156,8 @@ HOW PASSAGES ARE ADAPTED FOR CAT:
 
 ### GENERATION CONSTRAINTS (MANDATORY)
 
-- Word count: 500-800 words (optimal range for CAT)
-- Paragraphs: 3 to 5
+- Word count: 400-500 words (optimal range for CAT)
+- Paragraphs: 3 to 4
 - Tone: neutral, analytical, academic
 - No storytelling
 - No moral judgement
@@ -224,8 +224,8 @@ You MUST reflect these traits using FORM, not just vocabulary.
 
 
 ### CRITICAL LENGTH CONSTRAINT:
-- You MUST produce at least 500 words.
-- If the passage is shorter than 500 words, it is INVALID.
+- You MUST produce at least 400 words.
+- If the passage is shorter than 400 words, it is INVALID.
 - If necessary, deepen arguments rather than summarizing.
 - Do NOT conclude early.
 
@@ -275,7 +275,7 @@ Do NOT include reasoning.
 Do NOT include bullet points.
 
 FINAL CHECK (DO NOT OUTPUT):
-Before responding, verify that the passage length is between 500 and 800 words.
+Before responding, verify that the passage length is between 400 and 500 words.
 If not, expand the analysis until it is.
 `
 

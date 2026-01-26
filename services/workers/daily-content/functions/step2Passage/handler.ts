@@ -20,9 +20,9 @@ export async function handleStep2Passage(params: Step2Params): Promise<StepResul
             // Load state
             console.log(`📖 [Step 2] Loading state`);
             const state = await StateManager.load(exam_id);
-            const { article_data, reference_passages_content } = state;
+            const { articles_data, reference_passages_content } = state;
 
-            if (!article_data) {
+            if (!articles_data) {
                 throw new Error('No article data found in state');
             }
 
@@ -31,13 +31,23 @@ export async function handleStep2Passage(params: Step2Params): Promise<StepResul
             const costTracker = new CostTracker();
 
             const passageContent = await generatePassage({
-                semanticIdeas: article_data.semantic_ideas,
-                authorialPersona: article_data.authorial_persona,
+                semanticIdeas: articles_data[0].semantic_ideas,
+                authorialPersona: articles_data[0].authorial_persona,
                 referencePassages: reference_passages_content || []
             }, costTracker);
 
             const wordCount = passageContent.split(/\s+/).length;
             console.log(`   Generated passage: ${wordCount} words`);
+
+            // Determine difficulty based on word count
+            let difficulty: "easy" | "medium" | "hard";
+            if (wordCount < 400) {
+                difficulty = "easy";
+            } else if (wordCount < 600) {
+                difficulty = "medium";
+            } else {
+                difficulty = "hard";
+            }
 
             // Save passage to database
             const passageId = uuidv4();
@@ -47,9 +57,10 @@ export async function handleStep2Passage(params: Step2Params): Promise<StepResul
                 .insert({
                     id: passageId,
                     paper_id: exam_id,
-                    article_id: article_data.articleMeta.id,
+                    article_id: articles_data[0].articleMeta.id,
                     content: passageContent,
                     word_count: wordCount,
+                    difficulty: difficulty,
                     genre: state.genre,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
@@ -61,9 +72,9 @@ export async function handleStep2Passage(params: Step2Params): Promise<StepResul
 
             // Update state and mark passage as generated
             await StateManager.update(exam_id, {
-                status: 'generating_rc_questions',
+                status: 'initializing',
                 current_step: 3,
-                passage_id: passageId
+                passages_ids: [passageId]
             });
 
             // Move to next step

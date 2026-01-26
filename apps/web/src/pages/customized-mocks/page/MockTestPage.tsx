@@ -115,14 +115,14 @@ const MockTestPage: React.FC = () => {
 
     useExamNavigationGuard(shouldBlock);
 
-    const { questions, passages, questionOrder } = useMemo(() => {
-        if (!testData) return { questions: [], passages: [], questionOrder: [] };
+    const { orderedQuestions, passages, questionOrder } = useMemo(() => {
+        if (!testData) return { orderedQuestions: [], passages: [], questionOrder: [] };
 
         const allQuestions = testData.questions;
         const allPassages = testData.passages;
         const order: UUID[] = [];
 
-        // Simple sequencing - will be replaced by robust algorithm later
+        // Simple sequencing - RC questions grouped by passage first, then VA questions
         allPassages.forEach(passage => {
             const rcQuestions = allQuestions
                 .filter(q => q.passage_id === passage.id)
@@ -135,14 +135,21 @@ const MockTestPage: React.FC = () => {
             .sort((a, b) => a.created_at.localeCompare(b.created_at));
         order.push(...vaQuestions.map(q => q.id));
 
+        // Create ordered questions array matching the questionOrder
+        // This ensures palette index matches Redux currentQuestionIndex
+        const questionsMap = new Map(allQuestions.map(q => [q.id, q]));
+        const orderedQs = order
+            .map(id => questionsMap.get(id))
+            .filter((q): q is NonNullable<typeof q> => q !== undefined);
+
         return {
-            questions: allQuestions,
+            orderedQuestions: orderedQs,
             passages: allPassages,
             questionOrder: order,
         };
     }, [testData]);
 
-    const currentQuestion = questions.find((q) => q.id === currentQuestionId);
+    const currentQuestion = orderedQuestions.find((q) => q.id === currentQuestionId);
     const currentPassage = currentQuestion?.passage_id
         ? passages.find((p) => p.id === currentQuestion.passage_id)
         : null;
@@ -218,7 +225,7 @@ const MockTestPage: React.FC = () => {
         currentQuestionIndex,
         elapsedTime,
         progress,
-        questions,
+        orderedQuestions,
         viewMode
     });
 
@@ -229,10 +236,10 @@ const MockTestPage: React.FC = () => {
             currentQuestionIndex,
             elapsedTime,
             progress,
-            questions,
+            orderedQuestions,
             viewMode
         };
-    }, [session, attempts, currentQuestionIndex, elapsedTime, progress, questions, viewMode]);
+    }, [session, attempts, currentQuestionIndex, elapsedTime, progress, orderedQuestions, viewMode]);
 
     useEffect(() => {
         const handleBeforeUnload = async () => {
@@ -249,7 +256,7 @@ const MockTestPage: React.FC = () => {
                     current_question_index: current.currentQuestionIndex,
                     time_spent_seconds: current.elapsedTime,
                     status: "in_progress",
-                    total_questions: current.questions.length,
+                    total_questions: current.orderedQuestions.length,
                     correct_answers: current.progress.correct,
                     score_percentage: current.progress.percentage,
                 }).unwrap();
@@ -273,7 +280,7 @@ const MockTestPage: React.FC = () => {
                     current_question_index: current.currentQuestionIndex,
                     time_spent_seconds: current.elapsedTime,
                     status: "in_progress",
-                    total_questions: current.questions.length,
+                    total_questions: current.orderedQuestions.length,
                     correct_answers: current.progress.correct,
                     score_percentage: current.progress.percentage,
                 });
@@ -313,7 +320,7 @@ const MockTestPage: React.FC = () => {
                     status: "completed",
                     completed_at: new Date().toISOString(),
                     time_spent_seconds: session.time_limit_seconds || elapsedTime,
-                    total_questions: questions.length,
+                    total_questions: orderedQuestions.length,
                     correct_answers: progress.correct,
                     score_percentage: progress.percentage,
                     current_question_index: currentQuestionIndex,
@@ -325,7 +332,7 @@ const MockTestPage: React.FC = () => {
         } catch (err) {
             console.error("Auto-submit failed:", err);
         }
-    }, [session.id, session.user_id, session.time_limit_seconds, attempts, pendingAttempts, elapsedTime, startTime, progress, questions.length, currentQuestionId, currentQuestionIndex, saveSession, saveAttempts, dispatch]);
+    }, [session.id, session.user_id, session.time_limit_seconds, attempts, pendingAttempts, elapsedTime, startTime, progress, orderedQuestions.length, currentQuestionId, currentQuestionIndex, saveSession, saveAttempts, dispatch]);
 
     // --- 3. Timer Logic (Moved here to fix hoisting) ---
     useEffect(() => {
@@ -340,7 +347,7 @@ const MockTestPage: React.FC = () => {
 
     const handleFinishExam = useCallback(async () => {
         if (!session.id) return;
-        if (!window.confirm(`You have answered ${progress.answered}/${questions.length}. Submit?`)) return;
+        if (!window.confirm(`You have answered ${progress.answered}/${orderedQuestions.length}. Submit?`)) return;
 
         try {
             const timeNow = Date.now();
@@ -370,7 +377,7 @@ const MockTestPage: React.FC = () => {
                     status: "completed",
                     completed_at: new Date().toISOString(),
                     time_spent_seconds: elapsedTime,
-                    total_questions: questions.length,
+                    total_questions: orderedQuestions.length,
                     correct_answers: progress.correct,
                     score_percentage: progress.percentage,
                     current_question_index: currentQuestionIndex,
@@ -383,7 +390,7 @@ const MockTestPage: React.FC = () => {
             console.error("Failed to submit exam:", err);
             alert("Failed to submit. Please check your connection.");
         }
-    }, [session.id, session.user_id, attempts, pendingAttempts, elapsedTime, startTime, progress, questions.length, currentQuestionId, currentQuestionIndex, saveSession, saveAttempts, dispatch]);
+    }, [session.id, session.user_id, attempts, pendingAttempts, elapsedTime, startTime, progress, orderedQuestions.length, currentQuestionId, currentQuestionIndex, saveSession, saveAttempts, dispatch]);
 
     const handleSaveAndNext = () => {
         if (currentQuestion) {
@@ -419,7 +426,7 @@ const MockTestPage: React.FC = () => {
             questionId: currentQuestion.id,
             userId: session.user_id,
             passageId: currentQuestion.passage_id || null,
-            answer: { user_answer: answerValue },
+            answer: answerValue,
             isCorrect
         }));
     }, [dispatch, currentQuestion, session.user_id, viewMode]);
@@ -487,10 +494,10 @@ const MockTestPage: React.FC = () => {
 
                 <div className="flex items-center gap-2 md:gap-4">
                     <div className="w-20 md:w-32 h-2 rounded-full bg-gray-200 overflow-hidden">
-                        <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${(progress.answered / questions.length) * 100}%` }} />
+                        <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${(progress.answered / orderedQuestions.length) * 100}%` }} />
                     </div>
                     <span className={`text-sm ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
-                        {progress.answered}/{questions.length}
+                        {progress.answered}/{orderedQuestions.length}
                     </span>
                 </div>
             </header>
@@ -499,7 +506,7 @@ const MockTestPage: React.FC = () => {
             <div className="flex-1 flex relative overflow-hidden">
                 <div className="flex-1 h-full overflow-hidden">
                     {viewMode === "solution" && analysisViewType === "analysis" ? (
-                        <MockAnalysisView isDark={isDark} questions={questions} />
+                        <MockAnalysisView isDark={isDark} questions={orderedQuestions} />
                     ) : currentPassage ? (
                         <SplitPaneLayout
                             isDark={isDark}
@@ -573,7 +580,7 @@ const MockTestPage: React.FC = () => {
                                     className={`fixed md:relative inset-y-0 right-0 z-50 md:z-auto w-72 md:w-64 border-l overflow-y-auto shadow-2xl md:shadow-none ${isDark ? "bg-bg-secondary-dark border-border-dark" : "bg-bg-secondary-light border-border-light"}`}
                                 >
                                     <MockQuestionPalette
-                                        questions={questions}
+                                        questions={orderedQuestions}
                                         attempts={attempts}
                                         pendingAttempts={pendingAttempts}
                                         isDark={isDark}

@@ -60,8 +60,6 @@ DECLARE
     params JSONB;
     exam_id UUID;
 BEGIN
-    -- Generate a new exam_id for this daily generation
-    exam_id := gen_random_uuid();
     
     -- 1. Fetch credentials from Supabase Vault
     -- Note: Ensure these names match exactly what you saved in the Vault UI
@@ -78,13 +76,6 @@ BEGIN
         RAISE EXCEPTION 'Vault secrets not found. Check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY names.';
     END IF;
 
-    -- 3. Get daily content parameters
-    params := get_daily_content_params();
-
-    -- 4. Log the start of daily generation
-    RAISE NOTICE 'Starting daily content generation: %', exam_id;
-    RAISE NOTICE 'Target genre: %', params->>'genre_target';
-
     -- 5. Make async HTTP POST request to daily-content-init via pg_net
     -- This starts the 8-step pipeline
     SELECT INTO request_id net.http_post(
@@ -92,15 +83,10 @@ BEGIN
         headers := jsonb_build_object(
             'Content-Type', 'application/json',
             'Authorization', 'Bearer ' || service_key
-        ),
-        body := jsonb_build_object(
-            'date', CURRENT_DATE::text,
-            'exam_id', exam_id::text
-        ),
+        )
         timeout_milliseconds := 30000
     );
-    
-    RAISE NOTICE 'Daily content generation triggered, exam_id: %, request_id: %', exam_id, request_id;
+    RAISE NOTICE 'Daily content generation triggered, request_id: %', request_id;
 
 EXCEPTION
     WHEN OTHERS THEN

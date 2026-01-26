@@ -18,8 +18,8 @@ export interface ExamGenerationState {
 
     // Intermediate data
     genre?: string;
-    article_data?: any;
-    passage_id?: string;
+    articles_data?: any[];
+    passages_ids?: string[];
     rc_question_ids?: string[];
     va_question_ids?: string[];
 

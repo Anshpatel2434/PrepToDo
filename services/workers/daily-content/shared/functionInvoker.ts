@@ -1,4 +1,4 @@
-import { supabase } from '../../../../config/supabase';
+import { supabase } from '../../../config/supabase';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 
 export class FunctionInvoker {

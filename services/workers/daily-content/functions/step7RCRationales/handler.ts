@@ -21,18 +21,23 @@ export async function handleStep7RCRationales(params: Step7Params): Promise<Step
             // Load state
             console.log(`📖 [Step 7] Loading state`);
             const state = await StateManager.load(exam_id);
-            const { passage_id, rc_question_ids, reference_data_rc, reasoning_graph_nodes } = state;
+            const { passages_ids, rc_question_ids, reference_data_rc } = state;
 
-            if (!passage_id || !rc_question_ids || !reasoning_graph_nodes) {
+            if (!passages_ids || passages_ids.length === 0 || !rc_question_ids) {
                 throw new Error('Missing required data in state for RC rationale generation');
             }
 
+            //fetch reasoning graph nodes for rationale generation
+            console.log(`🧠 [Step 7] Fetching reasoning graph nodes`);
+            const { fetchNodes } = await import('../../graph/fetchNodes');
+            const reasoning_graph_nodes = await fetchNodes();
+
             // Fetch passage and RC questions
             const [{ data: passageData, error: passageError },
-                  { data: questionsData, error: questionsError }] = await Promise.all([
-                supabase.from('passages').select('content').eq('id', passage_id).single(),
-                supabase.from('questions').select('*').in('id', rc_question_ids)
-            ]);
+                { data: questionsData, error: questionsError }] = await Promise.all([
+                    supabase.from('passages').select('content').eq('id', passages_ids[0]).single(),
+                    supabase.from('questions').select('*').in('id', rc_question_ids)
+                ]);
 
             if (passageError) throw new Error(`Failed to fetch passage: ${passageError.message}`);
             if (questionsError) throw new Error(`Failed to fetch questions: ${questionsError.message}`);
@@ -45,7 +50,7 @@ export async function handleStep7RCRationales(params: Step7Params): Promise<Step
             const taggedQuestions = await tagQuestionsWithNodes({
                 passageText,
                 questions
-            }, new CostTracker());
+            });
 
             // Build reasoning graph context
             console.log(`🕸️ [Step 7] Building reasoning graph context`);
@@ -57,7 +62,7 @@ export async function handleStep7RCRationales(params: Step7Params): Promise<Step
 
             const questionsWithRationales = await generateBatchRCRationales({
                 passageText,
-                questions: taggedQuestions,
+                questions: questions,
                 reasoningContexts,
                 referenceData: reference_data_rc || []
             }, costTracker);
@@ -69,8 +74,6 @@ export async function handleStep7RCRationales(params: Step7Params): Promise<Step
                     .from('questions')
                     .update({
                         rationale: question.rationale,
-                        reasoning_graph_node: question.reasoning_graph_node,
-                        reasoning_graph_tags: question.reasoning_graph_tags
                     })
                     .eq('id', question.id);
 
@@ -81,9 +84,8 @@ export async function handleStep7RCRationales(params: Step7Params): Promise<Step
 
             // Update state
             await StateManager.update(exam_id, {
-                status: 'generating_va_rationales',
+                status: 'initializing',
                 current_step: 8,
-                rc_reasoning_contexts: reasoningContexts
             });
 
             // Move to final step

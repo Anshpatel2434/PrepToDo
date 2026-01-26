@@ -2,7 +2,6 @@ import { StateManager } from '../../shared/stateManager';
 import { FunctionInvoker } from '../../shared/functionInvoker';
 import { ErrorHandler } from '../../shared/errorHandler';
 import { supabase } from '../../../../config/supabase';
-import { CostTracker } from '../../retrieval/utils/CostTracker';
 import { selectVAAnswers } from '../../retrieval/vaQuestionsHandling/selectVAAnswers';
 import { StepResult } from '../../types/state';
 
@@ -39,18 +38,17 @@ export async function handleStep6VAAnswers(params: Step6Params): Promise<StepRes
 
             // Select answers for VA questions
             console.log(`✅ [Step 6] Selecting correct answers for ${questions.length} VA questions`);
-            const costTracker = new CostTracker();
 
             const questionsWithAnswers = await selectVAAnswers({
                 questions
-            }, costTracker);
+            });
 
             // Update questions with answers in database
             console.log(`💾 [Step 6] Saving answers`);
             for (const question of questionsWithAnswers) {
                 const { error } = await supabase
                     .from('questions')
-                    .update({ correct_option: question.correct_option })
+                    .update({ correct_answer: question.correct_answer })
                     .eq('id', question.id);
 
                 if (error) {
@@ -58,15 +56,9 @@ export async function handleStep6VAAnswers(params: Step6Params): Promise<StepRes
                 }
             }
 
-            // Update state - fetch reasoning graph nodes for rationale generation
-            console.log(`🧠 [Step 6] Fetching reasoning graph nodes`);
-            const { fetchNodes } = await import('../../graph/fetchNodes');
-            const nodes = await fetchNodes();
-
             await StateManager.update(exam_id, {
-                status: 'generating_rc_rationales',
-                current_step: 7,
-                reasoning_graph_nodes: nodes
+                status: 'initializing',
+                current_step: 7
             });
 
             // Move to next step
@@ -74,7 +66,6 @@ export async function handleStep6VAAnswers(params: Step6Params): Promise<StepRes
             await FunctionInvoker.invokeNext('step-7', { exam_id });
 
             console.log(`🎉 [Step 6] VA answers selected!`);
-            costTracker.printReport();
 
             return {
                 success: true,
