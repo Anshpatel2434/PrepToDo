@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { MdCheckCircle, MdPlayArrow, MdPending, MdAccessTime, MdErrorOutline } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
@@ -12,65 +12,19 @@ interface MockCardProps {
     isDark: boolean;
 }
 
-const MockCard: React.FC<MockCardProps> = ({ mock, index, isDark }) => {
+const MockCard = React.memo<MockCardProps>(({ mock, index, isDark }) => {
     const navigate = useNavigate();
-
-    console.log("[MockCard] Rendering mock card:", {
-        mockId: mock.id,
-        mockName: mock.name,
-        isOptimistic: (mock as any)?.isOptimistic,
-        sessionStatus: mock.session_status,
-    });
 
     const {
         data: generationData,
-        isLoading: isLoadingGeneration,
-        isFetching: isFetchingGeneration,
-        error: generationError
     } = useFetchGenerationStateQuery(
         mock.id,
         {
             skip: !mock.id || mock.id.startsWith('temp-'),
             pollingInterval: 0, // Rely on subscription only
-            // Add refetchOnMountOrArgChange to ensure fresh data
             refetchOnMountOrArgChange: true,
         }
     );
-
-    // DEBUGGING: Log query state changes
-    useEffect(() => {
-        console.log("[MockCard] Query state changed:", {
-            mockId: mock.id,
-            isLoadingGeneration,
-            isFetchingGeneration,
-            hasData: !!generationData,
-            hasError: !!generationError,
-            generationData: generationData ? {
-                isGenerating: generationData.isGenerating,
-                status: generationData.state?.status,
-                currentStep: generationData.state?.current_step,
-                totalSteps: generationData.state?.total_steps,
-            } : null,
-            error: generationError,
-            timestamp: new Date().toISOString()
-        });
-    }, [mock.id, generationData, isLoadingGeneration, isFetchingGeneration, generationError]);
-
-    // DEBUGGING: Log when generation data updates
-    useEffect(() => {
-        if (generationData?.state) {
-            console.log("[MockCard] 🔄 Generation state updated:", {
-                mockId: mock.id,
-                mockName: mock.name,
-                status: generationData.state.status,
-                isGenerating: generationData.isGenerating,
-                currentStep: generationData.state.current_step,
-                totalSteps: generationData.state.total_steps,
-                errorMessage: generationData.state.error_message,
-                timestamp: new Date().toISOString()
-            });
-        }
-    }, [generationData?.state?.status, generationData?.state?.current_step, mock.id, mock.name]);
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString("en-US", {
@@ -80,19 +34,9 @@ const MockCard: React.FC<MockCardProps> = ({ mock, index, isDark }) => {
         });
     };
 
-    const getStatusBadge = () => {
-        console.log("[MockCard] Computing status badge:", {
-            mockId: mock.id,
-            hasGenerationData: !!generationData,
-            isGenerating: generationData?.isGenerating,
-            generationStatus: generationData?.state?.status,
-            isOptimistic: (mock as any)?.isOptimistic,
-            sessionStatus: mock?.session_status,
-        });
-
+    const statusBadge = React.useMemo(() => {
         // Check generation state first with null/undefined checks
         if (generationData?.isGenerating && generationData?.state) {
-            // Use optional chaining and provide defaults for missing data
             const status = generationData.state.status ?? "initializing";
             const currentStep = generationData.state.current_step ?? 1;
             const totalSteps = generationData.state.total_steps ?? 7;
@@ -128,7 +72,9 @@ const MockCard: React.FC<MockCardProps> = ({ mock, index, isDark }) => {
         }
 
         // Check if this is an optimistic mock (still generating) with null/undefined checks
-        if ((mock as any)?.isOptimistic || (mock as any)?.generation_status === 'generating') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const unsafeMock = mock as any;
+        if (unsafeMock?.isOptimistic || unsafeMock?.generation_status === 'generating') {
             return {
                 icon: MdPending,
                 text: "Generating...",
@@ -174,23 +120,15 @@ const MockCard: React.FC<MockCardProps> = ({ mock, index, isDark }) => {
                     animate: false,
                 };
         }
-    };
+    }, [mock, generationData, isDark]);
 
-    const statusBadge = getStatusBadge();
     const StatusIcon = statusBadge?.icon ?? MdPlayArrow;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const isGenerating = generationData?.isGenerating || (mock as any)?.isOptimistic;
 
-    const handleClick = () => {
-        console.log("[MockCard] Card clicked:", {
-            mockId: mock.id,
-            isGenerating,
-            generationStatus: generationData?.state?.status,
-            sessionStatus: mock?.session_status,
-        });
-
+    const handleClick = React.useCallback(() => {
         // Don't navigate if still generating
         if (isGenerating) {
-            console.log("[MockCard] Navigation blocked: Mock is still generating");
             toast(statusBadge?.fullMessage || "Mock test is still being generated.", {
                 icon: "⏳",
                 duration: 4000,
@@ -200,27 +138,24 @@ const MockCard: React.FC<MockCardProps> = ({ mock, index, isDark }) => {
 
         // Don't navigate if failed
         if (generationData?.state?.status === 'failed') {
-            console.log("[MockCard] Navigation blocked: Mock generation failed");
             toast.error("This mock generation failed. Please try creating a new one.");
             return;
         }
 
         // Validate mock.id exists before navigation
         if (!mock?.id) {
-            console.error("[MockCard] Navigation blocked: Invalid mock ID");
             toast.error("Invalid mock test. Please try again.");
             return;
         }
 
-        console.log("[MockCard] Navigating to mock test:", mock.id);
         navigate(`/mock?exam_id=${mock.id}`);
-    };
+    }, [isGenerating, statusBadge, generationData, mock, navigate]);
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1, duration: 0.5 }}
+            transition={{ delay: index * 0.05, duration: 0.4 }} // Faster stagger
             onClick={handleClick}
             className={`
                 relative overflow-hidden p-6 rounded-2xl border-2 cursor-pointer
@@ -233,10 +168,10 @@ const MockCard: React.FC<MockCardProps> = ({ mock, index, isDark }) => {
                 ${isGenerating ? "opacity-75" : ""}
             `}
         >
-            {/* Gradient Background on Hover */}
+            {/* Gradient Background on Hover - Optimized with will-change */}
             <div
                 className={`
-                    absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                    absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 will-change-opacity
                     ${isDark
                         ? "bg-gradient-to-br from-purple-600/10 to-blue-600/10"
                         : "bg-gradient-to-br from-purple-500/5 to-blue-500/5"
@@ -320,7 +255,7 @@ const MockCard: React.FC<MockCardProps> = ({ mock, index, isDark }) => {
                     )}
                 </div>
 
-                {/* Action Indicator */}
+                {/* Action Indicator - CSS Animation Replacement */}
                 {!isGenerating && generationData?.state?.status !== 'failed' && (
                     <div className="flex items-center gap-2 mt-4">
                         <span
@@ -338,21 +273,19 @@ const MockCard: React.FC<MockCardProps> = ({ mock, index, isDark }) => {
                                     ? "Continue Test"
                                     : "Start Test"}
                         </span>
-                        <motion.span
-                            className={`${isDark
-                                ? "text-brand-primary-dark"
-                                : "text-brand-primary-light"
-                                }`}
-                            animate={{ x: [0, 4, 0] }}
-                            transition={{ repeat: Infinity, duration: 1.5 }}
+                        <span
+                            className={`
+                                transform transition-transform duration-300 group-hover:translate-x-1
+                                ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}
+                            `}
                         >
                             →
-                        </motion.span>
+                        </span>
                     </div>
                 )}
             </div>
         </motion.div>
     );
-};
+});
 
 export default MockCard;

@@ -127,8 +127,7 @@ const customizedMockSlice = createSlice({
                 questionId: UUID;
                 userId: UUID;
                 passageId: UUID | null;
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                answer: any; // user_answer JSON
+                answer: Record<string, unknown> | null; // user_answer JSON
                 isCorrect: boolean;
             }>
         ) => {
@@ -543,7 +542,7 @@ export const selectAnalysisData = createSelector(
             const timeSpent = attempt.time_spent_seconds || 0;
 
             // Check if question was attempted by looking at user_answer field
-            const userAnswer = attempt.user_answer as any;
+            const userAnswer = attempt.user_answer as { user_answer: unknown } | null;
             const isAttempted = userAnswer && userAnswer.user_answer != null;
 
             if (!isAttempted) {

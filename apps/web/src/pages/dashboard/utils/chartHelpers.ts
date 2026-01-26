@@ -19,12 +19,12 @@ export function extractSpeedVsAccuracyData(metrics: UserMetricProficiency[]) {
     }
 
     const data = readingSpeedMetric.speed_vs_accuracy_data;
-    
+
     if (!Array.isArray(data)) {
         return [];
     }
 
-    return data.map((d: any) => ({
+    return data.map((d: { date: string; wpm?: number; accuracy?: number }) => ({
         date: d.date,
         wpm: d.wpm || 0,
         accuracy: d.accuracy || 0,

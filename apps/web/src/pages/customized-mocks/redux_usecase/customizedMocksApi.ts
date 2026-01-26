@@ -24,8 +24,8 @@ interface CustomizedMockRequest {
     per_question_time_limit?: number;
     user_analytics?: {
         accuracy_percentage?: number;
-        genre_performance?: any;
-        question_type_performance?: any;
+        genre_performance?: Record<string, number>;
+        question_type_performance?: Record<string, number>;
         weak_topics?: string[];
         weak_question_types?: string[];
     };
@@ -469,7 +469,7 @@ export const customizedMocksApi = createApi({
                 const patchResult = dispatch(
                     customizedMocksApi.util.updateQueryData('fetchCustomizedMocks', undefined, (draft) => {
                         // Add to beginning of list
-                        draft.unshift(optimisticMock as any);
+                        draft.unshift(optimisticMock as unknown as CustomizedMockWithSession);
                     })
                 );
 
@@ -486,15 +486,16 @@ export const customizedMocksApi = createApi({
                                 const mockIndex = draft.findIndex(m => m.id === tempId);
                                 if (mockIndex !== -1) {
                                     // Update the temporary mock with real exam_id
-                                    draft[mockIndex].id = result.exam_id ? result.exam_id : "";
-                                    (draft[mockIndex] as any).exam_id = result.exam_id;
+                                    // Use type assertion to bypass readonly check if necessary, or ensure type compatibility
+                                    const mockToUpdate = draft[mockIndex] as unknown as { exam_id: UUID | undefined };
+                                    mockToUpdate.exam_id = result.exam_id;
                                 }
                             })
                         );
                     }
 
                     // Success - the invalidatesTags will trigger a refetch that replaces the optimistic mock
-                } catch (error) {
+                } catch {
                     console.log("[CustomizedMocksApi] Mock generation failed, removing optimistic mock");
                     // Failed - remove the optimistic mock
                     patchResult.undo();
@@ -1067,6 +1068,7 @@ export const customizedMocksApi = createApi({
 
                                     // Handle DELETE event (Generation Completed/Cleaned up)
                                     if (payload.eventType === 'DELETE') {
+                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                         if (payload.old && (payload.old as any).exam_id === examId) {
                                             console.log("[CustomizedMocksApi] DELETE event detected for this exam. Generation presumably completed.");
 

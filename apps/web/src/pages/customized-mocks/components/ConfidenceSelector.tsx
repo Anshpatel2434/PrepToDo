@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { MdOutlineSentimentDissatisfied, MdOutlineSentimentNeutral, MdOutlineSentimentSatisfied } from "react-icons/md";
 
@@ -55,8 +55,8 @@ export const ConfidenceSelector: React.FC<ConfidenceSelectorProps> = ({
         }
 
         return `${baseStyles} ${isDark
-                ? "bg-bg-tertiary-dark border-border-dark text-text-muted-dark"
-                : "bg-bg-tertiary-light border-border-light text-text-muted-light"
+            ? "bg-bg-tertiary-dark border-border-dark text-text-muted-dark"
+            : "bg-bg-tertiary-light border-border-light text-text-muted-light"
             } hover:border-brand-primary-${isDark ? "dark" : "light"}`;
     };
 

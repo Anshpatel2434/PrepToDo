@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { useSelector } from "react-redux";
-import { selectAnalysisData, selectAttempts, selectQuestionOrder } from "../redux_usecase/customizedMockSlice";
+import { selectAttempts, selectQuestionOrder } from "../redux_usecase/customizedMockSlice";
 import { ScoreCard } from "./ScoreCard";
 import { TimeDistributionChart } from "./TimeDistributionChart";
 import type { Question } from "../../../types";
@@ -11,7 +11,6 @@ interface MockAnalysisViewProps {
 }
 
 export const MockAnalysisView: React.FC<MockAnalysisViewProps> = ({ isDark, questions }) => {
-    const baseAnalysisData = useSelector(selectAnalysisData);
     const attempts = useSelector(selectAttempts);
     const questionOrder = useSelector(selectQuestionOrder);
 
@@ -37,7 +36,7 @@ export const MockAnalysisView: React.FC<MockAnalysisViewProps> = ({ isDark, ques
             const timeSpent = attempt.time_spent_seconds || 0;
 
             // Check if question was attempted by looking at user_answer field
-            const userAnswer = attempt.user_answer as any;
+            const userAnswer = attempt.user_answer as { user_answer: unknown } | null;
             const isAttempted = userAnswer && userAnswer.user_answer != null;
 
             if (!isAttempted) {

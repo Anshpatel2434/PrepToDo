@@ -1,9 +1,20 @@
-import React, { useCallback } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import type { Option, Question } from "../../../types";
 import { ConfidenceSelector } from "./ConfidenceSelector";
 import type { SolutionViewType } from "./SolutionToggle";
 import { SolutionToggle } from "./SolutionToggle";
+
+// Define types locally if not exported from types.ts
+interface DiagnosticData {
+    personalized_analysis?: string;
+    targeted_advice?: string;
+    strength_comparison?: string;
+    related_weak_areas?: Array<{ human_readable_description: string; proficiency_score: number }>;
+    trap_analysis?: string;
+    dominant_reasoning_failures?: Array<{ reasoning_node_label: string; failure_description: string }>;
+    error_pattern_keys?: string[];
+}
 
 interface QuestionPanelProps {
     question: Question;
@@ -17,7 +28,7 @@ interface QuestionPanelProps {
     onSolutionViewTypeChange: (value: SolutionViewType) => void;
     aiInsights?: {
         isAnalysed: boolean;
-        diagnostic?: any;
+        diagnostic?: DiagnosticData;
     };
     isCorrect?: boolean;
 }
@@ -38,7 +49,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
     const isExamMode = viewMode === "exam";
     const displayUserAnswer = typeof userAnswer === 'string' ? userAnswer : String(userAnswer || "");
 
-    const transformOptions = (options: any): Option[] => {
+    const transformOptions = (options: Record<string, string | { text: string }> | Array<string | { text: string }> | null | undefined): Option[] => {
         if (!options) return [];
         if (Array.isArray(options)) {
             return options.map((opt, i) => ({
@@ -48,22 +59,23 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
         }
         return Object.entries(options).map(([k, v]) => ({
             id: k,
-            text: typeof v === "string" ? v : String(v),
+            text: typeof v === "string" ? v : (v as { text: string }).text || String(v),
         }));
     };
 
     const getSentences = (q: Question): Option[] => {
         if (!q.jumbled_sentences || typeof q.jumbled_sentences !== "object") return [];
-        const sentences = Object.entries(q.jumbled_sentences).map(([k, v]) => ({
+        return Object.entries(q.jumbled_sentences as Record<string, string>).map(([k, v]) => ({
             id: k,
-            text: typeof v === "string" ? v : String(v),
-        }));
-        return q.question_type === "para_jumble" ? sentences.slice(0, 4) : sentences;
+            text: v,
+        })).slice(0, q.question_type === "para_jumble" ? 4 : undefined);
     };
 
     const getOptionClass = (option: Option) => {
         const isSelected = displayUserAnswer === option.id;
-        const correctAnswerId = (question.correct_answer as any)?.answer || question.correct_answer;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const correctAnswerRaw = question.correct_answer as any;
+        const correctAnswerId = typeof correctAnswerRaw === 'object' ? correctAnswerRaw?.answer : correctAnswerRaw;
         const isCorrectOption = correctAnswerId === option.id;
 
         if (isExamMode) {
@@ -163,7 +175,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                     <div>
                         <h5 className="text-sm font-bold uppercase tracking-wider mb-2 opacity-60">Areas To Focus On</h5>
                         <div className="flex flex-wrap gap-2">
-                            {diagnostic.related_weak_areas.map((area: any, i: number) => (
+                            {diagnostic.related_weak_areas.map((area, i) => (
                                 <span
                                     key={i}
                                     className={`px-3 py-1.5 rounded-full text-xs font-medium ${isDark ? "bg-warning/20 text-warning" : "bg-warning/10 text-warning"}`}
@@ -195,7 +207,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                             <div>
                                 <h6 className="text-xs font-bold uppercase tracking-wider mb-2 opacity-60">Reasoning Failures</h6>
                                 <div className="space-y-2">
-                                    {diagnostic.dominant_reasoning_failures?.map((f: any, i: number) => (
+                                    {diagnostic.dominant_reasoning_failures?.map((f, i) => (
                                         <div key={i} className={`p-2 rounded-lg text-sm ${isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"}`}>
                                             <div className="text-xs font-bold uppercase text-brand-primary-light mb-1">{f.reasoning_node_label}</div>
                                             <div className="text-xs opacity-80">{f.failure_description}</div>
@@ -209,7 +221,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                             <div>
                                 <h6 className="text-xs font-bold uppercase tracking-wider mb-2 opacity-60">Error Patterns</h6>
                                 <div className="flex flex-wrap gap-2">
-                                    {diagnostic.error_pattern_keys.map((key: string) => (
+                                    {diagnostic.error_pattern_keys.map((key) => (
                                         <span key={key} className="px-2 py-1 rounded-md bg-error/10 text-error text-xs font-medium">
                                             {key.replace(/_/g, " ")}
                                         </span>
@@ -222,6 +234,12 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
             </div>
         );
     };
+
+    const getCorrectAnswerText = (): string => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const raw = question.correct_answer as any;
+        return typeof raw === 'object' ? raw.answer : raw;
+    }
 
     return (
         <div className={`h-full flex flex-col ${isDark ? "scrollbar-dark" : "scrollbar-light"}`}>
@@ -263,8 +281,8 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                                 />
                             ) : (
                                 <div className={`p-4 rounded-xl border text-center font-mono text-lg ${isDark ? " text-text-primary-dark " : " text-text-primary-light "} `}>
-                                    Your Answer: <span className={(question.correct_answer as any)?.answer === displayUserAnswer ? "text-success" : "text-error"}>{displayUserAnswer || "-"}</span><br />
-                                    Correct: <span className="text-success">{(question.correct_answer as any)?.answer}</span>
+                                    Your Answer: <span className={getCorrectAnswerText() === displayUserAnswer ? "text-success" : "text-error"}>{displayUserAnswer || "-"}</span><br />
+                                    Correct: <span className="text-success">{getCorrectAnswerText()}</span>
                                 </div>
                             )}
                         </div>

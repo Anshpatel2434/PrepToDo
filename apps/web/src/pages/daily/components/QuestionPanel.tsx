@@ -146,6 +146,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
         }
 
         const diagnostic = session.analytics?.analytics?.diagnostics?.find(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (d: any) => d.attempt_id === currentAttempt?.id
         );
 
@@ -189,6 +190,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                     <div>
                         <h5 className="text-sm font-bold uppercase tracking-wider mb-2 opacity-60">Areas To Focus On</h5>
                         <div className="flex flex-wrap gap-2">
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {diagnostic.related_weak_areas.map((area: any, i: number) => (
                                 <span
                                     key={i}
@@ -221,6 +223,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                             <div>
                                 <h6 className="text-xs font-bold uppercase tracking-wider mb-2 opacity-60">Reasoning Failures</h6>
                                 <div className="space-y-2">
+                                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                                     {diagnostic.dominant_reasoning_failures?.map((f: any, i: number) => (
                                         <div key={i} className={`p-2 rounded-lg text-sm ${isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"}`}>
                                             <div className="text-xs font-bold uppercase text-brand-primary-light mb-1">{f.reasoning_node_label}</div>

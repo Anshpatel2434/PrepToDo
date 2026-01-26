@@ -24,15 +24,26 @@ interface SkillRadarWidgetProps {
     error?: unknown;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function CustomDot(props: any) {
+interface CustomDotProps {
+    cx?: number;
+    cy?: number;
+    payload?: {
+        trend?: "improving" | "declining" | "stagnant";
+        skill?: string;
+        confidence?: number
+    };
+    isDark?: boolean;
+    metricData?: UserMetricProficiency[];
+}
+
+function CustomDot(props: CustomDotProps) {
     const { cx, cy, payload, isDark, metricData } = props;
     const color = trendToColor(payload?.trend, Boolean(isDark));
     const opacity = typeof payload?.confidence === "number" ? payload.confidence : 1;
 
     // Find the original metric data to get attempts and confidence
-    const originalMetric = metricData?.find((m: any) => m.dimension_key === payload?.skill);
-    const hasLowAttempts = originalMetric?.total_attempts < 10;
+    const originalMetric = metricData?.find((m) => m.dimension_key === payload?.skill);
+    const hasLowAttempts = (originalMetric?.total_attempts || 0) < 10;
     const confidenceScore = originalMetric?.confidence_score || payload?.confidence || 1;
 
     // Stroke thickness based on confidence (thinner = less confident)

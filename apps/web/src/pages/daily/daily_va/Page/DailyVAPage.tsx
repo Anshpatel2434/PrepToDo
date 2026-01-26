@@ -317,6 +317,7 @@ const DailyVAPage: React.FC = () => {
         saveSession,
         saveAttempts,
         dispatch,
+        currentQuestionIndex,
     ]);
 
     // B. Navigation Handlers

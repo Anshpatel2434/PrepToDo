@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { useCreateCustomizedMockMutation, useFetchUserMetricProficiencyQuery, useFetchAvailableGenresQuery } from "../redux_usecase/customizedMocksApi";
@@ -24,7 +24,7 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
 
     const { data: user } = useFetchUserQuery();
     const { data: proficiencyData } = useFetchUserMetricProficiencyQuery(
-        user?.id || "" as any,
+        user?.id || "",
         { skip: !user?.id }
     );
     const { data: genresData, isLoading: isLoadingGenres } = useFetchAvailableGenresQuery();
@@ -52,17 +52,17 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
     const [showAdvanced, setShowAdvanced] = useState(false);
 
     // Get recommendations from proficiency
-    const weakestGenres = proficiencyData
+    const weakestGenres = React.useMemo(() => proficiencyData
         ?.filter(p => p.dimension_type === "genre")
         ?.sort((a, b) => (a.proficiency_score || 0) - (b.proficiency_score || 0))
         ?.slice(0, 4)
-        ?.map(p => p.dimension_key) || [];
+        ?.map(p => p.dimension_key) || [], [proficiencyData]);
 
-    const weakestMetrics = proficiencyData
+    const weakestMetrics = React.useMemo(() => proficiencyData
         ?.filter(p => p.dimension_type === "core_metric")
         ?.sort((a, b) => (a.proficiency_score || 0) - (b.proficiency_score || 0))
         ?.slice(0, 4)
-        ?.map(p => p.dimension_key) || [];
+        ?.map(p => p.dimension_key) || [], [proficiencyData]);
 
     // Auto-select recommendations if empty
     React.useEffect(() => {
@@ -72,7 +72,7 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
         if (targetMetrics.length === 0 && weakestMetrics.length > 0) {
             setTargetMetrics(weakestMetrics);
         }
-    }, [proficiencyData]);
+    }, [selectedGenres.length, targetMetrics.length, weakestGenres, weakestMetrics]);
 
     const questionDistributionTotal = rcQuestions + paraSummary + paraCompletion + paraJumble + oddOneOut;
 

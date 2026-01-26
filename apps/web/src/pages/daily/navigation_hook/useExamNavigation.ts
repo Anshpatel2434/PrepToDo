@@ -35,7 +35,6 @@ export function useExamNavigationGuard(
             return;
         }
 
-        blocker.proceed()
-        return
-    }, [blocker.state]);
+        blocker.proceed();
+    }, [blocker, shouldBlock]);
 }

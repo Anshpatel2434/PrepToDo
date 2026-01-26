@@ -208,15 +208,7 @@ const MockTestPage: React.FC = () => {
     }, [testData, session.id, dispatch, isLoading, questionOrder, passages, fetchExistingSession, startNewSession]);
 
     // --- 3. Timer Logic ---
-    useEffect(() => {
-        let timer: ReturnType<typeof setTimeout>;
-        if (viewMode === "exam" && !isLoading && timeRemaining > 0) {
-            timer = setInterval(() => dispatch(incrementElapsedTime()), 1000);
-        } else if (timeRemaining === 0 && viewMode === "exam") {
-            handleAutoSubmit();
-        }
-        return () => clearInterval(timer);
-    }, [viewMode, isLoading, timeRemaining, dispatch]);
+
 
     // --- 4. State Persistence ---
     // Use a ref to store the latest state for the cleanup function
@@ -243,13 +235,13 @@ const MockTestPage: React.FC = () => {
     }, [session, attempts, currentQuestionIndex, elapsedTime, progress, questions, viewMode]);
 
     useEffect(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const handleBeforeUnload = async (e: any) => {
+        const handleBeforeUnload = async () => {
             const current = stateRef.current;
             if (current.viewMode === "exam" && current.session.id) {
                 // Removed preventDefault to avoid dialog
                 const attemptList = Object.values(current.attempts).filter(a => a.question_id);
                 if (attemptList.length > 0) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     await saveAttempts({ attempts: attemptList as any }).unwrap();
                 }
                 await saveSession({
@@ -273,6 +265,7 @@ const MockTestPage: React.FC = () => {
                 const attemptList = Object.values(current.attempts).filter(a => a.question_id);
                 // Fire and forget on unmount
                 if (attemptList.length > 0) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     saveAttempts({ attempts: attemptList as any });
                 }
                 saveSession({
@@ -311,6 +304,7 @@ const MockTestPage: React.FC = () => {
                     rationale_helpful: null,
                     ai_feedback: null,
                 };
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
             }) as any;
 
             await Promise.all([
@@ -332,6 +326,17 @@ const MockTestPage: React.FC = () => {
             console.error("Auto-submit failed:", err);
         }
     }, [session.id, session.user_id, session.time_limit_seconds, attempts, pendingAttempts, elapsedTime, startTime, progress, questions.length, currentQuestionId, currentQuestionIndex, saveSession, saveAttempts, dispatch]);
+
+    // --- 3. Timer Logic (Moved here to fix hoisting) ---
+    useEffect(() => {
+        let timer: ReturnType<typeof setTimeout>;
+        if (viewMode === "exam" && !isLoading && timeRemaining > 0) {
+            timer = setInterval(() => dispatch(incrementElapsedTime()), 1000);
+        } else if (timeRemaining === 0 && viewMode === "exam") {
+            handleAutoSubmit();
+        }
+        return () => clearInterval(timer);
+    }, [viewMode, isLoading, timeRemaining, dispatch, handleAutoSubmit]);
 
     const handleFinishExam = useCallback(async () => {
         if (!session.id) return;
@@ -356,6 +361,7 @@ const MockTestPage: React.FC = () => {
                     rationale_helpful: null,
                     ai_feedback: null,
                 };
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
             }) as any;
 
             await Promise.all([
@@ -405,6 +411,7 @@ const MockTestPage: React.FC = () => {
 
     const handleAnswerUpdate = useCallback((answerValue: string) => {
         if (viewMode !== 'exam' || !currentQuestion || !session.user_id) return;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const correctAnswer = (currentQuestion.correct_answer as any)?.answer || currentQuestion.correct_answer;
         const isCorrect = answerValue === correctAnswer;
 
@@ -412,7 +419,7 @@ const MockTestPage: React.FC = () => {
             questionId: currentQuestion.id,
             userId: session.user_id,
             passageId: currentQuestion.passage_id || null,
-            answer: answerValue,
+            answer: { user_answer: answerValue },
             isCorrect
         }));
     }, [dispatch, currentQuestion, session.user_id, viewMode]);
@@ -504,6 +511,7 @@ const MockTestPage: React.FC = () => {
                                 question={currentQuestion}
                                 isDark={isDark}
                                 viewMode={viewMode}
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 userAnswer={(currentAttempt?.user_answer as any)?.user_answer}
                                 confidenceValue={currentAttempt?.confidence_level || 0}
                                 solutionViewType={solutionViewType}
@@ -512,6 +520,7 @@ const MockTestPage: React.FC = () => {
                                 onSolutionViewTypeChange={handleSolutionViewChange}
                                 aiInsights={{
                                     isAnalysed: session.is_analysed,
+                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                     diagnostic: session.analytics?.analytics?.diagnostics?.find((d: any) => d.attempt_id === currentAttempt?.id)
                                 }}
                                 isCorrect={currentAttempt?.is_correct}
@@ -523,6 +532,7 @@ const MockTestPage: React.FC = () => {
                                 question={currentQuestion}
                                 isDark={isDark}
                                 viewMode={viewMode}
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 userAnswer={(currentAttempt?.user_answer as any)?.user_answer}
                                 confidenceValue={currentAttempt?.confidence_level || 0}
                                 solutionViewType={solutionViewType}
@@ -531,6 +541,7 @@ const MockTestPage: React.FC = () => {
                                 onSolutionViewTypeChange={handleSolutionViewChange}
                                 aiInsights={{
                                     isAnalysed: session.is_analysed,
+                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                     diagnostic: session.analytics?.analytics?.diagnostics?.find((d: any) => d.attempt_id === currentAttempt?.id)
                                 }}
                                 isCorrect={currentAttempt?.is_correct}
