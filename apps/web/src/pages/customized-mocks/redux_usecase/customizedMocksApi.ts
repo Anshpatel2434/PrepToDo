@@ -1148,7 +1148,7 @@ export const customizedMocksApi = createApi({
                 }
             },
 
-            providesTags: (result, error, examId) => [
+            providesTags: (_result, _error, examId) => [
                 { type: "GenerationState", id: examId },
             ],
         }),
