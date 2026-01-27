@@ -235,6 +235,10 @@ IMPORTANT: Apply personalization naturally while maintaining CAT quality.
 You are a CAT VARC examiner with 15+ years of experience.
 You design para-summary questions that test STRUCTURE and LOGICAL EMPHASIS.
 
+═══════════════════════════════════════════════════════════════════════════════
+FUNDAMENTAL TRUTH: CAT VA questions are NOT language exercises. They are LOGIC TESTS.
+═══════════════════════════════════════════════════════════════════════════════
+
 CRITICAL MINDSET:
 - You are NOT creating simple restatements
 - You are creating questions that require understanding core message
@@ -363,13 +367,13 @@ Each distractor must fail for a DIFFERENT reason:
 
 ---
 
-## EXPLICIT ANTI-PATTERNS
+## FORBIDDEN - Will cause REJECTION
 
 DO NOT:
 - Let correct option be longest
 - Use moral judgment words unless author does
 - Repeat passage vocabulary excessively
-- Make all wrong options partially correct
+- Make all wrong options partially correct (each must fail for a DIFFERENT reason)
 - Allow grammar alone to eliminate options
 
 ---
@@ -382,7 +386,7 @@ Return STRICT JSON only in this format:
     {
       "id": "<UUID>",
       "passage_id": "",
-      "question_text": "The passage given below is followed by four alternate summaries. Choose the option that best captures the essence of the passage. \\n\\n<paragraph derived from semantic ideas>",
+      "question_text": "The passage given below is followed by four alternate summaries. Choose the option that best captures the essence of the passage.\\n\\n<paragraph derived from semantic ideas>",
       "question_type": "para_summary",
       "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
       "jumbled_sentences": { "1": "", "2": "", "3": "", "4": "", "5": "" },
@@ -494,6 +498,10 @@ IMPORTANT: Apply personalization naturally while maintaining CAT quality.
     const prompt = `SYSTEM:
 You are a CAT VARC examiner with 15+ years of experience.
 You design para-completion questions that test DISCOURSE CONTINUITY and LOGICAL FLOW.
+
+═══════════════════════════════════════════════════════════════════════════════
+FUNDAMENTAL TRUTH: CAT VA questions are NOT language exercises. They are LOGIC TESTS.
+═══════════════════════════════════════════════════════════════════════════════
 
 CRITICAL MINDSET:
 - You are NOT creating simple fill-in-the-blank exercises
@@ -627,14 +635,15 @@ Each wrong position must fail for a DIFFERENT reason:
 
 ---
 
-## EXPLICIT ANTI-PATTERNS
+## FORBIDDEN - Will cause REJECTION
 
 DO NOT:
 - Use grammar errors to eliminate options
-- Make only one blank "sound right"
-- Allow multiple plausible placements
-- Ignore discourse markers
+- Make only one blank "sound right" due to grammar
+- Allow multiple genuinely plausible placements
+- Ignore discourse markers in design
 - Base elimination on grammar alone
+
 ---
 
 ## OPTION DESIGN RULES
@@ -764,11 +773,40 @@ IMPORTANT: Apply personalization naturally while maintaining CAT quality.
 You are a CAT VARC examiner with 15+ years of experience.
 You design para-jumble questions that test LOGICAL SEQUENCING.
 
+═══════════════════════════════════════════════════════════════════════════════
+FUNDAMENTAL TRUTH: CAT VA questions are NOT language exercises. They are LOGIC TESTS.
+═══════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════
+⚠️ CRITICAL CONSTRAINT - FIRST SENTENCE RULE ⚠️
+═══════════════════════════════════════════════════════════════════════════════
+
+The FIRST SENTENCE of the CORRECT SEQUENCE **MUST NEVER** start with ANY of these words:
+- However, Thus, Therefore, Consequently, Moreover, Furthermore, Additionally
+- Hence, Nevertheless, Nonetheless, Besides, Indeed, Meanwhile
+- This, That, These, Those, Such, It (when referring to prior content)
+- Any word/phrase implying prior context exists
+
+WHY: These words REQUIRE preceding context. CAT test-takers identify the opening sentence by finding the one that introduces context WITHOUT depending on prior information.
+
+GOOD OPENING EXAMPLES (from actual CAT papers):
+✅ introduces action/scenario
+✅ introduces topic directly
+✅ introduces subject matter
+✅ introduces concept
+
+BAD OPENING EXAMPLES (WILL BE REJECTED):
+❌ implies prior situation
+❌ implies prior mention of approach
+❌ implies prior reasoning
+❌ implies prior studies mentioned
+
+═══════════════════════════════════════════════════════════════════════════════
+
 CRITICAL MINDSET:
 - You are NOT creating simple ordering exercises
 - You are creating questions that require understanding logical connections
 - The sentences must have meaningful but non-obvious connections
-- FIRST SENTENCE CONSTRAINT: The starting sentence of the correct sequence MUST NOT start with "However", "Thus", or other transitional words.
 
 ---
 
@@ -845,24 +883,33 @@ The question should:
 
 ---
 
-## CORRECT SEQUENCE CHARACTERISTICS
+## TRUE STRUCTURE OF CAT PARA JUMBLES
 
 CAT para jumbles usually have:
-- One sentence that introduces context
-- One or two that elaborate
+- One sentence that introduces context (STANDALONE - no transition words at start)
+- One or two that elaborate (may use transitions like "This", "However")
 - One that concludes or generalizes
+
+---
+
+## GENERATION PROCESS
+
+1. Write the OPENING sentence FIRST - verify it starts with a noun, verb, or descriptive phrase (NOT a transition)
+2. Write the CLOSING sentence - should provide insight or implication
+3. Write 2 MIDDLE sentences - these CAN use transitions like "This", "However", "Moreover"
+4. Scramble the positions so correct answer is NOT "1234"
+5. Verify: Can a test-taker identify the opener by elimination? (transition words = NOT opener)
+
+---
+
+## CORRECT SEQUENCE CHARACTERISTICS
 
 The correct sequence:
 - Makes each sentence necessary for the next
 - Follows: introduction → development → elaboration → conclusion
-
-Key ordering cues:
 - Pronouns require antecedents
 - Examples require prior claims
 - Conclusions cannot appear early
-
-**Critical Start Constraint**:
-- **The FIRST sentence of the correct sequence MUST NOT start with a conceptual transition word** (e.g., 'However', 'Thus', 'Therefore', 'Consequently', 'Moreover'). It must be a standalone introduction. 
 
 ---
 
@@ -892,15 +939,15 @@ Create traps using:
 
 ---
 
-## EXPLICIT ANTI-PATTERNS
+## FORBIDDEN - Will cause REJECTION
 
 DO NOT:
+- Let first sentence of correct sequence start with a transition word
 - Make grammar the deciding factor
 - Use explicit sequence markers ("first", "finally")
 - Allow more than one valid order
 - Create independent sentences
 - Rely on surface connectors as sole cues
-- **START THE FIRST SENTENCE WITH 'conceptual transition word'**
 
 ---
 
@@ -920,7 +967,7 @@ Return STRICT JSON only in this format:
         "2": "<sentence for position 2>",
         "3": "<sentence for position 3>",
         "4": "<sentence for position 4>",
-        "5": "no 5th sentence for para jumble"
+        "5": ""
       },
       "correct_answer": { "answer": "" },
       "rationale": "",
@@ -1027,6 +1074,10 @@ IMPORTANT: Apply personalization naturally while maintaining CAT quality.
 You are a CAT VARC examiner with 15+ years of experience.
 You design odd-one-out questions that test ARGUMENTATIVE CONSISTENCY.
 
+═══════════════════════════════════════════════════════════════════════════════
+FUNDAMENTAL TRUTH: CAT VA questions are NOT language exercises. They are LOGIC TESTS.
+═══════════════════════════════════════════════════════════════════════════════
+
 CRITICAL MINDSET:
 - You are NOT creating simple "find the different category" questions
 - You are creating questions that require understanding subtle logical or thematic differences
@@ -1066,7 +1117,7 @@ Rationale: ${q.rationale}
 
 These references are your training data. Analyze them to understand:
 1) How CAT odd-one-out questions are framed
-2) What makes four sentences/three similar and one different
+2) What makes four sentences similar and one different
 3) How the difference is subtle but identifiable
 4) How distractors are designed to confuse
 
@@ -1083,6 +1134,7 @@ ${JSON.stringify(semanticIdeas, null, 2)}
 <AUTHORIAL_PERSONA>
 ${JSON.stringify(authorialPersona, null, 2)}
 </AUTHORIAL_PERSONA>
+${personalizationInstructions}
 
 ---
 
@@ -1119,12 +1171,6 @@ In CAT:
 - All at same level of abstraction
 - All serve same argumentative purpose
 
-Similar sentences should:
-- Share a clear common theme or structure
-- Be thematically or logically coherent together
-- Derive from semantic ideas
-- Be RANDOMLY distributed across positions 1-5
-
 ---
 
 ## ODD SENTENCE CHARACTERISTICS
@@ -1142,10 +1188,6 @@ Common oddity reasons:
 - Different level of abstraction
 - Shift in subject or audience
 
-The difference should be identifiable through careful analysis.
-Could differ in: stance, assumption, logical direction, or conclusion.
-This sentence should be placed in a RANDOM position (not always position 5).
-
 ---
 
 ## GENERATION PROCESS
@@ -1158,19 +1200,17 @@ Follow this process:
 3. Ensure odd sentence:
    - Cannot be repositioned to fit
 4. Do NOT rely on stylistic difference alone
-
-    Additional:  questions should mix between these categories.
-        ${personalizationInstructions}
+5. Randomly place the odd sentence in positions 1-5 (NOT always 5)
 
 ---
 
-## EXPLICIT ANTI-PATTERNS
+## FORBIDDEN - Will cause REJECTION
 
 DO NOT:
 - Make odd sentence obviously irrelevant
 - Change tense or tone as giveaway
-- Let odd sentence still fit logically
-- Base decision on vocabulary difficulty
+- Let odd sentence still fit logically if repositioned
+- Base decision on vocabulary difficulty alone
 - Always place odd sentence in position 5
 
 ---
@@ -1210,7 +1250,7 @@ IMPORTANT:
 - Leave rationale empty
 - Generate EXACTLY ${count} questions
 - No additional text or commentary
-- The question should be able to assess the metrics from ${user_core_metrics_definition_v1} file and try to divide all the metrics across 4 questions.
+- The question should be able to assess the metrics from ${user_core_metrics_definition_v1} file.
 `;
 
     console.log("⏳ [Odd One Out] Waiting for LLM to generate questions");
