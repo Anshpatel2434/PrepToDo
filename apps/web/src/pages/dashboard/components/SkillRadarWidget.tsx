@@ -1,18 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { MdInsights } from "react-icons/md";
-import {
-    PolarAngleAxis,
-    PolarGrid,
-    PolarRadiusAxis,
-    Radar,
-    RadarChart,
-    ResponsiveContainer,
-    Tooltip,
-} from "recharts";
+import { MdInsights, MdTrendingUp, MdTrendingDown, MdTrendingFlat } from "react-icons/md";
 import type { UserMetricProficiency } from "../../../types";
-import { transformRadarData, trendToColor } from "../utils/chartHelpers";
-import { coreMetricsDefinition } from "../config/user_core_metrics_definition_v1";
 import { metricMappingJson } from "../config/core_metric_reasoning_map_v1_0";
 
 interface SkillRadarWidgetProps {
@@ -24,69 +13,143 @@ interface SkillRadarWidgetProps {
     error?: unknown;
 }
 
-interface CustomDotProps {
-    cx?: number;
-    cy?: number;
-    payload?: {
-        trend?: "improving" | "declining" | "stagnant";
-        skill?: string;
-        confidence?: number
-    };
-    isDark?: boolean;
-    metricData?: UserMetricProficiency[];
+// Get human-readable name for a metric
+function getMetricDisplayName(metricKey: string): string {
+    return metricKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 }
 
-function CustomDot(props: CustomDotProps) {
-    const { cx, cy, payload, isDark, metricData } = props;
-    const color = trendToColor(payload?.trend, Boolean(isDark));
-    const opacity = typeof payload?.confidence === "number" ? payload.confidence : 1;
-
-    // Find the original metric data to get attempts and confidence
-    const originalMetric = metricData?.find((m) => m.dimension_key === payload?.skill);
-    const hasLowAttempts = (originalMetric?.total_attempts || 0) < 10;
-    const confidenceScore = originalMetric?.confidence_score || payload?.confidence || 1;
-
-    // Stroke thickness based on confidence (thinner = less confident)
-    const strokeWidth = 1 + (confidenceScore * 3); // 1-4px based on confidence
-
-    if (typeof cx !== "number" || typeof cy !== "number") return null;
-
-    return (
-        <g>
-            <circle
-                cx={cx}
-                cy={cy}
-                r={4}
-                stroke={color}
-                strokeWidth={strokeWidth}
-                fill={color}
-                fillOpacity={opacity}
-                strokeDasharray={hasLowAttempts ? "2,2" : undefined}
-            />
-            {/* Trend indicator */}
-            {payload?.trend && (
-                <text
-                    x={cx + 8}
-                    y={cy - 8}
-                    fontSize="10"
-                    fill={color}
-                    textAnchor="middle"
-                >
-                    {payload.trend === 'improving' ? '↑' :
-                        payload.trend === 'declining' ? '↓' : '→'}
-                </text>
-            )}
-        </g>
-    );
+// Get status color based on proficiency score - STRONGER FOR LIGHT MODE
+function getStatusColor(score: number, isDark: boolean): string {
+    if (score >= 80) return isDark ? "#34D399" : "#059669"; // Emerald 400 / 600
+    if (score >= 60) return isDark ? "#6EE7B7" : "#10B981"; // Emerald 300 / 500
+    if (score >= 40) return isDark ? "#FBBF24" : "#D97706"; // Amber 400 / 600
+    return isDark ? "#F87171" : "#DC2626"; // Red 400 / 600
 }
 
-function getCognitiveFailureReason(metricKey: string): string {
+// Get reasoning steps for a metric in human-readable format
+function getReasoningSteps(metricKey: string): string[] {
     const steps = metricMappingJson.metrics[metricKey as keyof typeof metricMappingJson.metrics];
     if (!steps || !steps.reasoning_steps || steps.reasoning_steps.length === 0) {
-        return "Insufficient practice data to identify specific reasoning patterns.";
+        return [];
     }
+    return steps.reasoning_steps.slice(0, 3).map(step => step.label);
+}
 
-    return steps.reasoning_steps[0].label;
+// Get trend icon component
+
+
+// Single proficiency bar component with hover tooltip
+function ProficiencyBar({
+    metricKey,
+    label,
+    score,
+    trend,
+    isDark,
+}: {
+    metricKey: string;
+    label: string;
+    score: number;
+    trend?: "improving" | "declining" | "stagnant" | null;
+    isDark: boolean;
+}) {
+    const statusColor = getStatusColor(score, isDark);
+    const reasoningSteps = getReasoningSteps(metricKey);
+
+    const itemVariants = {
+        hidden: { opacity: 0, x: -20 },
+        visible: {
+            opacity: 1,
+            x: 0,
+            transition: { type: "spring" as const, stiffness: 300, damping: 24 }
+        }
+    };
+
+    return (
+        <motion.div
+            variants={itemVariants}
+            className="group relative"
+        >
+            <div className="flex items-center justify-between mb-1.5 gap-2">
+                <span className={`text-sm font-medium truncate cursor-help ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                    }`}>
+                    {label}
+                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                    {/* Colored Status Pill */}
+                    <span className={`
+                        text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide border
+                        ${score >= 80
+                            ? (isDark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200') + ' ambient-glow'
+                            : score >= 60
+                                ? isDark ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-blue-50 text-blue-700 border-blue-200'
+                                : score >= 40
+                                    ? isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-700 border-amber-200'
+                                    : isDark ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-rose-50 text-rose-700 border-rose-200'
+                        }
+                    `}>
+                        {score >= 80 ? 'Strong' : score >= 60 ? 'Good' : score >= 40 ? 'Building' : 'Focus'}
+                    </span>
+
+                    {/* Trend Icon */}
+                    {trend === 'improving' && <MdTrendingUp className="text-emerald-500 trend-glow" />}
+                    {trend === 'declining' && <MdTrendingDown className="text-rose-500" />}
+                    {trend === 'stagnant' && <MdTrendingFlat className="text-slate-400" />}
+                    <span className={`text-sm font-bold tabular-nums ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                        }`}>
+                        {Math.round(score)}%
+                    </span>
+                </div>
+            </div>
+
+            {/* Proficiency Bar */}
+            <div className={`proficiency-bar ${isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"}`}>
+                <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min(score, 100)}%` }}
+                    transition={{ delay: 0.4, duration: 0.8, ease: [0.34, 1.56, 0.64, 1] }}
+                    className="proficiency-bar-fill barPulse"
+                    style={{
+                        backgroundColor: statusColor,
+                        "--pulse-color": statusColor,
+                    } as React.CSSProperties}
+                >
+                    {/* Pulse indicator on the edge */}
+                    <div
+                        className="proficiency-bar-pulse"
+                        style={{
+                            backgroundColor: statusColor,
+                            "--pulse-color": statusColor,
+                        } as React.CSSProperties}
+                    />
+                </motion.div>
+            </div>
+
+            {/* Hover Tooltip with Reasoning Steps */}
+            {reasoningSteps.length > 0 && (
+                <div className={`absolute left-0 right-0 top-full mt-2 p-3 rounded-xl border z-20
+                    opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none
+                    ${isDark
+                        ? "bg-bg-primary-dark border-border-dark shadow-lg"
+                        : "bg-white border-border-light shadow-lg"
+                    }`}
+                >
+                    <div className={`text-xs font-semibold mb-2 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                        }`}>
+                        Focus on these reasoning skills:
+                    </div>
+                    <ul className="space-y-1">
+                        {reasoningSteps.map((step, i) => (
+                            <li key={i} className={`text-xs flex items-start gap-2 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                                }`}>
+                                <span className="text-brand-primary-light dark:text-brand-primary-dark">•</span>
+                                {step}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+        </motion.div>
+    );
 }
 
 export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
@@ -97,236 +160,145 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
     className = "",
     error,
 }) => {
-    // Filter out reading_speed_wpm and ensure we have exactly 10 core metrics
-    const validCoreMetrics = React.useMemo(() => {
+    // Filter out reading_speed_wpm and sort by proficiency (weakest first)
+    const sortedMetrics = React.useMemo(() => {
         return (coreMetrics ?? [])
             .filter(m => m.dimension_key !== 'reading_speed_wpm')
+            .sort((a, b) => a.proficiency_score - b.proficiency_score)
             .slice(0, 10);
     }, [coreMetrics]);
 
-    const radarData = React.useMemo(
-        () => transformRadarData(validCoreMetrics),
-        [validCoreMetrics]
-    );
+    // Generate insight text based on data
+    const insightText = React.useMemo(() => {
+        if (sortedMetrics.length === 0) return null;
 
-    // Get colors from CSS variables
-    const getChartColors = React.useCallback(() => {
-        if (typeof window === 'undefined') return {
-            gridStroke: isDark ? '#292524' : '#E7E5E4',
-            textFill: isDark ? '#A7F3D0' : '#57534E',
-            radarStroke: isDark ? '#10B981' : '#0F5F53',
-            radarFill: isDark ? '#10B981' : '#0F5F53',
-            tooltipBg: isDark ? '#131C18' : '#FFFFFF',
-            tooltipBorder: isDark ? '#292524' : '#E7E5E4',
-            tooltipText: isDark ? '#ECFDF5' : '#1C1917',
-        };
+        const weakest = sortedMetrics[0];
+        const strongest = sortedMetrics[sortedMetrics.length - 1];
 
-        return {
-            gridStroke: isDark ? '#292524' : '#E7E5E4',
-            textFill: isDark ? '#A7F3D0' : '#57534E',
-            radarStroke: isDark ? '#10B981' : '#0F5F53',
-            radarFill: isDark ? '#10B981' : '#0F5F53',
-            tooltipBg: isDark ? '#131C18' : '#FFFFFF',
-            tooltipBorder: isDark ? '#292524' : '#E7E5E4',
-            tooltipText: isDark ? '#ECFDF5' : '#1C1917',
-        };
-    }, [isDark]);
-
-    const chartColors = getChartColors();
-
-    const tooltipStyle = React.useMemo(() => {
-        return {
-            backgroundColor: chartColors.tooltipBg,
-            border: `1px solid ${chartColors.tooltipBorder}`,
-            borderRadius: 12,
-            color: chartColors.tooltipText,
-        };
-    }, [chartColors]);
-
-    const weakestMetrics = React.useMemo(() => {
-        return [...validCoreMetrics]
-            .sort((a, b) => a.proficiency_score - b.proficiency_score)
-            .slice(0, 3);
-    }, [validCoreMetrics]);
+        if (weakest && strongest) {
+            const weakName = getMetricDisplayName(weakest.dimension_key);
+            return `Your weakest skill is ${weakName} at ${Math.round(weakest.proficiency_score)}%. Hover over any skill to see which reasoning patterns to practice.`;
+        }
+        return "Hover over any skill to see which reasoning patterns need your attention.";
+    }, [sortedMetrics]);
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1, duration: 0.5 }}
-            whileHover={{ scale: 1.01 }}
-            className={`rounded-2xl border p-6 overflow-hidden transition-all duration-300 shadow-lg ${isDark
-                ? "bg-bg-secondary-dark border-border-dark hover:border-brand-primary-dark/40 hover:shadow-brand-primary-dark/10"
-                : "bg-bg-secondary-light border-border-light hover:border-brand-primary-light/40 hover:shadow-brand-primary-light/10"
+            whileHover={{ scale: 1.02, y: -4 }}
+            className={`card-depth rounded-2xl sm:rounded-3xl border overflow-hidden transition-all duration-300 ${isDark
+                ? "bg-bg-secondary-dark border-border-dark"
+                : "bg-bg-secondary-light border-border-light"
                 } ${className}`}
         >
-            <div className="flex items-start justify-between gap-4">
-                <div>
-                    <h3
-                        className={`font-serif font-bold text-xl flex items-center gap-2 ${isDark
-                            ? "text-text-primary-dark"
-                            : "text-text-primary-light"
-                            }`}
-                    >
-                        <MdInsights
-                            className={
-                                isDark
-                                    ? "text-brand-primary-dark"
-                                    : "text-brand-primary-light"
+            {/* Gradient Header Accent */}
+            <div className={`h-1.5 sm:h-2 w-full ${isDark
+                ? 'bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500'
+                : 'bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400'
+                }`} />
+
+            <div className="p-4 sm:p-6">
+                {/* Header */}
+                <div className="mb-4 sm:mb-6">
+                    <div className="flex items-center gap-3">
+                        <div className={`
+                            p-2.5 sm:p-3 rounded-xl sm:rounded-2xl
+                            ${isDark
+                                ? 'bg-violet-500/20'
+                                : 'bg-violet-100'
                             }
-                        />
-                        Cognitive Skill Map
-                    </h3>
-                    <p
-                        className={`text-sm mt-1 ${isDark
-                            ? "text-text-secondary-dark"
-                            : "text-text-secondary-light"
-                            }`}
-                    >
-                        Your thinking patterns and cognitive strengths visualized.
-                    </p>
-                </div>
-            </div>
-
-            <div className="mt-6">
-                {error ? (
-                    <div
-                        className={`text-sm ${isDark ? "text-rose-300" : "text-rose-700"
-                            }`}
-                    >
-                        Error loading skill radar.
-                    </div>
-                ) : isLoading ? (
-                    <div className="space-y-3">
-                        <div className="animate-pulse h-48 rounded-xl bg-bg-tertiary-light dark:bg-bg-tertiary-dark bg-opacity-60" />
-                        <div className="animate-pulse h-4 w-3/4 rounded bg-bg-tertiary-light dark:bg-bg-tertiary-dark bg-opacity-60" />
-                    </div>
-                ) : radarData.length < 3 ? (
-                    <div
-                        className={`text-sm ${isDark
-                            ? "text-text-secondary-dark"
-                            : "text-text-secondary-light"
-                            }`}
-                    >
-                        Not enough core-skill data yet. Complete more practice sessions
-                        to see your radar chart.
-                    </div>
-                ) : (
-                    <div className="h-64 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <RadarChart data={radarData} outerRadius="75%">
-                                <PolarGrid
-                                    stroke={chartColors.gridStroke}
-                                />
-                                <PolarAngleAxis
-                                    dataKey="skill"
-                                    tick={{
-                                        fill: chartColors.textFill,
-                                        fontSize: 11,
-                                    }}
-                                />
-                                <PolarRadiusAxis
-                                    angle={90}
-                                    domain={[0, 100]}
-                                    tick={{
-                                        fill: chartColors.textFill,
-                                        fontSize: 10,
-                                    }}
-                                />
-
-                                <Radar
-                                    dataKey="score"
-                                    stroke={chartColors.radarStroke}
-                                    fill={chartColors.radarFill}
-                                    fillOpacity={0.25}
-                                    strokeWidth={2}
-                                    dot={(p) => (
-                                        <CustomDot {...p} isDark={isDark} metricData={validCoreMetrics} />
-                                    )}
-                                />
-
-                                <Tooltip
-                                    contentStyle={tooltipStyle}
-                                    content={({ active, payload }) => {
-                                        if (active && payload && payload.length > 0) {
-                                            const data = payload[0].payload;
-                                            return (
-                                                <div style={tooltipStyle} className="p-3 text-xs">
-                                                    <div className="font-semibold mb-1">{data.skill}</div>
-                                                    <div>Proficiency: {data.score}/100</div>
-                                                    <div>Confidence: {Math.round((data.confidence || 0) * 100)}%</div>
-                                                    <div>Trend: {data.trend || 'stagnant'}</div>
-                                                </div>
-                                            );
-                                        }
-                                        return null;
-                                    }}
-                                />
-                            </RadarChart>
-                        </ResponsiveContainer>
-                    </div>
-                )}
-
-                {!isLoading && radarData.length >= 3 && (
-                    <>
-                        <div
-                            className={`mt-4 text-xs ${isDark
-                                ? "text-text-muted-dark"
-                                : "text-text-muted-light"
-                                }`}
-                        >
-                            Chart shows your cognitive skill profile. Thicker dots = higher confidence.
-                            <br />Shape asymmetry reveals your thinking patterns and imbalances.
+                        `}>
+                            <MdInsights className={`text-xl sm:text-2xl ${isDark ? "text-violet-400" : "text-violet-600"
+                                }`} />
                         </div>
-
-                        {/* Action Strip - Cognitive Analysis */}
-                        {weakestMetrics.length > 0 && (
-                            <div className={`mt-6 p-4 rounded-xl border ${isDark
-                                ? "bg-rose-900/20 border-rose-800/30"
-                                : "bg-rose-50 border-rose-200"
+                        <div>
+                            <h3 className={`font-bold text-lg sm:text-xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
                                 }`}>
-                                <div className={`flex items-center gap-2 mb-3 ${isDark ? "text-rose-300" : "text-rose-700"
+                                Skill Proficiency
+                            </h3>
+                            {insightText && (
+                                <p className={`text-xs sm:text-sm mt-0.5 line-clamp-2 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
                                     }`}>
-                                    <MdInsights size={18} />
-                                    <h4 className="font-semibold">Cognitive Focus Areas</h4>
+                                    {insightText}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+                {/* Content */}
+                <div>
+                    {error ? (
+                        <div className={`text-sm ${isDark ? "text-rose-300" : "text-rose-700"}`}>
+                            Error loading skill data.
+                        </div>
+                    ) : isLoading ? (
+                        <div className="space-y-4">
+                            {[...Array(6)].map((_, i) => (
+                                <div key={i} className="space-y-2">
+                                    <div className="animate-pulse h-4 w-32 rounded bg-bg-tertiary-light dark:bg-bg-tertiary-dark" />
+                                    <div className="animate-pulse h-2 w-full rounded-full bg-bg-tertiary-light dark:bg-bg-tertiary-dark" />
                                 </div>
+                            ))}
+                        </div>
+                    ) : sortedMetrics.length < 3 ? (
+                        <div className={`text-sm py-8 text-center ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                            }`}>
+                            Not enough skill data yet. Complete more practice sessions to see your proficiency breakdown.
+                        </div>
+                    ) : (
+                        <>
+                            {/* Proficiency Bars */}
+                            <motion.div
+                                className="space-y-4"
+                                variants={{
+                                    hidden: { opacity: 0 },
+                                    visible: {
+                                        opacity: 1,
+                                        transition: {
+                                            staggerChildren: 0.1
+                                        }
+                                    }
+                                }}
+                                initial="hidden"
+                                animate="visible"
+                            >
+                                {sortedMetrics.map((metric) => (
+                                    <ProficiencyBar
+                                        key={metric.id}
+                                        metricKey={metric.dimension_key}
+                                        label={getMetricDisplayName(metric.dimension_key)}
+                                        score={metric.proficiency_score}
+                                        trend={metric.trend}
+                                        isDark={isDark}
+                                    />
+                                ))}
+                            </motion.div>
 
-                                <div className="space-y-3">
-                                    {weakestMetrics.map((metric, index) => {
-                                        const metricDef = coreMetricsDefinition.metrics.find(
-                                            m => m.metric_key === metric.dimension_key
-                                        );
-                                        const displayName = metricDef ? metricDef.metric_key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : metric.dimension_key;
-
-                                        return (
-                                            <div key={metric.id} className="border-l-4 pl-3"
-                                                style={{ borderColor: isDark ? '#ef4444' : '#dc2626' }}>
-                                                <div className={`text-sm font-semibold mb-1 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                                                    }`}>
-                                                    #{index + 1} {displayName}
-                                                </div>
-                                                <div className={`text-xs mb-2 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
-                                                    }`}>
-                                                    What's failing: {getCognitiveFailureReason(metric.dimension_key)}
-                                                </div>
-                                                <div className={`text-xs font-medium flex items-center gap-1 ${isDark ? "text-rose-300" : "text-rose-700"
-                                                    }`}>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+                            {/* Legend */}
+                            <div className={`mt-6 pt-4 border-t flex flex-wrap gap-4 text-xs ${isDark ? "border-border-dark text-text-muted-dark" : "border-border-light text-text-muted-light"
+                                }`}>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: isDark ? "#34D399" : "#059669" }} />
+                                    <span>80%+ Strong</span>
                                 </div>
-
-                                <div className={`mt-4 pt-3 border-t text-xs ${isDark
-                                    ? "border-rose-800/30 text-rose-300/70"
-                                    : "border-rose-200 text-rose-600/70"
-                                    }`}>
-                                    Focus on these areas to strengthen your cognitive foundation and improve overall performance.
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: isDark ? "#6EE7B7" : "#10B981" }} />
+                                    <span>60-80% Good</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: isDark ? "#FBBF24" : "#D97706" }} />
+                                    <span>40-60% Develop</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: isDark ? "#F87171" : "#DC2626" }} />
+                                    <span>&lt;40% Focus</span>
                                 </div>
                             </div>
-                        )}
-                    </>
-                )}
+                        </>
+                    )}
+                </div>
             </div>
         </motion.div>
     );
