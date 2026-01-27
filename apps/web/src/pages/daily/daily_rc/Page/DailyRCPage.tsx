@@ -74,7 +74,7 @@ const DailyRCPage: React.FC = () => {
         undefined,
         { skip: !!examId }
     );
-    
+
     const { data: specificTestData, isLoading: isSpecificTestDataLoading } = useFetchDailyTestByIdQuery(
         { exam_id: examId ? examId : "" },
         { skip: !examId }
@@ -421,9 +421,9 @@ const DailyRCPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-2 md:gap-4">
-                    <div className="w-20 md:w-32 h-2 rounded-full bg-gray-200 overflow-hidden">
+                    <div className={`w-20 md:w-32 h-2 rounded-full overflow-hidden ${isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"}`}>
                         <div
-                            className="h-full bg-blue-600 transition-all duration-300"
+                            className={`h-full transition-all duration-300 ${isDark ? "bg-brand-primary-dark" : "bg-brand-primary-light"}`}
                             style={{
                                 width: `${(progress.answered / questions.length) * 100}%`,
                             }}
@@ -580,7 +580,7 @@ const DailyRCPage: React.FC = () => {
                         </button>
                         <button
                             onClick={handleFinishExam}
-                            className="px-4 md:px-6 py-2 md:py-3 bg-green-600 text-white rounded-xl font-medium text-sm md:text-base hover:scale-105 transition-all duration-200"
+                            className={`px-4 md:px-6 py-2 md:py-3 text-white rounded-xl font-medium text-sm md:text-base hover:scale-105 transition-all duration-200 ${isDark ? "bg-success" : "bg-success"}`}
                         >
                             Submit
                         </button>

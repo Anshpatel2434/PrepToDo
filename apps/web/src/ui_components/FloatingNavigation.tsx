@@ -74,8 +74,8 @@ const navigationItems: NavigationItem[] = [
         id: "dashboard",
         label: "Dashboard",
         icon: <MdInsertChart className="text-lg" />,
-        iconColorLight: "text-cyan-600",
-        iconColorDark: "text-cyan-400",
+        iconColorLight: "text-brand-secondary-light",
+        iconColorDark: "text-brand-secondary-dark",
         path: "/dashboard",
         description: "Your study overview",
     },
@@ -83,8 +83,8 @@ const navigationItems: NavigationItem[] = [
         id: "about",
         label: "About",
         icon: <MdInfo className="text-lg" />,
-        iconColorLight: "text-slate-600",
-        iconColorDark: "text-slate-300",
+        iconColorLight: "text-text-secondary-light",
+        iconColorDark: "text-text-secondary-dark",
         path: "/about",
         description: "Learn about us",
     },
@@ -101,8 +101,8 @@ const navigationItems: NavigationItem[] = [
         id: "customized-mocks",
         label: "Custom Mocks",
         icon: <MdDashboardCustomize className="text-lg" />,
-        iconColorLight: "text-indigo-600",
-        iconColorDark: "text-indigo-400",
+        iconColorLight: "text-graph-strategy-light",
+        iconColorDark: "text-graph-strategy-dark",
         path: "/customized-mocks",
         description: "Personalized mock tests",
     },
@@ -284,16 +284,16 @@ export const FloatingNavigation: React.FC = () => {
                             <div>
                                 <h1
                                     className={`text-2xl font-serif font-bold ${isDark
-                                            ? "text-text-primary-dark"
-                                            : "text-text-primary-light"
+                                        ? "text-text-primary-dark"
+                                        : "text-text-primary-light"
                                         }`}
                                 >
                                     PrepToDo
                                 </h1>
                                 <p
                                     className={`text-sm ${isDark
-                                            ? "text-text-secondary-dark"
-                                            : "text-text-secondary-light"
+                                        ? "text-text-secondary-dark"
+                                        : "text-text-secondary-light"
                                         }`}
                                 >
                                     AI Study Platform
@@ -444,8 +444,8 @@ export const FloatingNavigation: React.FC = () => {
                                         <div className="font-medium">{item.label}</div>
                                         <div
                                             className={`text-xs ${isDark
-                                                    ? "text-text-muted-dark"
-                                                    : "text-text-muted-light"
+                                                ? "text-text-muted-dark"
+                                                : "text-text-muted-light"
                                                 }`}
                                         >
                                             {item.description}
@@ -500,7 +500,9 @@ export const FloatingNavigation: React.FC = () => {
                                 className={`
               flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 hover:cursor-pointer
               ${isLogoutLoading
-                                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                        ? isDark
+                                            ? "bg-bg-tertiary-dark text-text-muted-dark cursor-not-allowed"
+                                            : "bg-bg-tertiary-light text-text-muted-light cursor-not-allowed"
                                         : "bg-brand-primary-light hover:bg-brand-primary-hover-light dark:bg-brand-primary-dark dark:hover:bg-brand-primary-hover-dark text-white shadow-lg hover:shadow-xl"
                                     }
             `}

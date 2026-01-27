@@ -9,55 +9,65 @@
      BACKGROUND COLORS - Use as: bg-bg-primary-light, bg-bg-primary-dark
      Research-Based: Minimize eye strain (asthenopia) + WCAG AA compliance
      ───────────────────────────────────────────────────────────────────────── */
-    --color-bg-primary-light: #faf9ef; /* Warm Alabaster - mimics paper, reduces blue-light glare */
-    --color-bg-secondary-light: #f5f4e8;
-    --color-bg-tertiary-light: #ece8d8;
+    /* LIGHT THEME (Warm Stone) */
+    --color-bg-primary-light: #f2f2f0;    /* Base Canvas */
+    --color-bg-secondary-light: #f8f8f6;  /* Card Elevation */
+    --color-bg-tertiary-light: #ffffff;   /* Modal/Active Elevation */
 
-    --color-bg-primary-dark: #121212; /* Dark Gray - prevents "smearing" on OLED screens */
-    --color-bg-secondary-dark: #1a1a1a;
-    --color-bg-tertiary-dark: #2a2a2a;
+    /* NEW DARK THEME (Deep Obsidian & Slate) */
+    --color-bg-primary-dark: #0a0a0b;    /* Deep Canvas */
+    --color-bg-secondary-dark: #141417;  /* Card/Surface */
+    --color-bg-tertiary-dark: #1c1c21;   /* Modal/Overlay */
 
-/* ─────────────────────────────────────────────────────────────────────────
-     TEXT COLORS - High readability Slate Blue
-     ───────────────────────────────────────────────────────────────────────── */
-    --color-text-primary-light: #1d2a30; /* Deep slate blue */
-    --color-text-secondary-light: #415158;
-    --color-text-muted-light: #6b7280;
+    /* Light Theme - Perfect (Stone Palette) */
+    --color-text-primary-light: #1C1917;   /* Stone 900 */
+    --color-text-secondary-light: #57534E; /* Stone 600 */
+    --color-text-muted-light: #78716C;     /* Stone 500 */
 
-    --color-text-primary-dark: #f2f4f5;
-    --color-text-secondary-dark: #e1e7ea;
-    --color-text-muted-dark: #94a3b8;
-
-    /* ─────────────────────────────────────────────────────────────────────────
-     BRAND COLORS - Deep Teal (Trust) & Warm Amber (Achievement)
-     ───────────────────────────────────────────────────────────────────────── */
-    --color-brand-primary-light: #0d7377; /* Deep Teal - Focus & Trust */
-    --color-brand-primary-hover-light: #0a5c5f;
-    --color-brand-secondary-light: #14919b; /* Supporting Teal */
-    --color-brand-accent-light: #d4a039; /* Warm Amber Gold - Achievement */
-
-    --color-brand-primary-dark: #5bb5b8; /* Bright Teal for visibility */
-    --color-brand-primary-hover-dark: #7ec8ca;
-    --color-brand-secondary-dark: #45a0a5;
-    --color-brand-accent-dark: #e8b84a; /* Warm Amber Glow */
+    /* Dark Theme - Corrected (Slate/Steel Palette) */
+    --color-text-primary-dark: #f5f6f7;   /* Crisp Slate - Main Text */
+    --color-text-secondary-dark: #e1e4e8; /* Muted Steel - Rationales */
+    --color-text-muted-dark: #c6cacf;     /* Slate Gray - Metadata */
 
     /* ─────────────────────────────────────────────────────────────────────────
-     SEMANTIC COLORS - Updated for PrepTodo System
+     BRAND COLORS - PrepToDo Teal (Primary) with derived variants
+     Primary: #0F5F53 (Teal) for trust & focus
+     Accent: #14E38A (Neon Mint) for success & progress
      ───────────────────────────────────────────────────────────────────────── */
-    --color-success: #28a745;
-    --color-warning: #ffc107;
-    --color-error: #dc3545;
-    --color-info: #17a2b8;
-    --color-gold-decoration: #ffc107; 
-    --color-gold-text: #d4a039;
+    --color-brand-primary-light: #0F5F53; /* PrepToDo Teal - primary buttons, active states */
+    --color-brand-primary-hover-light: #0A4A40; /* Darker teal for hover - derived */
+    --color-brand-secondary-light: #14B8A6; /* Teal 500 - secondary actions, derived */
+    --color-brand-accent-light: #14E38A; /* Neon Mint - progress bars, streaks, success */
+
+    --color-brand-primary-dark: #10B981; /* Emerald 500 - primary for dark mode */
+    --color-brand-primary-hover-dark: #34D399; /* Emerald 400 - hover state */
+    --color-brand-secondary-dark: #059669; /* Emerald 600 - secondary actions, derived */
+    --color-brand-accent-dark: #34D399; /* Emerald 400 - progress, streaks */
+
+    /* ─────────────────────────────────────────────────────────────────────────
+     SEMANTIC COLORS - Status and feedback colors
+     ───────────────────────────────────────────────────────────────────────── */
+    --color-success: #10B981; /* Emerald 500 - correct answers, achievements */
+    --color-warning: #F59E0B; /* Amber 500 - warnings */
+    --color-error: #DC2626; /* Red 600 - errors, incorrect answers (light mode) */
+    --color-error-dark: #F87171; /* Red 400 - errors (dark mode) */
+    --color-info: #3B82F6; /* Blue 500 - informational */
+    
+    /* ─────────────────────────────────────────────────────────────────────────
+     Analytics COLORS - For AI reasoning visualization
+     ───────────────────────────────────────────────────────────────────────── */
+    --color-analytics-light: #2563EB; /* Blue 600 - Insight Blue for concepts */
+    --color-analytics-dark: #60A5FA; /* Blue 400 - concepts in dark mode */
+    --color-strategy-light: #7C3AED; /* Violet 600 - strategies */
+    --color-strategy-dark: #A78BFA; /* Violet 400 - strategies in dark mode */
 
         /* ─────────────────────────────────────────────────────────────────────────
-     BORDER COLORS - Use as: border-border-light, border-border-dark
+     BORDER COLORS - Subtle borders derived from background colors
      ───────────────────────────────────────────────────────────────────────── */
-    --color-border-light: #d1d5db;
-    --color-border-lighter: #e5e7eb;
-    --color-border-dark: #4a5568;
-    --color-border-darker: #718096;
+    --color-border-light: #E7E5E4; /* Stone 200 - standard borders */
+    --color-border-lighter: #F5F5F4; /* Stone 100 - lighter borders */
+    --color-border-dark: #292524; /* Stone 800 - dark mode borders */
+    --color-border-darker: #44403C; /* Stone 700 - darker borders in dark mode */
 
     /* ─────────────────────────────────────────────────────────────────────────
      ANIMATIONS
@@ -224,48 +234,6 @@
    (No inline styles, no component-level colors)
    ═══════════════════════════════════════════════════════════════════════════ */
 
-@layer components {
-    .dashboard-panel {
-        @apply rounded-2xl border;
-    }
-
-    .dashboard-heat-0-light {
-        @apply bg-bg-tertiary-light border-border-light/60;
-    }
-    .dashboard-heat-1-light {
-        @apply bg-brand-primary-light/15 border-border-light/60;
-    }
-    .dashboard-heat-2-light {
-        @apply bg-brand-primary-light/30 border-border-light/60;
-    }
-    .dashboard-heat-3-light {
-        @apply bg-brand-primary-light/50 border-border-light/60;
-    }
-    .dashboard-heat-4-light {
-        @apply bg-brand-primary-light border-border-light/60;
-    }
-
-    .dashboard-heat-0-dark {
-        @apply bg-bg-tertiary-dark border-border-dark/70;
-    }
-    .dashboard-heat-1-dark {
-        @apply bg-brand-primary-dark/15 border-border-dark/70;
-    }
-    .dashboard-heat-2-dark {
-        @apply bg-brand-primary-dark/30 border-border-dark/70;
-    }
-    .dashboard-heat-3-dark {
-        @apply bg-brand-primary-dark/55 border-border-dark/70;
-    }
-    .dashboard-heat-4-dark {
-        @apply bg-brand-primary-dark border-border-dark/70;
-    }
-
-    progress.dashboard-meter {
-        @apply w-full h-2;
-    }
-}
-
 progress.dashboard-meter {
     appearance: none;
     border-radius: 9999px;
@@ -353,18 +321,18 @@ progress.dashboard-meter {
 }
 
 .scrollbar-light::-webkit-scrollbar-track {
-    background: #f5f4e8;
+    background: #F5F5F4; /* Stone 100 */
     border-radius: 4px;
 }
 
 .scrollbar-light::-webkit-scrollbar-thumb {
-    background: #6b7280;
+    background: #78716C; /* Stone 500 */
     border-radius: 4px;
     transition: background 0.3s ease;
 }
 
 .scrollbar-light::-webkit-scrollbar-thumb:hover {
-    background: #58595b;
+    background: #57534E; /* Stone 600 */
 }
 
 .scrollbar-dark::-webkit-scrollbar {
@@ -373,18 +341,18 @@ progress.dashboard-meter {
 }
 
 .scrollbar-dark::-webkit-scrollbar-track {
-    background: #2a2a2a;
+    background: #1C2822; /* Dark green tertiary */
     border-radius: 4px;
 }
 
 .scrollbar-dark::-webkit-scrollbar-thumb {
-    background: #d1d5db;
+    background: #A7F3D0; /* Emerald 200 */
     border-radius: 4px;
     transition: background 0.3s ease;
 }
 
 .scrollbar-dark::-webkit-scrollbar-thumb:hover {
-    background: #e5e7eb;
+    background: #ECFDF5; /* Mint White */
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

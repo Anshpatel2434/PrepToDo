@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useTeachConceptMutation } from "../redux_usecases/teachConceptApi";
+import { useTheme } from "../../../context/ThemeContext";
 
 type theory = string;
 
 const TeachConceptPage = () => {
+	const { isDark } = useTheme();
 	const [teachConcept, { isLoading }] = useTeachConceptMutation();
 	const theoryQuery = "How to identify the authors Tone ? ";
 
@@ -24,14 +26,14 @@ const TeachConceptPage = () => {
 	}
 
 	return (
-		<div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-			<div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+		<div className={`min-h-screen flex items-center justify-center p-4 ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"}`}>
+			<div className={`w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden border ${isDark ? "bg-bg-secondary-dark border-border-dark" : "bg-bg-secondary-light border-border-light"}`}>
 				{/* Header / Query Section */}
-				<div className="bg-slate-900 p-8 text-white">
-					<h2 className="text-xs font-bold tracking-widest text-indigo-400 uppercase mb-2">
+				<div className={`p-8 ${isDark ? "bg-bg-tertiary-dark" : "bg-brand-primary-light"}`}>
+					<h2 className={`text-xs font-bold tracking-widest uppercase mb-2 ${isDark ? "text-brand-accent-dark" : "text-brand-accent-light"}`}>
 						Current Query
 					</h2>
-					<p className="text-xl font-medium leading-relaxed">"{theoryQuery}"</p>
+					<p className={`text-xl font-medium leading-relaxed ${isDark ? "text-text-primary-dark" : "text-white"}`}>"{theoryQuery}"</p>
 				</div>
 
 				{/* Content Area */}
@@ -42,40 +44,43 @@ const TeachConceptPage = () => {
 						disabled={isLoading}
 						className={`
                             w-full py-4 px-6 rounded-lg font-bold text-lg transition-all duration-200 shadow-md hover:cursor-pointer
-                            ${
-															isLoading
-																? "bg-gray-100 text-gray-400 cursor-not-allowed border-2 border-gray-200"
-																: "bg-indigo-600 hover:bg-indigo-700 text-white hover:shadow-lg active:scale-[0.98]"
-														}
+                            ${isLoading
+								? isDark
+									? "bg-bg-tertiary-dark text-text-muted-dark cursor-not-allowed border-2 border-border-dark"
+									: "bg-bg-tertiary-light text-text-muted-light cursor-not-allowed border-2 border-border-light"
+								: isDark
+									? "bg-brand-primary-dark hover:bg-brand-primary-hover-dark text-white hover:shadow-lg active:scale-[0.98]"
+									: "bg-brand-primary-light hover:bg-brand-primary-hover-light text-white hover:shadow-lg active:scale-[0.98]"
+							}
                         `}
 					>
 						{isLoading ? "Processing..." : "Ab to sikhade yaar 🚀"}
 					</button>
 
-					<hr className="border-gray-100" />
+					<hr className={`${isDark ? "border-border-dark" : "border-border-light"}`} />
 
 					{/* Result / Loading State */}
 					<div className="min-h-[200px] flex flex-col justify-center">
 						{isLoading ? (
 							<div className="text-center space-y-4">
-								<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+								<div className={`animate-spin rounded-full h-12 w-12 border-b-2 mx-auto ${isDark ? "border-brand-primary-dark" : "border-brand-primary-light"}`}></div>
 								{/* Kept your custom text, just styled to fit the container */}
-								<h1 className="text-xl font-bold text-indigo-600 animate-pulse">
+								<h1 className={`text-xl font-bold animate-pulse ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}`}>
 									RUKJA THODI DER KAAAKEE !!!!!!
 								</h1>
 							</div>
 						) : theoryText ? (
-							<div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-								<h3 className="text-sm font-bold text-gray-500 mb-4 uppercase">
+							<div className={`rounded-xl p-6 border ${isDark ? "bg-bg-tertiary-dark border-border-dark" : "bg-bg-tertiary-light border-border-light"}`}>
+								<h3 className={`text-sm font-bold mb-4 uppercase ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
 									Explanation
 								</h3>
 								{/* Changed h1 to div/p for better readability on long text */}
-								<div className="text-gray-800 leading-7 text-lg whitespace-pre-wrap font-sans">
+								<div className={`leading-7 text-lg whitespace-pre-wrap font-sans ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
 									{theoryText}
 								</div>
 							</div>
 						) : (
-							<div className="text-center text-gray-400 italic">
+							<div className={`text-center italic ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>
 								Click the button above to start learning...
 							</div>
 						)}

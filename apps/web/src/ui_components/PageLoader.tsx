@@ -33,8 +33,8 @@ export const PageLoader: React.FC = () => {
                     animate-spring-in
                     rounded-sm
                     ${isDark
-                        ? "bg-brand-accent-dark shadow-[0_0_20px_rgba(232,184,74,0.4)]"
-                        : "bg-brand-accent-light shadow-[0_0_20px_rgba(212,160,57,0.4)]"
+                        ? "bg-brand-accent-dark shadow-[0_0_20px_rgba(20,227,138,0.5)]"
+                        : "bg-brand-accent-light shadow-[0_0_20px_rgba(20,227,138,0.4)]"
                     }
                     animate-pulse
                 `} />

@@ -52,8 +52,8 @@ const MockCard = React.memo<MockCardProps>(({ mock, index, isDark }) => {
                 text: shortMessage,
                 fullMessage: message,
                 bgClass: isDark
-                    ? "bg-purple-900/30 text-purple-400"
-                    : "bg-purple-100 text-purple-700",
+                    ? "bg-graph-strategy-dark/30 text-graph-strategy-dark"
+                    : "bg-graph-strategy-light/10 text-graph-strategy-light",
                 animate: true,
             };
         }
@@ -65,8 +65,8 @@ const MockCard = React.memo<MockCardProps>(({ mock, index, isDark }) => {
                 text: "Failed",
                 fullMessage: generationData.state.error_message || "Generation failed",
                 bgClass: isDark
-                    ? "bg-red-900/30 text-red-400"
-                    : "bg-red-100 text-red-700",
+                    ? "bg-error/20 text-error"
+                    : "bg-error/10 text-error",
                 animate: false,
             };
         }
@@ -80,8 +80,8 @@ const MockCard = React.memo<MockCardProps>(({ mock, index, isDark }) => {
                 text: "Generating...",
                 fullMessage: "Generating your customized mock...",
                 bgClass: isDark
-                    ? "bg-purple-900/30 text-purple-400"
-                    : "bg-purple-100 text-purple-700",
+                    ? "bg-graph-strategy-dark/30 text-graph-strategy-dark"
+                    : "bg-graph-strategy-light/10 text-graph-strategy-light",
                 animate: true,
             };
         }
@@ -94,8 +94,8 @@ const MockCard = React.memo<MockCardProps>(({ mock, index, isDark }) => {
                     text: "Completed",
                     fullMessage: "Test completed",
                     bgClass: isDark
-                        ? "bg-green-900/30 text-green-400"
-                        : "bg-green-100 text-green-700",
+                        ? "bg-success/20 text-success"
+                        : "bg-success/10 text-success",
                     animate: false,
                 };
             case "in_progress":
@@ -104,8 +104,8 @@ const MockCard = React.memo<MockCardProps>(({ mock, index, isDark }) => {
                     text: "In Progress",
                     fullMessage: "Test in progress",
                     bgClass: isDark
-                        ? "bg-yellow-900/30 text-yellow-400"
-                        : "bg-yellow-100 text-yellow-700",
+                        ? "bg-warning/20 text-warning"
+                        : "bg-warning/10 text-warning",
                     animate: false,
                 };
             case "not_started":

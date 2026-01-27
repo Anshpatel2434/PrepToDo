@@ -419,7 +419,7 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
                                                     : "bg-brand-primary-light text-white")
                                                 : (isDark
                                                     ? "bg-bg-tertiary-dark text-text-secondary-dark border-2 border-border-dark"
-                                                    : "bg-white text-text-secondary-light border-2 border-border-light")
+                                                    : "bg-bg-secondary-light text-text-secondary-light border-2 border-border-light")
                                             }
                                         `}
                                     >
@@ -526,7 +526,7 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
                                                     px-3 py-2 rounded-lg text-xs font-medium transition-all text-left flex items-center justify-between
                                                     ${isSelected
                                                         ? (isDark ? "bg-brand-primary-dark text-white" : "bg-brand-primary-light text-white")
-                                                        : (isDark ? "bg-bg-secondary-dark text-text-secondary-dark border border-border-dark hover:border-brand-primary-dark" : "bg-white text-text-secondary-light border border-border-light hover:border-brand-primary-light")
+                                                        : (isDark ? "bg-bg-secondary-dark text-text-secondary-dark border border-border-dark hover:border-brand-primary-dark" : "bg-bg-secondary-light text-text-secondary-light border border-border-light hover:border-brand-primary-light")
                                                     }
                                                 `}
                                             >

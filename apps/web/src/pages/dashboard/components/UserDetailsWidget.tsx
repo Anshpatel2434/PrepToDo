@@ -32,12 +32,12 @@ function Stat({
     return (
         <div
             className={`flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 ${highlight
-                    ? isDark
-                        ? "bg-gradient-to-br from-brand-primary-dark/10 to-brand-accent-dark/10 border-brand-primary-dark/30 shadow-lg shadow-brand-primary-dark/10"
-                        : "bg-gradient-to-br from-brand-primary-light/10 to-brand-accent-light/10 border-brand-primary-light/30 shadow-lg shadow-brand-primary-light/10"
-                    : isDark
-                        ? "bg-bg-tertiary-dark border-border-dark hover:border-border-darker"
-                        : "bg-bg-tertiary-light border-border-light hover:border-gray-300"
+                ? isDark
+                    ? "bg-gradient-to-br from-brand-primary-dark/10 to-brand-accent-dark/10 border-brand-primary-dark/30 shadow-lg shadow-brand-primary-dark/10"
+                    : "bg-gradient-to-br from-brand-primary-light/10 to-brand-accent-light/10 border-brand-primary-light/30 shadow-lg shadow-brand-primary-light/10"
+                : isDark
+                    ? "bg-bg-tertiary-dark border-border-dark hover:border-border-darker"
+                    : "bg-bg-tertiary-light border-border-light hover:border-border-light"
                 }`}
         >
             <div
@@ -149,8 +149,8 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                                 </div>
                                 {practicedToday && (
                                     <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full border-2 ${isDark
-                                            ? "bg-brand-accent-dark border-bg-secondary-dark"
-                                            : "bg-brand-accent-light border-bg-secondary-light"
+                                        ? "bg-brand-accent-dark border-bg-secondary-dark"
+                                        : "bg-brand-accent-light border-bg-secondary-light"
                                         } shadow-lg`} title="Practiced today!" />
                                 )}
                             </div>

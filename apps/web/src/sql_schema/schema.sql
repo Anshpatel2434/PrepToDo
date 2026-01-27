@@ -115,10 +115,31 @@ CREATE TABLE public.error_patterns (
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT error_patterns_pkey PRIMARY KEY (key)
 );
+CREATE TABLE public.exam_generation_state (
+  exam_id uuid NOT NULL,
+  status text NOT NULL CHECK (status = ANY (ARRAY['initializing'::text, 'generating_passages'::text, 'generating_rc_questions'::text, 'generating_va_questions'::text, 'selecting_answers'::text, 'generating_rc_rationales'::text, 'generating_va_rationales'::text, 'completed'::text, 'failed'::text])),
+  current_step integer DEFAULT 1,
+  total_steps integer DEFAULT 7,
+  articles_data jsonb,
+  passages_ids ARRAY,
+  rc_question_ids ARRAY,
+  va_question_ids ARRAY,
+  reference_passages_content ARRAY,
+  reference_data_rc jsonb,
+  reference_data_va jsonb,
+  user_id uuid,
+  params jsonb NOT NULL,
+  error_message text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  genre text,
+  CONSTRAINT exam_generation_state_pkey PRIMARY KEY (exam_id),
+  CONSTRAINT exam_generation_state_exam_id_fkey FOREIGN KEY (exam_id) REFERENCES public.exam_papers(id)
+);
 CREATE TABLE public.exam_papers (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   name text NOT NULL,
-  year integer NOT NULL,
+  year integer,
   exam_type text DEFAULT 'CAT'::text,
   slot text,
   is_official boolean DEFAULT true,
@@ -126,6 +147,8 @@ CREATE TABLE public.exam_papers (
   used_articles_id ARRAY,
   generated_by_user_id uuid,
   time_limit_minutes integer,
+  generation_status text DEFAULT 'completed'::text CHECK (generation_status = ANY (ARRAY['initializing'::text, 'generating'::text, 'completed'::text, 'failed'::text])),
+  updated_at timestamp with time zone,
   CONSTRAINT exam_papers_pkey PRIMARY KEY (id),
   CONSTRAINT exam_papers_generated_by_user_id_fkey FOREIGN KEY (generated_by_user_id) REFERENCES auth.users(id)
 );
@@ -244,8 +267,10 @@ CREATE TABLE public.passages (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   paper_id uuid,
+  article_id uuid,
   CONSTRAINT passages_pkey PRIMARY KEY (id),
-  CONSTRAINT passages_paper_id_fkey FOREIGN KEY (paper_id) REFERENCES public.exam_papers(id)
+  CONSTRAINT passages_paper_id_fkey FOREIGN KEY (paper_id) REFERENCES public.exam_papers(id),
+  CONSTRAINT passages_article_id_fkey FOREIGN KEY (article_id) REFERENCES public.articles(id)
 );
 CREATE TABLE public.peer_challenges (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -301,9 +326,9 @@ CREATE TABLE public.practice_sessions (
   is_analysed boolean DEFAULT false,
   analytics jsonb,
   CONSTRAINT practice_sessions_pkey PRIMARY KEY (id),
-  CONSTRAINT practice_sessions_paper_id_fkey FOREIGN KEY (paper_id) REFERENCES public.exam_papers(id),
   CONSTRAINT practice_sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.user_profiles(id),
-  CONSTRAINT practice_sessions_group_id_fkey FOREIGN KEY (group_id) REFERENCES public.study_groups(id)
+  CONSTRAINT practice_sessions_group_id_fkey FOREIGN KEY (group_id) REFERENCES public.study_groups(id),
+  CONSTRAINT practice_sessions_paper_id_fkey FOREIGN KEY (paper_id) REFERENCES public.exam_papers(id)
 );
 CREATE TABLE public.question_attempts (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),

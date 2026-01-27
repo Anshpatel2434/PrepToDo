@@ -109,14 +109,39 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
         [validCoreMetrics]
     );
 
-    const tooltipStyle = React.useMemo(() => {
+    // Get colors from CSS variables
+    const getChartColors = React.useCallback(() => {
+        if (typeof window === 'undefined') return {
+            gridStroke: isDark ? '#292524' : '#E7E5E4',
+            textFill: isDark ? '#A7F3D0' : '#57534E',
+            radarStroke: isDark ? '#10B981' : '#0F5F53',
+            radarFill: isDark ? '#10B981' : '#0F5F53',
+            tooltipBg: isDark ? '#131C18' : '#FFFFFF',
+            tooltipBorder: isDark ? '#292524' : '#E7E5E4',
+            tooltipText: isDark ? '#ECFDF5' : '#1C1917',
+        };
+
         return {
-            backgroundColor: isDark ? "#18181b" : "#ffffff",
-            border: `1px solid ${isDark ? "#3f3f46" : "#e4e4e7"}`,
-            borderRadius: 12,
-            color: isDark ? "#fafafa" : "#18181b",
+            gridStroke: isDark ? '#292524' : '#E7E5E4',
+            textFill: isDark ? '#A7F3D0' : '#57534E',
+            radarStroke: isDark ? '#10B981' : '#0F5F53',
+            radarFill: isDark ? '#10B981' : '#0F5F53',
+            tooltipBg: isDark ? '#131C18' : '#FFFFFF',
+            tooltipBorder: isDark ? '#292524' : '#E7E5E4',
+            tooltipText: isDark ? '#ECFDF5' : '#1C1917',
         };
     }, [isDark]);
+
+    const chartColors = getChartColors();
+
+    const tooltipStyle = React.useMemo(() => {
+        return {
+            backgroundColor: chartColors.tooltipBg,
+            border: `1px solid ${chartColors.tooltipBorder}`,
+            borderRadius: 12,
+            color: chartColors.tooltipText,
+        };
+    }, [chartColors]);
 
     const weakestMetrics = React.useMemo(() => {
         return [...validCoreMetrics]
@@ -191,12 +216,12 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
                         <ResponsiveContainer width="100%" height="100%">
                             <RadarChart data={radarData} outerRadius="75%">
                                 <PolarGrid
-                                    stroke={isDark ? "#3f3f46" : "#e4e4e7"}
+                                    stroke={chartColors.gridStroke}
                                 />
                                 <PolarAngleAxis
                                     dataKey="skill"
                                     tick={{
-                                        fill: isDark ? "#d4d4d8" : "#3f3f46",
+                                        fill: chartColors.textFill,
                                         fontSize: 11,
                                     }}
                                 />
@@ -204,17 +229,15 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
                                     angle={90}
                                     domain={[0, 100]}
                                     tick={{
-                                        fill: isDark ? "#a1a1aa" : "#71717a",
+                                        fill: chartColors.textFill,
                                         fontSize: 10,
                                     }}
                                 />
 
                                 <Radar
                                     dataKey="score"
-                                    stroke={
-                                        isDark ? "#3b82f6" : "#0f4c81"
-                                    }
-                                    fill={isDark ? "#3b82f6" : "#0f4c81"}
+                                    stroke={chartColors.radarStroke}
+                                    fill={chartColors.radarFill}
                                     fillOpacity={0.25}
                                     strokeWidth={2}
                                     dot={(p) => (
