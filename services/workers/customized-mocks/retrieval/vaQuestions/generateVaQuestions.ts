@@ -233,7 +233,7 @@ IMPORTANT: Apply personalization naturally while maintaining CAT quality.
 
     const prompt = `SYSTEM:
 You are a CAT VARC examiner with 15+ years of experience.
-You design para-summary questions that test comprehension and synthesis skills.
+You design para-summary questions that test STRUCTURE and LOGICAL EMPHASIS.
 
 CRITICAL MINDSET:
 - You are NOT creating simple restatements
@@ -382,7 +382,7 @@ Return STRICT JSON only in this format:
     {
       "id": "<UUID>",
       "passage_id": "",
-      "question_text": "The passage given below is followed by four alternate summaries. Choose option that best captures essence of the passage. \\n\\n<paragraph derived from semantic ideas>",
+      "question_text": "The passage given below is followed by four alternate summaries. Choose the option that best captures the essence of the passage. \\n\\n<paragraph derived from semantic ideas>",
       "question_type": "para_summary",
       "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
       "jumbled_sentences": { "1": "", "2": "", "3": "", "4": "", "5": "" },
@@ -493,7 +493,7 @@ IMPORTANT: Apply personalization naturally while maintaining CAT quality.
 
     const prompt = `SYSTEM:
 You are a CAT VARC examiner with 15+ years of experience.
-You design para-completion questions that test understanding of logical flow and coherence.
+You design para-completion questions that test DISCOURSE CONTINUITY and LOGICAL FLOW.
 
 CRITICAL MINDSET:
 - You are NOT creating simple fill-in-the-blank exercises
@@ -762,12 +762,13 @@ IMPORTANT: Apply personalization naturally while maintaining CAT quality.
 
     const prompt = `SYSTEM:
 You are a CAT VARC examiner with 15+ years of experience.
-You design para-jumble questions that test understanding of logical flow and coherence.
+You design para-jumble questions that test LOGICAL SEQUENCING.
 
 CRITICAL MINDSET:
 - You are NOT creating simple ordering exercises
 - You are creating questions that require understanding logical connections
 - The sentences must have meaningful but non-obvious connections
+- FIRST SENTENCE CONSTRAINT: The starting sentence of the correct sequence MUST NOT start with "However", "Thus", or other transitional words.
 
 ---
 
@@ -860,6 +861,9 @@ Key ordering cues:
 - Examples require prior claims
 - Conclusions cannot appear early
 
+**Critical Start Constraint**:
+- **The FIRST sentence of the correct sequence MUST NOT start with a conceptual transition word** (e.g., 'However', 'Thus', 'Therefore', 'Consequently', 'Moreover'). It must be a standalone introduction. 
+
 ---
 
 ## WRONG SEQUENCE DESIGN PATTERNS
@@ -896,6 +900,7 @@ DO NOT:
 - Allow more than one valid order
 - Create independent sentences
 - Rely on surface connectors as sole cues
+- **START THE FIRST SENTENCE WITH 'conceptual transition word'**
 
 ---
 
@@ -1020,12 +1025,13 @@ IMPORTANT: Apply personalization naturally while maintaining CAT quality.
 
     const prompt = `SYSTEM:
 You are a CAT VARC examiner with 15+ years of experience.
-You design odd-one-out questions that test understanding of thematic coherence and logical consistency.
+You design odd-one-out questions that test ARGUMENTATIVE CONSISTENCY.
 
 CRITICAL MINDSET:
 - You are NOT creating simple "find the different category" questions
 - You are creating questions that require understanding subtle logical or thematic differences
 - The "odd one" should be subtly different, not obviously so
+- It must test THEMATIC COHERENCE and SCOPE DISCIPLINE.
 
 ---
 
