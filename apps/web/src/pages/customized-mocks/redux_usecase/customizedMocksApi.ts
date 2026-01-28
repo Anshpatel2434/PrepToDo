@@ -3,6 +3,7 @@ import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
 import { supabase } from "../../../services/apiClient";
 import type { Exam, PracticeSession, UUID, Question, Passage, QuestionAttempt, UserMetricProficiency, Genre } from "../../../types";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import type z from "zod";
 
 interface CustomizedMockRequest {
     user_id: UUID;
@@ -36,6 +37,7 @@ export interface CustomizedMockWithSession extends Exam {
     session_id?: UUID;
     passages_count?: number;
     questions_count?: number;
+    generation_status: "completed" | "generating" | "initializing";
 }
 
 interface CreateMockResponse {
