@@ -14,7 +14,7 @@ export function useAnimatedCounter(
     end: number,
     options: UseAnimatedCounterOptions = {}
 ): number {
-    const { duration = 1200, delay = 0, easing = 'spring' } = options;
+    const { duration = 2000, delay = 0, easing = 'spring' } = options;
     const [count, setCount] = useState(0);
     const startTimeRef = useRef<number | null>(null);
     const frameRef = useRef<number | null>(null);

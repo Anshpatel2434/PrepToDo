@@ -48,14 +48,14 @@ export const DashboardPage: React.FC = () => {
         <div className={`min-h-screen relative ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"}`}>
             {/* Subtle background gradient */}
             <div className={`absolute inset-0 pointer-events-none ${isDark
-                ? "bg-gradient-to-br from-brand-primary-dark/3 via-transparent to-brand-accent-dark/3"
-                : "bg-gradient-to-br from-brand-primary-light/3 via-transparent to-brand-accent-light/3"
+                ? "bg-linear-to-br from-brand-primary-dark/3 via-transparent to-brand-accent-dark/3"
+                : "bg-linear-to-br from-brand-primary-light/3 via-transparent to-brand-accent-light/3"
                 }`} />
 
             <FloatingThemeToggle />
             <FloatingNavigation />
 
-            <div className="min-h-screen overflow-x-hidden pl-18 sm:pl-20 md:pl-24 pr-3 sm:pr-4 md:pr-6 lg:pr-8 py-4 sm:py-6 md:py-10 relative z-10 pb-20 sm:pb-24">
+            <div className="min-h-screen overflow-x-hidden pl-18 sm:pl-20 md:pl-24 lg:pr-8 py-4 sm:py-6 md:py-10 relative z-10 pb-20 sm:pb-24">
 
 
                 {!userId && isUserLoading ? (
@@ -76,10 +76,10 @@ export const DashboardPage: React.FC = () => {
                         <div className="text-sm">Please sign in to view your analytics dashboard.</div>
                     </motion.div>
                 ) : (
-                    <div className="space-y-4 sm:space-y-6 max-w-7xl">
+                    <div className="space-y-4 sm:space-y-5 max-w-[1600px] mx-auto">
                         {/* Row 1: User Details (left - smaller) + Skill Radar (right - larger) */}
-                        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6">
-                            <div className="lg:col-span-2">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
+                            <div className="lg:col-span-5">
                                 <UserDetailsWidget
                                     profile={profileQuery.data}
                                     analytics={analyticsQuery.data}
@@ -89,7 +89,7 @@ export const DashboardPage: React.FC = () => {
                                 />
                             </div>
 
-                            <div className="lg:col-span-3">
+                            <div className="lg:col-span-7">
                                 <SkillRadarWidget
                                     coreMetrics={coreMetrics}
                                     isLoading={metricQuery.isLoading || metricQuery.isFetching}
@@ -101,7 +101,7 @@ export const DashboardPage: React.FC = () => {
                         </div>
 
                         {/* Row 2: Genre Performance (left) + WPM vs Accuracy (right) */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
                             <GenreHeatmapWidget
                                 genres={genres}
                                 isLoading={metricQuery.isLoading || metricQuery.isFetching}

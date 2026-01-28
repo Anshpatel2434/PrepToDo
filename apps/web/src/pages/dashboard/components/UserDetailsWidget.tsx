@@ -89,31 +89,21 @@ function ColorfulStatCard({
                 duration: 0.5,
                 ease: [0.34, 1.56, 0.64, 1]
             }}
-            whileHover={{ y: -4, scale: 1.02 }}
             className={`
-                relative p-4 sm:p-5 rounded-3xl overflow-hidden cursor-default
-                transition-shadow duration-300
-                ${isDark ? colors.dark : colors.light}
+                relative p-3 rounded-xl overflow-hidden cursor-default
                 ${isDark
-                    ? 'shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30'
-                    : 'shadow-md shadow-black/5 hover:shadow-lg hover:shadow-black/10'
+                    ? 'bg-bg-secondary-dark/40'
+                    : 'bg-white/40'
                 }
+                backdrop-blur-sm
             `}
         >
-            {/* Background pattern - subtle dots */}
-            <div className="absolute inset-0 opacity-[0.03]"
-                style={{
-                    backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
-                    backgroundSize: '16px 16px'
-                }}
-            />
-
             {/* Content */}
             <div className="relative z-10">
-                <div className="flex justify-between items-start mb-2">
-                    <div>
+                <div className="flex justify-between items-start mb-1.5">
+                    <div className="flex-1 min-w-0">
                         {/* Large number - hero element */}
-                        <div className={`text-3xl sm:text-4xl font-bold tracking-tight mb-0.5 tabular-nums number-shimmer ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                        <div className={`text-xl sm:text-2xl font-bold tracking-tight mb-0.5 tabular-nums ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
                             }`}>
                             {value}
                         </div>
@@ -137,9 +127,9 @@ function ColorfulStatCard({
                 </div>
 
                 {/* Footer: subtext + change badge */}
-                <div className="flex items-center justify-between gap-2 mt-1.5">
+                <div className="flex items-center justify-between gap-2 mt-1">
                     {subtext && (
-                        <span className={`text-xs ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                        <span className={`text-[10px] truncate ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
                             }`}>
                             {subtext}
                         </span>
@@ -147,18 +137,18 @@ function ColorfulStatCard({
 
                     {change && change.value !== 0 && (
                         <span className={`
-                            inline-flex items-center gap-0.5 text-xs font-semibold px-2 py-0.5 rounded-full
+                            inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded shrink-0
                             ${change.type === 'positive'
-                                ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                                 : change.type === 'negative'
-                                    ? 'bg-red-500/20 text-red-600 dark:text-red-400'
-                                    : 'bg-gray-500/20 text-gray-600 dark:text-gray-400'
+                                    ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+                                    : 'bg-gray-500/10 text-gray-600 dark:text-gray-400'
                             }
                         `}>
                             {change.type === 'positive' ? (
-                                <MdTrendingUp className="w-3 h-3" />
+                                <MdTrendingUp className="w-2.5 h-2.5" />
                             ) : (
-                                <MdTrendingDown className="w-3 h-3" />
+                                <MdTrendingDown className="w-2.5 h-2.5" />
                             )}
                             {change.type === 'positive' ? '+' : ''}{change.value}%
                         </span>
@@ -248,7 +238,7 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
-            className="space-y-6"
+            className="space-y-4 h-full"
         >
             {isLoadingProfile && !profile ? (
                 <div className="space-y-6">
@@ -281,15 +271,15 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1, duration: 0.5 }}
-                        className="flex items-center gap-4"
+                        className="flex items-center gap-3 mb-4"
                     >
                         {/* Avatar */}
                         <div className="relative shrink-0">
                             <motion.div
                                 whileHover={{ scale: 1.05 }}
                                 className={`
-                                    w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center 
-                                    border-2 overflow-hidden
+                                    w-12 h-12 rounded-xl flex items-center justify-center 
+                                    border overflow-hidden
                                     ${isDark
                                         ? "bg-bg-tertiary-dark border-border-dark"
                                         : "bg-bg-tertiary-light border-border-light"
@@ -305,7 +295,7 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                                 ) : (
                                     <MdPerson
                                         className={isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}
-                                        size={28}
+                                        size={24}
                                     />
                                 )}
                             </motion.div>
@@ -315,8 +305,8 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                                     animate={{ scale: 1 }}
                                     transition={{ delay: 0.6, type: "spring", stiffness: 500 }}
                                     className={`
-                                        absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2
-                                        flex items-center justify-center text-[10px]
+                                        absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2
+                                        flex items-center justify-center text-[8px]
                                         ${isDark
                                             ? "bg-emerald-500 border-bg-primary-dark text-white"
                                             : "bg-emerald-500 border-bg-primary-light text-white"
@@ -330,11 +320,11 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                         </div>
 
                         {/* Welcome text */}
-                        <div>
-                            <div className={`text-sm ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>
+                        <div className="flex-1 min-w-0">
+                            <div className={`text-[10px] ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>
                                 Welcome back,
                             </div>
-                            <h2 className={`font-bold text-2xl sm:text-3xl tracking-tight ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                            <h2 className={`font-bold text-lg tracking-tight truncate ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
                                 }`}>
                                 {name}!
                             </h2>
@@ -344,7 +334,7 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
 
 
                     {/* Colorful Stat Cards Grid - 2x2 layout for compact view */}
-                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-2 gap-2.5">
                         <ColorfulStatCard
                             label="Day Streak"
                             value={

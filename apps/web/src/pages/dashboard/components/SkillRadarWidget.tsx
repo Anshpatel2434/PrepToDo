@@ -1,6 +1,5 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { MdInsights, MdTrendingUp, MdTrendingDown, MdTrendingFlat } from "react-icons/md";
 import type { UserMetricProficiency } from "../../../types";
 import { metricMappingJson } from "../config/core_metric_reasoning_map_v1_0";
 
@@ -42,9 +41,7 @@ function BarColumn({
     metricKey,
     label,
     score,
-    trend,
     isDark,
-    isHighlighted,
 }: {
     metricKey: string;
     label: string;
@@ -71,10 +68,27 @@ function BarColumn({
     const handleMouseMove = (e: React.MouseEvent) => {
         if (containerRef.current) {
             const rect = containerRef.current.getBoundingClientRect();
-            setTooltipPosition({
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
-            });
+            const parentRect = containerRef.current.closest('.rounded-2xl')?.getBoundingClientRect();
+
+            let x = e.clientX - rect.left;
+            let y = e.clientY - rect.top;
+
+            // Adjust position to prevent tooltip from going outside the widget
+            if (parentRect) {
+                const tooltipWidth = 280;
+
+                // Check if tooltip would overflow on the right
+                if (e.clientX + tooltipWidth + 10 > parentRect.right) {
+                    x = x - tooltipWidth - 20;
+                }
+
+                // Check if tooltip would overflow on the left
+                if (e.clientX - tooltipWidth - 10 < parentRect.left) {
+                    x = 10;
+                }
+            }
+
+            setTooltipPosition({ x, y });
         }
     };
 
@@ -95,17 +109,18 @@ function BarColumn({
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
         >
-            {/* Bar Container - Fixed width and height */}
-            <div className={`relative w-full max-w-[80px] h-48 overflow-hidden rounded-t-xl border ${isDark ? "bg-bg-tertiary-dark border-border-dark" : "bg-bg-tertiary-light border-border-light"}`}>
+            {/* Bar Container - Glass test tube effect */}
+            <div className={`relative w-full max-w-[80px] h-48 overflow-hidden rounded-t-2xl border-2 ${isDark ? "bg-white/5 border-white/10" : "bg-black/5 border-black/10"} backdrop-blur-sm shadow-inner`}>
                 {/* Liquid Fill with Wave Effect - positioned absolutely at bottom */}
                 <motion.div
                     initial={{ height: 0 }}
                     animate={{ height: `${Math.min(score, 100)}%` }}
-                    transition={{ delay: 0.3, duration: 0.8, ease: [0.34, 1.56, 0.64, 1] }}
+                    transition={{ delay: 0.3, duration: 2, ease: [0.34, 1.56, 0.64, 1] }}
                     className="absolute bottom-0 left-0 right-0"
                     style={{
                         backgroundColor: statusColor,
-                        opacity: isDark ? 0.35 : 0.35
+                        opacity: 0.6,
+                        boxShadow: `inset 0 -2px 8px rgba(255,255,255,0.3), 0 2px 8px ${statusColor}40`
                     }}
                 >
                     {/* Animated wave on top */}
@@ -113,31 +128,31 @@ function BarColumn({
                         className="liquid-wave"
                         style={{
                             backgroundColor: statusColor,
-                            opacity: isDark ? 0.6 : 0.6
+                            opacity: 0.4
                         }}
                     />
+
+                    {/* Glass shine effect */}
+                    <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent" style={{ width: '30%', left: '10%' }} />
                 </motion.div>
 
                 {/* Score Display Inside Bar */}
-                <div className="absolute bottom-0 left-0 right-0 z-10 flex items-end justify-center p-2">
-                    <div className={`text-lg font-bold ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                <div className="absolute bottom-0 left-0 right-0 z-10 flex items-end justify-center p-1.5">
+                    <div className={`text-base font-bold drop-shadow-sm ${isDark ? "text-white" : "text-gray-900"}`}>
                         {Math.round(score)}
-                        <span className={`text-xs font-normal ml-0.5 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>%</span>
+                        <span className={`text-[10px] font-normal ml-0.5`}>%</span>
                     </div>
                 </div>
+
+                {/* Glass reflection overlay */}
+                <div className="absolute inset-0 bg-linear-to-br from-white/30 via-transparent to-transparent pointer-events-none" style={{ width: '40%' }} />
             </div>
 
             {/* Label and Trend */}
-            <div className="mt-3 flex flex-col items-center gap-1 w-full max-w-[100px] h-16">
-                <span className={`text-xs font-medium text-center leading-tight ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+            <div className="mt-2 flex flex-col items-center gap-0.5 w-full max-w-[100px] h-12">
+                <span className={`text-[10px] font-medium text-center leading-tight ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
                     {label}
                 </span>
-                {/* Trend Icon */}
-                <div className="flex items-center justify-center mt-auto">
-                    {trend === 'improving' && <MdTrendingUp className="text-emerald-500 text-sm trend-glow" />}
-                    {trend === 'declining' && <MdTrendingDown className="text-rose-500 text-sm" />}
-                    {trend === 'stagnant' && <MdTrendingFlat className="text-slate-400 text-sm" />}
-                </div>
             </div>
 
             {/* Cursor-following Tooltip with Reasoning Steps */}
@@ -182,7 +197,6 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
         return (coreMetrics ?? [])
             .filter(m => m.dimension_key !== 'reading_speed_wpm')
             .sort((a, b) => a.proficiency_score - b.proficiency_score)
-            .slice(0, 7); // Show 7 bars for better visualization
     }, [coreMetrics]);
 
     // Find the weakest metric to highlight
@@ -204,48 +218,27 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1, duration: 0.5 }}
-            whileHover={{ scale: 1.02, y: -4 }}
-            className={`card-depth rounded-2xl sm:rounded-3xl border overflow-hidden transition-all duration-300 ${isDark
-                ? "bg-bg-secondary-dark border-border-dark"
-                : "bg-bg-secondary-light border-border-light"
-                } ${className}`}
+            className={`rounded-2xl overflow-hidden h-full ${isDark
+                ? "bg-bg-secondary-dark/40"
+                : "bg-white/40"
+                } backdrop-blur-md ${className}`}
         >
-            {/* Gradient Header Accent */}
-            <div className={`h-1.5 sm:h-2 w-full ${isDark
-                ? 'bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500'
-                : 'bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400'
-                }`} />
-
-            <div className="p-4 sm:p-6">
+            <div className="p-5 sm:p-6">
                 {/* Header */}
-                <div className="mb-4 sm:mb-6">
-                    <div className="flex items-center gap-3">
-                        <div className={`
-                            p-2.5 sm:p-3 rounded-xl sm:rounded-2xl
-                            ${isDark
-                                ? 'bg-violet-500/20'
-                                : 'bg-violet-100'
-                            }
-                        `}>
-                            <MdInsights className={`text-xl sm:text-2xl ${isDark ? "text-violet-400" : "text-violet-600"
-                                }`} />
-                        </div>
-                        <div>
-                            <h3 className={`font-bold text-lg sm:text-xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                                }`}>
-                                Skill Proficiency
-                            </h3>
-                            {insightText && (
-                                <p className={`text-xs sm:text-sm mt-0.5 line-clamp-2 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
-                                    }`}>
-                                    {insightText}
-                                </p>
-                            )}
-                        </div>
-                    </div>
+                <div className="mb-5">
+                    <h3 className={`font-bold text-lg ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                        }`}>
+                        Skill Proficiency
+                    </h3>
+                    {insightText && (
+                        <p className={`text-[11px] mt-1 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                            }`}>
+                            {insightText}
+                        </p>
+                    )}
                 </div>
                 {/* Content */}
                 <div>
@@ -271,7 +264,7 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
                         <>
                             {/* Bar Graph */}
                             <motion.div
-                                className="flex items-end justify-between gap-2 px-2"
+                                className="flex items-end justify-between"
                                 variants={{
                                     hidden: { opacity: 0 },
                                     visible: {
@@ -298,23 +291,23 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
                             </motion.div>
 
                             {/* Legend */}
-                            <div className={`mt-6 pt-4 border-t flex flex-wrap gap-4 text-xs ${isDark ? "border-border-dark text-text-muted-dark" : "border-border-light text-text-muted-light"
+                            <div className={`pt-4 border-t flex flex-wrap gap-3 text-[11px] ${isDark ? "border-white/5 text-text-muted-dark" : "border-black/5 text-text-muted-light"
                                 }`}>
                                 <div className="flex items-center gap-1.5">
-                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: isDark ? "#34D399" : "#059669" }} />
-                                    <span>80%+ Strong</span>
+                                    <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: isDark ? "#34D399" : "#059669" }} />
+                                    <span>Strong</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
-                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: isDark ? "#6EE7B7" : "#10B981" }} />
-                                    <span>60-80% Good</span>
+                                    <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: isDark ? "#6EE7B7" : "#10B981" }} />
+                                    <span>Good</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
-                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: isDark ? "#FBBF24" : "#D97706" }} />
-                                    <span>40-60% Develop</span>
+                                    <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: isDark ? "#FBBF24" : "#D97706" }} />
+                                    <span>Developing</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
-                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: isDark ? "#F87171" : "#DC2626" }} />
-                                    <span>&lt;40% Focus</span>
+                                    <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: isDark ? "#F87171" : "#DC2626" }} />
+                                    <span>Focus</span>
                                 </div>
                             </div>
                         </>

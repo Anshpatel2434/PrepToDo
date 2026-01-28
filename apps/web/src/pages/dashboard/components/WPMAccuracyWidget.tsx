@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { MdShowChart, MdSpeed, MdGpsFixed } from "react-icons/md";
+import { MdSpeed, MdGpsFixed } from "react-icons/md";
 import {
     Area,
     CartesianGrid,
@@ -105,44 +105,26 @@ export const WPMAccuracyWidget: React.FC<WPMAccuracyWidgetProps> = ({
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1, duration: 0.5 }}
-            className={`card-depth rounded-2xl sm:rounded-3xl border overflow-hidden transition-all duration-300 ${isDark
-                ? "bg-bg-secondary-dark border-border-dark"
-                : "bg-bg-secondary-light border-border-light"
-                } ${className}`}
+            className={`rounded-2xl overflow-hidden ${isDark
+                ? "bg-bg-secondary-dark/40"
+                : "bg-white/40"
+                } backdrop-blur-sm ${className}`}
         >
-            {/* Gradient Header Accent - Blue theme for charts */}
-            <div className={`h-1.5 sm:h-2 w-full ${isDark
-                ? 'bg-gradient-to-r from-blue-500 via-indigo-500 to-sky-500'
-                : 'bg-gradient-to-r from-blue-400 via-indigo-400 to-sky-400'
-                }`} />
-
-            <div className="p-4 sm:p-6">
+            <div className="p-5 sm:p-6">
                 {/* Header with current values */}
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
-                    <div className="flex items-start gap-3">
-                        <div className={`
-                            p-2.5 sm:p-3 rounded-xl sm:rounded-2xl shrink-0
-                            ${isDark
-                                ? 'bg-blue-500/20'
-                                : 'bg-blue-100'
-                            }
-                        `}>
-                            <MdShowChart className={`text-xl sm:text-2xl ${isDark ? "text-blue-400" : "text-blue-600"
-                                }`} />
-                        </div>
-                        <div>
-                            <h3 className={`font-bold text-lg sm:text-xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                                }`}>
-                                Speed vs Accuracy
-                            </h3>
-                            <p className={`text-xs sm:text-sm mt-0.5 line-clamp-2 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
-                                }`}>
-                                {insightText}
-                            </p>
-                        </div>
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 mb-5">
+                    <div className="flex-1 min-w-0">
+                        <h3 className={`font-bold text-lg ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                            }`}>
+                            Speed vs Accuracy
+                        </h3>
+                        <p className={`text-[11px] mt-1 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                            }`}>
+                            {insightText}
+                        </p>
                     </div>
 
                     {/* Current values badges */}

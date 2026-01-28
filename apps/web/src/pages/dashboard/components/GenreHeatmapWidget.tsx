@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { MdGridOn, MdTrendingUp, MdTrendingDown, MdTrendingFlat } from "react-icons/md";
+import { MdTrendingUp, MdTrendingDown, MdTrendingFlat } from "react-icons/md";
 import type { UserMetricProficiency } from "../../../types";
 import { transformHeatmapData } from "../utils/chartHelpers";
 
@@ -61,25 +61,35 @@ function LiquidCell({
         <motion.div
             variants={itemVariants}
             whileHover={{ scale: 1.05, y: -2 }}
-            className={`liquid-cell group relative h-28 border cursor-default ${isDark
-                ? "bg-bg-tertiary-dark border-border-dark hover:border-brand-primary-dark/40"
-                : "bg-bg-tertiary-light border-border-light hover:border-brand-primary-light/40"
-                }`}
+            className={`liquid-cell group relative h-28 border-2 cursor-default rounded-2xl overflow-hidden ${isDark
+                ? "bg-white/5 border-white/10 hover:border-white/20"
+                : "bg-black/5 border-black/10 hover:border-black/20"
+                } backdrop-blur-sm shadow-inner`}
         >
             {/* Liquid fill */}
             <motion.div
                 initial={{ height: 0 }}
                 animate={{ height: `${fillHeight}%` }}
-                transition={{ delay: 0.3, duration: 0.8, ease: [0.34, 1.56, 0.64, 1] }}
+                transition={{ delay: 0.3, duration: 2, ease: [0.34, 1.56, 0.64, 1] }}
                 className="liquid-fill"
-                style={{ backgroundColor: liquidColor, opacity: isDark ? 0.35 : 0.35 }}
+                style={{
+                    backgroundColor: liquidColor,
+                    opacity: 0.6,
+                    boxShadow: `inset 0 -2px 8px rgba(255,255,255,0.3), 0 2px 8px ${liquidColor}40`
+                }}
             >
                 {/* Animated wave on top */}
                 <div
                     className="liquid-wave"
-                    style={{ backgroundColor: liquidColor, opacity: isDark ? 0.6 : 0.6 }}
+                    style={{ backgroundColor: liquidColor, opacity: 0.4 }}
                 />
+
+                {/* Glass shine effect */}
+                <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent" style={{ width: '30%', left: '10%' }} />
             </motion.div>
+
+            {/* Glass reflection overlay */}
+            <div className="absolute inset-0 bg-linear-to-br from-white/30 via-transparent to-transparent pointer-events-none" style={{ width: '40%' }} />
 
             {/* Content overlay */}
             <div className="relative z-10 h-full flex flex-col justify-between p-3">
@@ -96,7 +106,7 @@ function LiquidCell({
 
                 {/* Score at bottom */}
                 <div>
-                    <div className={`text-2xl font-bold ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                    <div className={`text-2xl font-bold drop-shadow-sm ${isDark ? "text-white" : "text-gray-900"
                         }`}>
                         {Math.round(score)}
                         <span className={`text-xs font-normal ml-0.5 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
@@ -165,45 +175,25 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1, duration: 0.5 }}
-            className={`card-depth rounded-2xl sm:rounded-3xl border overflow-hidden transition-all duration-300 ${isDark
-                ? "bg-bg-secondary-dark border-border-dark"
-                : "bg-bg-secondary-light border-border-light"
-                } ${className}`}
+            className={`rounded-2xl overflow-hidden ${isDark
+                ? "bg-bg-secondary-dark/40"
+                : "bg-white/40"
+                } backdrop-blur-sm ${className}`}
         >
-            {/* Gradient Header Accent - Teal theme */}
-            <div className={`h-1.5 sm:h-2 w-full ${isDark
-                ? 'bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-500'
-                : 'bg-gradient-to-r from-teal-400 via-emerald-400 to-cyan-400'
-                }`} />
-
-            <div className="p-4 sm:p-6">
+            <div className="p-5 sm:p-6">
                 {/* Header */}
-                <div className="mb-4 sm:mb-6">
-                    <div className="flex items-center gap-3">
-                        <div className={`
-                            p-2.5 sm:p-3 rounded-xl sm:rounded-2xl
-                            ${isDark
-                                ? 'bg-teal-500/20'
-                                : 'bg-teal-100'
-                            }
-                        `}>
-                            <MdGridOn className={`text-xl sm:text-2xl ${isDark ? "text-teal-400" : "text-teal-600"
-                                }`} />
-                        </div>
-                        <div>
-                            <h3 className={`font-bold text-lg sm:text-xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                                }`}>
-                                Genre Performance
-                            </h3>
-                            <p className={`text-xs sm:text-sm mt-0.5 line-clamp-2 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
-                                }`}>
-                                {insightText || "Complete RC sets to see genre breakdown."}
-                            </p>
-                        </div>
-                    </div>
+                <div className="mb-5">
+                    <h3 className={`font-bold text-lg ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                        }`}>
+                        Genre Performance
+                    </h3>
+                    <p className={`text-[11px] mt-1 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                        }`}>
+                        {insightText || "Complete RC sets to see genre breakdown."}
+                    </p>
                 </div>
 
                 {/* Content */}
@@ -217,7 +207,7 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
                             {[...Array(6)].map((_, i) => (
                                 <div
                                     key={i}
-                                    className="animate-pulse h-28 rounded-2xl bg-bg-tertiary-light dark:bg-bg-tertiary-dark"
+                                    className="h-28 rounded-2xl bg-bg-tertiary-light dark:bg-bg-tertiary-dark"
                                 />
                             ))}
                         </div>
@@ -255,27 +245,27 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
                             </motion.div>
 
                             {/* Legend */}
-                            <div className="mt-5 pt-4 border-t flex flex-wrap gap-2 text-xs">
+                            <div className="mt-5 pt-4 border-t flex flex-wrap gap-2 text-[11px]">
                                 <span className={`mr-2 flex items-center ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>
-                                    Fill = proficiency
+                                    Fill level = proficiency
                                 </span>
                                 <span className={`
-                                    flex items-center gap-1.5 px-2 py-0.5 rounded-full font-medium border
-                                    ${isDark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}
+                                    flex items-center gap-1.5 px-2 py-0.5 rounded-lg
+                                    ${isDark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-500/10 text-emerald-700'}
                                 `}>
-                                    <MdTrendingUp className="w-3.5 h-3.5 trend-glow" /> Improving
+                                    <MdTrendingUp className="w-3 h-3" /> Improving
                                 </span>
                                 <span className={`
-                                    flex items-center gap-1.5 px-2 py-0.5 rounded-full font-medium border
-                                    ${isDark ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-rose-50 text-rose-700 border-rose-200'}
+                                    flex items-center gap-1.5 px-2 py-0.5 rounded-lg
+                                    ${isDark ? 'bg-rose-500/10 text-rose-400' : 'bg-rose-500/10 text-rose-700'}
                                 `}>
-                                    <MdTrendingDown className="w-3.5 h-3.5" /> Declining
+                                    <MdTrendingDown className="w-3 h-3" /> Declining
                                 </span>
                                 <span className={`
-                                    flex items-center gap-1.5 px-2 py-0.5 rounded-full font-medium border
-                                    ${isDark ? 'bg-slate-500/10 text-slate-400 border-slate-500/20' : 'bg-slate-50 text-slate-700 border-slate-200'}
+                                    flex items-center gap-1.5 px-2 py-0.5 rounded-lg
+                                    ${isDark ? 'bg-slate-500/10 text-slate-400' : 'bg-slate-500/10 text-slate-700'}
                                 `}>
-                                    <MdTrendingFlat className="w-3.5 h-3.5" /> Stable
+                                    <MdTrendingFlat className="w-3 h-3" /> Stable
                                 </span>
                             </div>
                         </>

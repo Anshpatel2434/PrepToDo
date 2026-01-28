@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { MdAutoAwesome, MdPlayArrow, MdLightbulb } from "react-icons/md";
+import { MdPlayArrow, MdLightbulb } from "react-icons/md";
 import type { UserProficiencySignals } from "../../../types";
 
 interface RecommendationWidgetProps {
@@ -135,46 +135,25 @@ export const RecommendationWidget: React.FC<RecommendationWidgetProps> = ({
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1, duration: 0.5 }}
-            whileHover={{ scale: 1.02, y: -4 }}
-            className={`card-depth rounded-2xl sm:rounded-3xl border overflow-hidden transition-all duration-300 ${isDark
-                ? "bg-bg-secondary-dark border-border-dark"
-                : "bg-bg-secondary-light border-border-light"
-                } ${className}`}
+            className={`rounded-2xl overflow-hidden ${isDark
+                ? "bg-bg-secondary-dark/40"
+                : "bg-white/40"
+                } backdrop-blur-sm ${className}`}
         >
-            {/* Gradient Header Accent - Amber theme for recommendations */}
-            <div className={`h-1.5 sm:h-2 w-full ${isDark
-                ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500'
-                : 'bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-400'
-                }`} />
-
-            <div className="p-4 sm:p-6">
+            <div className="p-5 sm:p-6">
                 {/* Header */}
-                <div className="mb-4 sm:mb-6">
-                    <div className="flex items-center gap-3">
-                        <div className={`
-                            p-2.5 sm:p-3 rounded-xl sm:rounded-2xl
-                            ${isDark
-                                ? 'bg-amber-500/20'
-                                : 'bg-amber-100'
-                            }
-                        `}>
-                            <MdAutoAwesome className={`text-xl sm:text-2xl ${isDark ? "text-amber-400" : "text-amber-600"
-                                }`} />
-                        </div>
-                        <div>
-                            <h3 className={`font-bold text-lg sm:text-xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                                }`}>
-                                Focus Today
-                            </h3>
-                            <p className={`text-xs sm:text-sm mt-0.5 line-clamp-2 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
-                                }`}>
-                                Personalized practice priorities based on your performance.
-                            </p>
-                        </div>
-                    </div>
+                <div className="mb-5">
+                    <h3 className={`font-bold text-lg ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                        }`}>
+                        Focus Today
+                    </h3>
+                    <p className={`text-[11px] mt-1 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                        }`}>
+                        Personalized practice priorities based on your performance.
+                    </p>
                 </div>
 
                 {/* Content */}
