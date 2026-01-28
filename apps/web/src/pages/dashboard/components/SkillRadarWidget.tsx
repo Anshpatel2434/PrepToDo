@@ -37,110 +37,127 @@ function getReasoningSteps(metricKey: string): string[] {
 
 // Get trend icon component
 
-
-// Single proficiency bar component with hover tooltip
-function ProficiencyBar({
+// Single bar column component with hover tooltip and liquid fill effect
+function BarColumn({
     metricKey,
     label,
     score,
     trend,
     isDark,
+    isHighlighted,
 }: {
     metricKey: string;
     label: string;
     score: number;
     trend?: "improving" | "declining" | "stagnant" | null;
     isDark: boolean;
+    isHighlighted: boolean;
 }) {
     const statusColor = getStatusColor(score, isDark);
     const reasoningSteps = getReasoningSteps(metricKey);
+    const [tooltipPosition, setTooltipPosition] = React.useState({ x: 0, y: 0 });
+    const [showTooltip, setShowTooltip] = React.useState(false);
+    const containerRef = React.useRef<HTMLDivElement>(null);
 
     const itemVariants = {
-        hidden: { opacity: 0, x: -20 },
+        hidden: { opacity: 0, y: 20 },
         visible: {
             opacity: 1,
-            x: 0,
+            y: 0,
             transition: { type: "spring" as const, stiffness: 300, damping: 24 }
         }
     };
 
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (containerRef.current) {
+            const rect = containerRef.current.getBoundingClientRect();
+            setTooltipPosition({
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            });
+        }
+    };
+
+    const handleMouseEnter = () => {
+        setShowTooltip(true);
+    };
+
+    const handleMouseLeave = () => {
+        setShowTooltip(false);
+    };
+
     return (
         <motion.div
+            ref={containerRef}
             variants={itemVariants}
-            className="group relative"
+            className="relative flex flex-col items-center flex-1"
+            onMouseMove={handleMouseMove}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
         >
-            <div className="flex items-center justify-between mb-1.5 gap-2">
-                <span className={`text-sm font-medium truncate cursor-help ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                    }`}>
-                    {label}
-                </span>
-                <div className="flex items-center gap-2 shrink-0">
-                    {/* Colored Status Pill */}
-                    <span className={`
-                        text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide border
-                        ${score >= 80
-                            ? (isDark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200') + ' ambient-glow'
-                            : score >= 60
-                                ? isDark ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-blue-50 text-blue-700 border-blue-200'
-                                : score >= 40
-                                    ? isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-700 border-amber-200'
-                                    : isDark ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-rose-50 text-rose-700 border-rose-200'
-                        }
-                    `}>
-                        {score >= 80 ? 'Strong' : score >= 60 ? 'Good' : score >= 40 ? 'Building' : 'Focus'}
-                    </span>
+            {/* Bar Container - Fixed width and height */}
+            <div className={`relative w-full max-w-[80px] h-48 overflow-hidden rounded-t-xl border ${isDark ? "bg-bg-tertiary-dark border-border-dark" : "bg-bg-tertiary-light border-border-light"}`}>
+                {/* Liquid Fill with Wave Effect - positioned absolutely at bottom */}
+                <motion.div
+                    initial={{ height: 0 }}
+                    animate={{ height: `${Math.min(score, 100)}%` }}
+                    transition={{ delay: 0.3, duration: 0.8, ease: [0.34, 1.56, 0.64, 1] }}
+                    className="absolute bottom-0 left-0 right-0"
+                    style={{
+                        backgroundColor: statusColor,
+                        opacity: isDark ? 0.35 : 0.35
+                    }}
+                >
+                    {/* Animated wave on top */}
+                    <div
+                        className="liquid-wave"
+                        style={{
+                            backgroundColor: statusColor,
+                            opacity: isDark ? 0.6 : 0.6
+                        }}
+                    />
+                </motion.div>
 
-                    {/* Trend Icon */}
-                    {trend === 'improving' && <MdTrendingUp className="text-emerald-500 trend-glow" />}
-                    {trend === 'declining' && <MdTrendingDown className="text-rose-500" />}
-                    {trend === 'stagnant' && <MdTrendingFlat className="text-slate-400" />}
-                    <span className={`text-sm font-bold tabular-nums ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                        }`}>
-                        {Math.round(score)}%
-                    </span>
+                {/* Score Display Inside Bar */}
+                <div className="absolute bottom-0 left-0 right-0 z-10 flex items-end justify-center p-2">
+                    <div className={`text-lg font-bold ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                        {Math.round(score)}
+                        <span className={`text-xs font-normal ml-0.5 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>%</span>
+                    </div>
                 </div>
             </div>
 
-            {/* Proficiency Bar */}
-            <div className={`proficiency-bar ${isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"}`}>
-                <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${Math.min(score, 100)}%` }}
-                    transition={{ delay: 0.4, duration: 0.8, ease: [0.34, 1.56, 0.64, 1] }}
-                    className="proficiency-bar-fill barPulse"
-                    style={{
-                        backgroundColor: statusColor,
-                        "--pulse-color": statusColor,
-                    } as React.CSSProperties}
-                >
-                    {/* Pulse indicator on the edge */}
-                    <div
-                        className="proficiency-bar-pulse"
-                        style={{
-                            backgroundColor: statusColor,
-                            "--pulse-color": statusColor,
-                        } as React.CSSProperties}
-                    />
-                </motion.div>
+            {/* Label and Trend */}
+            <div className="mt-3 flex flex-col items-center gap-1 w-full max-w-[100px] h-16">
+                <span className={`text-xs font-medium text-center leading-tight ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                    {label}
+                </span>
+                {/* Trend Icon */}
+                <div className="flex items-center justify-center mt-auto">
+                    {trend === 'improving' && <MdTrendingUp className="text-emerald-500 text-sm trend-glow" />}
+                    {trend === 'declining' && <MdTrendingDown className="text-rose-500 text-sm" />}
+                    {trend === 'stagnant' && <MdTrendingFlat className="text-slate-400 text-sm" />}
+                </div>
             </div>
 
-            {/* Hover Tooltip with Reasoning Steps */}
-            {reasoningSteps.length > 0 && (
-                <div className={`absolute left-0 right-0 top-full mt-2 p-3 rounded-xl border z-20
-                    opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none
-                    ${isDark
-                        ? "bg-bg-primary-dark border-border-dark shadow-lg"
-                        : "bg-white border-border-light shadow-lg"
-                    }`}
+            {/* Cursor-following Tooltip with Reasoning Steps */}
+            {reasoningSteps.length > 0 && showTooltip && (
+                <div
+                    className={`absolute z-50 p-3 rounded-xl border shadow-xl pointer-events-none min-w-[220px] max-w-[280px] ${isDark
+                        ? "bg-bg-primary-dark border-border-dark"
+                        : "bg-white border-border-light"
+                        }`}
+                    style={{
+                        left: `${tooltipPosition.x + 10}px`,
+                        top: `${tooltipPosition.y - 60}px`,
+                    }}
                 >
-                    <div className={`text-xs font-semibold mb-2 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
-                        }`}>
+                    <div className={`text-xs font-semibold mb-2 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
                         Focus on these reasoning skills:
                     </div>
                     <ul className="space-y-1">
                         {reasoningSteps.map((step, i) => (
-                            <li key={i} className={`text-xs flex items-start gap-2 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                                }`}>
+                            <li key={i} className={`text-xs flex items-start gap-2 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
                                 <span className="text-brand-primary-light dark:text-brand-primary-dark">•</span>
                                 {step}
                             </li>
@@ -165,8 +182,11 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
         return (coreMetrics ?? [])
             .filter(m => m.dimension_key !== 'reading_speed_wpm')
             .sort((a, b) => a.proficiency_score - b.proficiency_score)
-            .slice(0, 10);
+            .slice(0, 7); // Show 7 bars for better visualization
     }, [coreMetrics]);
+
+    // Find the weakest metric to highlight
+    const weakestMetricKey = sortedMetrics.length > 0 ? sortedMetrics[0].dimension_key : null;
 
     // Generate insight text based on data
     const insightText = React.useMemo(() => {
@@ -249,9 +269,9 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
                         </div>
                     ) : (
                         <>
-                            {/* Proficiency Bars */}
+                            {/* Bar Graph */}
                             <motion.div
-                                className="space-y-4"
+                                className="flex items-end justify-between gap-2 px-2"
                                 variants={{
                                     hidden: { opacity: 0 },
                                     visible: {
@@ -265,13 +285,14 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
                                 animate="visible"
                             >
                                 {sortedMetrics.map((metric) => (
-                                    <ProficiencyBar
+                                    <BarColumn
                                         key={metric.id}
                                         metricKey={metric.dimension_key}
                                         label={getMetricDisplayName(metric.dimension_key)}
                                         score={metric.proficiency_score}
                                         trend={metric.trend}
                                         isDark={isDark}
+                                        isHighlighted={metric.dimension_key === weakestMetricKey}
                                     />
                                 ))}
                             </motion.div>

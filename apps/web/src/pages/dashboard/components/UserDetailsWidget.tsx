@@ -34,35 +34,35 @@ interface ColorfulStatCardProps {
 
 const colorClasses = {
     streak: {
-        light: 'bg-stat-streak-light',
+        light: 'bg-[#F5E6D3]',
         dark: 'bg-stat-streak-dark',
-        accentLight: 'text-stat-streak-accent-light',
+        accentLight: 'text-[#D4A574]',
         accentDark: 'text-stat-streak-accent-dark',
-        iconBgLight: 'bg-amber-200/60',
+        iconBgLight: 'bg-[#F0D9B5]/70',
         iconBgDark: 'bg-amber-500/20',
     },
     points: {
-        light: 'bg-stat-points-light',
+        light: 'bg-[#D4E7D7]',
         dark: 'bg-stat-points-dark',
-        accentLight: 'text-stat-points-accent-light',
+        accentLight: 'text-[#6B9B76]',
         accentDark: 'text-stat-points-accent-dark',
-        iconBgLight: 'bg-emerald-200/60',
+        iconBgLight: 'bg-[#C1DCC6]/70',
         iconBgDark: 'bg-emerald-500/20',
     },
     accuracy: {
-        light: 'bg-stat-accuracy-light',
+        light: 'bg-[#D4D9F5]',
         dark: 'bg-stat-accuracy-dark',
-        accentLight: 'text-stat-accuracy-accent-light',
+        accentLight: 'text-[#7B87C9]',
         accentDark: 'text-stat-accuracy-accent-dark',
-        iconBgLight: 'bg-blue-200/60',
+        iconBgLight: 'bg-[#C1C9E8]/70',
         iconBgDark: 'bg-blue-500/20',
     },
     practice: {
-        light: 'bg-stat-practice-light',
+        light: 'bg-[#E8D9F5]',
         dark: 'bg-stat-practice-dark',
-        accentLight: 'text-stat-practice-accent-light',
+        accentLight: 'text-[#9B7BC9]',
         accentDark: 'text-stat-practice-accent-dark',
-        iconBgLight: 'bg-violet-200/60',
+        iconBgLight: 'bg-[#DCC6E8]/70',
         iconBgDark: 'bg-violet-500/20',
     },
 };
@@ -343,8 +343,8 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
 
 
 
-                    {/* Colorful Stat Cards Grid - The main attraction! */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    {/* Colorful Stat Cards Grid - 2x2 layout for compact view */}
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
                         <ColorfulStatCard
                             label="Day Streak"
                             value={

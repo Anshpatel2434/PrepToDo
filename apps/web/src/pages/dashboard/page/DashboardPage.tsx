@@ -77,25 +77,31 @@ export const DashboardPage: React.FC = () => {
                     </motion.div>
                 ) : (
                     <div className="space-y-4 sm:space-y-6 max-w-7xl">
-                        {/* Zone 1: User Stats */}
-                        <UserDetailsWidget
-                            profile={profileQuery.data}
-                            analytics={analyticsQuery.data}
-                            isLoadingProfile={profileQuery.isLoading || profileQuery.isFetching}
-                            isLoadingAnalytics={analyticsQuery.isLoading || analyticsQuery.isFetching}
-                            isDark={isDark}
-                        />
+                        {/* Row 1: User Details (left - smaller) + Skill Radar (right - larger) */}
+                        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6">
+                            <div className="lg:col-span-2">
+                                <UserDetailsWidget
+                                    profile={profileQuery.data}
+                                    analytics={analyticsQuery.data}
+                                    isLoadingProfile={profileQuery.isLoading || profileQuery.isFetching}
+                                    isLoadingAnalytics={analyticsQuery.isLoading || analyticsQuery.isFetching}
+                                    isDark={isDark}
+                                />
+                            </div>
 
-                        {/* Zone 2: Performance Overview (Skills + Genres) */}
+                            <div className="lg:col-span-3">
+                                <SkillRadarWidget
+                                    coreMetrics={coreMetrics}
+                                    isLoading={metricQuery.isLoading || metricQuery.isFetching}
+                                    isDark={isDark}
+                                    index={0}
+                                    error={metricQuery.error}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Row 2: Genre Performance (left) + WPM vs Accuracy (right) */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                            <SkillRadarWidget
-                                coreMetrics={coreMetrics}
-                                isLoading={metricQuery.isLoading || metricQuery.isFetching}
-                                isDark={isDark}
-                                index={0}
-                                error={metricQuery.error}
-                            />
-
                             <GenreHeatmapWidget
                                 genres={genres}
                                 isLoading={metricQuery.isLoading || metricQuery.isFetching}
@@ -103,10 +109,7 @@ export const DashboardPage: React.FC = () => {
                                 index={1}
                                 error={metricQuery.error}
                             />
-                        </div>
 
-                        {/* Zone 3: Trends + Actions (Charts + Recommendations) */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                             <WPMAccuracyWidget
                                 metrics={metricProficiency}
                                 isLoading={metricQuery.isLoading || metricQuery.isFetching}
@@ -114,15 +117,16 @@ export const DashboardPage: React.FC = () => {
                                 index={2}
                                 error={metricQuery.error}
                             />
-
-                            <RecommendationWidget
-                                signals={signalsQuery.data}
-                                isLoading={signalsQuery.isLoading || signalsQuery.isFetching}
-                                isDark={isDark}
-                                index={3}
-                                error={signalsQuery.error}
-                            />
                         </div>
+
+                        {/* Row 3: Recommendations (full width) */}
+                        <RecommendationWidget
+                            signals={signalsQuery.data}
+                            isLoading={signalsQuery.isLoading || signalsQuery.isFetching}
+                            isDark={isDark}
+                            index={3}
+                            error={signalsQuery.error}
+                        />
                     </div>
                 )}
             </div>
