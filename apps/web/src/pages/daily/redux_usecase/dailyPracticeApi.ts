@@ -852,7 +852,14 @@ export const dailyPracticeApi = createApi({
                     // Calculate leaderboard entries
                     const leaderboardMap = calculateLeaderboard(sessions, profiles || []);
                     const sortedLeaderboard = Array.from(leaderboardMap.values())
-                        .sort((a, b) => b.score - a.score);
+                        .sort((a, b) => {
+                            // Primary: Higher accuracy wins
+                            if (b.accuracy !== a.accuracy) {
+                                return b.accuracy - a.accuracy;
+                            }
+                            // Secondary (tiebreaker): Lower time wins
+                            return a.time_taken_seconds - b.time_taken_seconds;
+                        });
 
                     // Assign ranks
                     sortedLeaderboard.forEach((entry, index) => {

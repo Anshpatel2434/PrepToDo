@@ -17,6 +17,20 @@ export interface PhaseFResult {
     reading_speed_wpm: number;
 }
 
+/**
+ * Calculate streak bonus multiplier for points calculation
+ * - 0-1 day streak: No bonus (1.0x)
+ * - 2-9 day streak: 10% bonus (1.1x)
+ * - 10-29 day streak: 25% bonus (1.25x)
+ * - 30+ day streak: 50% bonus (1.5x)
+ */
+function getStreakBonusMultiplier(currentStreak: number): number {
+    if (currentStreak >= 30) return 1.50;
+    if (currentStreak >= 10) return 1.25;
+    if (currentStreak >= 2) return 1.10;
+    return 1.0;
+}
+
 export async function phaseF_updateUserAnalytics(
     supabase: any,
     user_id: string,
@@ -121,18 +135,23 @@ export async function phaseF_updateUserAnalytics(
     const lastActiveDate = existingAnalytics?.last_active_date;
     const isNewDay = !lastActiveDate || lastActiveDate !== today;
 
-    // 11. Calculate points earned today
+    // 11. Calculate points earned today (with streak bonus)
+    // Base points = number of correct answers
+    const basePointsEarned = questions_correct;
+    const streakMultiplier = getStreakBonusMultiplier(streakData.currentStreak);
+    const pointsWithBonus = Math.floor(basePointsEarned * streakMultiplier);
+
     let points_earned_today: number;
     if (isNewDay) {
         // New day - reset daily points
-        points_earned_today = points_earned_session;
+        points_earned_today = pointsWithBonus;
     } else {
         // Same day - accumulate points
-        points_earned_today = (existingAnalytics?.points_earned_today || 0) + points_earned_session;
+        points_earned_today = (existingAnalytics?.points_earned_today || 0) + pointsWithBonus;
     }
 
-    // 12. Calculate total points
-    const total_points = (existingAnalytics?.total_points || 0) + points_earned_session;
+    // 12. Calculate total points (with streak bonus applied)
+    const total_points = (existingAnalytics?.total_points || 0) + pointsWithBonus;
 
     // 13. Prepare final upsert data
     const upsertData = {
@@ -185,7 +204,7 @@ export async function phaseF_updateUserAnalytics(
     console.log(`   - Questions: ${questions_attempted}/${questions_correct} (${accuracy_percentage}%)`);
     console.log(`   - Minutes: ${minutes_practiced}`);
     console.log(`   - WPM: ${reading_speed_wpm}`);
-    console.log(`   - Points Today: ${points_earned_today}`);
+    console.log(`   - Points Today: ${points_earned_today} (base: ${basePointsEarned}, streak multiplier: ${streakMultiplier}x)`);
     console.log(`   - Total Points: ${total_points}`);
     console.log(`   - Streak: ${streakData.currentStreak} days`);
 

@@ -45,6 +45,29 @@ export async function handleStep1Init(params: Step1Params): Promise<StepResult> 
                 time_limit_minutes = 40,
             } = params;
 
+            // Beta version limit
+            const BETA_MOCK_LIMIT = 2;
+
+            // Check if user has reached the limit
+            // Count exams that are NOT daily practice and are active (initializing, generating, or completed)
+            const { count, error: countError } = await supabase
+                .from('exam_papers')
+                .select('*', { count: 'exact', head: true })
+                .eq('generated_by_user_id', user_id)
+                .neq('name', 'Daily Practice')
+                .in('generation_status', ['initializing', 'generating', 'completed']);
+
+            if (countError) {
+                console.error(`❌ [Step 1] Failed to check mock count:`, countError);
+                throw new Error(`Failed to check mock count: ${countError.message}`);
+            }
+
+            console.log(`📊 [Step 1] User ${user_id} has ${count} existing customized mocks`);
+
+            if (count !== null && count >= BETA_MOCK_LIMIT) {
+                throw new Error(`Beta version is limited to ${BETA_MOCK_LIMIT} customized mocks. Please contact support for more limits.`);
+            }
+
             // Step 1.1: Create exam record
             console.log(`📝 [Step 1.1] Creating exam record`);
             const { data: examData, error: examError } = await supabase
@@ -111,7 +134,7 @@ export async function handleStep1Init(params: Step1Params): Promise<StepResult> 
             }
 
             console.log(`✅ [Step 1.3] All articles fetched`);
-            
+
             console.log(`📝 [Step 1.3.1] Updating the used articles ids in exam`);
             const articleIds = articlesData.map(a => a.articleMeta.id);
             const { error: articleIdsError } = await supabase
@@ -166,7 +189,7 @@ export async function handleStep1Init(params: Step1Params): Promise<StepResult> 
 
             // Step 1.6: Invoke next function
             console.log(`📞 [Step 1.6] Invoking Step 2: Passages`);
-           await FunctionInvoker.invokeNext('step-2', { exam_id: examId });
+            await FunctionInvoker.invokeNext('step-2', { exam_id: examId });
 
             console.log(`🎉 [Step 1] Initialization complete!`);
 

@@ -8,6 +8,10 @@ import { useFetchCustomizedMocksQuery } from "../redux_usecase/customizedMocksAp
 import MockCard from "../components/MockCard";
 import MockListSkeleton from "../components/MockListSkeleton";
 import MockFormModal from "../components/MockFormModal";
+import toast from "react-hot-toast";
+
+// Beta version limit for customized mocks
+const BETA_MOCK_LIMIT = 2;
 
 const CustomizedMocksPage: React.FC = () => {
     const { isDark } = useTheme();
@@ -15,6 +19,29 @@ const CustomizedMocksPage: React.FC = () => {
 
     // Fetch user's customized mocks
     const { data: mocks = [], isLoading, isError, error, refetch } = useFetchCustomizedMocksQuery();
+
+    // Check if user has reached the limit for beta version
+    const handleCreateClick = () => {
+        // Filter for active mocks (completed or generating)
+        const activeMocks = mocks.filter(m =>
+            m.generation_status === 'completed' ||
+            m.generation_status === 'generating' ||
+            m.generation_status === 'initializing'
+        );
+
+        if (activeMocks.length >= BETA_MOCK_LIMIT) {
+            toast.error(`Beta version is limited to ${BETA_MOCK_LIMIT} customized mocks.`, {
+                icon: '🔒',
+                style: {
+                    borderRadius: '10px',
+                    background: isDark ? '#333' : '#fff',
+                    color: isDark ? '#fff' : '#333',
+                },
+            });
+            return;
+        }
+        setIsModalOpen(true);
+    };
 
     const handleCreateSuccess = () => {
         console.log("[CustomizedMocksPage] Mock creation started");
@@ -75,7 +102,7 @@ const CustomizedMocksPage: React.FC = () => {
                     className="max-w-6xl mx-auto mb-8 flex justify-end"
                 >
                     <button
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={handleCreateClick}
                         className={`
                             flex items-center gap-2 px-6 py-3 rounded-xl font-medium
                             transition-all duration-300 transform hover:scale-105
@@ -182,7 +209,7 @@ const CustomizedMocksPage: React.FC = () => {
                             personalized content.
                         </p>
                         <button
-                            onClick={() => setIsModalOpen(true)}
+                            onClick={handleCreateClick}
                             className={`
                                 px-6 py-3 rounded-xl font-medium transition-all duration-300
                                 ${isDark
