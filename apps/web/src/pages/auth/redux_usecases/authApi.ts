@@ -12,6 +12,7 @@ interface AuthCredentials {
 // Types for the 3-step signup process
 interface SendEmailRequest {
     email: string;
+    captchaToken?: string;
 }
 
 interface VerifyOtpRequest {
@@ -33,10 +34,13 @@ export const authApi = createApi({
     endpoints: (builder) => ({
         //SIGNUP STEP 1: Send the OTP to the user's email
         sendOtpToEmail: builder.mutation<unknown, SendEmailRequest>({
-            queryFn: async ({ email }) => {
+            queryFn: async ({ email, captchaToken }) => {
                 try {
                     const { data, error } = await supabase.auth.signInWithOtp({
                         email: email,
+                        options: {
+                            captchaToken: captchaToken,
+                        },
                     });
 
                     if (error)

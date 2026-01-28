@@ -58,7 +58,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
     const [checkUserExists] = useCheckUserExistsMutation();
 
     // Handle email step
-    const handleEmailSubmit = async (emailValue: string) => {
+    const handleEmailSubmit = async (emailValue: string, captchaToken?: string) => {
         if (!EmailService.isValidEmail(emailValue)) {
             toast.error("Please enter a valid email address");
             return;
@@ -77,7 +77,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                     toast.success("Email already exists, try another !");
                     return;
                 } else {
-                    await sendOtpToEmail({ email: emailValue }).unwrap();
+                    await sendOtpToEmail({ email: emailValue, captchaToken }).unwrap();
                     toast.success("OTP sent successfully");
                 }
             } catch (error) {

@@ -55,7 +55,7 @@ async function main() {
 	// const result = await handleStep5SelectAnswers({ exam_id: "2e64bff5-2fb2-44c3-9842-644f08b743c0"})
 	// const result = await handleStep6RcRationales({ exam_id: "2e64bff5-2fb2-44c3-9842-644f08b743c0"})
 	// const result = await handleStep7VaRationales({ exam_id: "2e64bff5-2fb2-44c3-9842-644f08b743c0"})
-	const {data, error} = await supabase.functions.invoke("daily-content-init");
+	const {data, error} = await supabase.functions.invoke("cleanup-unverified-users");
 	if (error) {
 		console.log("error ")
 		console.log(error)

@@ -1,14 +1,17 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { FaEnvelope } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { EmailService } from "../../../services/email-handling/emailService";
+import { TurnstileWidget, type TurnstileWidgetRef } from "../../../ui_components/TurnstileWidget";
+import { useCooldown } from "../../../hooks/useDebounce";
+import toast from "react-hot-toast";
 
 interface EmailStepProps {
 	isDark: boolean;
 	email: string;
 	onEmailChange: (email: string) => void;
-	onSubmit: (email: string) => void;
+	onSubmit: (email: string, captchaToken?: string) => void;
 	isLoading: boolean;
 	error: string | null;
 	onGoogleLogin: () => void;
@@ -25,9 +28,31 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 	onGoogleLogin,
 	onSwitchMode,
 }) => {
+	const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+	const turnstileRef = useRef<TurnstileWidgetRef>(null);
+	const { isOnCooldown, startCooldown, remainingSeconds } = useCooldown(60000); // 60 second cooldown
+
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
-		onSubmit(email);
+
+		if (isOnCooldown) {
+			toast.error(`Please wait ${remainingSeconds}s before trying again`);
+			return;
+		}
+
+		// Check for CAPTCHA - only required if the widget is enabled (site key is set)
+		const siteKeyConfigured = !!import.meta.env.VITE_TURNSTILE_SITE_KEY;
+		if (siteKeyConfigured && !captchaToken) {
+			toast.error("Please complete the security verification");
+			return;
+		}
+
+		onSubmit(email, captchaToken ?? undefined);
+		startCooldown();
+
+		// Reset captcha after submission
+		turnstileRef.current?.reset();
+		setCaptchaToken(null);
 	};
 
 	return (
@@ -43,11 +68,10 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 					<div
 						className={`
             w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-            ${
-							isDark
+            ${isDark
 								? "bg-brand-primary-dark text-white"
 								: "bg-brand-primary-light text-white"
-						}
+							}
           `}
 					>
 						1
@@ -98,10 +122,9 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 							placeholder="Enter your email"
 							className={`
                 w-full pl-10 pr-4 py-3 rounded-xl border-2 transition-colors duration-200
-                ${
-									isDark
-										? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark placeholder-text-muted-dark"
-										: "bg-bg-tertiary-light border-border-light text-text-primary-light placeholder-text-muted-light"
+                ${isDark
+									? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark placeholder-text-muted-dark"
+									: "bg-bg-tertiary-light border-border-light text-text-primary-light placeholder-text-muted-light"
 								}
                 focus:border-brand-primary-light dark:focus:border-brand-primary-dark focus:ring-0
               `}
@@ -117,21 +140,32 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 					</div>
 				</div>
 
+				{/* Turnstile CAPTCHA Widget */}
+				<TurnstileWidget
+					ref={turnstileRef}
+					isDark={isDark}
+					onVerify={setCaptchaToken}
+					onExpire={() => setCaptchaToken(null)}
+					onError={() => {
+						setCaptchaToken(null);
+						toast.error("Security verification failed. Please try again.");
+					}}
+				/>
+
 				{/* Action buttons */}
 				<div className="space-y-3 pt-2">
 					<button
 						type="submit"
-						disabled={isLoading || !email || !EmailService.isValidEmail(email)}
+						disabled={isLoading || !email || !EmailService.isValidEmail(email) || isOnCooldown}
 						className={`
               w-full py-3 px-4 rounded-xl font-medium transition-all duration-200 hover:cursor-pointer
-              ${
-								isLoading || !email || !EmailService.isValidEmail(email)
-									? "bg-gray-300 text-gray-500 cursor-not-allowed"
-									: "bg-brand-primary-light hover:bg-brand-primary-hover-light dark:bg-brand-primary-dark dark:hover:bg-brand-primary-hover-dark text-white shadow-lg hover:shadow-xl"
+              ${isLoading || !email || !EmailService.isValidEmail(email) || isOnCooldown
+								? "bg-gray-300 text-gray-500 cursor-not-allowed"
+								: "bg-brand-primary-light hover:bg-brand-primary-hover-light dark:bg-brand-primary-dark dark:hover:bg-brand-primary-hover-dark text-white shadow-lg hover:shadow-xl"
 							}
             `}
 					>
-						{isLoading ? "Sending..." : "Continue with Email"}
+						{isLoading ? "Sending..." : isOnCooldown ? `Wait ${remainingSeconds}s` : "Continue with Email"}
 					</button>
 
 					<div className="relative">
@@ -147,11 +181,10 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 							<span
 								className={`
                 px-2 
-                ${
-									isDark
+                ${isDark
 										? "bg-bg-secondary-dark text-text-secondary-dark"
 										: "bg-bg-secondary-light text-text-secondary-light"
-								}
+									}
               `}
 							>
 								Or
@@ -165,13 +198,12 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 						disabled={isLoading}
 						className={`
                         w-full py-3 px-4 rounded-xl font-medium transition-all duration-200 border-2 hover:cursor-pointer
-                        ${
-													isLoading
-														? "bg-gray-300 text-gray-500 cursor-not-allowed"
-														: isDark
-														? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark hover:bg-bg-primary-dark"
-														: "bg-bg-tertiary-light border-border-light text-text-primary-light hover:bg-bg-primary-light"
-												}
+                        ${isLoading
+								? "bg-gray-300 text-gray-500 cursor-not-allowed"
+								: isDark
+									? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark hover:bg-bg-primary-dark"
+									: "bg-bg-tertiary-light border-border-light text-text-primary-light hover:bg-bg-primary-light"
+							}
                       `}
 					>
 						<div className="flex items-center justify-center space-x-2">
@@ -194,10 +226,9 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 							onClick={onSwitchMode}
 							className={`
                 font-medium transition-colors duration-200 hover:cursor-pointer
-                ${
-									isDark
-										? "text-brand-primary-dark hover:text-brand-primary-hover-dark"
-										: "text-brand-primary-light hover:text-brand-primary-hover-light"
+                ${isDark
+									? "text-brand-primary-dark hover:text-brand-primary-hover-dark"
+									: "text-brand-primary-light hover:text-brand-primary-hover-light"
 								}
               `}
 						>

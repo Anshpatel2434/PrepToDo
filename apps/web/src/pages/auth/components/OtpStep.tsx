@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import { FaKey, FaArrowLeft, FaClock } from "react-icons/fa";
+import { useCooldown } from "../../../hooks/useDebounce";
 
 interface OtpStepProps {
 	isDark: boolean;
@@ -21,22 +22,12 @@ export const OtpStep: React.FC<OtpStepProps> = ({
 	isLoading,
 	error,
 }) => {
-	const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
-	const [canResend, setCanResend] = useState(false);
+	const { isOnCooldown, startCooldown, remainingSeconds } = useCooldown(300000); // 5 minutes
 
+	// Start cooldown on mount (since OTP was just sent)
 	useEffect(() => {
-		const timer = setInterval(() => {
-			setTimeLeft((prev) => {
-				if (prev <= 1) {
-					setCanResend(true);
-					return 0;
-				}
-				return prev - 1;
-			});
-		}, 1000);
-
-		return () => clearInterval(timer);
-	}, []);
+		startCooldown();
+	}, [startCooldown]);
 
 	const formatTime = (seconds: number) => {
 		const mins = Math.floor(seconds / 60);
@@ -52,10 +43,10 @@ export const OtpStep: React.FC<OtpStepProps> = ({
 	};
 
 	const handleResendOtp = () => {
-		// This would trigger resending the OTP
-		setTimeLeft(300);
-		setCanResend(false);
-		console.log("Resend OTP");
+		// This would trigger resending the OTP - requires parent handler and CAPTCHA
+		// For now, we just reset the timer to prevent spam clicking
+		startCooldown();
+		console.log("Resend OTP requested");
 	};
 
 	return (
@@ -71,11 +62,10 @@ export const OtpStep: React.FC<OtpStepProps> = ({
 					<div
 						className={`
             w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-            ${
-							isDark
+            ${isDark
 								? "bg-brand-primary-dark text-white"
 								: "bg-brand-primary-light text-white"
-						}
+							}
           `}
 					>
 						1
@@ -86,11 +76,10 @@ export const OtpStep: React.FC<OtpStepProps> = ({
 					<div
 						className={`
             w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-            ${
-							isDark
+            ${isDark
 								? "bg-brand-primary-dark text-white"
 								: "bg-brand-primary-light text-white"
-						}
+							}
           `}
 					>
 						2
@@ -149,27 +138,25 @@ export const OtpStep: React.FC<OtpStepProps> = ({
 				<span
 					className={`
           text-sm font-medium
-          ${
-						timeLeft > 60
+          ${remainingSeconds > 60
 							? isDark
 								? "text-text-secondary-dark"
 								: "text-text-secondary-light"
 							: "text-red-500"
-					}
+						}
         `}
 				>
-					{formatTime(timeLeft)}
+					{isOnCooldown ? formatTime(remainingSeconds) : "Code expired"}
 				</span>
-				{canResend && (
+				{!isOnCooldown && (
 					<button
 						type="button"
 						onClick={handleResendOtp}
 						className={`
               ml-3 text-sm font-medium transition-colors duration-200
-              ${
-								isDark
-									? "text-brand-primary-dark hover:text-brand-primary-hover-dark"
-									: "text-brand-primary-light hover:text-brand-primary-hover-light"
+              ${isDark
+								? "text-brand-primary-dark hover:text-brand-primary-hover-dark"
+								: "text-brand-primary-light hover:text-brand-primary-hover-light"
 							}
             `}
 					>
@@ -232,10 +219,9 @@ export const OtpStep: React.FC<OtpStepProps> = ({
 								name={`otp-${index}`}
 								className={`
                   w-full h-12 text-center text-lg font-bold rounded-xl border-2 transition-colors duration-200
-                  ${
-										isDark
-											? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark"
-											: "bg-bg-tertiary-light border-border-light text-text-primary-light"
+                  ${isDark
+										? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark"
+										: "bg-bg-tertiary-light border-border-light text-text-primary-light"
 									}
                   focus:border-brand-primary-light dark:focus:border-brand-primary-dark focus:ring-0
                 `}
@@ -252,10 +238,9 @@ export const OtpStep: React.FC<OtpStepProps> = ({
 						onClick={onBack}
 						className={`
               flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200
-              ${
-								isDark
-									? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark hover:bg-bg-primary-dark"
-									: "bg-bg-tertiary-light border-border-light text-text-primary-light hover:bg-bg-primary-light"
+              ${isDark
+								? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark hover:bg-bg-primary-dark"
+								: "bg-bg-tertiary-light border-border-light text-text-primary-light hover:bg-bg-primary-light"
 							}
             `}
 					>
@@ -270,10 +255,9 @@ export const OtpStep: React.FC<OtpStepProps> = ({
 						disabled={isLoading || otp.length !== 8}
 						className={`
               flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 hover:cursor-pointer
-              ${
-								isLoading || otp.length !== 8
-									? "bg-gray-300 text-gray-500 cursor-not-allowed"
-									: "bg-brand-primary-light hover:bg-brand-primary-hover-light dark:bg-brand-primary-dark dark:hover:bg-brand-primary-hover-dark text-white shadow-lg hover:shadow-xl"
+              ${isLoading || otp.length !== 8
+								? "bg-gray-300 text-gray-500 cursor-not-allowed"
+								: "bg-brand-primary-light hover:bg-brand-primary-hover-light dark:bg-brand-primary-dark dark:hover:bg-brand-primary-hover-dark text-white shadow-lg hover:shadow-xl"
 							}
             `}
 					>
