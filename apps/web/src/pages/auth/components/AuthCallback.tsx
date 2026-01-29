@@ -2,6 +2,7 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../../services/apiClient";
+import { PageLoader } from "../../../ui_components/PageLoader";
 
 export default function AuthCallback() {
     const navigate = useNavigate();
@@ -55,5 +56,5 @@ export default function AuthCallback() {
         };
     }, [navigate]);
 
-    return <div>Completing sign in…</div>;
+    return <PageLoader/>;
 }
