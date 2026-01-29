@@ -2,14 +2,11 @@
 // FLOATING NAVIGATION COMPONENT
 // ============================================================================
 import React, { useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, MotionValue } from "framer-motion";
 import {
     MdHome,
     MdGridView,
-    MdSchool,
     MdInsertChart,
-    MdInfo,
-    MdMailOutline,
     MdToday,
     MdMenu,
     MdPerson,
@@ -31,6 +28,145 @@ interface NavigationItem {
     iconColorDark: string;
     path: string;
     description: string;
+}
+
+function DockItem({
+    item,
+    mouseY,
+    isDark,
+    hoveredItem,
+    setHoveredItem,
+    handleNavigate
+}: {
+    item: NavigationItem;
+    mouseY: MotionValue;
+    isDark: boolean;
+    hoveredItem: string | null;
+    setHoveredItem: (id: string | null) => void;
+    handleNavigate: (item: NavigationItem) => void;
+}) {
+    const ref = useRef<HTMLDivElement>(null);
+
+    const distance = useTransform(mouseY, (val) => {
+        const bounds = ref.current?.getBoundingClientRect() ?? { y: 0, height: 0 };
+        return val - bounds.y - bounds.height / 2;
+    });
+
+    const widthSync = useTransform(distance, [-150, 0, 150], [40, 60, 40]);
+    const width = useSpring(widthSync, { mass: 0.1, stiffness: 150, damping: 12 });
+
+    return (
+        <motion.div
+            ref={ref}
+            style={{ width, height: width }}
+            onMouseEnter={() => setHoveredItem(item.id)}
+            onMouseLeave={() => setHoveredItem(null)}
+            className="aspect-square flex items-center justify-center relative group"
+        >
+            <motion.button
+                onClick={() => handleNavigate(item)}
+                className={`
+                    w-full h-full rounded-2xl
+                    flex items-center justify-center
+                    backdrop-blur-3xl 
+                    hover:cursor-pointer focus:outline-none
+                    transition-colors
+                    ${isDark
+                        ? "bg-bg-tertiary-dark/80 border border-border-dark/50"
+                        : "bg-bg-tertiary-light/80 border border-border-light/50"
+                    }
+                `}
+                aria-label={item.label}
+                whileTap={{ scale: 0.95 }}
+            >
+                <div
+                    className={`
+                        text-xl sm:text-2xl
+                        ${isDark ? item.iconColorDark : item.iconColorLight}
+                    `}
+                >
+                    {item.icon}
+                </div>
+            </motion.button>
+
+            {/* Floating tooltip */}
+            <AnimatePresence>
+                {hoveredItem === item.id && (
+                    <motion.div
+                        className={`
+                            absolute left-full top-1/2 -translate-y-1/2 ml-4 px-3 py-2 rounded-lg
+                            text-sm font-medium shadow-lg z-50 whitespace-nowrap pointer-events-none
+                            ${isDark
+                                ? "bg-bg-secondary-dark text-text-primary-dark border border-border-dark"
+                                : "bg-bg-secondary-light text-text-primary-light border border-border-light"
+                            }
+                        `}
+                        initial={{ opacity: 0, x: -10, scale: 0.8 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: -10, scale: 0.8 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        {item.label}
+                        <div
+                            className={`
+                                absolute right-full top-1/2 -translate-y-1/2 w-2 h-2 rotate-45
+                                ${isDark
+                                    ? "bg-bg-secondary-dark border-l border-b border-border-dark"
+                                    : "bg-bg-secondary-light border-l border-b border-border-light"
+                                }
+                            `}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </motion.div>
+    );
+}
+
+function DockContainer({
+    isOpen,
+    isDark,
+    navigationItems,
+    hoveredItem,
+    setHoveredItem,
+    handleNavigate
+}: {
+    isOpen: boolean;
+    isDark: boolean;
+    navigationItems: NavigationItem[];
+    hoveredItem: string | null;
+    setHoveredItem: (id: string | null) => void;
+    handleNavigate: (item: NavigationItem) => void;
+}) {
+    const mouseY = useMotionValue(Infinity);
+
+    return (
+        <motion.div
+            onMouseMove={(e) => mouseY.set(e.pageY)}
+            onMouseLeave={() => mouseY.set(Infinity)}
+            className={`
+                fixed left-4 top-20 sm:top-24 z-30 
+                flex flex-col gap-4
+                px-2 py-4 rounded-3xl
+                ${isOpen
+                    ? "translate-x-20 opacity-0 pointer-events-none"
+                    : "translate-x-0 opacity-100 pointer-events-auto"
+                }
+            `}
+        >
+            {navigationItems.map((item) => (
+                <DockItem
+                    key={item.id}
+                    item={item}
+                    mouseY={mouseY}
+                    isDark={isDark}
+                    hoveredItem={hoveredItem}
+                    setHoveredItem={setHoveredItem}
+                    handleNavigate={handleNavigate}
+                />
+            ))}
+        </motion.div>
+    );
 }
 
 const navigationItems: NavigationItem[] = [
@@ -149,17 +285,7 @@ export const FloatingNavigation: React.FC = () => {
         },
     };
 
-    const floatingIconVariants = {
-        hidden: { opacity: 0, scale: 0.8 },
-        visible: (i: number) => ({
-            opacity: 1,
-            scale: 1,
-            transition: {
-                delay: i * 0.1,
-                duration: 0.5,
-            },
-        }),
-    };
+
 
     const onNavigate = (path: string) => {
         // Special handling for daily path
@@ -488,89 +614,15 @@ export const FloatingNavigation: React.FC = () => {
             </motion.div>
 
             {/* Floating Navigation Icons */}
-            <motion.div
-                className={`
-                    fixed left-6 top-20 sm:top-24 z-30 
-                    flex flex-col gap-4 sm:gap-6
-                    hover:cursor-pointer
-                    ${isOpen
-                        ? "translate-x-20 opacity-0 pointer-events-none"
-                        : "translate-x-0 opacity-100 pointer-events-auto"
-                    }
-                `}
-            >
-                {navigationItems.map((item, index) => {
-                    return (
-                        <motion.div
-                            key={item.id}
-                            className="relative group"
-                            onMouseEnter={() => setHoveredItem(item.id)}
-                            onMouseLeave={() => setHoveredItem(null)}
-                            variants={floatingIconVariants}
-                            initial="hidden"
-                            animate="visible"
-                            custom={index}
-                        >
-                            <motion.button
-                                onClick={() => handleNavigate(item)}
-                                className={`
-                                    w-10 h-10 sm:w-12 sm:h-12 rounded-2xl
-                                    flex items-center justify-center
-                                    backdrop-blur-3xl 
-                                    hover:cursor-pointer focus:outline-none
-                                    ${isDark
-                                        ? "bg-bg-tertiary-dark/80 hover:shadow-[0_0_20px_rgba(0,103,71,0.4)] border border-border-dark/50 focus:ring-brand-accent-dark/30"
-                                        : "bg-bg-tertiary-light/80 hover:shadow-[0_0_20px_rgba(0,103,71,0.3)] border border-border-light/50 focus:ring-brand-accent-light/30"
-                                    }
-                                `}
-                                aria-label={item.label}
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.95 }}
-                            >
-                                <motion.div
-                                    className={`
-                                        ${isDark ? item.iconColorDark : item.iconColorLight}
-                                        group-hover:scale-110
-                                    `}
-                                >
-                                    {item.icon}
-                                </motion.div>
-                            </motion.button>
+            <DockContainer
+                isOpen={isOpen}
+                isDark={!!isDark}
+                navigationItems={navigationItems}
+                hoveredItem={hoveredItem}
+                setHoveredItem={setHoveredItem}
+                handleNavigate={handleNavigate}
+            />
 
-                            {/* Floating tooltip */}
-                            <AnimatePresence>
-                                {hoveredItem === item.id && (
-                                    <motion.div
-                                        className={`
-                                            absolute left-full top-1/2 -translate-y-1/2 ml-4 px-3 py-2 rounded-lg
-                                            text-sm font-medium shadow-lg z-50 whitespace-nowrap
-                                            ${isDark
-                                                ? "bg-bg-secondary-dark text-text-primary-dark border border-border-dark"
-                                                : "bg-bg-secondary-light text-text-primary-light border border-border-light"
-                                            }
-                                        `}
-                                        initial={{ opacity: 0, x: -10, scale: 0.8 }}
-                                        animate={{ opacity: 1, x: 0, scale: 1 }}
-                                        exit={{ opacity: 0, x: -10, scale: 0.8 }}
-                                        transition={{ duration: 0.2 }}
-                                    >
-                                        {item.label}
-                                        <div
-                                            className={`
-                                                absolute right-full top-1/2 -translate-y-1/2 w-2 h-2 rotate-45
-                                                ${isDark
-                                                    ? "bg-bg-secondary-dark border-l border-b border-border-dark"
-                                                    : "bg-bg-secondary-light border-l border-b border-border-light"
-                                                }
-                                            `}
-                                        />
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </motion.div>
-                    );
-                })}
-            </motion.div>
 
             {/* Overlay when sidebar is open */}
             <AnimatePresence>

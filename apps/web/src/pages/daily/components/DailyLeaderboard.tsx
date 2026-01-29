@@ -1,13 +1,13 @@
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
-    FaTrophy,
-    FaClock,
-    FaQuestionCircle,
-    FaChevronDown,
-    FaUserCircle,
-    FaTimes
-} from "react-icons/fa";
+    Trophy,
+    Clock,
+    HelpCircle,
+    ChevronDown,
+    UserCircle,
+    X
+} from "lucide-react";
 import { useFetchDailyLeaderboardQuery } from "../redux_usecase/dailyPracticeApi";
 import type { UUID } from "../../../types";
 
@@ -130,30 +130,30 @@ const DailyLeaderboard: React.FC<DailyLeaderboardProps> = ({ examId, isDark }) =
                 className={`p-6 rounded-3xl border ${isDark ? "bg-bg-secondary-dark/40 border-border-dark backdrop-blur-md" : "bg-white border-border-light shadow-sm"} relative overflow-hidden`}
             >
                 <div className="absolute top-0 right-0 p-8 opacity-5">
-                    <FaTrophy size={120} />
+                    <Trophy size={120} />
                 </div>
 
                 <div className="flex items-center justify-between flex-wrap gap-4 relative z-10">
                     <div className="flex items-center gap-4">
-                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-yellow-500 border ${isDark ? "bg-yellow-500/10 border-yellow-500/20" : "bg-yellow-50 border-yellow-200"}`}>
-                            <FaTrophy size={28} />
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-yellow-500 border shrink-0 ${isDark ? "bg-yellow-500/10 border-yellow-500/20" : "bg-yellow-50 border-yellow-200"}`}>
+                            <Trophy size={28} />
                         </div>
                         <div>
-                            <h2 className={`text-2xl font-bold tracking-tight ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                            <h2 className={`text-xl sm:text-2xl font-bold tracking-tight ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
                                 Daily Leaderboard
                             </h2>
                             <p className={`text-sm font-medium ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
-                                <span className={isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}>{totalParticipants}</span> explorers participating today
+                                <span className={isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}>{totalParticipants}</span> participants today
                             </p>
                         </div>
                     </div>
 
                     {currentUserRank !== null && (
-                        <div className={`px-5 py-3 rounded-2xl border ${isDark ? "bg-brand-primary-dark/10 border-brand-primary-dark/20" : "bg-brand-primary-light/5 border-brand-primary-light/20"}`}>
-                            <p className={`text-xs uppercase tracking-widest font-bold opacity-60 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                        <div className={`px-5 py-3 rounded-2xl border ml-auto sm:ml-0 ${isDark ? "bg-brand-primary-dark/10 border-brand-primary-dark/20" : "bg-brand-primary-light/5 border-brand-primary-light/20"}`}>
+                            <p className={`text-[10px] uppercase tracking-widest font-bold opacity-60 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
                                 Your Standing
                             </p>
-                            <p className={`text-3xl font-black ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}`}>
+                            <p className={`text-2xl sm:text-3xl font-black ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}`}>
                                 #{currentUserRank}
                             </p>
                         </div>
@@ -163,20 +163,20 @@ const DailyLeaderboard: React.FC<DailyLeaderboardProps> = ({ examId, isDark }) =
 
             {/* Main Table */}
             <div className={`rounded-3xl border overflow-hidden ${isDark ? "bg-bg-secondary-dark/30 border-border-dark backdrop-blur-sm" : "bg-white border-border-light shadow-md"}`}>
-                <div className="overflow-x-auto overflow-y-hidden">
-                    <div className="min-w-200">
+                <div className="overflow-x-auto overflow-y-hidden custom-scrollbar">
+                    <div className="min-w-[800px]">
                         {/* Table Header */}
                         <div className={`grid grid-cols-12 gap-4 px-8 py-5 text-sm font-bold uppercase tracking-wider border-b ${isDark ? "bg-white/5 border-white/10 text-text-secondary-dark" : "bg-gray-50/50 border-gray-100 text-text-secondary-light"}`}>
                             <div className="col-span-1 flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity" onClick={() => handleSort("rank")}>
-                                Rank <FaChevronDown size={10} className={`transition-transform ${sortField === "rank" && sortOrder === "desc" ? "rotate-180" : ""}`} />
+                                Rank <ChevronDown size={10} className={`transition-transform ${sortField === "rank" && sortOrder === "desc" ? "rotate-180" : ""}`} />
                             </div>
                             <div className="col-span-1"></div> {/* Avatar Spacer */}
                             <div className="col-span-4">Explorer</div>
                             <div className="col-span-3 text-center flex items-center justify-center gap-2 cursor-pointer hover:opacity-70 transition-opacity" onClick={() => handleSort("accuracy")}>
-                                Precision <FaChevronDown size={10} className={`transition-transform ${sortField === "accuracy" && sortOrder === "desc" ? "rotate-180" : ""}`} />
+                                Precision <ChevronDown size={10} className={`transition-transform ${sortField === "accuracy" && sortOrder === "desc" ? "rotate-180" : ""}`} />
                             </div>
                             <div className="col-span-3 text-right flex items-center justify-end gap-2 cursor-pointer hover:opacity-70 transition-opacity" onClick={() => handleSort("time_taken_seconds")}>
-                                Duration <FaChevronDown size={10} className={`transition-transform ${sortField === "time_taken_seconds" && sortOrder === "desc" ? "rotate-180" : ""}`} />
+                                Duration <ChevronDown size={10} className={`transition-transform ${sortField === "time_taken_seconds" && sortOrder === "desc" ? "rotate-180" : ""}`} />
                             </div>
                         </div>
 
@@ -198,13 +198,13 @@ const DailyLeaderboard: React.FC<DailyLeaderboardProps> = ({ examId, isDark }) =
                                     >
                                         <div className="col-span-1">
                                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold border transition-transform group-hover:scale-110 ${getRankBg(entry.rank)} ${getRankColor(entry.rank)}`}>
-                                                {entry.rank <= 3 ? <FaTrophy size={18} /> : <span>#{entry.rank}</span>}
+                                                {entry.rank <= 3 ? <Trophy size={18} /> : <span>#{entry.rank}</span>}
                                             </div>
                                         </div>
 
                                         <div className="col-span-1 flex justify-center">
                                             <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${isDark ? "bg-bg-tertiary-dark border-white/10" : "bg-gray-100 border-white"}`}>
-                                                <FaUserCircle size={24} className="opacity-40" />
+                                                <UserCircle size={24} className="opacity-40" />
                                             </div>
                                         </div>
 
@@ -221,7 +221,7 @@ const DailyLeaderboard: React.FC<DailyLeaderboardProps> = ({ examId, isDark }) =
 
                                         <div className="col-span-3 text-center">
                                             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-blue-500/20 bg-blue-500/5">
-                                                <FaQuestionCircle className="text-blue-500" size={12} />
+                                                <HelpCircle className="text-blue-500" size={12} />
                                                 <span className={`font-mono font-bold ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
                                                     {entry.accuracy.toFixed(1)}%
                                                 </span>
@@ -233,7 +233,7 @@ const DailyLeaderboard: React.FC<DailyLeaderboardProps> = ({ examId, isDark }) =
                                                 <span className={`font-mono text-sm font-medium ${isDark ? "text-orange-400" : "text-orange-600"}`}>
                                                     {formatTime(entry.time_taken_seconds)}
                                                 </span>
-                                                <FaClock className="text-orange-500" size={12} />
+                                                <Clock className="text-orange-500" size={12} />
                                             </div>
                                         </div>
                                     </motion.div>
@@ -259,7 +259,7 @@ const DailyLeaderboard: React.FC<DailyLeaderboardProps> = ({ examId, isDark }) =
                         </div>
                         <div className="col-span-1 flex justify-center">
                             <div className="w-10 h-10 rounded-full bg-brand-primary-light/20 flex items-center justify-center">
-                                <FaUserCircle size={24} className="text-brand-primary-light" />
+                                <UserCircle size={24} className="text-brand-primary-light" />
                             </div>
                         </div>
                         <div className="col-span-4">
@@ -297,12 +297,12 @@ const DailyLeaderboard: React.FC<DailyLeaderboardProps> = ({ examId, isDark }) =
                             className={`w-full max-w-sm rounded-[2.5rem] p-8 border relative z-10 ${isDark ? "bg-bg-secondary-dark border-white/10" : "bg-white border-gray-100"}`}
                         >
                             <button onClick={() => setSelectedEntryDetail(null)} className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
-                                <FaTimes className="opacity-40" />
+                                <X className="opacity-40" />
                             </button>
 
                             <div className="flex flex-col items-center text-center space-y-6">
                                 <div className={`w-24 h-24 rounded-full flex items-center justify-center border-4 ${isDark ? "bg-bg-tertiary-dark border-brand-primary-dark/20" : "bg-gray-50 border-brand-primary-light/20"}`}>
-                                    <FaUserCircle size={60} className="opacity-20 text-brand-primary-light" />
+                                    <UserCircle size={60} className="opacity-20 text-brand-primary-light" />
                                 </div>
 
                                 <div>
@@ -310,7 +310,7 @@ const DailyLeaderboard: React.FC<DailyLeaderboardProps> = ({ examId, isDark }) =
                                         {selectedEntryDetail.username || "Anonymous Scout"}
                                     </h3>
                                     <div className={`mt-2 inline-flex items-center gap-2 px-4 py-1.5 rounded-full font-bold text-sm ${getRankBg(selectedEntryDetail.rank)} ${getRankColor(selectedEntryDetail.rank)}`}>
-                                        <FaTrophy size={14} /> Rank #{selectedEntryDetail.rank}
+                                        <Trophy size={14} /> Rank #{selectedEntryDetail.rank}
                                     </div>
                                 </div>
 

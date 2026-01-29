@@ -1,13 +1,9 @@
-import React from "react";
-import {
-	MdMenuBook,
-	MdQuiz,
-	MdSpellcheck,
-	MdInsertChart,
-	MdPeople,
-	MdAutoAwesome,
-} from "react-icons/md";
+
+import { useState } from "react";
+
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import demo from "../../../assets/demo.png";
 
 interface FeatureShowcaseProps {
 	isDark: boolean;
@@ -15,484 +11,130 @@ interface FeatureShowcaseProps {
 
 const features = [
 	{
-		id: "reading-practice",
-		title: "Daily Reading Comprehension",
+		id: "daily-section",
+		title: "Daily Section",
 		description:
-			"Timed RC practice sessions with microlearning passages, difficulty selection, and built-in analytics.",
-		icon: MdMenuBook,
-		benefits: [
-			"Adaptive difficulty levels",
-			"Real exam simulation",
-			"Progress tracking",
-			"Streak-based motivation",
-		],
-		path: "/reading-practice",
+			"Curated daily practice with fresh passages and questions tailored to your skill level. Maintain your streak with quick 15-min sessions.",
+
+		path: "/daily",
 	},
 	{
-		id: "varc-drills",
-		title: "VARC Question Engine",
+		id: "customized-mocks",
+		title: "Customized Mocks",
 		description:
-			"Interactive drills for para jumbles, summaries, critical reasoning, and vocabulary with AI assistance.",
-		icon: MdQuiz,
-		benefits: [
-			"Multiple question types",
-			"Auto-checked answers",
-			"Detailed explanations",
-			"AI-powered hints",
-		],
-		path: "/varc-drills",
-	},
-	{
-		id: "vocabulary-builder",
-		title: "Smart Vocabulary Builder",
-		description:
-			"Personal dictionary with spaced repetition, mnemonics, and words saved directly from your reading.",
-		icon: MdSpellcheck,
-		benefits: [
-			"Spaced repetition system",
-			"Personal mnemonics",
-			"Context-based learning",
-			"Mastery tracking",
-		],
-		path: "/vocabulary-builder",
+			"AI-powered mock tests designed around your weaknesses. Experience real exam simulation with personalized difficulty.",
+
+		path: "/customized-mocks",
 	},
 	{
 		id: "analytics-dashboard",
-		title: "Performance Analytics",
+		title: "Dashboard",
 		description:
-			"Comprehensive dashboard with visualizations, peer comparisons, and real-time progress updates.",
-		icon: MdInsertChart,
-		benefits: [
-			"Visual progress tracking",
-			"Peer comparisons",
-			"Topic-wise mastery",
-			"Real-time insights",
-		],
-		path: "/analytics",
-	},
-	{
-		id: "social-learning",
-		title: "Social Learning Hub",
-		description:
-			"Leaderboards, study groups, and peer challenges to keep you motivated and engaged.",
-		icon: MdPeople,
-		benefits: [
-			"Daily leaderboards",
-			"Study groups",
-			"Peer challenges",
-			"Achievement system",
-		],
-		path: "/social-learning",
-	},
-	{
-		id: "ai-tutor",
-		title: "AI Study Tutor",
-		description:
-			"24/7 AI assistance with content generation, instant feedback, and personalized study recommendations.",
-		icon: MdAutoAwesome,
-		benefits: [
-			"24/7 availability",
-			"Personalized guidance",
-			"Instant feedback",
-			"Smart recommendations",
-		],
-		path: "/ai-tutor",
+			"Comprehensive analytics with visual insights into your performance. Track your growth trajectory in real-time.",
+
+		path: "/dashboard",
 	},
 ];
 
-export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ isDark }) => {
-	// Animation variants
-	const containerVariants = {
-		hidden: { opacity: 0 },
-		visible: {
-			opacity: 1,
-			transition: {
-				staggerChildren: 0.3,
-				delayChildren: 0.2,
-			},
-		},
-	};
+export const FeatureShowcase = ({ isDark }: FeatureShowcaseProps) => {
+	const navigate = useNavigate();
+	const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
-	const itemVariants = {
-		hidden: { opacity: 0, y: 30 },
-		visible: {
-			opacity: 1,
-			y: 0,
-			transition: {
-				duration: 0.8,
-			},
-		},
-	};
-
-	const headerVariants = {
-		hidden: { opacity: 0, y: -20 },
-		visible: {
-			opacity: 1,
-			y: 0,
-			transition: {
-				duration: 0.8,
-			},
-		},
+	const handleCardClick = (path: string) => {
+		navigate(path);
 	};
 
 	return (
 		<section
-			className={`relative py-16 sm:py-20 md:py-24 lg:py-28 overflow-hidden transition-colors duration-300 ${
-				isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
-			}`}
+			className={`relative py-24 overflow-hidden transition-colors duration-500 ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
+				}`}
 		>
-			{/* Background Elements */}
-			<div className="absolute inset-0 overflow-hidden pointer-events-none">
-				<motion.div
-					className={`absolute top-1/4 left-1/4 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-full blur-3xl ${
-						isDark ? "bg-brand-primary-dark/20" : "bg-brand-primary-light/10"
-					}`}
-					animate={{
-						y: [0, 30, 0],
-						x: [0, 20, 0],
-						scale: [1, 1.1, 1],
-					}}
-					transition={{
-						duration: 8,
-						repeat: Infinity,
-						repeatType: "reverse",
-					}}
-				/>
-				<motion.div
-					className={`absolute bottom-1/4 right-1/4 w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-full blur-3xl ${
-						isDark
-							? "bg-brand-secondary-dark/20"
-							: "bg-brand-secondary-light/10"
-					}`}
-					animate={{
-						y: [0, -40, 0],
-						x: [0, -30, 0],
-						scale: [1, 1.15, 1],
-					}}
-					transition={{
-						duration: 10,
-						repeat: Infinity,
-						repeatType: "reverse",
-						delay: 1,
-					}}
-				/>
-			</div>
-
-			<div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-				{/* Section Header */}
-				<motion.div
-					className="text-center mb-12 sm:mb-14 md:mb-16 lg:mb-20"
-					initial="hidden"
-					whileInView="visible"
-					viewport={{ once: true, amount: 0.3 }}
-					variants={headerVariants}
-				>
-					<motion.div
-						className={`inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full backdrop-blur-sm mb-4 sm:mb-6 border ${
-							isDark
-								? "bg-brand-primary-dark/20 border-brand-primary-dark/30"
-								: "bg-brand-primary-light/10 border-brand-primary-light/20"
-						}`}
-						whileHover={{ scale: 1.05 }}
-					>
-						<motion.div
-							className={`w-2 h-2 rounded-full ${
-								isDark ? "bg-brand-primary-dark" : "bg-brand-primary-light"
-							}`}
-							animate={{ opacity: [1, 0.5, 1] }}
-							transition={{ duration: 2, repeat: Infinity }}
-						/>
-						<span
-							className={`text-xs sm:text-sm font-medium transition-colors duration-300 ${
-								isDark ? "text-brand-primary-dark" : "text-brand-primary-light"
-							}`}
-						>
-							Powerful Features
-						</span>
-					</motion.div>
-
+			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+				{/* Header */}
+				<div className="text-center mb-16 space-y-4">
 					<h2
-						className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold mb-4 sm:mb-6 transition-colors duration-300 ${
-							isDark ? "text-text-primary-dark" : "text-text-primary-light"
-						}`}
-					>
-						Transform Your
-						<br />
-						<span
-							className={`transition-colors duration-300 ${
-								isDark ? "text-brand-primary-dark" : "text-brand-primary-light"
+						className={`text-3xl md:text-5xl font-bold tracking-tight ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
 							}`}
-						>
-							Study Experience
-						</span>
-					</h2>
-
-					<motion.div
-						className={`w-16 sm:w-20 md:w-24 h-1 mx-auto rounded-full ${
-							isDark ? "bg-brand-primary-dark" : "bg-brand-primary-light"
-						}`}
-						initial={{ width: 0 }}
-						whileInView={{ width: "auto" }}
-						viewport={{ once: true }}
-						transition={{ duration: 0.8, delay: 0.5 }}
-					/>
-
-					<p
-						className={`text-base sm:text-lg md:text-xl leading-relaxed max-w-3xl mx-auto mt-4 sm:mt-6 transition-colors duration-300 ${
-							isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
-						}`}
 					>
-						Discover how PrepToDo's comprehensive suite of AI-powered tools can
-						revolutionize your learning journey and accelerate your academic
-						growth.
+						Master Your Preparation
+					</h2>
+					<p
+						className={`text-lg md:text-xl max-w-2xl mx-auto ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+							}`}
+					>
+						Powerful tools designed to accelerate your learning and maximize your score.
 					</p>
-				</motion.div>
+				</div>
 
-				{/* Features Grid */}
-				<motion.div
-					className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 lg:gap-10 xl:gap-12"
-					initial="hidden"
-					whileInView="visible"
-					viewport={{ once: true, amount: 0.1 }}
-					variants={containerVariants}
-				>
+				{/* Grid */}
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 					{features.map((feature) => {
-						const IconComponent = feature.icon;
+						const isHovered = hoveredCard === feature.id;
+
+
 						return (
 							<motion.div
 								key={feature.id}
-								variants={itemVariants}
-								whileHover={{ y: -5 }}
-								transition={{ duration: 0.3 }}
-								className="group"
+								className={`group relative rounded-3xl border cursor-pointer overflow-hidden transition-all duration-300 ${isDark
+									? "bg-bg-secondary-dark/40 border-border-dark hover:bg-bg-secondary-dark/60"
+									: "bg-bg-secondary-light/40 border-border-light hover:bg-bg-secondary-light/60"
+									}`}
+								onMouseEnter={() => setHoveredCard(feature.id)}
+								onMouseLeave={() => setHoveredCard(null)}
+								onClick={() => handleCardClick(feature.path)}
+								whileHover={{ y: -4 }}
 							>
-								<motion.div
-									className={`
-                  relative p-6 sm:p-8 lg:p-10 rounded-2xl sm:rounded-3xl backdrop-blur-sm shadow-lg border
-                  ${
-										isDark
-											? "bg-bg-secondary-dark border-border-dark hover:border-brand-primary-dark"
-											: "bg-bg-secondary-light border-border-light hover:border-brand-primary-light"
-									}
-                  hover:shadow-xl
-                `}
-									whileHover={{
-										boxShadow: isDark
-											? "0 20px 40px rgba(0, 0, 0, 0.5)"
-											: "0 20px 40px rgba(0, 0, 0, 0.15)",
-									}}
-								>
-									{/* Feature Header */}
-									<div className="relative z-10 flex flex-col sm:flex-row items-start gap-4 sm:gap-6 mb-4 sm:mb-6">
-										{/* Icon */}
+								<div className="p-4 h-full flex flex-col">
+									<div className="flex items-start justify-end">
 										<motion.div
-											className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg ${
-												isDark
-													? "bg-brand-primary-dark"
-													: "bg-brand-primary-light"
-											}`}
-											whileHover={{
-												scale: 1.1,
-												rotate: [0, -10, 10, 0],
-											}}
-											transition={{ duration: 0.5 }}
+											initial={{ opacity: 0, x: 10 }}
+											animate={{ opacity: isHovered ? 1 : 0, x: isHovered ? 0 : 10 }}
+											transition={{ duration: 0.2 }}
 										>
-											<IconComponent className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-											<motion.div
-												className={`absolute inset-0 rounded-xl sm:rounded-2xl blur-lg opacity-0 ${
-													isDark
-														? "bg-brand-primary-dark"
-														: "bg-brand-primary-light"
-												}`}
-												whileHover={{ opacity: 0.4 }}
-											/>
-										</motion.div>
-
-										{/* Content */}
-										<div className="flex-1 space-y-2">
-											<h3
-												className={`text-xl sm:text-2xl md:text-3xl font-bold transition-colors duration-300 ${
-													isDark
-														? "text-text-primary-dark"
-														: "text-text-primary-light"
-												}`}
+											<svg
+												className={`w-5 h-5 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+													}`}
+												fill="none"
+												viewBox="0 0 24 24"
+												stroke="currentColor"
 											>
-												{feature.title}
-											</h3>
-										</div>
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													strokeWidth={2}
+													d="M17 8l4 4m0 0l-4 4m4-4H3"
+												/>
+											</svg>
+										</motion.div>
 									</div>
 
-									{/* Description */}
+									<h3
+										className={`text-2xl font-bold mb-3 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+											}`}
+									>
+										{feature.title}
+									</h3>
+
 									<p
-										className={`text-base sm:text-lg leading-relaxed mb-4 sm:mb-6 relative z-10 transition-colors duration-300 ${
-											isDark
-												? "text-text-secondary-dark"
-												: "text-text-secondary-light"
-										}`}
+										className={`mb-8 leading-relaxed ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+											}`}
 									>
 										{feature.description}
 									</p>
 
-									{/* Demo Image */}
-									<div className="mb-4 sm:mb-6 relative z-10">
-										<div
-											className={`w-full h-32 sm:h-40 md:h-48 rounded-xl sm:rounded-2xl overflow-hidden shadow-md border transition-colors duration-300 ${
-												isDark
-													? "border-border-dark bg-bg-tertiary-dark"
-													: "border-border-light bg-bg-tertiary-light"
-											}`}
-										>
-											<div className="w-full h-full flex items-center justify-center">
-												{/* Demo image placeholder */}
-												<div className="text-center">
-													<div
-														className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-2 sm:mb-4 mx-auto ${
-															isDark
-																? "bg-brand-primary-dark/20"
-																: "bg-brand-primary-light/20"
-														}`}
-													>
-														<IconComponent className="text-xl sm:text-2xl" />
-													</div>
-													<p
-														className={`text-xs sm:text-sm font-medium ${
-															isDark
-																? "text-text-muted-dark"
-																: "text-text-muted-light"
-														}`}
-													>
-														{feature.title} Preview
-													</p>
-													<p
-														className={`text-xs mt-1 ${
-															isDark
-																? "text-text-muted-dark"
-																: "text-text-muted-light"
-														}`}
-													>
-														Interactive demo coming soon
-													</p>
-												</div>
-											</div>
-										</div>
+									<div className="mt-auto relative rounded-xl overflow-hidden aspect-video shadow-lg">
+										<img
+											src={demo}
+											alt={feature.title}
+											className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+										/>
+										<div className={`absolute inset-0 bg-linear-to-t ${isDark ? 'from-black/40' : 'from-black/20'} to-transparent`} />
 									</div>
-
-									{/* Benefits List */}
-									<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-10">
-										{feature.benefits.map((benefit, idx) => (
-											<div
-												key={idx}
-												className="flex items-center gap-3 group/item"
-											>
-												<motion.div
-													className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center shadow-sm ${
-														isDark
-															? "bg-brand-primary-dark"
-															: "bg-brand-primary-light"
-													}`}
-													whileHover={{ scale: 1.1 }}
-													transition={{ duration: 0.2 }}
-												>
-													<svg
-														className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white"
-														fill="currentColor"
-														viewBox="0 0 20 20"
-													>
-														<path
-															fillRule="evenodd"
-															d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-															clipRule="evenodd"
-														/>
-													</svg>
-												</motion.div>
-												<span
-													className={`text-xs sm:text-sm font-medium transition-colors duration-200 ${
-														isDark
-															? "text-text-secondary-dark"
-															: "text-text-secondary-light"
-													}`}
-												>
-													{benefit}
-												</span>
-											</div>
-										))}
-									</div>
-
-									{/* Hover action indicator */}
-									<motion.div
-										className={`
-                      absolute top-4 sm:top-6 right-4 sm:right-6 w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2
-                      flex items-center justify-center opacity-0 group-hover:opacity-100
-                      transform scale-75 group-hover:scale-100
-                      ${
-												isDark
-													? "border-brand-primary-dark text-brand-primary-dark"
-													: "border-brand-primary-light text-brand-primary-light"
-											}
-                    `}
-										whileHover={{ scale: 1.1 }}
-									>
-										<svg
-											className="w-3 h-3 sm:w-4 sm:h-4"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-										>
-											<path
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												strokeWidth={2}
-												d="M9 5l7 7-7 7"
-											/>
-										</svg>
-									</motion.div>
-								</motion.div>
+								</div>
 							</motion.div>
 						);
 					})}
-				</motion.div>
-
-				{/* Bottom CTA */}
-				<motion.div
-					className="text-center mt-12 sm:mt-14 md:mt-16 lg:mt-20"
-					initial={{ opacity: 0, y: 20 }}
-					whileInView={{ opacity: 1, y: 0 }}
-					viewport={{ once: true }}
-					transition={{ duration: 0.8, delay: 0.3 }}
-				>
-					<div className="inline-flex flex-col sm:flex-row gap-4">
-						<motion.button
-							className={`
-                px-6 sm:px-8 py-3 sm:py-4 text-white font-semibold rounded-xl sm:rounded-2xl
-                shadow-lg hover:shadow-xl focus-ring
-                ${
-									isDark
-										? "bg-brand-primary-dark hover:bg-brand-primary-hover-dark"
-										: "bg-brand-primary-light hover:bg-brand-primary-hover-light"
-								}
-              `}
-							whileHover={{ y: -2 }}
-							whileTap={{ scale: 0.98 }}
-						>
-							<span className="text-sm sm:text-base">Explore All Features</span>
-						</motion.button>
-						<motion.button
-							className={`
-                px-6 sm:px-8 py-3 sm:py-4 backdrop-blur-sm font-semibold rounded-xl sm:rounded-2xl
-                shadow-lg hover:shadow-xl focus-ring border
-                ${
-									isDark
-										? "bg-bg-tertiary-dark/80 text-text-secondary-dark border-border-darker hover:border-brand-primary-dark"
-										: "bg-bg-tertiary-light/80 text-text-secondary-light border-border-lighter hover:border-brand-primary-light"
-								}
-              `}
-							whileHover={{ y: -2 }}
-							whileTap={{ scale: 0.98 }}
-						>
-							<span className="text-sm sm:text-base">Start Free Trial</span>
-						</motion.button>
-					</div>
-				</motion.div>
+				</div>
 			</div>
 		</section>
 	);

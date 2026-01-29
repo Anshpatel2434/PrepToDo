@@ -1,13 +1,12 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-    FaHistory,
-    FaChevronLeft,
-    FaChevronRight,
-    FaCalendarAlt,
-    FaCheckCircle,
-    FaArrowRight
-} from "react-icons/fa";
+    History,
+    ChevronLeft,
+    ChevronRight,
+    CalendarDays,
+    ArrowRight
+} from "lucide-react";
 import { useFetchPreviousDailyTestsQuery } from "../redux_usecase/dailyPracticeApi";
 import { useTheme } from "../../../context/ThemeContext";
 
@@ -96,7 +95,7 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isDark ? "bg-bg-tertiary-dark text-brand-primary-dark" : "bg-brand-primary-light/10 text-brand-primary-light"}`}>
-                        <FaHistory size={22} />
+                        <History size={22} />
                     </div>
                     <div>
                         <h2 className={`text-2xl font-bold tracking-tight ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
@@ -129,7 +128,7 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
                                         whileHover={{ scale: 1.02, y: -2 }}
                                         whileTap={{ scale: 0.98 }}
                                         className={`
-                                            relative w-full p-5 flex items-center gap-5 rounded-3xl text-left border backdrop-blur-md transition-all group
+                                            relative w-full p-5 flex items-center gap-1 rounded-3xl text-left border backdrop-blur-md group
                                             ${isCurrent
                                                 ? (isDark
                                                     ? "bg-brand-primary-dark/20 border-brand-primary-dark shadow-lg shadow-brand-primary-dark/10"
@@ -147,7 +146,7 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
                                         )}
 
                                         <div className={`
-                                            w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-black shrink-0 border-2
+                                            w-8 h-8 rounded-2xl flex items-center justify-center text-lg font-black shrink-0 border-2
                                             ${isToday
                                                 ? "bg-amber-500 text-white border-amber-400 rotate-[-4deg]"
                                                 : isDark
@@ -159,15 +158,14 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
                                         </div>
 
                                         <div className="flex-1 min-w-0">
-                                            <h3 className={`flex items-center justify-center gap-2 mb-1 font-bold truncate ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
-                                                <FaCalendarAlt size={14} />
+                                            <h3 className={`flex items-center justify-center gap-2  font-bold truncate text-lg ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                                                <CalendarDays size={16} />
                                                 <span>{formatDate(exam.created_at)}</span>
                                             </h3>
-                                            {isCurrent && <FaCheckCircle className="text-brand-primary-light shrink-0" size={12} />}
                                         </div>
 
-                                        <div className={`p-3 rounded-xl transition-transform group-hover:translate-x-1 ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
-                                            <FaArrowRight size={14} className="opacity-30" />
+                                        <div className={`p-2 rounded-xl transition-transform group-hover:translate-x-1 ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+                                            <ArrowRight size={14} className="opacity-30" />
                                         </div>
                                     </motion.button>
                                 );
@@ -191,7 +189,7 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
                                     ${currentPage === 1 ? "opacity-30 cursor-not-allowed" : "hover:scale-105 active:scale-95"}
                                 `}
                             >
-                                <FaChevronLeft size={12} />
+                                <ChevronLeft size={16} />
                                 <span>Previous</span>
                             </motion.button>
                             <motion.button
@@ -205,7 +203,7 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
                                 `}
                             >
                                 <span>Next</span>
-                                <FaChevronRight size={12} />
+                                <ChevronRight size={16} />
                             </motion.button>
                         </div>
                     </div>
@@ -213,7 +211,7 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
             ) : (
                 <div className={`text-center py-20 rounded-[2.5rem] border-2 border-dashed ${isDark ? "border-white/10" : "border-gray-100 bg-gray-50/30"}`}>
                     <div className="w-20 h-20 rounded-full bg-gray-400/10 flex items-center justify-center mx-auto mb-6">
-                        <FaHistory className="opacity-20" size={32} />
+                        <History className="opacity-20" size={32} />
                     </div>
                     <p className={`text-xl font-bold mb-2 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
                         No History Found
