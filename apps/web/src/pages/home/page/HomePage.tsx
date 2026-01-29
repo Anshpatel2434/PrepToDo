@@ -1,17 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useFetchUserQuery } from "../../auth/redux_usecases/authApi";
 import { FloatingNavigation } from "../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
 import { AuthPopup } from "../../auth/components/AuthPopup";
 import { HeroSection } from "../components/HeroSection";
-import { IntroductionSection } from "../components/IntroductionSection";
 import { FeatureShowcase } from "../components/FeatureShowcase";
 import { Footer } from "../components/Footer";
 import { useTheme } from "../../../context/ThemeContext";
 import { dailyPracticeApi } from "../../daily/redux_usecase/dailyPracticeApi";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export const HomePage: React.FC = () => {
 	const { data: authState } = useFetchUserQuery();
+	const location = useLocation();
+	const navigate = useNavigate();
+	const hasScrolled = useRef(false);
 
 	const { isDark } = useTheme();
 
@@ -22,6 +25,22 @@ export const HomePage: React.FC = () => {
 	useEffect(() => {
 		console.log("Auth state:", authState);
 	}, [authState]);
+
+	useEffect(() => {
+		if (
+			location.hash === "#features" &&
+			!hasScrolled.current
+		) {
+			hasScrolled.current = true;
+
+			document
+				.querySelector('[data-section="features"]')
+				?.scrollIntoView({ behavior: "smooth" });
+
+			// ✅ remove hash after scrolling
+			navigate("/home", { replace: true });
+		}
+	}, [location, navigate]);
 
 	const handleQuickAuth = (action: "signin" | "signup") => {
 		setAuthMode(action);
@@ -62,11 +81,6 @@ export const HomePage: React.FC = () => {
 						isAuthenticated={Boolean(authState)}
 						onQuickAuth={handleQuickAuth}
 					/>
-				</section>
-
-				{/* Introduction Section */}
-				<section data-section="about">
-					<IntroductionSection isDark={isDark} />
 				</section>
 
 				{/* Feature Showcase */}
