@@ -58,10 +58,12 @@ export type MetricMapping = z.infer<typeof MetricMappingSchema>;
 export const DiagnosticResultSchema = z.object({
     attempt_id: z.string(),
 
-    // Personalized analysis in natural, conversational language
-    personalized_analysis: z.string(), // Main explanation of why THIS user got it wrong
-    targeted_advice: z.string(), // Specific, actionable next steps for this user
-
+    // Personalized analysis in natural, conversational language  
+    analysis: z.string(), // Main explanation of why THIS user got it wrong (formerly personalized_analysis)
+    action: z.string(), // Specific, actionable next steps for this user (formerly targeted_advice)
+    performance: z.string().nullish(), // Contextual encouragement based on strengths (formerly strength_comparison)
+    focus_areas: z.array(z.string()), // Specific skills to work on
+    
     // User-specific context (for internal use, not displayed directly)
     related_weak_areas: z.array(z.object({
         dimension_type: z.string(),
@@ -70,9 +72,7 @@ export const DiagnosticResultSchema = z.object({
         human_readable_description: z.string(), // Natural language description
     })).nullish(),
 
-    strength_comparison: z.string().nullish(), // Contextual encouragement based on strengths
-
-    // Existing fields (kept for backward compatibility and supplementary info)
+    // Existing technical fields (kept for backward compatibility and supplementary info)
     dominant_reasoning_failures: z.array(
         z.object({
             reasoning_node_label: z.string(),

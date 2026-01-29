@@ -7,10 +7,12 @@
         "test": "npm run start",
         "start": "ts-node index.ts",
         "bundle:edge": "node scripts/bundle-edge-function.js",
+        "bundle:analytics": "node scripts/bundle-edge-function.js",
         "bundle:customized-mocks": "node scripts/bundleCustomizedMocks.js",
         "bundle:daily-content": "node scripts/bundleDailyContent.js",
         "deploy:edge": "npm run bundle:edge && supabase functions deploy daily-content",
-        "dev:edge": "npm run bundle:edge && supabase functions serve daily-content"
+        "dev:edge": "npm run bundle:edge && supabase functions serve daily-content",
+        "deploy:analytics": "npm run bundle:analytics && supabase functions deploy user-analytics"
     },
     "author": "",
     "license": "ISC",
