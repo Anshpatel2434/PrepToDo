@@ -76,7 +76,7 @@ export const DashboardPage: React.FC = () => {
                         <div className="text-sm">Please sign in to view your analytics dashboard.</div>
                     </motion.div>
                 ) : (
-                    <div className="space-y-4 sm:space-y-5 max-w-[1600px] mx-auto">
+                    <div className="space-y-4 sm:space-y-5 max-w-400 mx-auto">
                         {/* Row 1: User Details (left - smaller) + Skill Radar (right - larger) */}
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
                             <div className="lg:col-span-5">

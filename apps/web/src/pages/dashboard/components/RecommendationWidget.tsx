@@ -146,11 +146,11 @@ export const RecommendationWidget: React.FC<RecommendationWidgetProps> = ({
             <div className="p-5 sm:p-6">
                 {/* Header */}
                 <div className="mb-5">
-                    <h3 className={`font-bold text-lg ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                    <h3 className={`font-bold text-xl sm:text-2xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
                         }`}>
                         Focus Today
                     </h3>
-                    <p className={`text-[11px] mt-1 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                    <p className={`text-sm mt-1.5 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
                         }`}>
                         Personalized practice priorities based on your performance.
                     </p>
@@ -212,8 +212,8 @@ export const RecommendationWidget: React.FC<RecommendationWidgetProps> = ({
 
                             {/* Recommended Difficulty & CTA */}
                             <div className={`p-4 rounded-xl border ${isDark
-                                ? "bg-gradient-to-r from-brand-primary-dark/10 to-brand-accent-dark/10 border-brand-primary-dark/30"
-                                : "bg-gradient-to-r from-brand-primary-light/5 to-brand-accent-light/5 border-brand-primary-light/20"
+                                ? "bg-linear-to-r from-brand-primary-dark/10 to-brand-accent-dark/10 border-brand-primary-dark/30"
+                                : "bg-linear-to-r from-brand-primary-light/5 to-brand-accent-light/5 border-brand-primary-light/20"
                                 }`}>
                                 <div className="flex items-center justify-between gap-4">
                                     <div>

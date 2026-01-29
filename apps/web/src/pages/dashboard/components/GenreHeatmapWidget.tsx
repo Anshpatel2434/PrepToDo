@@ -99,9 +99,6 @@ function LiquidCell({
                         }`}>
                         {formatGenreName(genre)}
                     </span>
-                    {trend === "improving" && <MdTrendingUp className="w-4 h-4 trend-improving shrink-0 trend-glow" />}
-                    {trend === "declining" && <MdTrendingDown className="w-4 h-4 trend-declining shrink-0" />}
-                    {trend === "stagnant" && <MdTrendingFlat className="w-4 h-4 trend-stable shrink-0" />}
                 </div>
 
                 {/* Score at bottom */}
@@ -186,11 +183,11 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
             <div className="p-5 sm:p-6">
                 {/* Header */}
                 <div className="mb-5">
-                    <h3 className={`font-bold text-lg ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                    <h3 className={`font-bold text-xl sm:text-2xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
                         }`}>
                         Genre Performance
                     </h3>
-                    <p className={`text-[11px] mt-1 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                    <p className={`text-sm mt-1.5 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
                         }`}>
                         {insightText || "Complete RC sets to see genre breakdown."}
                     </p>
@@ -245,28 +242,33 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
                             </motion.div>
 
                             {/* Legend */}
-                            <div className="mt-5 pt-4 border-t flex flex-wrap gap-2 text-[11px]">
-                                <span className={`mr-2 flex items-center ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>
-                                    Fill level = proficiency
-                                </span>
-                                <span className={`
-                                    flex items-center gap-1.5 px-2 py-0.5 rounded-lg
-                                    ${isDark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-500/10 text-emerald-700'}
-                                `}>
-                                    <MdTrendingUp className="w-3 h-3" /> Improving
-                                </span>
-                                <span className={`
-                                    flex items-center gap-1.5 px-2 py-0.5 rounded-lg
-                                    ${isDark ? 'bg-rose-500/10 text-rose-400' : 'bg-rose-500/10 text-rose-700'}
-                                `}>
-                                    <MdTrendingDown className="w-3 h-3" /> Declining
-                                </span>
-                                <span className={`
-                                    flex items-center gap-1.5 px-2 py-0.5 rounded-lg
-                                    ${isDark ? 'bg-slate-500/10 text-slate-400' : 'bg-slate-500/10 text-slate-700'}
-                                `}>
-                                    <MdTrendingFlat className="w-3 h-3" /> Stable
-                                </span>
+                            <div className="mt-5 pt-4 border-t flex flex-col gap-3">
+                                <div className={`text-[10px] leading-relaxed ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>
+                                    <span className="font-semibold block mb-1 uppercase tracking-wider opacity-60">Understanding the metrics</span>
+                                    The <span className="italic">fill level</span> represents your holistic proficiency—a weighted score of accuracy and comprehension depth.
+                                    The <span className="italic">percentage</span> indicates your mastery of specific genre nuances based on your performance history.
+                                </div>
+
+                                <div className="flex flex-wrap gap-2 text-[11px]">
+                                    <span className={`
+                                        flex items-center gap-1.5 px-2 py-0.5 rounded-lg
+                                        ${isDark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-500/10 text-emerald-700'}
+                                    `}>
+                                        <MdTrendingUp className="w-3 h-3" /> Improving
+                                    </span>
+                                    <span className={`
+                                        flex items-center gap-1.5 px-2 py-0.5 rounded-lg
+                                        ${isDark ? 'bg-rose-500/10 text-rose-400' : 'bg-rose-500/10 text-rose-700'}
+                                    `}>
+                                        <MdTrendingDown className="w-3 h-3" /> Declining
+                                    </span>
+                                    <span className={`
+                                        flex items-center gap-1.5 px-2 py-0.5 rounded-lg
+                                        ${isDark ? 'bg-slate-500/10 text-slate-400' : 'bg-slate-500/10 text-slate-700'}
+                                    `}>
+                                        <MdTrendingFlat className="w-3 h-3" /> Stable
+                                    </span>
+                                </div>
                             </div>
                         </>
                     )}

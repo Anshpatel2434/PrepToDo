@@ -117,11 +117,11 @@ export const WPMAccuracyWidget: React.FC<WPMAccuracyWidgetProps> = ({
                 {/* Header with current values */}
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 mb-5">
                     <div className="flex-1 min-w-0">
-                        <h3 className={`font-bold text-lg ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                        <h3 className={`font-bold text-xl sm:text-2xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
                             }`}>
                             Speed vs Accuracy
                         </h3>
-                        <p className={`text-[11px] mt-1 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                        <p className={`text-sm mt-1.5 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
                             }`}>
                             {insightText}
                         </p>

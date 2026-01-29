@@ -321,10 +321,10 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
 
                         {/* Welcome text */}
                         <div className="flex-1 min-w-0">
-                            <div className={`text-[10px] ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>
+                            <div className={`text-xs ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>
                                 Welcome back,
                             </div>
-                            <h2 className={`font-bold text-lg tracking-tight truncate ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                            <h2 className={`font-bold text-xl tracking-tight truncate ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
                                 }`}>
                                 {name}!
                             </h2>

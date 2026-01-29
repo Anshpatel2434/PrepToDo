@@ -150,7 +150,7 @@ function BarColumn({
 
             {/* Label and Trend */}
             <div className="mt-2 flex flex-col items-center gap-0.5 w-full max-w-[100px] h-12">
-                <span className={`text-[10px] font-medium text-center leading-tight ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                <span className={`text-xs font-medium text-center leading-tight ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
                     {label}
                 </span>
             </div>
@@ -229,14 +229,17 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
             <div className="p-5 sm:p-6">
                 {/* Header */}
                 <div className="mb-5">
-                    <h3 className={`font-bold text-lg ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                    <h3 className={`font-bold text-xl sm:text-2xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
                         }`}>
                         Skill Proficiency
                     </h3>
                     {insightText && (
-                        <p className={`text-[11px] mt-1 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                        <p className={`text-sm mt-1.5 leading-relaxed ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
                             }`}>
                             {insightText}
+                            <span className="block mt-1 opacity-80 italic text-xs">
+                                Percentages represent reasoning mastery: your ability to consistently apply logic patterns across all attempted questions.
+                            </span>
                         </p>
                     )}
                 </div>

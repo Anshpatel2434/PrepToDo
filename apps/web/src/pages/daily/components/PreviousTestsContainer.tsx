@@ -1,6 +1,13 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion"
-import { MdHistory, MdArrowBack, MdArrowForward } from "react-icons/md";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+    FaHistory,
+    FaChevronLeft,
+    FaChevronRight,
+    FaCalendarAlt,
+    FaCheckCircle,
+    FaArrowRight
+} from "react-icons/fa";
 import { useFetchPreviousDailyTestsQuery } from "../redux_usecase/dailyPracticeApi";
 import { useTheme } from "../../../context/ThemeContext";
 
@@ -34,16 +41,11 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
     };
 
     const isTodayExam = (examId: string) => {
-        if (!todayExamId) return false;
-
-        // Find the exam in the list
-        const exam = previousTests?.find(e => e.id === examId);
+        if (!todayExamId || !previousTests) return false;
+        const exam = previousTests.find(e => e.id === examId);
         if (!exam) return todayExamId === examId;
-
-        // Compare both exam ID and date to ensure it's actually today's exam
         const today = new Date().toISOString().split('T')[0];
         const examDate = new Date(exam.created_at).toISOString().split('T')[0];
-
         return todayExamId === examId && examDate === today;
     };
 
@@ -61,203 +63,163 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
 
     if (isLoading) {
         return (
-            <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary-light"></div>
+            <div className="flex flex-col items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-primary-light"></div>
             </div>
         );
     }
 
+    const containerVariants = {
+        visible: {
+            transition: {
+                staggerChildren: 0.03,
+            },
+        }
+    };
+
+    const cardVariants = {
+        hidden: { opacity: 0, x: -10 },
+        visible: {
+            opacity: 1,
+            x: 0,
+            transition: { type: "spring" as const, stiffness: 300, damping: 25 }
+        }
+    };
+
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-            className="max-w-4xl mx-auto"
+            className="max-w-4xl mx-auto space-y-8"
         >
-            {/* Header */}
-            <div className="flex items-center gap-3 mb-6">
-                <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"
-                        }`}
-                >
-                    <MdHistory
-                        className={`w-6 h-6 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
-                            }`}
-                    />
+            {/* Legend/Header */}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isDark ? "bg-bg-tertiary-dark text-brand-primary-dark" : "bg-brand-primary-light/10 text-brand-primary-light"}`}>
+                        <FaHistory size={22} />
+                    </div>
+                    <div>
+                        <h2 className={`text-2xl font-bold tracking-tight ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                            Previous Daily Challenges
+                        </h2>
+                    </div>
                 </div>
-                <h2
-                    className={`text-2xl font-serif font-bold ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                        }`}
-                >
-                    Previous Daily Tests
-                </h2>
             </div>
 
-            {/* Tests Container */}
+            {/* Content Area */}
             {previousTests && previousTests.length > 0 ? (
-                <div
-                    className={`rounded-2xl border-2 ${isDark
-                        ? "bg-bg-secondary-dark border-border-dark"
-                        : "bg-bg-secondary-light border-border-light"
-                        }`}
-                >
-                    {/* Test List */}
-                    <div className="divide-y-2">
-                        {previousTests.map((exam, index) => (
-                            <motion.button
-                                key={exam.id}
-                                onClick={() => onExamSelect(exam.id, formatDate(exam.created_at))}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.6 + index * 0.02, duration: 0.3 }}
-                                className={`
-                                    w-full px-6 py-4 flex items-center justify-between
-                                    transition-all duration-200
-                                    ${selectedExamId === exam.id
-                                        ? isDark
-                                            ? "bg-brand-primary-dark/20"
-                                            : "bg-brand-primary-light/20"
-                                        : isDark
-                                            ? "hover:bg-bg-tertiary-dark/50"
-                                            : "hover:bg-bg-tertiary-light/50"
-                                    }
-                                    ${isTodayExam(exam.id)
-                                        ? "border-l-4 border-amber-500"
-                                        : ""
-                                    }
-                                `}
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div
+                <div className="space-y-6">
+                    <motion.div
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="visible"
+                        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                    >
+                        <AnimatePresence mode="popLayout">
+                            {previousTests.map((exam, index) => {
+                                const isCurrent = selectedExamId === exam.id;
+                                const isToday = isTodayExam(exam.id);
+
+                                return (
+                                    <motion.button
+                                        key={exam.id}
+                                        variants={cardVariants}
+                                        layout
+                                        onClick={() => onExamSelect(exam.id, formatDate(exam.created_at))}
+                                        whileHover={{ scale: 1.02, y: -2 }}
+                                        whileTap={{ scale: 0.98 }}
                                         className={`
-                                            w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold
-                                            ${isTodayExam(exam.id)
-                                                ? "bg-amber-500 text-white"
-                                                : isDark
-                                                    ? "bg-bg-tertiary-dark text-text-primary-dark"
-                                                    : "bg-bg-tertiary-light text-text-primary-light"
+                                            relative w-full p-5 flex items-center gap-5 rounded-3xl text-left border backdrop-blur-md transition-all group
+                                            ${isCurrent
+                                                ? (isDark
+                                                    ? "bg-brand-primary-dark/20 border-brand-primary-dark shadow-lg shadow-brand-primary-dark/10"
+                                                    : "bg-brand-primary-light/10 border-brand-primary-light shadow-lg shadow-brand-primary-light/10")
+                                                : (isDark
+                                                    ? "bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20"
+                                                    : "bg-white/60 border-black/5 hover:bg-white hover:shadow-xl hover:shadow-brand-primary-light/10")
                                             }
                                         `}
                                     >
-                                        {getTestNumber(index)}
-                                    </div>
-                                    <div className="text-left">
-                                        <h3
-                                            className={`font-semibold ${isDark
-                                                ? "text-text-primary-dark"
-                                                : "text-text-primary-light"
-                                                }`}
-                                        >
-                                            Daily Test #{getTestNumber(index)}
-                                        </h3>
-                                        <p
-                                            className={`text-sm ${isDark
-                                                ? "text-text-secondary-dark"
-                                                : "text-text-secondary-light"
-                                                }`}
-                                        >
-                                            {formatDate(exam.created_at)}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    {isTodayExam(exam.id) && (
-                                        <span className="px-3 py-1 bg-amber-500 text-white text-xs rounded-full font-medium">
-                                            TODAY
-                                        </span>
-                                    )}
-                                    <MdHistory
-                                        className={`w-5 h-5 ${isDark
-                                            ? "text-text-secondary-dark"
-                                            : "text-text-secondary-light"
-                                            }`}
-                                    />
-                                </div>
-                            </motion.button>
-                        ))}
-                    </div>
+                                        {isToday && (
+                                            <div className="absolute top-0 right-6 translate-y-[-50%] px-3 py-1 bg-amber-500 text-white text-[10px] font-black uppercase tracking-tighter rounded-full shadow-lg">
+                                                Live Now
+                                            </div>
+                                        )}
 
-                    {/* Pagination Controls */}
-                    <div
-                        className={`px-6 py-4 border-t-2 flex items-center justify-between ${isDark ? "border-border-dark" : "border-border-light"
-                            }`}
-                    >
-                        <span
-                            className={`text-sm ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
-                                }`}
-                        >
-                            Page {currentPage}
-                        </span>
-                        <div className="flex gap-2">
+                                        <div className={`
+                                            w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-black shrink-0 border-2
+                                            ${isToday
+                                                ? "bg-amber-500 text-white border-amber-400 rotate-[-4deg]"
+                                                : isDark
+                                                    ? "bg-bg-tertiary-dark text-text-primary-dark border-white/5"
+                                                    : "bg-gray-50 text-text-primary-light border-gray-100"
+                                            }
+                                        `}>
+                                            {getTestNumber(index)}
+                                        </div>
+
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className={`flex items-center justify-center gap-2 mb-1 font-bold truncate ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                                                <FaCalendarAlt size={14} />
+                                                <span>{formatDate(exam.created_at)}</span>
+                                            </h3>
+                                            {isCurrent && <FaCheckCircle className="text-brand-primary-light shrink-0" size={12} />}
+                                        </div>
+
+                                        <div className={`p-3 rounded-xl transition-transform group-hover:translate-x-1 ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+                                            <FaArrowRight size={14} className="opacity-30" />
+                                        </div>
+                                    </motion.button>
+                                );
+                            })}
+                        </AnimatePresence>
+                    </motion.div>
+
+                    {/* Pagination */}
+                    <div className="flex items-center justify-between pt-6">
+                        <p className={`text-xs font-bold uppercase tracking-widest opacity-40 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                            Page {currentPage} Overflow
+                        </p>
+                        <div className="flex gap-3">
                             <motion.button
                                 onClick={handlePreviousPage}
                                 disabled={currentPage === 1}
-                                whileHover={{ scale: currentPage === 1 ? 1 : 1.05 }}
-                                whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
+                                whileTap={{ scale: 0.95 }}
                                 className={`
-                                    px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-200
-                                    ${currentPage === 1
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : isDark
-                                            ? "hover:bg-bg-tertiary-dark"
-                                            : "hover:bg-bg-tertiary-light"
-                                    }
-                                    ${isDark
-                                        ? "bg-bg-secondary-dark text-text-primary-dark border-border-dark border-2"
-                                        : "bg-bg-secondary-light text-text-primary-light border-border-light border-2"
-                                    }
+                                    flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all
+                                    border-2 ${isDark ? "border-white/5" : "border-gray-100 bg-white shadow-sm"}
+                                    ${currentPage === 1 ? "opacity-30 cursor-not-allowed" : "hover:scale-105 active:scale-95"}
                                 `}
                             >
-                                <MdArrowBack size={16} />
-                                <span className="text-sm font-medium">Previous</span>
+                                <FaChevronLeft size={12} />
+                                <span>Previous</span>
                             </motion.button>
                             <motion.button
                                 onClick={handleNextPage}
                                 disabled={previousTests.length < itemsPerPage}
-                                whileHover={{ scale: previousTests.length < itemsPerPage ? 1 : 1.05 }}
-                                whileTap={{ scale: previousTests.length < itemsPerPage ? 1 : 0.95 }}
+                                whileTap={{ scale: 0.95 }}
                                 className={`
-                                    px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-200
-                                    ${previousTests.length < itemsPerPage
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : isDark
-                                            ? "hover:bg-bg-tertiary-dark"
-                                            : "hover:bg-bg-tertiary-light"
-                                    }
-                                    ${isDark
-                                        ? "bg-bg-secondary-dark text-text-primary-dark border-border-dark border-2"
-                                        : "bg-bg-secondary-light text-text-primary-light border-border-light border-2"
-                                    }
+                                    flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all
+                                    border-2 ${isDark ? "border-white/5" : "border-gray-100 bg-white shadow-sm"}
+                                    ${previousTests.length < itemsPerPage ? "opacity-30 cursor-not-allowed" : "hover:scale-105 active:scale-95"}
                                 `}
                             >
-                                <span className="text-sm font-medium">Next</span>
-                                <MdArrowForward size={16} />
+                                <span>Next</span>
+                                <FaChevronRight size={12} />
                             </motion.button>
                         </div>
                     </div>
                 </div>
             ) : (
-                <div
-                    className={`
-                        text-center py-12 rounded-2xl border-2 border-dashed
-                        ${isDark ? "border-border-dark" : "border-border-light"}
-                    `}
-                >
-                    <MdHistory
-                        className={`w-16 h-16 mx-auto mb-4 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
-                            }`}
-                    />
-                    <p
-                        className={`text-lg font-medium mb-2 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                            }`}
-                    >
-                        No Previous Tests
+                <div className={`text-center py-20 rounded-[2.5rem] border-2 border-dashed ${isDark ? "border-white/10" : "border-gray-100 bg-gray-50/30"}`}>
+                    <div className="w-20 h-20 rounded-full bg-gray-400/10 flex items-center justify-center mx-auto mb-6">
+                        <FaHistory className="opacity-20" size={32} />
+                    </div>
+                    <p className={`text-xl font-bold mb-2 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                        No History Found
                     </p>
-                    <p
-                        className={`text-sm ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
-                            }`}
-                    >
-                        Complete today's challenge to see it here!
+                    <p className={`text-sm opacity-50 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                        Your past achievements will appear here once you complete a challenge.
                     </p>
                 </div>
             )}
