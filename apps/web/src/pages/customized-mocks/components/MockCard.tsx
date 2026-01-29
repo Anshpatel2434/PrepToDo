@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { MdCheckCircle, MdPlayArrow, MdPending, MdAccessTime, MdErrorOutline } from "react-icons/md";
+import { CheckCircle2, Play, Clock, AlertCircle, Loader2, ArrowRight, FileText, Timer } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import type { CustomizedMockWithSession } from "../redux_usecase/customizedMocksApi";
@@ -29,7 +29,7 @@ const MockCard = React.memo<MockCardProps>(({ mock, index, isDark }) => {
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString("en-US", {
             year: "numeric",
-            month: "long",
+            month: "short",
             day: "numeric",
         });
     };
@@ -48,12 +48,12 @@ const MockCard = React.memo<MockCardProps>(({ mock, index, isDark }) => {
             );
 
             return {
-                icon: MdPending,
+                icon: Loader2,
                 text: shortMessage,
                 fullMessage: message,
                 bgClass: isDark
-                    ? "bg-graph-strategy-dark/30 text-graph-strategy-dark"
-                    : "bg-graph-strategy-light/10 text-graph-strategy-light",
+                    ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                    : "bg-amber-50 text-amber-600 border-amber-200",
                 animate: true,
             };
         }
@@ -61,12 +61,12 @@ const MockCard = React.memo<MockCardProps>(({ mock, index, isDark }) => {
         // Check for failed generation with null/undefined checks
         if (generationData?.state?.status === 'failed') {
             return {
-                icon: MdErrorOutline,
+                icon: AlertCircle,
                 text: "Failed",
                 fullMessage: generationData.state.error_message || "Generation failed",
                 bgClass: isDark
-                    ? "bg-error/20 text-error"
-                    : "bg-error/10 text-error",
+                    ? "bg-red-500/10 text-red-500 border-red-500/20"
+                    : "bg-red-50 text-red-600 border-red-200",
                 animate: false,
             };
         }
@@ -76,12 +76,12 @@ const MockCard = React.memo<MockCardProps>(({ mock, index, isDark }) => {
         const unsafeMock = mock as any;
         if (unsafeMock?.isOptimistic || unsafeMock?.generation_status === 'generating') {
             return {
-                icon: MdPending,
+                icon: Loader2,
                 text: "Generating...",
                 fullMessage: "Generating your customized mock...",
                 bgClass: isDark
-                    ? "bg-graph-strategy-dark/30 text-graph-strategy-dark"
-                    : "bg-graph-strategy-light/10 text-graph-strategy-light",
+                    ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                    : "bg-amber-50 text-amber-600 border-amber-200",
                 animate: true,
             };
         }
@@ -90,39 +90,39 @@ const MockCard = React.memo<MockCardProps>(({ mock, index, isDark }) => {
         switch (mock?.session_status) {
             case "completed":
                 return {
-                    icon: MdCheckCircle,
+                    icon: CheckCircle2,
                     text: "Completed",
                     fullMessage: "Test completed",
                     bgClass: isDark
-                        ? "bg-success/20 text-success"
-                        : "bg-success/10 text-success",
+                        ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                        : "bg-emerald-50 text-emerald-600 border-emerald-200",
                     animate: false,
                 };
             case "in_progress":
                 return {
-                    icon: MdPending,
+                    icon: Clock,
                     text: "In Progress",
                     fullMessage: "Test in progress",
                     bgClass: isDark
-                        ? "bg-warning/20 text-warning"
-                        : "bg-warning/10 text-warning",
+                        ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                        : "bg-blue-50 text-blue-600 border-blue-200",
                     animate: false,
                 };
             case "not_started":
             default:
                 return {
-                    icon: MdPlayArrow,
+                    icon: Play,
                     text: "Not Started",
                     fullMessage: "Ready to start",
                     bgClass: isDark
-                        ? "bg-blue-900/30 text-blue-400"
-                        : "bg-blue-100 text-blue-700",
+                        ? "bg-bg-tertiary-dark text-text-secondary-dark border-transparent"
+                        : "bg-gray-100 text-gray-500 border-gray-200",
                     animate: false,
                 };
         }
     }, [mock, generationData, isDark]);
 
-    const StatusIcon = statusBadge?.icon ?? MdPlayArrow;
+    const StatusIcon = statusBadge?.icon ?? Play;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const isGenerating = generationData?.isGenerating || (mock as any)?.isOptimistic;
 
@@ -153,136 +153,78 @@ const MockCard = React.memo<MockCardProps>(({ mock, index, isDark }) => {
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05, duration: 0.4 }} // Faster stagger
+            layout
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.3, delay: index * 0.05 }}
             onClick={handleClick}
             className={`
-                relative overflow-hidden p-6 rounded-2xl border-2 cursor-pointer
-                group transition-all duration-300
+                group relative p-5 rounded-3xl border cursor-pointer overflow-hidden
+                transition-all duration-300
                 ${isDark
-                    ? "bg-bg-secondary-dark border-border-dark hover:border-brand-primary-dark"
-                    : "bg-bg-secondary-light border-border-light hover:border-brand-primary-light"
+                    ? "bg-white/5 border-white/5 hover:border-brand-primary-dark/30 hover:bg-white/10"
+                    : "bg-white border-gray-100 shadow-sm hover:shadow-xl hover:border-brand-primary-light/30"
                 }
-                ${!isGenerating ? "hover:shadow-xl transform hover:-translate-y-1" : ""}
-                ${isGenerating ? "opacity-75" : ""}
+                ${isGenerating ? "opacity-80" : ""}
             `}
         >
-            {/* Gradient Background on Hover - Optimized with will-change */}
-            <div
-                className={`
-                    absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 will-change-opacity
-                    ${isDark
-                        ? "bg-gradient-to-br from-purple-600/10 to-blue-600/10"
-                        : "bg-gradient-to-br from-purple-500/5 to-blue-500/5"
-                    }
-                `}
-            />
-
             {/* Content */}
-            <div className="relative z-10">
-                {/* Header with Status Badge */}
+            <div className="relative z-10 flex flex-col h-full">
+                {/* Header: Date & Status */}
                 <div className="flex items-start justify-between mb-4">
-                    <h3
-                        className={`
-                            font-serif font-bold text-xl flex-1
-                            ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
-                        `}
-                    >
-                        {mock?.name || "Untitled Mock"}
-                    </h3>
-                    <span
-                        className={`
-                            flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium
-                            ${statusBadge?.bgClass || (isDark ? "bg-blue-900/30 text-blue-400" : "bg-blue-100 text-blue-700")}
-                        `}
-                    >
-                        {statusBadge?.animate ? (
-                            <motion.div
-                                animate={{ rotate: 360 }}
-                                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                            >
-                                <StatusIcon className="w-4 h-4" />
-                            </motion.div>
-                        ) : (
-                            <StatusIcon className="w-4 h-4" />
-                        )}
-                        {statusBadge?.text || "Unknown"}
-                    </span>
-                </div>
-
-                {/* Progress Message (if generating or failed) */}
-                {(isGenerating || generationData?.state?.status === 'failed') && statusBadge?.fullMessage && (
-                    <div className={`
-                        mb-3 text-sm
-                        ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
-                    `}>
-                        {statusBadge.fullMessage}
+                    <div className={`p-2 rounded-xl text-xs font-bold flex items-center gap-2 border ${statusBadge?.bgClass}`}>
+                        <StatusIcon className={`w-3.5 h-3.5 ${statusBadge?.animate ? "animate-spin" : ""}`} />
+                        {statusBadge?.text}
                     </div>
-                )}
-
-                {/* Date */}
-                <div className="flex items-center gap-2 mb-4">
-                    <MdAccessTime
-                        className={`w-4 h-4 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
-                            }`}
-                    />
-                    <p
-                        className={`
-                            text-sm
-                            ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
-                        `}
-                    >
-                        {mock?.created_at ? formatDate(mock.created_at) : "Unknown date"}
-                    </p>
                 </div>
 
-                {/* Metadata */}
-                <div
-                    className={`
-                        flex items-center gap-3 text-sm mb-4
-                        ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
-                    `}
-                >
-                    <span>{mock?.passages_count ?? 0} Passages</span>
-                    <span>•</span>
-                    <span>{mock?.questions_count ?? 0} Questions</span>
-                    {mock?.time_limit_minutes && (
-                        <>
-                            <span>•</span>
-                            <span>{mock.time_limit_minutes} min</span>
-                        </>
+                {/* Title and Icon */}
+                <div className="flex-1 mb-6">
+                    <div className={`
+                        w-12 h-12 rounded-2xl flex items-center justify-center mb-4 text-xl
+                        ${isDark ? "bg-bg-tertiary-dark text-text-primary-dark" : "bg-bg-secondary-light text-brand-primary-light"}
+                    `}>
+                        <FileText size={20} />
+                    </div>
+
+                    <h3 className={`font-serif font-bold text-lg leading-tight mb-2 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                        {"Customized Sectional Test"}
+                    </h3>
+
+                    <div className="flex items-center gap-2 text-2xl opacity-60">
+                        <Clock size={16} />
+                        <span>{mock?.created_at ? formatDate(mock.created_at) : "Unknown date"}</span>
+                    </div>
+
+                </div>
+
+                {/* Footer Metrics */}
+                <div className={`
+                    pt-4 border-t flex items-center justify-between text-xs font-medium
+                    ${isDark ? "border-white/5 text-text-secondary-dark" : "border-gray-100 text-text-secondary-light"}
+                `}>
+                    <div className="flex items-center gap-3">
+                        <span className="flex items-center gap-1">
+                            <FileText size={12} />
+                            {mock?.questions_count ?? 0} Qs
+                        </span>
+                        <span className="flex items-center gap-1">
+                            <Timer size={12} />
+                            {mock?.time_limit_minutes ?? 0}m
+                        </span>
+                    </div>
+
+                    {!isGenerating && generationData?.state?.status !== 'failed' && (
+                        <div className={`
+                            flex items-center gap-1 transition-transform group-hover:translate-x-1
+                            ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}
+                        `}>
+                            {mock?.session_status === "completed" ? "Results" : "Start"}
+                            <ArrowRight size={12} />
+                        </div>
                     )}
                 </div>
-
-                {/* Action Indicator - CSS Animation Replacement */}
-                {!isGenerating && generationData?.state?.status !== 'failed' && (
-                    <div className="flex items-center gap-2 mt-4">
-                        <span
-                            className={`
-                            text-sm font-medium
-                            ${isDark
-                                    ? "text-brand-primary-dark"
-                                    : "text-brand-primary-light"
-                                }
-                        `}
-                        >
-                            {mock?.session_status === "completed"
-                                ? "View Results"
-                                : mock?.session_status === "in_progress"
-                                    ? "Continue Test"
-                                    : "Start Test"}
-                        </span>
-                        <span
-                            className={`
-                                transform transition-transform duration-300 group-hover:translate-x-1
-                                ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}
-                            `}
-                        >
-                            →
-                        </span>
-                    </div>
-                )}
             </div>
         </motion.div>
     );

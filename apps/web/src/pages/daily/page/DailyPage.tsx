@@ -13,6 +13,18 @@ import DailyLeaderboard from "../components/DailyLeaderboard";
 import { DailyFeatureWidget } from "../components/DailyFeatureWidget";
 import { ArticleSourceWidget } from "../components/ArticleSourceWidget";
 
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+function cn(...inputs: ClassValue[]) {
+    return twMerge(clsx(inputs));
+}
+
+const TOGGLE_OPTIONS = [
+    { label: 'Practice', value: 'test' },
+    { label: 'Leaderboard', value: 'leaderboard' },
+] as const;
+
 const DailyPage: React.FC = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -166,35 +178,41 @@ const DailyPage: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Segmented Toggle */}
-                                <div className={`
-                                    p-1 rounded-lg flex items-center
-                                    ${isDark ? "bg-bg-tertiary-dark" : "bg-gray-100"}
-                                `}>
-                                    <button
-                                        onClick={() => setViewMode("test")}
-                                        className={`
-                                            px-4 py-1.5 rounded-md text-sm font-medium transition-all
-                                            ${viewMode === "test"
-                                                ? (isDark ? "bg-bg-secondary-dark text-text-primary-dark shadow-sm" : "bg-white text-gray-900 shadow-sm")
-                                                : (isDark ? "text-text-secondary-dark hover:text-text-primary-dark" : "text-gray-500 hover:text-gray-900")
-                                            }
-                                        `}
-                                    >
-                                        Practice
-                                    </button>
-                                    <button
-                                        onClick={() => setViewMode("leaderboard")}
-                                        className={`
-                                            px-4 py-1.5 rounded-md text-sm font-medium transition-all
-                                            ${viewMode === "leaderboard"
-                                                ? (isDark ? "bg-bg-secondary-dark text-text-primary-dark shadow-sm" : "bg-white text-gray-900 shadow-sm")
-                                                : (isDark ? "text-text-secondary-dark hover:text-text-primary-dark" : "text-gray-500 hover:text-gray-900")
-                                            }
-                                        `}
-                                    >
-                                        Leaderboard
-                                    </button>
+                                {/* Segmented Toggle (Refactored with framer-motion) */}
+                                <div
+                                    className={cn(
+                                        "p-1 rounded-lg flex items-center relative",
+                                        isDark ? "bg-bg-tertiary-dark" : "bg-gray-100"
+                                    )}
+                                    role="tablist"
+                                >
+                                    {TOGGLE_OPTIONS.map((option) => (
+                                        <button
+                                            key={option.value}
+                                            onClick={() => setViewMode(option.value as "test" | "leaderboard")}
+                                            className={cn(
+                                                "relative w-32 px-4 py-1.5 text-sm font-medium transition-colors z-10 flex justify-center",
+                                                viewMode === option.value
+                                                    ? (isDark ? "text-text-primary-dark" : "text-gray-900")
+                                                    : (isDark ? "text-text-secondary-dark hover:text-text-primary-dark" : "text-gray-500 hover:text-gray-900")
+                                            )}
+                                            role="tab"
+                                            aria-selected={viewMode === option.value}
+                                        >
+                                            {viewMode === option.value && (
+                                                <motion.div
+                                                    layoutId="view-mode-pill"
+                                                    className={cn(
+                                                        "absolute inset-0 rounded-md shadow-sm",
+                                                        isDark ? "bg-bg-secondary-dark" : "bg-white"
+                                                    )}
+                                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                                    style={{ zIndex: -1 }}
+                                                />
+                                            )}
+                                            {option.label}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
                         )}

@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import { useCreateCustomizedMockMutation, useFetchUserMetricProficiencyQuery, useFetchAvailableGenresQuery } from "../redux_usecase/customizedMocksApi";
 import { useFetchUserQuery } from "../../auth/redux_usecases/authApi";
 import { supabase } from "../../../services/apiClient";
-import { MdClose, MdExpandMore, MdExpandLess, MdTimer, MdLibraryBooks, MdAssignment, MdRecommend } from "react-icons/md";
+import { X, ChevronDown, ChevronUp, Timer, BookOpen, ClipboardList, Sparkles, Check } from "lucide-react";
 
 interface MockFormModalProps {
     isOpen: boolean;
@@ -262,7 +262,7 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={handleClose}
-                    className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                    className="absolute inset-0 bg-black/60 backdrop-blur-md"
                 />
 
                 {/* Modal */}
@@ -271,92 +271,97 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 20 }}
                     className={`
-                        relative w-full max-w-2xl max-h-[90vh] overflow-y-auto
-                        rounded-2xl shadow-2xl
-                        ${isDark ? "bg-bg-secondary-dark" : "bg-bg-secondary-light"}
+                        relative w-full max-w-2xl max-h-[85vh] overflow-y-auto overflow-x-hidden
+                        rounded-3xl shadow-2xl border
+                        ${isDark
+                            ? "bg-bg-secondary-dark border-white/10"
+                            : "bg-white border-white/50"
+                        }
                     `}
                 >
                     {/* Header */}
                     <div className={`
-                        sticky top-0 z-10 px-6 py-4 border-b
-                        ${isDark ? "bg-bg-secondary-dark border-border-dark" : "bg-bg-secondary-light border-border-light"}
+                        sticky top-0 z-10 px-8 py-5 border-b backdrop-blur-md flex items-center justify-between
+                        ${isDark
+                            ? "bg-bg-secondary-dark/80 border-white/10"
+                            : "bg-white/80 border-black/5"
+                        }
                     `}>
-                        <div className="flex items-center justify-between">
-                            <h2 className={`
-                                text-2xl font-serif font-bold
-                                ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
-                            `}>
-                                Create Custom Mock Test
-                            </h2>
-                            <button
-                                onClick={handleClose}
-                                disabled={isLoading}
-                                className={`
-                                    p-2 rounded-lg transition-colors
-                                    ${isDark
-                                        ? "hover:bg-bg-tertiary-dark text-text-secondary-dark"
-                                        : "hover:bg-bg-tertiary-light text-text-secondary-light"}
-                                    ${isLoading ? "opacity-50 cursor-not-allowed" : ""}
-                                `}
-                            >
-                                <MdClose className="w-6 h-6" />
-                            </button>
-                        </div>
+                        <h2 className={`
+                            text-2xl font-serif font-bold tracking-tight
+                            ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
+                        `}>
+                            New Mock Test
+                        </h2>
+                        <button
+                            onClick={handleClose}
+                            disabled={isLoading}
+                            className={`
+                                p-2 rounded-full transition-colors
+                                ${isDark
+                                    ? "hover:bg-white/10 text-text-secondary-dark"
+                                    : "hover:bg-black/5 text-text-secondary-light"}
+                                ${isLoading ? "opacity-50 cursor-not-allowed" : ""}
+                            `}
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
                     </div>
 
                     {/* Form */}
-                    <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                    <form onSubmit={handleSubmit} className="p-8 space-y-8">
 
                         {/* Fixed Metadata Display */}
                         <div className="grid grid-cols-3 gap-4">
                             <div className={`
-                                p-4 rounded-xl border flex flex-col items-center justify-center text-center
-                                ${isDark ? "bg-bg-tertiary-dark/50 border-border-dark" : "bg-bg-tertiary-light/50 border-border-light"}
+                                p-4 rounded-2xl flex flex-col items-center justify-center text-center gap-1 border
+                                ${isDark ? "bg-bg-tertiary-dark/50 border-white/5" : "bg-gray-50 border-black/5"}
                             `}>
-                                <MdLibraryBooks className={`w-6 h-6 mb-2 ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}`} />
-                                <span className={`text-xs uppercase tracking-wider font-semibold ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>Passages</span>
+                                <BookOpen className={`w-5 h-5 mb-1 ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}`} />
+                                <span className={`text-[10px] uppercase tracking-wider font-bold opacity-60 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>Passages</span>
                                 <span className={`text-xl font-bold ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>{numPassages}</span>
                             </div>
                             <div className={`
-                                p-4 rounded-xl border flex flex-col items-center justify-center text-center
-                                ${isDark ? "bg-bg-tertiary-dark/50 border-border-dark" : "bg-bg-tertiary-light/50 border-border-light"}
+                                p-4 rounded-2xl flex flex-col items-center justify-center text-center gap-1 border
+                                ${isDark ? "bg-bg-tertiary-dark/50 border-white/5" : "bg-gray-50 border-black/5"}
                             `}>
-                                <MdAssignment className={`w-6 h-6 mb-2 ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}`} />
-                                <span className={`text-xs uppercase tracking-wider font-semibold ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>Questions</span>
+                                <ClipboardList className={`w-5 h-5 mb-1 ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}`} />
+                                <span className={`text-[10px] uppercase tracking-wider font-bold opacity-60 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>Questions</span>
                                 <span className={`text-xl font-bold ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>{totalQuestions}</span>
                             </div>
                             <div className={`
-                                p-4 rounded-xl border flex flex-col items-center justify-center text-center
-                                ${isDark ? "bg-bg-tertiary-dark/50 border-border-dark" : "bg-bg-tertiary-light/50 border-border-light"}
+                                p-4 rounded-2xl flex flex-col items-center justify-center text-center gap-1 border
+                                ${isDark ? "bg-bg-tertiary-dark/50 border-white/5" : "bg-gray-50 border-black/5"}
                             `}>
-                                <MdTimer className={`w-6 h-6 mb-2 ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}`} />
-                                <span className={`text-xs uppercase tracking-wider font-semibold ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>Time</span>
+                                <Timer className={`w-5 h-5 mb-1 ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}`} />
+                                <span className={`text-[10px] uppercase tracking-wider font-bold opacity-60 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>Time</span>
                                 <span className={`text-xl font-bold ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>{timeLimitMinutes}m</span>
                             </div>
                         </div>
 
                         {/* Genre Selection */}
                         <div>
-                            <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center justify-between mb-4">
                                 <label className={`
-                                    text-sm font-medium
+                                    text-base font-bold
                                     ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
                                 `}>
-                                    Select Exactly 4 Genres
+                                    Select Genres
                                 </label>
                                 <span className={`
-                                    text-xs px-2 py-1 rounded-full
+                                    text-xs px-2.5 py-1 rounded-md font-bold
                                     ${selectedGenres.length === 4
-                                        ? (isDark ? "bg-green-900/30 text-green-400" : "bg-green-100 text-green-700")
-                                        : (isDark ? "bg-amber-900/30 text-amber-400" : "bg-amber-100 text-amber-700")
+                                        ? "bg-emerald-500/10 text-emerald-500"
+                                        : "bg-amber-500/10 text-amber-500"
                                     }
                                 `}>
                                     {selectedGenres.length} / 4 Selected
                                 </span>
                             </div>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                 {isLoadingGenres ? (
-                                    <div className="col-span-4 text-center py-4 text-sm text-text-secondary-light italic">
+                                    <div className="col-span-4 text-center py-8 opacity-50 text-sm">
                                         Loading available genres...
                                     </div>
                                 ) : (
@@ -370,19 +375,27 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
                                                 type="button"
                                                 onClick={() => handleGenreToggle(genreName)}
                                                 className={`
-                                                    relative px-3 py-2 rounded-lg text-xs font-medium transition-all text-left flex flex-col gap-1
+                                                    relative px-4 py-3 rounded-xl text-xs font-bold transition-all text-left flex flex-col gap-2 border
                                                     ${isSelected
-                                                        ? (isDark ? "bg-brand-primary-dark text-white shadow-lg" : "bg-brand-primary-light text-white shadow-lg")
-                                                        : (isDark ? "bg-bg-tertiary-dark text-text-secondary-dark border border-border-dark hover:border-brand-primary-dark" : "bg-gray-50 text-text-secondary-light border border-border-light hover:border-brand-primary-light")
+                                                        ? (isDark
+                                                            ? "bg-brand-primary-dark text-white border-brand-primary-dark shadow-lg shadow-brand-primary-dark/20"
+                                                            : "bg-brand-primary-light text-white border-brand-primary-light shadow-lg shadow-brand-primary-light/20")
+                                                        : (isDark
+                                                            ? "bg-white/5 border-white/5 text-text-secondary-dark hover:bg-white/10 hover:border-white/10"
+                                                            : "bg-white border-gray-100 text-text-secondary-light hover:border-brand-primary-light/30 hover:shadow-md")
                                                     }
                                                 `}
                                             >
-                                                <span className="flex items-center gap-2">
-                                                    {isRecommended && !isSelected && <MdRecommend className="text-amber-500" />}
-                                                    {genreName}
-                                                </span>
+                                                <div className="flex items-center justify-between w-full">
+                                                    <span className="truncate">{genreName}</span>
+                                                    {isSelected && <Check size={12} />}
+                                                </div>
+
                                                 {isRecommended && (
-                                                    <span className={`text-[8px] px-1 rounded self-start ${isSelected ? "bg-white/20 text-white" : "bg-amber-50 text-white"}`}>REC</span>
+                                                    <div className={`flex items-center gap-1 text-[10px] ${isSelected ? "text-white/80" : "text-amber-500"}`}>
+                                                        <Sparkles size={10} />
+                                                        <span>Recommended</span>
+                                                    </div>
                                                 )}
                                             </button>
                                         );
@@ -390,9 +403,9 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
                                 )}
                             </div>
                             {weakestGenres.length > 0 && (
-                                <p className={`mt-2 text-xs flex items-center gap-1 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>
-                                    <MdRecommend className="text-amber-500" />
-                                    We recommended your weakest genres first.
+                                <p className={`mt-3 text-xs flex items-center gap-1.5 opacity-60 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                                    <Sparkles size={12} className="text-amber-500" />
+                                    <span>Based on your recent performance analysis.</span>
                                 </p>
                             )}
                         </div>
@@ -400,26 +413,26 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
                         {/* Difficulty */}
                         <div>
                             <label className={`
-                                block text-sm font-medium mb-2
+                                block text-base font-bold mb-4
                                 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
                             `}>
                                 Difficulty Level
                             </label>
-                            <div className="grid grid-cols-4 gap-3">
+                            <div className={`p-1 rounded-xl flex ${isDark ? "bg-black/20" : "bg-gray-100"}`}>
                                 {(["easy", "medium", "hard", "mixed"] as const).map((difficulty) => (
                                     <button
                                         key={difficulty}
                                         type="button"
                                         onClick={() => setDifficultyTarget(difficulty)}
                                         className={`
-                                            px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize
+                                            flex-1 py-2.5 rounded-lg text-sm font-bold transition-all capitalize
                                             ${difficultyTarget === difficulty
                                                 ? (isDark
-                                                    ? "bg-brand-primary-dark text-white"
-                                                    : "bg-brand-primary-light text-white")
+                                                    ? "bg-brand-secondary-dark text-text-primary-dark shadow-md"
+                                                    : "bg-white text-brand-primary-light shadow-md")
                                                 : (isDark
-                                                    ? "bg-bg-tertiary-dark text-text-secondary-dark border-2 border-border-dark"
-                                                    : "bg-bg-secondary-light text-text-secondary-light border-2 border-border-light")
+                                                    ? "text-text-secondary-dark hover:text-text-primary-dark"
+                                                    : "text-gray-500 hover:text-gray-900")
                                             }
                                         `}
                                     >
@@ -431,16 +444,16 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
 
                         {/* Question Distribution (Fixed Info) */}
                         <div className={`
-                            p-4 rounded-xl border
-                            ${isDark ? "bg-bg-tertiary-dark/30 border-border-dark" : "bg-gray-50 border-border-light"}
+                            p-5 rounded-2xl border
+                            ${isDark ? "bg-white/5 border-white/5" : "bg-gray-50/50 border-gray-100"}
                         `}>
                             <label className={`
-                                block text-sm font-medium mb-3
+                                block text-xs uppercase tracking-widest font-bold mb-4 opacity-50
                                 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
                             `}>
-                                Question Type Distribution
+                                Layout Configuration
                             </label>
-                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                                 {[
                                     { label: "RC per passage", count: rcQuestions },
                                     { label: "Summary", count: paraSummary },
@@ -448,9 +461,9 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
                                     { label: "Jumble", count: paraJumble },
                                     { label: "Odd One", count: oddOneOut },
                                 ].map((type) => (
-                                    <div key={type.label} className="flex flex-col items-center">
-                                        <span className={`text-[10px] uppercase font-semibold ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>{type.label}</span>
-                                        <span className={`text-sm font-bold ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>{type.count}</span>
+                                    <div key={type.label} className="flex flex-col gap-1">
+                                        <span className={`text-[10px] font-medium opacity-60 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>{type.label}</span>
+                                        <span className={`text-lg font-bold ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>{type.count}</span>
                                     </div>
                                 ))}
                             </div>
@@ -458,9 +471,9 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
 
                         {/* Target Metrics */}
                         <div>
-                            <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center justify-between mb-3">
                                 <label className={`
-                                    text-sm font-medium
+                                    text-sm font-bold
                                     ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
                                 `}>
                                     Target Performance Metrics
@@ -469,12 +482,12 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
                                     type="button"
                                     onClick={() => setShowAdvanced(!showAdvanced)}
                                     className={`
-                                        text-xs flex items-center gap-1 font-medium transition-colors
+                                        text-xs flex items-center gap-1 font-bold transition-colors
                                         ${isDark ? "text-brand-primary-dark hover:text-brand-primary-dark/80" : "text-brand-primary-light hover:text-brand-primary-light/80"}
                                     `}
                                 >
                                     {showAdvanced ? "Hide Options" : "Select Metrics"}
-                                    {showAdvanced ? <MdExpandLess /> : <MdExpandMore />}
+                                    {showAdvanced ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                                 </button>
                             </div>
 
@@ -482,16 +495,19 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
                                 <div className="flex flex-wrap gap-2 mb-3">
                                     {targetMetrics.map(metric => (
                                         <span key={metric} className={`
-                                            px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-2
-                                            ${isDark ? "bg-brand-primary-dark/20 text-brand-primary-dark border border-brand-primary-dark/30" : "bg-brand-primary-light/10 text-brand-primary-light border border-brand-primary-light/20"}
+                                            px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 border
+                                            ${isDark
+                                                ? "bg-brand-primary-dark/10 text-brand-primary-dark border-brand-primary-dark/20"
+                                                : "bg-brand-primary-light/5 text-brand-primary-light border-brand-primary-light/20"
+                                            }
                                         `}>
                                             {metric.replace(/_/g, " ")}
                                             <button
                                                 type="button"
                                                 onClick={() => setTargetMetrics(targetMetrics.filter(m => m !== metric))}
-                                                className="hover:text-red-500"
+                                                className="hover:text-red-500 transition-colors"
                                             >
-                                                <MdClose />
+                                                <X size={12} />
                                             </button>
                                         </span>
                                     ))}
@@ -505,7 +521,7 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
                                     exit={{ opacity: 0, height: 0 }}
                                     className={`
                                         p-4 rounded-xl border grid grid-cols-1 sm:grid-cols-2 gap-2
-                                        ${isDark ? "bg-bg-tertiary-dark border-border-dark" : "bg-gray-50 border-border-light"}
+                                        ${isDark ? "bg-bg-tertiary-dark border-white/5" : "bg-gray-50 border-gray-100"}
                                     `}
                                 >
                                     {proficiencyData?.filter(p => p.dimension_type === "core_metric").map(metric => {
@@ -523,25 +539,25 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
                                                     }
                                                 }}
                                                 className={`
-                                                    px-3 py-2 rounded-lg text-xs font-medium transition-all text-left flex items-center justify-between
+                                                    px-4 py-3 rounded-xl text-xs font-bold transition-all text-left flex items-center justify-between border
                                                     ${isSelected
-                                                        ? (isDark ? "bg-brand-primary-dark text-white" : "bg-brand-primary-light text-white")
-                                                        : (isDark ? "bg-bg-secondary-dark text-text-secondary-dark border border-border-dark hover:border-brand-primary-dark" : "bg-bg-secondary-light text-text-secondary-light border border-border-light hover:border-brand-primary-light")
+                                                        ? (isDark ? "bg-brand-primary-dark text-white border-brand-primary-dark" : "bg-brand-primary-light text-white border-brand-primary-light")
+                                                        : (isDark ? "bg-bg-secondary-dark text-text-secondary-dark border-white/5 hover:border-white/20" : "bg-white text-text-secondary-light border-gray-200 hover:border-brand-primary-light/50")
                                                     }
                                                 `}
                                             >
                                                 <span className="flex items-center gap-2">
-                                                    {isRecommended && !isSelected && <MdRecommend className="text-amber-500" />}
+                                                    {isRecommended && !isSelected && <Sparkles size={12} className="text-amber-500" />}
                                                     {metric.dimension_key.replace(/_/g, " ")}
                                                 </span>
                                                 {isRecommended && (
-                                                    <span className={`text-[8px] px-1 rounded ${isSelected ? "bg-white/20 text-white" : "bg-amber-500 text-white"}`}>REC</span>
+                                                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${isSelected ? "bg-white/20 text-white" : "bg-amber-500/10 text-amber-500"}`}>REC</span>
                                                 )}
                                             </button>
                                         );
                                     })}
                                     {(!proficiencyData || proficiencyData.filter(p => p.dimension_type === "core_metric").length === 0) && (
-                                        <p className="col-span-2 text-center text-xs text-text-muted-light py-2">
+                                        <p className="col-span-2 text-center text-xs opacity-50 py-2">
                                             No explicit metrics found. Standard metrics will be used.
                                         </p>
                                     )}
@@ -549,35 +565,42 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
                             )}
                         </div>
 
-                        {/* Submit Button */}
-                        <div className="flex items-center gap-3 pt-4">
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className={`
-                                    flex-1 px-6 py-3 rounded-xl font-medium transition-all
-                                    ${isDark
-                                        ? "bg-brand-primary-dark text-white hover:bg-opacity-90"
-                                        : "bg-brand-primary-light text-white hover:bg-opacity-90"}
-                                    disabled:opacity-50 disabled:cursor-not-allowed
-                                    ${!isLoading && questionDistributionTotal === totalQuestions ? "transform hover:scale-105" : ""}
-                                `}
-                            >
-                                {isLoading ? "Generating..." : "Generate Mock Test"}
-                            </button>
+                        {/* Submit Actions */}
+                        <div className="flex items-center gap-3 pt-6 border-t border-white/5">
                             <button
                                 type="button"
                                 onClick={handleClose}
                                 disabled={isLoading}
                                 className={`
-                                    px-6 py-3 rounded-xl font-medium transition-all
+                                    px-6 py-3.5 rounded-xl font-bold transition-all
                                     ${isDark
-                                        ? "bg-bg-tertiary-dark text-text-primary-dark hover:bg-opacity-80"
-                                        : "bg-gray-200 text-text-primary-light hover:bg-gray-300"}
+                                        ? "bg-white/5 text-text-primary-dark hover:bg-white/10"
+                                        : "bg-gray-100 text-text-primary-light hover:bg-gray-200"}
                                     disabled:opacity-50 disabled:cursor-not-allowed
                                 `}
                             >
                                 Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className={`
+                                    flex-1 px-6 py-3.5 rounded-xl font-bold transition-all shadow-lg
+                                    ${isDark
+                                        ? "bg-brand-primary-dark text-white shadow-brand-primary-dark/20 hover:bg-opacity-90"
+                                        : "bg-brand-primary-light text-white shadow-brand-primary-light/20 hover:bg-opacity-90"}
+                                    disabled:opacity-50 disabled:cursor-not-allowed
+                                    ${!isLoading && questionDistributionTotal === totalQuestions ? "transform hover:scale-[1.02]" : ""}
+                                `}
+                            >
+                                {isLoading ? (
+                                    <div className="flex items-center justify-center gap-2">
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        <span>Generating...</span>
+                                    </div>
+                                ) : (
+                                    "Generate Mock Test"
+                                )}
                             </button>
                         </div>
                     </form>

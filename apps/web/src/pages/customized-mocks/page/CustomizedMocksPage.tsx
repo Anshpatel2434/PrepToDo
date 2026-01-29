@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../../../context/ThemeContext";
 import { FloatingNavigation } from "../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
-import { MdAdd } from "react-icons/md";
+import { Plus, RotateCcw } from "lucide-react";
 import { useFetchCustomizedMocksQuery } from "../redux_usecase/customizedMocksApi";
 import MockCard from "../components/MockCard";
 import MockListSkeleton from "../components/MockListSkeleton";
@@ -54,73 +54,53 @@ const CustomizedMocksPage: React.FC = () => {
     }
 
     return (
-        <div
-            className={`min-h-screen ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
-                }`}
-        >
+        <div className={`min-h-screen relative ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"}`}>
+            {/* Subtle background gradient from Dashboard + Hint of Brand Accent */}
+            <div className={`absolute inset-0 pointer-events-none ${isDark
+                ? "bg-linear-to-br from-brand-primary-dark/5 via-transparent to-brand-accent-dark/5"
+                : "bg-linear-to-br from-brand-primary-light/5 via-transparent to-brand-accent-light/5"
+                }`} />
+
             <FloatingThemeToggle />
             <FloatingNavigation />
 
-            <div className="container mx-auto px-6 py-16">
+            <div className="min-h-screen overflow-x-hidden pl-18 sm:pl-20 md:pl-24 pr-4 lg:pr-8 py-4 sm:py-6 md:py-10 relative z-10 pb-20 sm:pb-24">
                 {/* Header */}
                 <motion.div
-                    initial={{ opacity: 0, y: -20 }}
+                    initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="text-center mb-12"
+                    className="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-6 pr-14"
                 >
-                    <h1
-                        className={`
-                            font-serif font-bold text-3xl md:text-5xl mb-4
-                            ${isDark
-                                ? "text-text-primary-dark"
-                                : "text-text-primary-light"
-                            }
-                        `}
-                    >
-                        Customized Mock Tests
-                    </h1>
-                    <p
-                        className={`
-                            text-base md:text-lg max-w-2xl mx-auto
-                            ${isDark
-                                ? "text-text-secondary-dark"
-                                : "text-text-secondary-light"
-                            }
-                        `}
-                    >
-                        Create personalized mock tests tailored to your preparation needs.
-                        Choose your genres, difficulty, and weak areas to target.
-                    </p>
-                </motion.div>
+                    <div>
+                        <h1 className={`font-serif font-bold text-3xl md:text-4xl mb-2 flex items-center gap-3 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                            Customized VARC Sectionals
+                        </h1>
+                        <p className={`text-base max-w-2xl ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                            Create personalized VARC sectional tests tailored to your preparation needs.
+                        </p>
+                    </div>
 
-                {/* Create Button */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.2, duration: 0.5 }}
-                    className="max-w-6xl mx-auto mb-8 flex justify-end"
-                >
-                    <button
+                    <motion.button
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.2 }}
                         onClick={handleCreateClick}
                         className={`
-                            flex items-center gap-2 px-6 py-3 rounded-xl font-medium
-                            transition-all duration-300 transform hover:scale-105
+                            flex items-center gap-2 px-6 py-3 rounded-xl font-bold tracking-wide transition-all duration-300 transform hover:scale-105 shadow-lg
                             ${isDark
-                                ? "bg-brand-primary-dark text-white hover:bg-opacity-90"
-                                : "bg-brand-primary-light text-white hover:bg-opacity-90"
+                                ? "bg-brand-primary-dark text-white shadow-brand-primary-dark/20 hover:bg-brand-primary-dark/90"
+                                : "bg-brand-primary-light text-white shadow-brand-primary-light/20 hover:bg-brand-primary-light/90"
                             }
-                            shadow-lg hover:shadow-xl
                         `}
                     >
-                        <MdAdd className="w-5 h-5" />
-                        <span>Create New Mock</span>
-                    </button>
+                        <Plus className="w-5 h-5" />
+                        <span>Create Sectional</span>
+                    </motion.button>
                 </motion.div>
 
                 {/* Loading State */}
                 {isLoading && (
-                    <div className="max-w-6xl mx-auto">
+                    <div className="max-w-7xl">
                         <MockListSkeleton />
                     </div>
                 )}
@@ -131,29 +111,27 @@ const CustomizedMocksPage: React.FC = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         className={`
-                            max-w-2xl mx-auto p-6 rounded-xl border-2 text-center
+                            max-w-2xl mx-auto p-8 rounded-2xl border text-center
                             ${isDark
                                 ? "bg-red-900/10 border-red-500/30"
                                 : "bg-red-50 border-red-200"
                             }
                         `}
                     >
-                        <p
-                            className={`text-lg ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                                }`}
-                        >
-                            Failed to load your mock tests. Please try refreshing the page.
+                        <p className={`text-lg font-medium mb-4 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                            Failed to load your sectional tests. Please try refreshing the page.
                         </p>
                         <button
                             onClick={() => refetch()}
                             className={`
-                                mt-4 px-4 py-2 rounded-lg font-medium
+                                flex items-center gap-2 px-6 py-2.5 rounded-xl font-medium mx-auto transition-colors
                                 ${isDark
-                                    ? "bg-brand-primary-dark text-white"
-                                    : "bg-brand-primary-light text-white"
+                                    ? "bg-bg-tertiary-dark text-text-primary-dark hover:bg-bg-secondary-dark"
+                                    : "bg-white text-text-primary-light border shadow-sm hover:bg-gray-50"
                                 }
                             `}
                         >
+                            <RotateCcw size={16} />
                             Retry
                         </button>
                     </motion.div>
@@ -166,72 +144,44 @@ const CustomizedMocksPage: React.FC = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3, duration: 0.5 }}
                         className={`
-                            max-w-2xl mx-auto p-12 rounded-2xl border-2 border-dashed text-center
-                            ${isDark ? "border-border-dark" : "border-border-light"}
+                            max-w-2xl mx-auto p-12 rounded-[2.5rem] border-2 border-dashed text-center
+                            ${isDark ? "border-white/10" : "border-gray-100 bg-gray-50/30"}
                         `}
                     >
-                        <div className="mb-6">
-                            <div
-                                className={`
-                                    w-20 h-20 mx-auto rounded-full flex items-center justify-center
-                                    ${isDark
-                                        ? "bg-brand-primary-dark/20"
-                                        : "bg-brand-primary-light/20"
-                                    }
-                                `}
-                            >
-                                <MdAdd
-                                    className={`w-10 h-10 ${isDark
-                                        ? "text-brand-primary-dark"
-                                        : "text-brand-primary-light"
-                                        }`}
-                                />
-                            </div>
+                        <div className={`
+                            w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6
+                            ${isDark ? "bg-brand-primary-dark/10" : "bg-brand-primary-light/10"}
+                        `}>
+                            <Plus
+                                className={`w-10 h-10 ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}`}
+                            />
                         </div>
-                        <h3
-                            className={`
-                                text-xl font-semibold mb-2
-                                ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
-                            `}
-                        >
-                            No Mock Tests Yet
+                        <h3 className={`text-xl font-bold mb-2 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                            No Sectional Tests Yet
                         </h3>
-                        <p
-                            className={`
-                                text-base mb-6
-                                ${isDark
-                                    ? "text-text-secondary-dark"
-                                    : "text-text-secondary-light"
-                                }
-                            `}
-                        >
-                            Create your first customized mock test to start practicing with
-                            personalized content.
+                        <p className={`text-base mb-8 max-w-sm mx-auto ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                            Create your first customized sectional test to start practicing with personalized content.
                         </p>
                         <button
                             onClick={handleCreateClick}
                             className={`
-                                px-6 py-3 rounded-xl font-medium transition-all duration-300
+                                inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-bold transition-all duration-300 shadow-lg
                                 ${isDark
-                                    ? "bg-brand-primary-dark text-white hover:bg-opacity-90"
-                                    : "bg-brand-primary-light text-white hover:bg-opacity-90"
+                                    ? "bg-brand-primary-dark text-white shadow-brand-primary-dark/20 hover:scale-105"
+                                    : "bg-brand-primary-light text-white shadow-brand-primary-light/20 hover:scale-105"
                                 }
                             `}
                         >
-                            Create Your First Mock
+                            <Plus size={20} />
+                            Create Your First Sectional
                         </button>
                     </motion.div>
                 )}
 
                 {/* Mock List Grid */}
                 {!isLoading && !error && mocks.length > 0 && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.4, duration: 0.5 }}
-                        className="max-w-6xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-6"
-                    >
-                        <AnimatePresence>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <AnimatePresence mode="popLayout">
                             {mocks.map((mock, index) => (
                                 <MockCard
                                     key={mock.id}
@@ -241,46 +191,8 @@ const CustomizedMocksPage: React.FC = () => {
                                 />
                             ))}
                         </AnimatePresence>
-                    </motion.div>
+                    </div>
                 )}
-
-                {/* Info Section */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.7, duration: 0.5 }}
-                    className={`
-                        mt-12 max-w-2xl mx-auto p-6 rounded-xl border
-                        ${isDark
-                            ? "bg-bg-secondary-dark border-border-dark"
-                            : "bg-bg-secondary-light border-border-light"
-                        }
-                    `}
-                >
-                    <h3
-                        className={`
-                            font-semibold mb-3
-                            ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}
-                        `}
-                    >
-                        📊 Customized Mock Features
-                    </h3>
-                    <ul
-                        className={`
-                            space-y-2 text-sm
-                            ${isDark
-                                ? "text-text-secondary-dark"
-                                : "text-text-secondary-light"
-                            }
-                        `}
-                    >
-                        <li>✓ Choose specific genres and topics</li>
-                        <li>✓ Set custom difficulty levels</li>
-                        <li>✓ Control question type distribution</li>
-                        <li>✓ Target weak areas for improvement</li>
-                        <li>✓ Track your progress across multiple attempts</li>
-                    </ul>
-                </motion.div>
             </div>
 
             {/* Create Mock Modal */}
