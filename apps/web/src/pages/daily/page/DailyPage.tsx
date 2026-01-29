@@ -136,10 +136,10 @@ const DailyPage: React.FC = () => {
                     className="mb-8"
                 >
                     <h1 className={`font-serif font-bold text-3xl md:text-4xl mb-2 flex items-center gap-3 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
-                        Daily Practice
+                        Daily Practice Arena
                     </h1>
-                    <p className={`text-base max-w-2xl ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
-                        Sharpen your skills with daily sessions.
+                    <p className={`text-base max-w-3xl ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                        Experience fresh, AI-generated CAT-style passages every day. Our content engine builds unique Reasoning Graphs for every question to test your logic, not just your memory.
                     </p>
                 </motion.div>
 
@@ -240,10 +240,10 @@ const DailyPage: React.FC = () => {
                                     {!hasTodayTest && !isLoadingToday && !selectedExam && (
                                         <div className={`p-6 rounded-xl border-l-4 border-red-500 ${isDark ? "bg-bg-secondary-dark" : "bg-white"}`}>
                                             <h3 className={`font-bold ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
-                                                No Test Generated Today
+                                                Daily Challenge Preparing...
                                             </h3>
                                             <p className={`text-sm mt-1 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
-                                                Please check back later or practice with previous tests regarding.
+                                                Your personalized daily challenge is being curated. In the meantime, analyze your previous performance or try a sectional mock to keep your prep active.
                                             </p>
                                         </div>
                                     )}
@@ -269,7 +269,7 @@ const DailyPage: React.FC = () => {
                                         <DailyLeaderboard examId={selectedExam.id} isDark={isDark} />
                                     ) : (
                                         <div className={`p-12 text-center rounded-xl border-2 border-dashed ${isDark ? "border-border-dark" : "border-border-light"}`}>
-                                            Please select an exam to view the leaderboard.
+                                            Select a completed challenge to compare your reasoning speed and accuracy with top percentiles.
                                         </div>
                                     )}
                                 </motion.div>

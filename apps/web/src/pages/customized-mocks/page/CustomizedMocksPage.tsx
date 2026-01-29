@@ -73,10 +73,10 @@ const CustomizedMocksPage: React.FC = () => {
                 >
                     <div>
                         <h1 className={`font-serif font-bold text-3xl md:text-4xl mb-2 flex items-center gap-3 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
-                            Customized VARC Sectionals
+                            Adaptive VARC Sectionals
                         </h1>
-                        <p className={`text-base max-w-2xl ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
-                            Create personalized VARC sectional tests tailored to your preparation needs.
+                        <p className={`text-base max-w-3xl ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                            Target your specific weaknesses with precision. Generate unlimited tests that adapt to your 'Atomic Proficiency' scores, focusing on the genres and question types where you need the most improvement.
                         </p>
                     </div>
 
@@ -157,10 +157,10 @@ const CustomizedMocksPage: React.FC = () => {
                             />
                         </div>
                         <h3 className={`text-xl font-bold mb-2 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
-                            No Sectional Tests Yet
+                            Architect Your Preparation
                         </h3>
-                        <p className={`text-base mb-8 max-w-sm mx-auto ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
-                            Create your first customized sectional test to start practicing with personalized content.
+                        <p className={`text-base mb-8 max-w-md mx-auto ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                            Don't just practice randomly. Configure a test that targets your logic gaps. Select specific genres (e.g., Philosophy, Economics) and question types to build your mastery.
                         </p>
                         <button
                             onClick={handleCreateClick}

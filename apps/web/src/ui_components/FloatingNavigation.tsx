@@ -4,14 +4,16 @@
 import React, { useRef, useState } from "react";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, MotionValue } from "framer-motion";
 import {
-    MdHome,
-    MdGridView,
-    MdInsertChart,
-    MdToday,
-    MdMenu,
-    MdPerson,
-    MdDashboardCustomize,
-} from "react-icons/md";
+    Home,
+    LayoutGrid,
+    CalendarCheck,
+    Menu,
+    User,
+    Sliders,
+    LogOut,
+    X,
+    PieChart
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
     useFetchUserQuery,
@@ -68,20 +70,21 @@ function DockItem({
                 className={`
                     w-full h-full rounded-2xl
                     flex items-center justify-center
-                    backdrop-blur-3xl 
+                    backdrop-blur-xl
                     hover:cursor-pointer focus:outline-none
-                    transition-colors
+                    transition-all duration-300
                     ${isDark
-                        ? "bg-bg-tertiary-dark/80 border border-border-dark/50"
-                        : "bg-bg-tertiary-light/80 border border-border-light/50"
+                        ? "bg-bg-tertiary-dark/60 border border-white/5 hover:bg-bg-tertiary-dark"
+                        : "bg-white/60 border border-black/5 hover:bg-white"
                     }
+                    shadow-sm hover:shadow-md
                 `}
                 aria-label={item.label}
                 whileTap={{ scale: 0.95 }}
             >
                 <div
                     className={`
-                        text-xl sm:text-2xl
+                        transition-transform duration-300
                         ${isDark ? item.iconColorDark : item.iconColorLight}
                     `}
                 >
@@ -89,30 +92,31 @@ function DockItem({
                 </div>
             </motion.button>
 
-            {/* Floating tooltip */}
+            {/* Floating tooltip for Dock (Keep this as labels are hidden in dock) */}
             <AnimatePresence>
                 {hoveredItem === item.id && (
                     <motion.div
                         className={`
-                            absolute left-full top-1/2 -translate-y-1/2 ml-4 px-3 py-2 rounded-lg
-                            text-sm font-medium shadow-lg z-50 whitespace-nowrap pointer-events-none
+                            absolute left-full top-1/2 -translate-y-1/2 ml-4 px-3 py-1.5 rounded-lg
+                            text-xs font-medium shadow-xl z-50 whitespace-nowrap pointer-events-none
+                            backdrop-blur-md
                             ${isDark
-                                ? "bg-bg-secondary-dark text-text-primary-dark border border-border-dark"
-                                : "bg-bg-secondary-light text-text-primary-light border border-border-light"
+                                ? "bg-black/80 text-white border border-white/10"
+                                : "bg-white/80 text-black border border-black/10"
                             }
                         `}
-                        initial={{ opacity: 0, x: -10, scale: 0.8 }}
+                        initial={{ opacity: 0, x: -10, scale: 0.9 }}
                         animate={{ opacity: 1, x: 0, scale: 1 }}
-                        exit={{ opacity: 0, x: -10, scale: 0.8 }}
+                        exit={{ opacity: 0, x: -10, scale: 0.9 }}
                         transition={{ duration: 0.2 }}
                     >
                         {item.label}
                         <div
                             className={`
-                                absolute right-full top-1/2 -translate-y-1/2 w-2 h-2 rotate-45
+                                absolute right-full top-1/2 -translate-y-1/2 w-1.5 h-1.5 rotate-45
                                 ${isDark
-                                    ? "bg-bg-secondary-dark border-l border-b border-border-dark"
-                                    : "bg-bg-secondary-light border-l border-b border-border-light"
+                                    ? "bg-black/80 border-l border-b border-white/10"
+                                    : "bg-white/80 border-l border-b border-black/10"
                                 }
                             `}
                         />
@@ -145,11 +149,12 @@ function DockContainer({
             onMouseMove={(e) => mouseY.set(e.pageY)}
             onMouseLeave={() => mouseY.set(Infinity)}
             className={`
-                fixed left-4 top-20 sm:top-24 z-30 
-                flex flex-col gap-4
-                px-2 py-4 rounded-3xl
+                fixed left-4 top-24 z-30 
+                flex flex-col gap-3
+                px-3 py-4 rounded-[2rem]
+                transition-all duration-300
                 ${isOpen
-                    ? "translate-x-20 opacity-0 pointer-events-none"
+                    ? "translate-x-[-200%] opacity-0 pointer-events-none"
                     : "translate-x-0 opacity-100 pointer-events-auto"
                 }
             `}
@@ -173,47 +178,47 @@ const navigationItems: NavigationItem[] = [
     {
         id: "home",
         label: "Home",
-        icon: <MdHome className="text-lg" />,
-        iconColorLight: "text-blue-600",
-        iconColorDark: "text-blue-400",
+        icon: <Home size={20} />,
+        iconColorLight: "text-gray-700",
+        iconColorDark: "text-gray-300",
         path: "/",
-        description: "Go to homepage",
+        description: "Dashboard Overview",
     },
     {
         id: "daily",
-        label: "Daily",
-        icon: <MdToday className="text-lg" />,
+        label: "Daily Practice",
+        icon: <CalendarCheck size={20} />,
         iconColorLight: "text-amber-600",
         iconColorDark: "text-amber-400",
         path: "/daily",
-        description: "Daily RC & VA practice",
+        description: "RC & VA Exercises",
     },
     {
         id: "features",
-        label: "Features",
-        icon: <MdGridView className="text-lg" />,
+        label: "All Features",
+        icon: <LayoutGrid size={20} />,
         iconColorLight: "text-violet-600",
         iconColorDark: "text-violet-400",
         path: "/home#features",
-        description: "Explore platform features",
+        description: "Explore Tools",
     },
     {
         id: "dashboard",
-        label: "Dashboard",
-        icon: <MdInsertChart className="text-lg" />,
-        iconColorLight: "text-brand-secondary-light",
-        iconColorDark: "text-brand-secondary-dark",
+        label: "Analytics",
+        icon: <PieChart size={20} />,
+        iconColorLight: "text-blue-600",
+        iconColorDark: "text-blue-400",
         path: "/dashboard",
-        description: "Your study overview",
+        description: "Performance Stats",
     },
     {
         id: "customized-mocks",
         label: "Custom Mocks",
-        icon: <MdDashboardCustomize className="text-lg" />,
-        iconColorLight: "text-graph-strategy-light",
-        iconColorDark: "text-graph-strategy-dark",
+        icon: <Sliders size={20} />,
+        iconColorLight: "text-emerald-600",
+        iconColorDark: "text-emerald-400",
         path: "/customized-mocks",
-        description: "Personalized mock tests",
+        description: "Tailored Tests",
     },
 ];
 
@@ -256,9 +261,13 @@ export const FloatingNavigation: React.FC = () => {
         }
     };
 
-    // Get the daily path with exam_id if available
-    const getDailyPath = () => {
-        return "/daily";
+    const handleNavigate = (item: NavigationItem) => {
+        navigate(item.path);
+        setIsOpen(false);
+    };
+
+    const toggleSidebar = () => {
+        setIsOpen(!isOpen);
     };
 
     // Animation variants
@@ -266,14 +275,8 @@ export const FloatingNavigation: React.FC = () => {
         hidden: { x: "-100%" },
         visible: {
             x: 0,
-            transition: { duration: 0.5 },
+            transition: { duration: 0.4, ease: [0.32, 0.72, 0, 1] as const },
         },
-    };
-
-    const toggleButtonVariants = {
-        initial: { scale: 1 },
-        hover: { scale: 1.05 },
-        tap: { scale: 0.95 },
     };
 
     const navigationItemVariants = {
@@ -285,335 +288,211 @@ export const FloatingNavigation: React.FC = () => {
         },
     };
 
-
-
-    const onNavigate = (path: string) => {
-        // Special handling for daily path
-        if (path === "/daily") {
-            const dailyPath = getDailyPath();
-            navigate(dailyPath);
-        } else {
-            navigate(path);
-        }
-    };
-
-    const handleNavigate = (item: NavigationItem) => {
-        onNavigate?.(item.path);
-        setIsOpen(false);
-    };
-
-    const toggleSidebar = () => {
-        setIsOpen(!isOpen);
-    };
-
     return (
         <>
             {/* Sidebar Toggle Button */}
             <motion.button
                 onClick={toggleSidebar}
                 className={`
-                    fixed top-6 z-50 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl sm:rounded-3xl
+                    fixed top-6 z-50 w-12 h-12 rounded-full
                     flex items-center justify-center
-                    transition-all duration-300 ease-out
-                    backdrop-blur-3xl 
-                    hover:cursor-pointer focus:outline-none
-                    ${isOpen ? "left-80 sm:left-96 md:left-80" : "left-6"}
+                    backdrop-blur-md transition-all duration-500 ease-[0.32,0.72,0,1]
+                    hover:scale-105 active:scale-95
+                    ${isOpen ? "left-[19rem] shadow-none" : "left-6 shadow-lg"}
                     ${isDark
-                        ? "bg-bg-tertiary-dark/80 hover:shadow-[0_0_20px_rgba(0,103,71,0.4)] border border-border-dark/50 focus:ring-brand-accent-dark/30"
-                        : "bg-bg-tertiary-light/80 hover:shadow-[0_0_20px_rgba(0,103,71,0.3)] border border-border-light/50 focus:ring-brand-accent-light/30"
+                        ? "bg-bg-tertiary-dark/40 border border-white/5 text-white"
+                        : "bg-white/40 border border-black/5 text-black"
                     }
                 `}
                 aria-label="Toggle sidebar"
-                variants={toggleButtonVariants}
-                initial="initial"
-                whileHover="hover"
-                whileTap="tap"
             >
-                {/* Menu Icon - shown when closed */}
-                <motion.div
-                    animate={{ rotate: isOpen ? 180 : 0 }}
-                    transition={{ duration: 0.3 }}
-                >
-                    <MdMenu
-                        className={`text-2xl sm:text-2xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                            }`}
-                    />
-                </motion.div>
+                <div className="relative flex items-center justify-center">
+                    <AnimatePresence mode="wait">
+                        {isOpen ? (
+                            <motion.div
+                                key="close"
+                                initial={{ opacity: 0, rotate: -90 }}
+                                animate={{ opacity: 1, rotate: 0 }}
+                                exit={{ opacity: 0, rotate: 90 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <X size={24} />
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="menu"
+                                initial={{ opacity: 0, rotate: 90 }}
+                                animate={{ opacity: 1, rotate: 0 }}
+                                exit={{ opacity: 0, rotate: -90 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <Menu size={24} />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
             </motion.button>
 
             {/* Sidebar */}
             <motion.div
                 ref={containerRef}
                 className={`
-                    fixed left-0 top-0 h-full z-40
-                    backdrop-blur-xl border-r shadow-2xl
-                    ${isOpen ? "w-80 sm:w-96" : "w-0 overflow-hidden"}
+                    fixed left-0 top-0 h-full z-40 w-80
+                    backdrop-blur-2xl shadow-2xl border-r
+                    flex flex-col
                     ${isDark
-                        ? "bg-bg-primary-dark/95 border-border-dark"
-                        : "bg-bg-primary-light/95 border-border-light"
+                        ? "bg-bg-primary-dark/90 border-white/5"
+                        : "bg-white/90 border-black/5"
                     }
                 `}
                 variants={sidebarVariants}
                 initial="hidden"
                 animate={isOpen ? "visible" : "hidden"}
             >
-                <div className="p-6 h-full flex flex-col overflow-y-auto">
-                    {/* Logo Section */}
-                    <div className="mb-8">
-                        <div className="flex items-center gap-3">
-                            <div className="relative">
-                                <motion.div
-                                    className={`
-                                                        w-12 h-12 rounded-xl flex items-center justify-center shadow-lg border
-                                                        ${isDark
-                                            ? "bg-bg-secondary-dark border-border-dark"
-                                            : "bg-bg-secondary-light border-border-light"
-                                        }
-                                                    `}
-                                    whileHover={{ scale: 1.05 }}
-                                    transition={{ duration: 0.2 }}
-                                >
-                                    <img
-                                        src="/new_icon.png"
-                                        alt="PrepToDo Logo"
-                                        className="w-8 h-8 rounded-lg object-cover"
-                                    />
-                                </motion.div>
-                            </div>
-                            <div>
-                                <h1
-                                    className={`text-2xl font-serif font-bold ${isDark
-                                        ? "text-text-primary-dark"
-                                        : "text-text-primary-light"
-                                        }`}
-                                >
-                                    PrepToDo
-                                </h1>
-                                <p
-                                    className={`text-sm ${isDark
-                                        ? "text-text-secondary-dark"
-                                        : "text-text-secondary-light"
-                                        }`}
-                                >
-                                    AI Study Platform
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                <div className="flex-1 flex flex-col p-8 pt-24 overflow-y-auto">
 
-                    {/* User Status Section */}
-                    <div
-                        className={`
-                                        mb-6 p-4 rounded-xl border-2
-                                        ${isDark
-                                ? "bg-bg-secondary-dark/50 border-border-dark"
-                                : "bg-bg-secondary-light/50 border-border-light"
-                            }
-                                    `}
-                    >
+                    {/* User Status Section - Minimalist */}
+                    <div className="mb-10">
                         {isAuthenticated && user ? (
-                            <div className="flex items-center gap-3">
-                                <div
-                                    className={`
-                                                    w-10 h-10 rounded-full flex items-center justify-center
-                                                    ${isDark
-                                            ? "bg-brand-primary-dark"
-                                            : "bg-brand-primary-light"
-                                        }
-                                                `}
-                                >
-                                    <MdPerson className="text-white" size={20} />
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 }}
+                                className={`
+                                    flex items-center gap-4 p-4 rounded-2xl
+                                    ${isDark ? "bg-white/5" : "bg-black/5"}
+                                `}
+                            >
+                                <div className={`
+                                    w-10 h-10 rounded-full flex items-center justify-center
+                                    ${isDark ? "bg-brand-primary-dark/20 text-brand-primary-dark" : "bg-brand-primary-light/10 text-brand-primary-light"}
+                                `}>
+                                    <User size={20} />
                                 </div>
-                                <div>
-                                    <div
-                                        className={`
-                                                        font-medium
-                                                        ${isDark
-                                                ? "text-text-primary-dark"
-                                                : "text-text-primary-light"
-                                            }
-                                                    `}
-                                    >
-                                        Welcome back!
-                                    </div>
-                                    <div
-                                        className={`
-                                                        text-sm
-                                                        ${isDark
-                                                ? "text-text-secondary-dark"
-                                                : "text-text-secondary-light"
-                                            }
-                                                    `}
-                                    >
-                                        {user.email ?? ""}
-                                    </div>
+                                <div className="flex-1 min-w-0">
+                                    <h3 className={`font-medium truncate ${isDark ? "text-white" : "text-gray-900"}`}>
+                                        {user.email}
+                                    </h3>
+                                    <p className={`text-xs truncate ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                                        Free Plan
+                                    </p>
                                 </div>
-                            </div>
+                            </motion.div>
                         ) : (
-                            <div className="text-center">
-                                <div
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 }}
+                                className="flex gap-3"
+                            >
+                                <button
+                                    onClick={() => handleAuthAction?.("signin")}
                                     className={`
-                                                    mb-3
-                                                    ${isDark
-                                            ? "text-text-primary-dark"
-                                            : "text-text-primary-light"
+                                        flex-1 py-2.5 px-4 rounded-xl text-sm font-medium transition-all
+                                        ${isDark
+                                            ? "bg-white/10 hover:bg-white/20 text-white"
+                                            : "bg-black/5 hover:bg-black/10 text-gray-900"
                                         }
-                                                `}
+                                    `}
                                 >
-                                    Join PrepToDo
-                                </div>
-                                <div className="flex gap-2">
-                                    <motion.button
-                                        onClick={() => handleAuthAction?.("signin")}
-                                        className={`
-                                                            flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors hover:cursor-pointer
-                                                            ${isDark
-                                                ? "bg-brand-primary-dark hover:bg-brand-primary-hover-dark text-white"
-                                                : "bg-brand-primary-light hover:bg-brand-primary-hover-light text-white"
-                                            }
-                                                        `}
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                    >
-                                        Sign In
-                                    </motion.button>
-                                    <motion.button
-                                        onClick={() => handleAuthAction?.("signup")}
-                                        className={`
-                                                            flex-1 py-2 px-3 rounded-lg text-sm font-medium border-2 transition-colors hover:cursor-pointer
-                                                            ${isDark
-                                                ? "border-brand-primary-dark text-brand-primary-dark hover:bg-brand-primary-dark hover:text-white"
-                                                : "border-brand-primary-light text-brand-primary-light hover:bg-brand-primary-light hover:text-white"
-                                            }
-                                                        `}
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                    >
-                                        Sign Up
-                                    </motion.button>
-                                </div>
-                            </div>
+                                    Sign In
+                                </button>
+                                <button
+                                    onClick={() => handleAuthAction?.("signup")}
+                                    className={`
+                                        flex-1 py-2.5 px-4 rounded-xl text-sm font-medium transition-all
+                                        ${isDark
+                                            ? "bg-brand-primary-dark text-white hover:brightness-110"
+                                            : "bg-brand-primary-light text-white hover:brightness-110"
+                                        }
+                                    `}
+                                >
+                                    Sign Up
+                                </button>
+                            </motion.div>
                         )}
                     </div>
 
                     {/* Navigation Items */}
                     <nav className="flex-1 space-y-2">
-                        {navigationItems.map((item) => (
+                        {navigationItems.map((item, index) => (
                             <motion.div
                                 key={item.id}
-                                className="relative group"
-                                onMouseEnter={() => setHoveredItem(item.id)}
-                                onMouseLeave={() => setHoveredItem(null)}
                                 variants={navigationItemVariants}
                                 initial="hidden"
-                                animate="visible"
-                                whileHover={{ x: 4 }}
-                                transition={{ duration: 0.2 }}
+                                animate={isOpen ? "visible" : "hidden"}
+                                transition={{ delay: 0.2 + index * 0.05 }}
                             >
-                                <motion.button
+                                <button
                                     onClick={() => handleNavigate(item)}
                                     className={`
-                                        w-full flex items-center gap-4 p-4 rounded-xl
-                                        hover:cursor-pointer
+                                        group w-full flex items-center gap-4 p-3.5 rounded-xl transition-all
                                         ${isDark
-                                            ? "hover:bg-bg-tertiary-dark/50 text-text-secondary-dark hover:text-text-primary-dark"
-                                            : "hover:bg-bg-tertiary-light/50 text-text-secondary-light hover:text-text-primary-light"
+                                            ? "hover:bg-white/5 text-gray-400 hover:text-white"
+                                            : "hover:bg-black/5 text-gray-500 hover:text-gray-900"
                                         }
                                     `}
                                 >
-                                    <motion.div
-                                        className={`
-                                            w-10 h-10 rounded-xl flex items-center justify-center
+                                    <div className={`
+                                        p-2 rounded-lg transition-colors
+                                        ${isDark
+                                            ? "group-hover:bg-white/5"
+                                            : "group-hover:bg-white"
+                                        }
+                                    `}>
+                                        <div className={`
+                                            transition-colors
                                             ${isDark
-                                                ? "bg-bg-tertiary-dark/50 group-hover:bg-bg-tertiary-dark/80"
-                                                : "bg-bg-tertiary-light/50 group-hover:bg-bg-tertiary-light/80"
+                                                ? "text-gray-400 group-hover:text-brand-primary-dark"
+                                                : "text-gray-500 group-hover:text-brand-primary-light"
                                             }
-                                            
-                                        `}
-                                        whileHover={{ scale: 1.05 }}
-                                    >
-                                        <div
-                                            className={`text-lg ${isDark ? item.iconColorDark : item.iconColorLight
-                                                }`}
-                                        >
+                                        `}>
                                             {item.icon}
                                         </div>
-                                    </motion.div>
-                                    <div className="text-left">
-                                        <div className="font-medium">{item.label}</div>
-                                        <div
-                                            className={`text-xs ${isDark
-                                                ? "text-text-muted-dark"
-                                                : "text-text-muted-light"
-                                                }`}
-                                        >
+                                    </div>
+                                    <div className="text-left flex-1">
+                                        <div className="font-medium text-sm">{item.label}</div>
+                                        <div className={`text-[10px] ${isDark ? "text-gray-600" : "text-gray-400"}`}>
                                             {item.description}
                                         </div>
                                     </div>
-                                </motion.button>
-
-                                {/* Tooltip for sidebar */}
-                                <AnimatePresence>
-                                    {hoveredItem === item.id && (
-                                        <motion.div
-                                            className={`
-                                                absolute left-full top-1/2 -translate-y-1/2 ml-4 px-3 py-2 rounded-lg
-                                                text-sm font-medium shadow-lg z-50
-                                                ${isDark
-                                                    ? "bg-bg-secondary-dark text-text-primary-dark border border-border-dark"
-                                                    : "bg-bg-secondary-light text-text-primary-light border border-border-light"
-                                                }
-                                            `}
-                                            initial={{ opacity: 0, x: -10 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            exit={{ opacity: 0, x: -10 }}
-                                            transition={{ duration: 0.2 }}
-                                        >
-                                            {item.label}
-                                            <div
-                                                className={`
-                                                    absolute right-full top-1/2 -translate-y-1/2 w-2 h-2 rotate-45
-                                                    ${isDark
-                                                        ? "bg-bg-secondary-dark border-l border-b border-border-dark"
-                                                        : "bg-bg-secondary-light border-l border-b border-border-light"
-                                                    }
-                                                `}
-                                            />
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
+                                </button>
+                                {/* Tooltips removed here as requested */}
                             </motion.div>
                         ))}
                     </nav>
 
                     {/* Bottom section */}
                     {isAuthenticated && (
-                        <div
-                            className={`border-t flex flex-col justify-center${isDark ? "border-border-dark" : "border-border-light"
-                                }`}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.5 }}
+                            className={`
+                                pt-6 mt-6 border-t
+                                ${isDark ? "border-white/5" : "border-black/5"}
+                            `}
                         >
-                            <motion.button
-                                type="submit"
+                            <button
                                 disabled={isLogoutLoading}
                                 onClick={handleLogout}
                                 className={`
-              flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 hover:cursor-pointer
-              ${isLogoutLoading
-                                        ? isDark
-                                            ? "bg-bg-tertiary-dark text-text-muted-dark cursor-not-allowed"
-                                            : "bg-bg-tertiary-light text-text-muted-light cursor-not-allowed"
-                                        : "bg-brand-primary-light hover:bg-brand-primary-hover-light dark:bg-brand-primary-dark dark:hover:bg-brand-primary-hover-dark text-white shadow-lg hover:shadow-xl"
+                                    w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all
+                                    ${isDark
+                                        ? "text-red-400 hover:bg-red-500/10"
+                                        : "text-red-600 hover:bg-red-50"
                                     }
-            `}
+                                `}
                             >
-                                {isLogoutLoading ? "Logging out..." : "Log out"}
-                            </motion.button>
-                        </div>
+                                <LogOut size={16} />
+                                {isLogoutLoading ? "Logging out..." : "Sign Out"}
+                            </button>
+                        </motion.div>
                     )}
                 </div>
             </motion.div>
 
-            {/* Floating Navigation Icons */}
+            {/* Floating Navigation Icons (Dock) */}
             <DockContainer
                 isOpen={isOpen}
                 isDark={!!isDark}
@@ -623,8 +502,7 @@ export const FloatingNavigation: React.FC = () => {
                 handleNavigate={handleNavigate}
             />
 
-
-            {/* Overlay when sidebar is open */}
+            {/* Overlay */}
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
@@ -633,7 +511,7 @@ export const FloatingNavigation: React.FC = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.4 }}
                     />
                 )}
             </AnimatePresence>

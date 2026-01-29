@@ -72,8 +72,8 @@ export const DashboardPage: React.FC = () => {
                         <div className={`text-4xl mb-4 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>
                             📊
                         </div>
-                        <div className="font-medium mb-2">Sign in required</div>
-                        <div className="text-sm">Please sign in to view your analytics dashboard.</div>
+                        <div className="font-medium mb-2">Unlock Deep Performance Insights</div>
+                        <div className="text-sm">Sign in to access AI-driven diagnostics, track your improved reasoning skills, and visualize your growth across core VARC metrics.</div>
                     </motion.div>
                 ) : (
                     <div className="space-y-4 sm:space-y-5 max-w-400 mx-auto">
