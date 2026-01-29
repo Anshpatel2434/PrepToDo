@@ -42,11 +42,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     const navigate = useNavigate();
 
     return (
-        <section className={`relative min-h-[110vh] flex flex-col items-center pt-10 pb-20 overflow-hidden ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
+        <section className={`relative min-h-[110vh] flex flex-col items-center pt-6 pb-12 md:pt-10 md:pb-20 overflow-hidden ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
             }`}>
 
             <motion.div
-                className="container mx-auto px-4 z-10 flex flex-col items-center text-center max-w-6xl"
+                className="container mx-auto pl-18 sm:pl-20 md:pl-24 pr-4 lg:pr-8 z-10 flex flex-col items-center text-center max-w-6xl"
                 variants={staggerContainer}
                 initial="hidden"
                 animate="visible"
@@ -63,7 +63,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 {/* Hero Headline */}
                 <motion.h1
                     variants={fadeInUp}
-                    className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-[1.1]"
+                    className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-[1.1]"
                 >
                     <span className="relative inline-block mt-2">
                         <span className={`bg-clip-text text-transparent bg-linear-to-r ${isDark
@@ -93,7 +93,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 {/* Subtext */}
                 <motion.p
                     variants={fadeInUp}
-                    className={`text-lg md:text-xl max-w-2xl mb-10 leading-relaxed ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                    className={`text-base md:text-xl max-w-2xl mb-10 leading-relaxed ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
                         }`}
                 >
                     Daily drills, mistake analysis, and adaptive tests built from your performance data.

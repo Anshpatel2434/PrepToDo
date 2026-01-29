@@ -14,7 +14,7 @@ export const DashboardSkeleton: React.FC = () => {
     return (
         <div className="space-y-6">
             {/* User Details Skeleton */}
-            <div className="rounded-2xl border p-6 bg-bg-secondary-light dark:bg-bg-secondary-dark border-border-light dark:border-border-dark">
+            <div className="rounded-2xl border p-4 sm:p-6 bg-bg-secondary-light dark:bg-bg-secondary-dark border-border-light dark:border-border-dark">
                 <div className="flex items-center gap-4 mb-6">
                     <SkeletonRect className="w-14 h-14 rounded-2xl" />
                     <div className="space-y-2 flex-1">

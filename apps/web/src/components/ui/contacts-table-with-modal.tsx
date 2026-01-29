@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../../context/ThemeContext";
 import {
@@ -94,7 +94,6 @@ export function ContactsTable({
     enableAnimations = true
 }: ContactsTableProps = {}) {
     const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
-    const [mounted, setMounted] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [sortField, setSortField] = useState<SortField | null>(null);
     const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
@@ -107,11 +106,6 @@ export function ContactsTable({
     const { isDark } = useTheme();
 
     const ITEMS_PER_PAGE = 10;
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
     const handleContactSelect = (contactId: string) => {
         setSelectedContacts(prev => {
             if (prev.includes(contactId)) {

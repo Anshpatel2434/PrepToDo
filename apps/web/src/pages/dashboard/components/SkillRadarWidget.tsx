@@ -110,7 +110,7 @@ function BarColumn({
             onMouseLeave={handleMouseLeave}
         >
             {/* Bar Container - Glass test tube effect */}
-            <div className={`relative w-full max-w-[80px] h-48 overflow-hidden rounded-t-2xl border-2 ${isDark ? "bg-white/5 border-white/10" : "bg-black/5 border-black/10"} backdrop-blur-sm shadow-inner`}>
+            <div className={`relative w-full max-w-[60px] h-30 overflow-hidden rounded-t-2xl border-2 ${isDark ? "bg-white/5 border-white/10" : "bg-black/5 border-black/10"} backdrop-blur-sm shadow-inner`}>
                 {/* Liquid Fill with Wave Effect - positioned absolutely at bottom */}
                 <motion.div
                     initial={{ height: 0 }}
@@ -226,7 +226,7 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
                 : "bg-white/40"
                 } backdrop-blur-md ${className}`}
         >
-            <div className="p-5 sm:p-6">
+            <div className="p-4 sm:p-6">
                 {/* Header */}
                 <div className="mb-5">
                     <h3 className={`font-bold text-xl sm:text-2xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"

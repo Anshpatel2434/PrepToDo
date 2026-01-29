@@ -27,7 +27,7 @@ export const Footer: React.FC<FooterProps> = ({ className = "" }) => {
                 ${className}
             `}
 		>
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+			<div className="max-w-7xl mx-auto pl-18 sm:pl-20 md:pl-24 pr-4 lg:pr-8">
 				<div className="flex flex-col md:flex-row justify-between items-center gap-4">
 					{/* Copyright */}
 					<div
@@ -115,7 +115,7 @@ export const Footer: React.FC<FooterProps> = ({ className = "" }) => {
 								<span>GDPR Compliant</span>
 							</motion.div>
 						</motion.div>
-						</motion.div>
+					</motion.div>
 				</div>
 			</div>
 		</footer>

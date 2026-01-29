@@ -180,7 +180,7 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
                 : "bg-white/40"
                 } backdrop-blur-sm ${className}`}
         >
-            <div className="p-5 sm:p-6">
+            <div className="p-4 sm:p-6">
                 {/* Header */}
                 <div className="mb-5">
                     <h3 className={`font-bold text-xl sm:text-2xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"

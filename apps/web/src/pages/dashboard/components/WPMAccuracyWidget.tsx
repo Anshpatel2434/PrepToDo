@@ -113,7 +113,7 @@ export const WPMAccuracyWidget: React.FC<WPMAccuracyWidgetProps> = ({
                 : "bg-white/40"
                 } backdrop-blur-sm ${className}`}
         >
-            <div className="p-5 sm:p-6">
+            <div className="p-4 sm:p-6">
                 {/* Header with current values */}
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 mb-5">
                     <div className="flex-1 min-w-0">

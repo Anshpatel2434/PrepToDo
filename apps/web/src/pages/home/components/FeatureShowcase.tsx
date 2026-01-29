@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { MoveRight, Star } from "lucide-react";
+import { MoveRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 // --- Utility ---
@@ -40,21 +40,19 @@ export const FeatureShowcase = ({ isDark }: FeatureShowcaseProps) => {
 			imageUrl: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=1000",
 			href: "/daily",
 			views: 1240,
-			readTime: 15,
-			rating: 5,
-			description: "Fresh CAT-level passages generated daily. Each question is backed by a 'Reasoning Graph' to ensure it tests genuine comprehension.",
+			readTime: 20, // Avg time approx
+			description: "Stay consistent with daily practice. Our AI curates CAT-level verbal sections tailored to your progress.",
 		},
 		{
 			id: "customized-mocks",
-			title: "Customized Mocks",
-			category: "Simulation",
+			title: "Customized VARC SECTIONAL",
+			category: "Adaptive Practice",
 			// Unsplash: Laptop/Code/Exam
 			imageUrl: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=1000",
 			href: "/customized-mocks",
 			views: 890,
-			readTime: 180, // Mock duration approx
-			rating: 5,
-			description: "Turn your weaknesses into strengths. Our AI generates mocks that specifically target your lowest proficiency genres.",
+			readTime: 40, // Mock duration approx
+			description: "Turn your weaknesses into strengths. Our AI generates varc sectionals that specifically target your lowest proficiency scores.",
 		},
 		{
 			id: "analytics-dashboard",
@@ -65,7 +63,6 @@ export const FeatureShowcase = ({ isDark }: FeatureShowcaseProps) => {
 			href: "/dashboard",
 			views: 2100,
 			readTime: 5,
-			rating: 5,
 			description: "Go beyond simple scores. Our 'Reasoning Engine' diagnoses *why* you got a question wrong—identifying logic gaps.",
 		},
 	];
@@ -82,7 +79,7 @@ export const FeatureShowcase = ({ isDark }: FeatureShowcaseProps) => {
 
 	return (
 		<section className={cn(
-			"container relative my-24 py-10 mx-auto pl-18 sm:pl-20 md:pl-24 pr-4 sm:pr-6 lg:pr-8",
+			"container relative my-12 md:my-24 py-10 mx-auto pl-18 sm:pl-20 md:pl-24 pr-4 sm:pr-6 lg:pr-8",
 			className
 		)}>
 			<h1 className={cn("text-center text-4xl font-serif font-bold tracking-tight capitalize !leading-[1.4] md:text-5xl lg:text-6xl mb-4", isDark ? "text-white" : "text-gray-900")}>
@@ -92,7 +89,7 @@ export const FeatureShowcase = ({ isDark }: FeatureShowcaseProps) => {
 			{backgroundLabel && (
 				<span
 					className={cn(
-						"absolute -top-10 -z-50 select-none text-[120px] font-extrabold leading-[1] md:text-[200px] lg:text-[300px]",
+						"absolute -top-10 -z-50 select-none text-[80px] md:text-[200px] lg:text-[300px] font-extrabold leading-[1]",
 						isDark ? "text-white/[0.03]" : "text-black/[0.03]",
 						backgroundPosition === "left" ? "-left-[10%]" : "-right-[10%]"
 					)}
@@ -112,9 +109,7 @@ export const FeatureShowcase = ({ isDark }: FeatureShowcaseProps) => {
 						title: postTitle,
 						category,
 						imageUrl,
-						views,
 						readTime,
-						rating = 4,
 						className: postClassName,
 						description: postDesc
 					} = post;
@@ -153,25 +148,6 @@ export const FeatureShowcase = ({ isDark }: FeatureShowcaseProps) => {
 										<span className="text-sm font-medium capitalize py-1 px-3 rounded-full bg-white/20 w-fit text-white backdrop-blur-md border border-white/10">
 											{category}
 										</span>
-
-										<div className="flex items-center gap-4 text-sm md:text-base text-gray-300">
-											<div className="flex items-center gap-1">
-												<span className="font-semibold text-white">{rating}</span>
-												{Array.from({ length: 5 }).map((_, idx) => (
-													<Star
-														width={16}
-														height={16}
-														key={idx}
-														stroke={idx < rating ? "#fbbf24" : "#9ca3af"} // amber-400 vs gray-400
-														fill={idx < rating ? "#fbbf24" : "transparent"}
-														className="transition-colors"
-													/>
-												))}
-											</div>
-											<span className="font-medium">
-												{views.toLocaleString()} Users
-											</span>
-										</div>
 
 										{readTime && (
 											<div className="text-sm font-semibold text-emerald-400">
