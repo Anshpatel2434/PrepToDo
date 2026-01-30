@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { MdSpeed, MdGpsFixed } from "react-icons/md";
+import { Zap, Crosshair } from "lucide-react";
 import {
     Area,
     CartesianGrid,
@@ -108,20 +108,20 @@ export const WPMAccuracyWidget: React.FC<WPMAccuracyWidgetProps> = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1, duration: 0.5 }}
-            className={`rounded-2xl overflow-hidden ${isDark
-                ? "bg-bg-secondary-dark/40"
-                : "bg-white/40"
-                } backdrop-blur-sm ${className}`}
-        >
+            className={`rounded-3xl overflow-hidden ${isDark
+                ? "bg-bg-secondary-dark/5"
+                : "bg-white/20"
+                } backdrop-blur-xl ${className}`}
+        >   
             <div className="p-4 sm:p-6">
                 {/* Header with current values */}
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 mb-5">
                     <div className="flex-1 min-w-0">
-                        <h3 className={`font-bold text-xl sm:text-2xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                        <h3 className={`font-bold text-2xl sm:text-3xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
                             }`}>
                             Speed vs Accuracy
                         </h3>
-                        <p className={`text-sm mt-1.5 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                        <p className={`text-lg mt-3 opacity-80 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
                             }`}>
                             {insightText}
                         </p>
@@ -130,14 +130,14 @@ export const WPMAccuracyWidget: React.FC<WPMAccuracyWidgetProps> = ({
                     {/* Current values badges */}
                     {series.length > 0 && (
                         <div className="flex gap-2 sm:gap-3 shrink-0">
-                            <div className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium ${isDark ? "bg-emerald-500/10 text-emerald-400" : "bg-emerald-100 text-emerald-800"
+                            <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold shadow-sm ${isDark ? "bg-emerald-500/10 text-emerald-400" : "bg-emerald-50 text-emerald-700"
                                 }`}>
-                                <MdSpeed size={14} />
+                                <Zap size={16} />
                                 <span>{latestWpm} WPM</span>
                             </div>
-                            <div className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium ${isDark ? "bg-blue-500/10 text-blue-400" : "bg-blue-100 text-blue-800"
+                            <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold shadow-sm ${isDark ? "bg-blue-500/10 text-blue-400" : "bg-blue-50 text-blue-700"
                                 }`}>
-                                <MdGpsFixed size={14} />
+                                <Crosshair size={16} />
                                 <span>{latestAccuracy}%</span>
                             </div>
                         </div>

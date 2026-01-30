@@ -48,8 +48,8 @@ export const DashboardPage: React.FC = () => {
         <div className={`min-h-screen relative ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"}`}>
             {/* Subtle background gradient */}
             <div className={`absolute inset-0 pointer-events-none ${isDark
-                ? "bg-linear-to-br from-brand-primary-dark/3 via-transparent to-brand-accent-dark/3"
-                : "bg-linear-to-br from-brand-primary-light/3 via-transparent to-brand-accent-light/3"
+                ? "bg-linear-to-br from-brand-primary-dark/5 via-transparent to-brand-accent-dark/5"
+                : "bg-linear-to-br from-brand-primary-light/5 via-transparent to-brand-accent-light/5"
                 }`} />
 
             <FloatingThemeToggle />
@@ -64,16 +64,16 @@ export const DashboardPage: React.FC = () => {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={`max-w-md p-8 rounded-2xl border text-center ${isDark
-                            ? "bg-bg-secondary-dark border-border-dark text-text-secondary-dark"
-                            : "bg-bg-secondary-light border-border-light text-text-secondary-light"
+                        className={`max-w-xl p-10 rounded-3xl border text-center backdrop-blur-md ${isDark
+                            ? "bg-bg-secondary-dark/50 border-white/5 text-text-secondary-dark"
+                            : "bg-white/50 border-black/5 text-text-secondary-light"
                             }`}
                     >
-                        <div className={`text-4xl mb-4 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>
+                        <div className={`text-6xl mb-6 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>
                             📊
                         </div>
-                        <div className="font-medium mb-2">Unlock Deep Performance Insights</div>
-                        <div className="text-sm">Sign in to access AI-driven diagnostics, track your improved reasoning skills, and visualize your growth across core VARC metrics.</div>
+                        <div className="font-bold text-3xl mb-4 tracking-tight">Unlock Deep Performance Insights</div>
+                        <div className="text-lg leading-relaxed opacity-80">Sign in to access AI-driven diagnostics, track your improved reasoning skills, and visualize your growth across core VARC metrics.</div>
                     </motion.div>
                 ) : (
                     <div className="space-y-4 sm:space-y-5 max-w-400 mx-auto">

@@ -10,6 +10,7 @@ export const AttemptDatumSchema = z.object({
     passage_id: z.string().nullish(),
     question_type: z.string(),
     genre: z.string().nullish(),
+    difficulty: z.string().nullish(),
     correct: z.boolean(),
     time_spent_seconds: z.number(),
     confidence_level: z.number().nullish(),
@@ -63,7 +64,7 @@ export const DiagnosticResultSchema = z.object({
     action: z.string(), // Specific, actionable next steps for this user (formerly targeted_advice)
     performance: z.string().nullish(), // Contextual encouragement based on strengths (formerly strength_comparison)
     focus_areas: z.array(z.string()), // Specific skills to work on
-    
+
     // User-specific context (for internal use, not displayed directly)
     related_weak_areas: z.array(z.object({
         dimension_type: z.string(),
@@ -266,6 +267,7 @@ export const UserMetricProficiencySchema = z.object({
         "question_type",
         "reasoning_step",
         "error_pattern",
+        "difficulty",
     ]),
     dimension_key: z.string(),
     proficiency_score: z.number().int().min(0).max(100),

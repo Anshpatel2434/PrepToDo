@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { Brain, Lightbulb, Target, AlertTriangle, CheckCircle2, TrendingUp, Sparkles } from "lucide-react";
 import type { Option, Question } from "../../../types";
 import { ConfidenceSelector } from "./ConfidenceSelector";
 import type { SolutionViewType } from "./SolutionToggle";
@@ -7,10 +8,17 @@ import { SolutionToggle } from "./SolutionToggle";
 
 // Define types locally if not exported from types.ts
 interface DiagnosticData {
+    analysis?: string;
+    action?: string;
+    performance?: string;
+    focus_areas?: string[];
+
+    // Deprecated fields
     personalized_analysis?: string;
     targeted_advice?: string;
     strength_comparison?: string;
     related_weak_areas?: Array<{ human_readable_description: string; proficiency_score: number }>;
+
     trap_analysis?: string;
     dominant_reasoning_failures?: Array<{ reasoning_node_label: string; failure_description: string }>;
     error_pattern_keys?: string[];
@@ -108,9 +116,15 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
     const renderAIInsights = () => {
         if (propIsCorrect) {
             return (
-                <div className="p-6 text-center">
-                    <p className={`font-medium ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
-                        AI insights are generated only for incorrect attempts.
+                <div className={`p-8 text-center rounded-xl border border-dashed ${isDark ? "border-border-dark" : "border-border-light"}`}>
+                    <div className="flex justify-center mb-3">
+                        <CheckCircle2 className={`w-8 h-8 ${isDark ? "text-success/50" : "text-success/50"}`} />
+                    </div>
+                    <p className={`font-medium ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                        Great job!
+                    </p>
+                    <p className={`text-sm mt-1 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                        AI insights are generated for incorrect attempts to help you learn.
                     </p>
                 </div>
             );
@@ -118,18 +132,21 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 
         if (!aiInsights?.isAnalysed) {
             return (
-                <div className="flex flex-col items-center justify-center p-8 space-y-4">
+                <div className="flex flex-col items-center justify-center p-12 space-y-6 opacity-70">
                     <motion.div
                         animate={{ rotate: 360 }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                        className="w-12 h-12 border-4 border-brand-primary-light border-t-transparent rounded-full"
-                    />
-                    <p className={`text-center font-medium ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
-                        AI is analyzing your mistakes...
-                    </p>
-                    <p className="text-xs text-center opacity-60">
-                        Encourage checking common solutions meanwhile.
-                    </p>
+                        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                    >
+                        <Sparkles className={`w-8 h-8 ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}`} />
+                    </motion.div>
+                    <div className="text-center space-y-2">
+                        <p className={`font-medium ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                            Analyzing your response...
+                        </p>
+                        <p className={`text-xs ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                            Identifying reasoning patterns and gaps.
+                        </p>
+                    </div>
                 </div>
             );
         }
@@ -137,7 +154,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
         const diagnostic = aiInsights.diagnostic;
         if (!diagnostic) {
             return (
-                <div className="p-6 text-center">
+                <div className={`p-8 text-center rounded-xl border border-dashed ${isDark ? "border-border-dark" : "border-border-light"}`}>
                     <p className={`font-medium ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
                         No AI insights available for this attempt.
                     </p>
@@ -145,72 +162,126 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
             );
         }
 
+        const analysis = diagnostic.analysis || diagnostic.personalized_analysis;
+        const action = diagnostic.action || diagnostic.targeted_advice;
+        const performance = diagnostic.performance || diagnostic.strength_comparison;
+        const focusAreas = diagnostic.focus_areas || (diagnostic.related_weak_areas?.map(a => a.human_readable_description) || []);
+
         return (
-            <div className="space-y-6">
-                {/* Personalized Analysis - Primary Focus */}
-                {diagnostic.personalized_analysis && (
-                    <div>
-                        <h5 className="text-sm font-bold uppercase tracking-wider mb-3 opacity-60">Why You Got This Wrong</h5>
-                        <p className="leading-relaxed text-base">{diagnostic.personalized_analysis}</p>
+            <div className="space-y-8 animate-in fade-in duration-500">
+                {/* Header */}
+                <div className="flex items-center gap-2 opacity-60">
+                    <Brain className={`w-4 h-4 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`} />
+                    <h4 className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                        AI Diagnostics
+                    </h4>
+                </div>
+
+                {/* Main Analysis */}
+                {analysis && (
+                    <div className="space-y-3">
+                        <h5 className={`font-semibold text-lg ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                            Analysis
+                        </h5>
+                        <p className={`leading-relaxed text-[15px] ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                            {analysis}
+                        </p>
                     </div>
                 )}
 
-                {/* Targeted Advice - Actionable Steps */}
-                {diagnostic.targeted_advice && (
-                    <div className={`p-4 rounded-lg border-l-4 ${isDark ? "bg-brand-primary-dark/10 border-brand-accent-light" : "bg-brand-primary-light/10 border-brand-accent-light"}`}>
-                        <h5 className="text-sm font-bold uppercase tracking-wider mb-3 text-brand-accent-light">What To Do Next</h5>
-                        <p className="leading-relaxed">{diagnostic.targeted_advice}</p>
-                    </div>
-                )}
-
-                {/* Strength Comparison - Encouragement */}
-                {diagnostic.strength_comparison && (
-                    <div className={`p-3 rounded-lg ${isDark ? "bg-success/10" : "bg-success/5"}`}>
-                        <p className="text-sm leading-relaxed italic opacity-90">{diagnostic.strength_comparison}</p>
-                    </div>
-                )}
-
-                {/* Related Weak Areas - Context */}
-                {diagnostic.related_weak_areas && diagnostic.related_weak_areas.length > 0 && (
-                    <div>
-                        <h5 className="text-sm font-bold uppercase tracking-wider mb-2 opacity-60">Areas To Focus On</h5>
-                        <div className="flex flex-wrap gap-2">
-                            {diagnostic.related_weak_areas.map((area, i) => (
-                                <span
-                                    key={i}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-medium ${isDark ? "bg-warning/20 text-warning" : "bg-warning/10 text-warning"}`}
-                                >
-                                    {area.human_readable_description} ({area.proficiency_score}%)
-                                </span>
-                            ))}
+                {/* Actionable Advice - Minimalist Card */}
+                {action && (
+                    <div className={`p-5 rounded-lg border-l-2 ${isDark
+                        ? "border-brand-accent-light bg-bg-tertiary-dark"
+                        : "border-brand-accent-light bg-bg-tertiary-light"
+                        }`}>
+                        <div className="flex gap-4">
+                            <Lightbulb className={`w-5 h-5 shrink-0 mt-0.5 ${isDark ? "text-brand-accent-light" : "text-brand-accent-light"}`} />
+                            <div className="space-y-1">
+                                <h5 className={`font-semibold ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                                    Recommended Action
+                                </h5>
+                                <p className={`text-sm leading-relaxed ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                                    {action}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 )}
 
+                {/* Comparison & Weak Areas */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {performance && (
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2 opacity-70">
+                                <TrendingUp className="w-4 h-4" />
+                                <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                                    Performance
+                                </span>
+                            </div>
+                            <p className={`text-sm leading-relaxed italic ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                                "{performance}"
+                            </p>
+                        </div>
+                    )}
+
+                    {focusAreas && focusAreas.length > 0 && (
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2 opacity-70">
+                                <Target className="w-4 h-4" />
+                                <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                                    Focus Areas
+                                </span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {focusAreas.map((area, i) => (
+                                    <span
+                                        key={i}
+                                        className={`px-2.5 py-1 rounded text-xs font-medium border ${isDark
+                                            ? "bg-transparent border-border-dark text-text-secondary-dark"
+                                            : "bg-transparent border-border-light text-text-secondary-light"
+                                            }`}
+                                    >
+                                        {area}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
                 {/* Divider */}
                 <div className={`border-t ${isDark ? "border-border-dark" : "border-border-light"} opacity-30`} />
 
-                {/* Supplementary Information */}
-                <details className="cursor-pointer">
-                    <summary className="text-sm font-bold uppercase tracking-wider mb-2 opacity-60 hover:opacity-100 transition-opacity">
-                        Technical Analysis (Optional)
+                {/* Technical Details (Collapsed) */}
+                <details className="group">
+                    <summary className={`list-none flex items-center gap-2 cursor-pointer text-sm font-medium opacity-60 hover:opacity-100 transition-opacity ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                        <div className={`p-1 rounded transition-transform group-open:rotate-90`}>
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                        </div>
+                        View Technical Breakdown
                     </summary>
-                    <div className="mt-4 space-y-4">
+                    <div className="mt-6 space-y-6 pl-6 border-l border-dashed border-opacity-30 border-gray-400">
                         {diagnostic.trap_analysis && (
-                            <div>
-                                <h6 className="text-xs font-bold uppercase tracking-wider mb-2 opacity-60">Trap Analysis</h6>
-                                <p className="text-sm leading-relaxed">{diagnostic.trap_analysis}</p>
+                            <div className="space-y-2">
+                                <h6 className={`text-xs font-bold uppercase tracking-wider opacity-60 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>Trap Analysis</h6>
+                                <p className={`text-sm leading-relaxed ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                                    {diagnostic.trap_analysis}
+                                </p>
                             </div>
                         )}
 
                         {diagnostic.dominant_reasoning_failures && diagnostic.dominant_reasoning_failures.length > 0 && (
-                            <div>
-                                <h6 className="text-xs font-bold uppercase tracking-wider mb-2 opacity-60">Reasoning Failures</h6>
+                            <div className="space-y-3">
+                                <h6 className={`text-xs font-bold uppercase tracking-wider opacity-60 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>Reasoning Gaps</h6>
                                 <div className="space-y-2">
                                     {diagnostic.dominant_reasoning_failures?.map((f, i) => (
-                                        <div key={i} className={`p-2 rounded-lg text-sm ${isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"}`}>
-                                            <div className="text-xs font-bold uppercase text-brand-primary-light mb-1">{f.reasoning_node_label}</div>
-                                            <div className="text-xs opacity-80">{f.failure_description}</div>
+                                        <div key={i} className={`flex items-start gap-3 p-3 rounded-md ${isDark ? "bg-bg-tertiary-dark/50" : "bg-bg-tertiary-light/50"}`}>
+                                            <AlertTriangle className={`w-4 h-4 shrink-0 mt-0.5 ${isDark ? "text-warning" : "text-warning"}`} />
+                                            <div>
+                                                <div className={`text-xs font-bold uppercase mb-0.5 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>{f.reasoning_node_label}</div>
+                                                <div className={`text-xs opacity-80 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>{f.failure_description}</div>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -218,11 +289,11 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                         )}
 
                         {diagnostic.error_pattern_keys && diagnostic.error_pattern_keys.length > 0 && (
-                            <div>
-                                <h6 className="text-xs font-bold uppercase tracking-wider mb-2 opacity-60">Error Patterns</h6>
+                            <div className="space-y-2">
+                                <h6 className={`text-xs font-bold uppercase tracking-wider opacity-60 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>Identified Patterns</h6>
                                 <div className="flex flex-wrap gap-2">
                                     {diagnostic.error_pattern_keys.map((key) => (
-                                        <span key={key} className="px-2 py-1 rounded-md bg-error/10 text-error text-xs font-medium">
+                                        <span key={key} className={`px-2 py-1 rounded-md text-xs font-medium ${isDark ? "bg-error/10 text-error" : "bg-error/10 text-error"}`}>
                                             {key.replace(/_/g, " ")}
                                         </span>
                                     ))}

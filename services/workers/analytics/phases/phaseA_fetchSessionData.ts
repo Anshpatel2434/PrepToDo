@@ -96,7 +96,7 @@ export async function phaseA_fetchSessionData(
             .in('id', passageIds);
 
         if (passagesError) throw new Error(`Passages fetch failed: ${passagesError.message}`);
-        
+
         const passagesParsed = PassageArraySchema.safeParse(passages);
         if (!passagesParsed.success) {
             console.error("Validation failed for passages:", passagesParsed.error.issues[0]);
@@ -104,7 +104,7 @@ export async function phaseA_fetchSessionData(
         }
         console.log("Validation passed for passages");
         const passageVerified = passagesParsed.data;
-        
+
         // Build passage lookup map
         passageMap = new Map(passageVerified.map(p => [p.id, p]));
     }
@@ -125,6 +125,7 @@ export async function phaseA_fetchSessionData(
 
             question_type: question.question_type,
             genre: passage?.genre || null,
+            difficulty: question.difficulty || null,
 
             correct: attempt.is_correct,
             time_spent_seconds: attempt.time_spent_seconds,

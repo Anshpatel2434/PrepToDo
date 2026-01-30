@@ -1,34 +1,62 @@
 // VARC Analytics - Scoring & Math Functions
 
-// Constants (DO NOT CHANGE without understanding impact)
-export const ALPHA = 0.2;
-export const CONFIDENCE_THRESHOLD = 9;
+// Constants
+export const CALIBRATION_THRESHOLD = 20; // Number of attempts before switching to trend-based scoring
+export const BAYESIAN_PRIOR_WEIGHT = 2; // "Fake" attempts to stabilize early scores
+export const BAYESIAN_PRIOR_SCORE = 0.5; // Assume 50% start
+export const EMA_ALPHA = 0.2; // Learning rate for established users
 export const TREND_DELTA_THRESHOLD = 3;
 
 /**
- * Confidence calculation using sqrt curve
- * Returns value between 0 and 1
+ * Confidence Score Calculation
+ * Returns a value between 0 and 1, representing statistical significance of the sample size.
+ * Uses a tanh curve for smooth saturation.
  */
 export function calculateConfidence(attempts: number): number {
-    return Math.min(1.0, Math.sqrt(attempts / CONFIDENCE_THRESHOLD));
+    // 10 attempts = ~0.76 confidence
+    // 20 attempts = ~0.96 confidence
+    return Math.tanh(attempts / 10);
 }
 
 /**
- * Proficiency smoothing using exponential weighted average
- * Formula: newPS = oldPS * (1 - α*confidence) + surfaceScore * (α*confidence)
+ * Calculates the new proficiency score using a Hybrid Bayesian-EMA approach.
+ * 
+ * Logic:
+ * 1. Calibration Phase (Attempts < Threshold):
+ *    Uses Bayesian Average to stabilize early scores while remaining responsive.
+ *    Formula: (Correct + PriorCorrect) / (Total + PriorWeight)
+ *    This prevents wild swings (0% or 100%) on first try but respects the user's actual performance (e.g. 3/4 -> ~67-70%).
+ * 
+ * 2. Growth Phase (Attempts >= Threshold):
+ *    Uses Exponential Moving Average (EMA) to track skill evolution over time.
+ *    Formula: Old * (1 - α) + NewSessions * α
+ *    This ensures that recent improvements (or slumps) update the score, rather than being drowned out by valid history.
  */
 export function calculateNewProficiency(
     oldProficiency: number,
-    surfaceScore: number,
-    confidence: number
+    sessionScore: number,
+    totalAttempts: number,
+    totalCorrect: number
 ): number {
-    const learningWeight = ALPHA * confidence;
-    const newProficiency =
-        oldProficiency * (1 - learningWeight) +
-        surfaceScore * learningWeight;
+    let newScore: number;
+
+    if (totalAttempts <= CALIBRATION_THRESHOLD) {
+        // [Hybrid Phase 1] Bayesian Average (Stabilized Exact History)
+        // We calculate what the "True" score likely is based on history + priors
+        const priorCorrect = BAYESIAN_PRIOR_WEIGHT * BAYESIAN_PRIOR_SCORE;
+        const adjustedCorrect = totalCorrect + priorCorrect;
+        const adjustedTotal = totalAttempts + BAYESIAN_PRIOR_WEIGHT;
+
+        newScore = (adjustedCorrect / adjustedTotal) * 100;
+    } else {
+        // [Hybrid Phase 2] Adaptive EMA (Trend Tracking)
+        // Adjust Alpha based on confidence? For now standard EMA is robust for tracking.
+        // We could use a slightly higher Alpha if we detect a "breakthrough", but standard EMA is safe.
+        newScore = oldProficiency * (1 - EMA_ALPHA) + sessionScore * EMA_ALPHA;
+    }
 
     // Clamp to [0, 100] and round
-    return Math.max(0, Math.min(100, Math.round(newProficiency)));
+    return Math.max(0, Math.min(100, Math.round(newScore)));
 }
 
 /**

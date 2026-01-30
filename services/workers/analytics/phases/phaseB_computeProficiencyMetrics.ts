@@ -50,6 +50,11 @@ export function phaseB_computeProficiencyMetrics(
             update("genre", attempt.genre, attempt.correct, attempt.confidence_level);
         }
 
+        // Dimension: difficulty
+        if (attempt.difficulty) {
+            update("difficulty", attempt.difficulty, attempt.correct, attempt.confidence_level);
+        }
+
         // Dimension: reasoning_step & core_metric
         for (const metric_key of attempt.metric_keys) {
             // Update core_metric directly
@@ -79,7 +84,7 @@ export function phaseB_computeProficiencyMetrics(
         const [dimension_type, dimension_key] = compositeKey.split("|");
 
         const accuracy = stats.correct / stats.total;
-        
+
         // Calculate Confidence Score (Normalized to 0-1)
         // If confidence_level is 1-3, (avg / 3) gives 0-1 range
         const avgRawConfidence = stats.confidenceCount > 0

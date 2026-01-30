@@ -45,14 +45,15 @@ export async function phaseD_updateProficiency(
         const confidence = calculateConfidence(totalAttempts);
 
         // 5. Calculate new proficiency score
-        // This usually uses an Exponential Moving Average (EMA) or a simple weighted average
+        // Uses Hybrid Bayesian-EMA approach (Calibration vs Growth)
         const oldProficiency = existing ? existing.proficiency_score : 50;
         const sessionProficiency = incoming.proficiency_score;
 
         const newProficiency = calculateNewProficiency(
             oldProficiency,
             sessionProficiency,
-            confidence
+            totalAttempts,
+            totalCorrect
         );
 
         // 6. Calculate trend ('improving', 'declining', 'stagnant')

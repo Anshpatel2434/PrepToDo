@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { MdPlayArrow, MdLightbulb } from "react-icons/md";
+import { Play, Lightbulb } from "lucide-react";
 import type { UserProficiencySignals } from "../../../types";
 
 interface RecommendationWidgetProps {
@@ -51,12 +51,12 @@ function PriorityItem({
     return (
         <motion.div
             variants={itemVariants}
-            className={`priority-card rounded-xl border-l-4 p-4 ${colorClass}`}
+            className={`priority-card rounded-2xl border-l-[6px] p-5 shadow-sm ${colorClass}`}
         >
             <div className={`priority-number ${numberClass}`}>
                 {priority}
             </div>
-            <div className={`font-medium text-sm ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+            <div className={`font-bold text-base ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
                 }`}>
                 {label}
             </div>
@@ -138,19 +138,19 @@ export const RecommendationWidget: React.FC<RecommendationWidgetProps> = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1, duration: 0.5 }}
-            className={`rounded-2xl overflow-hidden ${isDark
-                ? "bg-bg-secondary-dark/40"
-                : "bg-white/40"
-                } backdrop-blur-sm ${className}`}
+            className={`rounded-3xl overflow-hidden ${isDark
+                ? "bg-bg-secondary-dark/5"
+                : "bg-white/20"
+                } backdrop-blur-xl ${className}`}
         >
             <div className="p-4 sm:p-6">
                 {/* Header */}
                 <div className="mb-5">
-                    <h3 className={`font-bold text-xl sm:text-2xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                    <h3 className={`font-bold text-2xl sm:text-3xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
                         }`}>
                         Focus Today
                     </h3>
-                    <p className={`text-sm mt-1.5 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                    <p className={`text-lg mt-3 opacity-80 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
                         }`}>
                         Personalized practice priorities based on your performance.
                     </p>
@@ -177,9 +177,9 @@ export const RecommendationWidget: React.FC<RecommendationWidgetProps> = ({
                     ) : hasNoWeakAreas ? (
                         <div className={`flex flex-col items-center justify-center py-8 text-center ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
                             }`}>
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${isDark ? "bg-brand-accent-dark/20" : "bg-brand-accent-light/20"
+                            <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 ${isDark ? "bg-brand-accent-dark/10 text-brand-accent-dark" : "bg-brand-accent-light/10 text-brand-accent-light"
                                 }`}>
-                                <MdLightbulb className={isDark ? "text-brand-accent-dark" : "text-brand-accent-light"} size={24} />
+                                <Lightbulb size={28} />
                             </div>
                             <div className="font-medium mb-1">Great balance!</div>
                             <div className="text-sm">No significant weak areas detected. Keep practicing to maintain your edge.</div>
@@ -211,9 +211,9 @@ export const RecommendationWidget: React.FC<RecommendationWidgetProps> = ({
                             </motion.div>
 
                             {/* Recommended Difficulty & CTA */}
-                            <div className={`p-4 rounded-xl border ${isDark
+                            <div className={`p-5 rounded-2xl border ${isDark
                                 ? "bg-linear-to-r from-brand-primary-dark/10 to-brand-accent-dark/10 border-brand-primary-dark/30"
-                                : "bg-linear-to-r from-brand-primary-light/5 to-brand-accent-light/5 border-brand-primary-light/20"
+                                : "bg-linear-to-r from-brand-primary-light/5 to-brand-accent-light/5 border-brand-primary-light/10"
                                 }`}>
                                 <div className="flex items-center justify-between gap-4">
                                     <div>
@@ -230,12 +230,12 @@ export const RecommendationWidget: React.FC<RecommendationWidgetProps> = ({
                                     <motion.button
                                         whileHover={{ scale: 1.03 }}
                                         whileTap={{ scale: 0.98 }}
-                                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg ${isDark
+                                        className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-200 shadow-md hover:shadow-lg ${isDark
                                             ? "bg-brand-primary-dark text-white hover:bg-brand-primary-hover-dark"
                                             : "bg-brand-primary-light text-white hover:bg-brand-primary-hover-light"
                                             }`}
                                     >
-                                        <MdPlayArrow size={18} />
+                                        <Play size={20} fill="currentColor" />
                                         <span>Start Practice</span>
                                     </motion.button>
                                 </div>

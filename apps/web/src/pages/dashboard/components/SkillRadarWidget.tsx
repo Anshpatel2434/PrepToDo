@@ -221,25 +221,22 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1, duration: 0.5 }}
-            className={`rounded-2xl overflow-hidden h-full ${isDark
-                ? "bg-bg-secondary-dark/40"
-                : "bg-white/40"
-                } backdrop-blur-md ${className}`}
+            className={`rounded-3xl overflow-hidden h-full ${isDark
+                ? "bg-bg-secondary-dark/5"
+                : "bg-white/20"
+                } backdrop-blur-xl ${className}`}
         >
             <div className="p-4 sm:p-6">
                 {/* Header */}
                 <div className="mb-5">
-                    <h3 className={`font-bold text-xl sm:text-2xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                    <h3 className={`font-bold text-2xl sm:text-3xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
                         }`}>
                         Skill Proficiency
                     </h3>
                     {insightText && (
-                        <p className={`text-sm mt-1.5 leading-relaxed ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                        <p className={`text-lg mt-3 leading-relaxed opacity-80 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
                             }`}>
                             {insightText}
-                            <span className="block mt-1 opacity-80 italic text-xs">
-                                Percentages represent reasoning mastery: your ability to consistently apply logic patterns across all attempted questions.
-                            </span>
                         </p>
                     )}
                 </div>
@@ -294,25 +291,39 @@ export const SkillRadarWidget: React.FC<SkillRadarWidgetProps> = ({
                             </motion.div>
 
                             {/* Legend */}
+                             <div className="pt-4 border-t flex flex-col gap-3">
+                                <div className={`leading-relaxed ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>
+                                <span className={`font-semibold block mb-1 uppercase tracking-wider opacity-80 text-lg ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>Understanding the metrics</span>
+                                <div className="text-md">
+                                    <span className={`font-semibold ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>Percentages represent reasoning mastery:</span> your ability to consistently apply logic patterns across all attempted questions.
+                                </div>
+                            </div>
+                                </div>
+
+                            {/* Legend */}
                             <div className={`pt-4 border-t flex flex-wrap gap-3 text-[11px] ${isDark ? "border-white/5 text-text-muted-dark" : "border-black/5 text-text-muted-light"
                                 }`}>
                                 <div className="flex items-center gap-1.5">
-                                    <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: isDark ? "#34D399" : "#059669" }} />
-                                    <span>Strong</span>
+                                    <div className="w-3 h-3 rounded-md" style={{ backgroundColor: isDark ? "#34D399" : "#059669" }} />
+                                    <span className="text-sm">Strong</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
-                                    <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: isDark ? "#6EE7B7" : "#10B981" }} />
-                                    <span>Good</span>
+                                    <div className="w-3 h-3 rounded-md" style={{ backgroundColor: isDark ? "#6EE7B7" : "#10B981" }} />
+                                    <span className="text-sm">Good</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
-                                    <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: isDark ? "#FBBF24" : "#D97706" }} />
-                                    <span>Developing</span>
+                                    <div className="w-3 h-3 rounded-md" style={{ backgroundColor: isDark ? "#FBBF24" : "#D97706" }} />
+                                    <span className="text-sm">Developing</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
-                                    <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: isDark ? "#F87171" : "#DC2626" }} />
-                                    <span>Focus</span>
+                                    <div className="w-3 h-3 rounded-md" style={{ backgroundColor: isDark ? "#F87171" : "#DC2626" }} />
+                                    <span className="text-sm">Focus</span>
                                 </div>
                             </div>
+
+                            <span className={`block mt-2 opacity-80 italic text-lg font-normal ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                                
+                            </span>
                         </>
                     )}
                 </div>

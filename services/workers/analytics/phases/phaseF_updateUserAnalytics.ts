@@ -76,14 +76,10 @@ export async function phaseF_updateUserAnalytics(
         );
     }
 
-    // 4. Calculate genre performance
-    const genrePerformance = calculateGenrePerformance(dataset);
-
-    // 5. Calculate difficulty performance
-    const difficultyPerformance = await calculateDifficultyPerformance(supabase, dataset);
-
-    // 6. Calculate question type performance
-    const questionTypePerformance = calculateQuestionTypePerformance(dataset);
+    // 4. Performance Metrics (Genre, Difficulty, Question Type)
+    // Now fetched directly from user_metric_proficiency (computed in Phase D)
+    // This ensures consistency with the robust scoring model
+    // No local calculation or "merge" needed here.
 
     // 7. Fetch existing analytics for this user (single row)
     const { data: existingAnalytics } = await supabase
@@ -170,18 +166,9 @@ export async function phaseF_updateUserAnalytics(
         longest_streak: streakData.longestStreak,
         points_earned_today,
         total_points,
-        genre_performance: mergePerformance(
-            (existingAnalytics?.genre_performance as Record<string, number>) || {},
-            genrePerformance
-        ),
-        difficulty_performance: mergePerformance(
-            (existingAnalytics?.difficulty_performance as Record<string, number>) || {},
-            difficultyPerformance
-        ),
-        question_type_performance: mergePerformance(
-            (existingAnalytics?.question_type_performance as Record<string, number>) || {},
-            questionTypePerformance
-        ),
+        genre_performance: await fetchProficiencyMap(supabase, user_id, 'genre'),
+        difficulty_performance: await fetchProficiencyMap(supabase, user_id, 'difficulty'),
+        question_type_performance: await fetchProficiencyMap(supabase, user_id, 'question_type'),
         new_words_learned: existingAnalytics?.new_words_learned || 0,
         words_reviewed: existingAnalytics?.words_reviewed || 0,
         updated_at: new Date().toISOString(),
@@ -217,9 +204,9 @@ export async function phaseF_updateUserAnalytics(
         accuracy_percentage,
         last_active_date: today,
         points_earned_today,
-        genre_performance: genrePerformance,
-        difficulty_performance: difficultyPerformance,
-        question_type_performance: questionTypePerformance,
+        genre_performance: upsertData.genre_performance, // Use the fetched map
+        difficulty_performance: upsertData.difficulty_performance,
+        question_type_performance: upsertData.question_type_performance,
         reading_speed_wpm,
     };
 
@@ -538,108 +525,32 @@ async function calculateReadingSpeedWpm(
 }
 
 /**
- * Calculate performance by genre
+ * Fetch proficiency scores for a specific dimension type
+ * Returns a map of Key -> Score (0-100)
  */
-function calculateGenrePerformance(dataset: AttemptDatum[]): Record<string, number> {
-    const genreStats = new Map<string, { correct: number; total: number }>();
-
-    for (const attempt of dataset) {
-        if (!attempt.genre) continue;
-
-        if (!genreStats.has(attempt.genre)) {
-            genreStats.set(attempt.genre, { correct: 0, total: 0 });
-        }
-
-        const stats = genreStats.get(attempt.genre)!;
-        stats.total += 1;
-        stats.correct += attempt.correct ? 1 : 0;
-    }
-
-    const performance: Record<string, number> = {};
-    for (const [genre, stats] of Array.from(genreStats)) {
-        performance[genre] = Math.round((stats.correct / stats.total) * 100);
-    }
-
-    return performance;
-}
-
-/**
- * Calculate performance by difficulty
- */
-async function calculateDifficultyPerformance(
+async function fetchProficiencyMap(
     supabase: any,
-    dataset: AttemptDatum[]
+    user_id: string,
+    dimension_type: 'genre' | 'difficulty' | 'question_type'
 ): Promise<Record<string, number>> {
-    const questionIds = Array.from(new Set(dataset.map(d => d.question_id)));
+    const { data, error } = await supabase
+        .from('user_metric_proficiency')
+        .select('dimension_key, proficiency_score')
+        .eq('user_id', user_id)
+        .eq('dimension_type', dimension_type);
 
-    if (questionIds.length === 0) {
+    if (error) {
+        console.error(`⚠️ [Phase F] Failed to fetch proficiency map for ${dimension_type}:`, error.message);
         return {};
     }
 
-    const { data: questions, error } = await supabase
-        .from('questions')
-        .select('*')
-        .in('id', questionIds);
-
-    if (error || !questions || questions.length === 0) {
-        console.warn('⚠️ [Phase F] Could not fetch question difficulties');
-        return {};
-    }
-
-    const questionsParsed = QuestionArraySchema.safeParse(questions);
-    if (!questionsParsed.success) {
-        console.error('⚠️ [Phase F] Validation failed for questions:', questionsParsed.error.issues[0]);
-        return {};
-    }
-
-    const questionsVerified = questionsParsed.data;
-
-    const questionDifficulty = new Map(questionsVerified.map(q => [q.id, q.difficulty]));
-
-    const difficultyStats = new Map<string, { correct: number; total: number }>();
-
-    for (const attempt of dataset) {
-        const difficulty = questionDifficulty.get(attempt.question_id) || 'medium';
-
-        if (!difficultyStats.has(difficulty)) {
-            difficultyStats.set(difficulty, { correct: 0, total: 0 });
+    const map: Record<string, number> = {};
+    if (data) {
+        for (const row of data) {
+            map[row.dimension_key] = row.proficiency_score;
         }
-
-        const stats = difficultyStats.get(difficulty)!;
-        stats.total += 1;
-        stats.correct += attempt.correct ? 1 : 0;
     }
-
-    const performance: Record<string, number> = {};
-    for (const [difficulty, stats] of Array.from(difficultyStats)) {
-        performance[difficulty] = Math.round((stats.correct / stats.total) * 100);
-    }
-
-    return performance;
-}
-
-/**
- * Calculate performance by question type
- */
-function calculateQuestionTypePerformance(dataset: AttemptDatum[]): Record<string, number> {
-    const typeStats = new Map<string, { correct: number; total: number }>();
-
-    for (const attempt of dataset) {
-        if (!typeStats.has(attempt.question_type)) {
-            typeStats.set(attempt.question_type, { correct: 0, total: 0 });
-        }
-
-        const stats = typeStats.get(attempt.question_type)!;
-        stats.total += 1;
-        stats.correct += attempt.correct ? 1 : 0;
-    }
-
-    const performance: Record<string, number> = {};
-    for (const [type, stats] of Array.from(typeStats)) {
-        performance[type] = Math.round((stats.correct / stats.total) * 100);
-    }
-
-    return performance;
+    return map;
 }
 
 /**
@@ -689,7 +600,15 @@ async function calculateStreaks(
                 if (daysDiff === 0) {
                     // Same day - maintain current streak (no change)
                     currentStreak = previousStreak;
-                    console.log(`   - Same day: maintaining streak at ${currentStreak}`);
+
+                    // Fix: If streak was previously 0 (e.g., from a prior short session today),
+                    // but now the user has satisfied the criteria, ensure streak is at least 1.
+                    if (currentStreak === 0) {
+                        currentStreak = 1;
+                        console.log(`   - Same day recovery: initializing streak to ${currentStreak}`);
+                    } else {
+                        console.log(`   - Same day: maintaining streak at ${currentStreak}`);
+                    }
                 } else if (daysDiff === 1) {
                     // Consecutive day - increment streak
                     currentStreak = previousStreak + 1;
@@ -721,27 +640,6 @@ async function calculateStreaks(
 }
 
 /**
- * Merge performance records, averaging overlapping values
- */
-function mergePerformance(
-    existing: Record<string, number>,
-    newData: Record<string, number>
-): Record<string, number> {
-    const merged = { ...existing };
-
-    for (const [key, value] of Object.entries(newData)) {
-        if (merged[key] !== undefined) {
-            // Average the values if key exists
-            merged[key] = Math.round((merged[key] + value) / 2);
-        } else {
-            merged[key] = value;
-        }
-    }
-
-    return merged;
-}
-
-/**
  * Calculate weighted accuracy when merging
  */
 function calculateWeightedAccuracy(
@@ -757,5 +655,5 @@ function calculateWeightedAccuracy(
     const existingWeighted = (existingAttempts / totalAttempts) * existingAccuracy;
     const newWeighted = (newAttempts / totalAttempts) * newAccuracy;
 
-    return Math.round(existingWeighted + newWeighted);
+    return Math.round((existingWeighted + newWeighted) * 100) / 100;
 }

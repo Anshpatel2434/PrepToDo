@@ -2,7 +2,14 @@
 // FLOATING NAVIGATION COMPONENT
 // ============================================================================
 import React, { useRef, useState } from "react";
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, MotionValue } from "framer-motion";
+import {
+    motion,
+    AnimatePresence,
+    useMotionValue,
+    useSpring,
+    useTransform,
+    MotionValue
+} from "framer-motion";
 import {
     Home,
     LayoutGrid,
@@ -32,7 +39,7 @@ interface NavigationItem {
     description: string;
 }
 
-function DockItem({
+const DockItem = React.memo(function DockItem({
     item,
     mouseY,
     isDark,
@@ -70,9 +77,8 @@ function DockItem({
                 className={`
                     w-full h-full rounded-2xl
                     flex items-center justify-center
-                    backdrop-blur-xl
+                    backdrop-blur-md
                     hover:cursor-pointer focus:outline-none
-                    transition-all duration-300
                     ${isDark
                         ? "bg-bg-tertiary-dark/60 border border-white/5 hover:bg-bg-tertiary-dark"
                         : "bg-white/60 border border-black/5 hover:bg-white"
@@ -84,7 +90,6 @@ function DockItem({
             >
                 <div
                     className={`
-                        transition-transform duration-300
                         ${isDark ? item.iconColorDark : item.iconColorLight}
                     `}
                 >
@@ -125,7 +130,7 @@ function DockItem({
             </AnimatePresence>
         </motion.div>
     );
-}
+});
 
 function DockContainer({
     isOpen,
@@ -152,12 +157,14 @@ function DockContainer({
                 fixed left-4 top-24 z-30 
                 flex flex-col gap-3
                 px-3 py-4 rounded-[2rem]
-                transition-all duration-300
-                ${isOpen
-                    ? "translate-x-[-200%] opacity-0 pointer-events-none"
-                    : "translate-x-0 opacity-100 pointer-events-auto"
-                }
             `}
+            initial={false}
+            animate={{
+                x: isOpen ? "-200%" : "0%",
+                opacity: isOpen ? 0 : 1,
+                pointerEvents: isOpen ? "none" : "auto"
+            }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
         >
             {navigationItems.map((item) => (
                 <DockItem
@@ -261,10 +268,10 @@ export const FloatingNavigation: React.FC = () => {
         }
     };
 
-    const handleNavigate = (item: NavigationItem) => {
+    const handleNavigate = React.useCallback((item: NavigationItem) => {
         navigate(item.path);
         setIsOpen(false);
-    };
+    }, [navigate, setIsOpen]);
 
     const toggleSidebar = () => {
         setIsOpen(!isOpen);
@@ -293,12 +300,16 @@ export const FloatingNavigation: React.FC = () => {
             {/* Sidebar Toggle Button */}
             <motion.button
                 onClick={toggleSidebar}
+                animate={{
+                    left: isOpen ? "19rem" : "1.5rem", // 1.5rem = 6 (tailwind spacing)
+                    boxShadow: isOpen ? "none" : "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
+                }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className={`
                     fixed top-6 z-50 w-12 h-12 rounded-full
                     flex items-center justify-center
-                    backdrop-blur-md transition-all duration-500 ease-[0.32,0.72,0,1]
+                    backdrop-blur-md
                     hover:scale-105 active:scale-95
-                    ${isOpen ? "left-[19rem] shadow-none" : "left-6 shadow-lg"}
                     ${isDark
                         ? "bg-bg-tertiary-dark/40 border border-white/5 text-white"
                         : "bg-white/40 border border-black/5 text-black"

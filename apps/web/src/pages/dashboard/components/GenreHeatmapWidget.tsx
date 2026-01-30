@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { MdTrendingUp, MdTrendingDown, MdTrendingFlat } from "react-icons/md";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import type { UserMetricProficiency } from "../../../types";
 import { transformHeatmapData } from "../utils/chartHelpers";
 
@@ -61,10 +61,10 @@ function LiquidCell({
         <motion.div
             variants={itemVariants}
             whileHover={{ scale: 1.05, y: -2 }}
-            className={`liquid-cell group relative h-28 border-2 cursor-default rounded-2xl overflow-hidden ${isDark
-                ? "bg-white/5 border-white/10 hover:border-white/20"
-                : "bg-black/5 border-black/10 hover:border-black/20"
-                } backdrop-blur-sm shadow-inner`}
+            className={`liquid-cell group relative h-32 cursor-pointer rounded-2xl overflow-hidden transition-all duration-300 ${isDark
+                ? "bg-white/5 hover:bg-white/10"
+                : "bg-black/5 hover:bg-black/10"
+                } shadow-sm hover:shadow-md`}
         >
             {/* Liquid fill */}
             <motion.div
@@ -112,13 +112,13 @@ function LiquidCell({
 
                     <div className="flex items-center gap-1">
                         {trend === "improving" && (
-                            <MdTrendingUp className="w-4 h-4 trend-improving" />
+                            <TrendingUp className="w-4 h-4 trend-improving" />
                         )}
                         {trend === "declining" && (
-                            <MdTrendingDown className="w-4 h-4 trend-declining" />
+                            <TrendingDown className="w-4 h-4 trend-declining" />
                         )}
                         {trend === "stagnant" && (
-                            <MdTrendingFlat className="w-4 h-4 trend-stable" />
+                            <Minus className="w-4 h-4 trend-stable" />
                         )}
                     </div>
                 </div>
@@ -175,19 +175,19 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1, duration: 0.5 }}
-            className={`rounded-2xl overflow-hidden ${isDark
-                ? "bg-bg-secondary-dark/40"
-                : "bg-white/40"
-                } backdrop-blur-sm ${className}`}
+            className={`rounded-3xl overflow-hidden ${isDark
+                ? "bg-bg-secondary-dark/5"
+                : "bg-white/20"
+                } backdrop-blur-xl ${className}`}
         >
             <div className="p-4 sm:p-6">
                 {/* Header */}
                 <div className="mb-5">
-                    <h3 className={`font-bold text-xl sm:text-2xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                    <h3 className={`font-bold text-2xl sm:text-3xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
                         }`}>
                         Genre Performance
                     </h3>
-                    <p className={`text-sm mt-1.5 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                    <p className={`text-lg mt-3 opacity-80 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
                         }`}>
                         {insightText || "Complete RC sets to see genre breakdown."}
                     </p>
@@ -243,10 +243,14 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
 
                             {/* Legend */}
                             <div className="mt-5 pt-4 border-t flex flex-col gap-3">
-                                <div className={`text-[10px] leading-relaxed ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>
-                                    <span className="font-semibold block mb-1 uppercase tracking-wider opacity-60">Understanding the metrics</span>
-                                    The <span className="italic">fill level</span> represents your holistic proficiency—a weighted score of accuracy and comprehension depth.
-                                    The <span className="italic">percentage</span> indicates your mastery of specific genre nuances based on your performance history.
+                                <div className={`leading-relaxed ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>
+                                    <span className={`font-semibold block mb-1 uppercase tracking-wider opacity-80 text-lg ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>Understanding the metrics</span>
+                                    <div className="text-md">
+                                        The <span className={`font-semibold ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>fill level</span> represents your holistic proficiency—a weighted score of accuracy and comprehension depth.
+                                    </div>
+                                    <div className="text-md">
+                                        The <span className={`font-semibold ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>percentage</span> indicates your mastery of specific genre nuances based on your performance history.
+                                    </div>
                                 </div>
 
                                 <div className="flex flex-wrap gap-2 text-[11px]">
@@ -254,21 +258,41 @@ export const GenreHeatmapWidget: React.FC<GenreHeatmapWidgetProps> = ({
                                         flex items-center gap-1.5 px-2 py-0.5 rounded-lg
                                         ${isDark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-500/10 text-emerald-700'}
                                     `}>
-                                        <MdTrendingUp className="w-3 h-3" /> Improving
+                                        <TrendingUp className="w-3 h-3" /> Improving
                                     </span>
                                     <span className={`
                                         flex items-center gap-1.5 px-2 py-0.5 rounded-lg
                                         ${isDark ? 'bg-rose-500/10 text-rose-400' : 'bg-rose-500/10 text-rose-700'}
                                     `}>
-                                        <MdTrendingDown className="w-3 h-3" /> Declining
+                                        <TrendingDown className="w-3 h-3" /> Declining
                                     </span>
                                     <span className={`
                                         flex items-center gap-1.5 px-2 py-0.5 rounded-lg
                                         ${isDark ? 'bg-slate-500/10 text-slate-400' : 'bg-slate-500/10 text-slate-700'}
                                     `}>
-                                        <MdTrendingFlat className="w-3 h-3" /> Stable
+                                        <Minus className="w-3 h-3" /> Stable
                                     </span>
                                 </div>
+                                            {/* Legend */}
+                                            <div className={`flex flex-wrap gap-3 text-[11px] ${isDark ? "border-white/5 text-text-muted-dark" : "border-black/5 text-text-muted-light"
+                                                }`}>
+                                                <div className="flex items-center gap-1.5">
+                                                    <div className="w-3 h-3 rounded-md" style={{ backgroundColor: isDark ? "#34D399" : "#059669" }} />
+                                                    <span className="text-sm">Strong</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <div className="w-3 h-3 rounded-md" style={{ backgroundColor: isDark ? "#6EE7B7" : "#10B981" }} />
+                                                    <span className="text-sm">Good</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <div className="w-3 h-3 rounded-md" style={{ backgroundColor: isDark ? "#FBBF24" : "#D97706" }} />
+                                                    <span className="text-sm">Developing</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <div className="w-3 h-3 rounded-md" style={{ backgroundColor: isDark ? "#F87171" : "#DC2626" }} />
+                                                    <span className="text-sm">Focus</span>
+                                                </div>
+                                            </div>
                             </div>
                         </>
                     )}

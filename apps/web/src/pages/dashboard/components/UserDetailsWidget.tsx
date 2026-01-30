@@ -1,13 +1,13 @@
 import React from "react";
 import { motion } from "framer-motion";
 import {
-    MdPerson,
-    MdLocalFireDepartment,
-    MdStars,
-    MdTimer,
-    MdTrendingUp,
-    MdTrendingDown,
-} from "react-icons/md";
+    User,
+    Flame,
+    Sparkles,
+    Timer,
+    TrendingUp,
+    TrendingDown,
+} from "lucide-react";
 import type { UserAnalytics, UserProfile } from "../../../types";
 import { useAnimatedCounter, useAnimatedPercentage } from "../hooks/useAnimatedCounter";
 
@@ -34,36 +34,36 @@ interface ColorfulStatCardProps {
 
 const colorClasses = {
     streak: {
-        light: 'bg-[#F5E6D3]',
+        light: 'bg-stat-streak-light',
         dark: 'bg-stat-streak-dark',
-        accentLight: 'text-[#D4A574]',
+        accentLight: 'text-stat-streak-accent-light',
         accentDark: 'text-stat-streak-accent-dark',
-        iconBgLight: 'bg-[#F0D9B5]/70',
-        iconBgDark: 'bg-amber-500/20',
+        iconBgLight: 'backdrop-blur-xl bg-amber-300/10',
+        iconBgDark: 'backdrop-blur-xl bg-amber-300/10',
     },
     points: {
-        light: 'bg-[#D4E7D7]',
+        light: 'bg-stat-points-light',
         dark: 'bg-stat-points-dark',
-        accentLight: 'text-[#6B9B76]',
+        accentLight: 'text-stat-points-accent-light',
         accentDark: 'text-stat-points-accent-dark',
-        iconBgLight: 'bg-[#C1DCC6]/70',
-        iconBgDark: 'bg-emerald-500/20',
+        iconBgLight: 'backdrop-blur-xl bg-emerald-300/10',
+        iconBgDark: 'backdrop-blur-xl bg-emerald-300/10',
     },
     accuracy: {
-        light: 'bg-[#D4D9F5]',
+        light: 'bg-stat-accuracy-light',
         dark: 'bg-stat-accuracy-dark',
-        accentLight: 'text-[#7B87C9]',
+        accentLight: 'text-stat-accuracy-accent-light',
         accentDark: 'text-stat-accuracy-accent-dark',
-        iconBgLight: 'bg-[#C1C9E8]/70',
-        iconBgDark: 'bg-blue-500/20',
+        iconBgLight: 'backdrop-blur-xl bg-blue-300/10',
+        iconBgDark: 'backdrop-blur-xl bg-blue-300/10',
     },
     practice: {
-        light: 'bg-[#E8D9F5]',
+        light: 'bg-stat-practice-light',
         dark: 'bg-stat-practice-dark',
-        accentLight: 'text-[#9B7BC9]',
+        accentLight: 'text-stat-practice-accent-light',
         accentDark: 'text-stat-practice-accent-dark',
-        iconBgLight: 'bg-[#DCC6E8]/70',
-        iconBgDark: 'bg-violet-500/20',
+        iconBgLight: 'backdrop-blur-xl bg-violet-300/10',
+        iconBgDark: 'backdrop-blur-xl bg-violet-300/10',
     },
 };
 
@@ -90,12 +90,12 @@ function ColorfulStatCard({
                 ease: [0.34, 1.56, 0.64, 1]
             }}
             className={`
-                relative p-3 rounded-xl overflow-hidden cursor-default
+                relative p-5 rounded-3xl overflow-hidden cursor-default transition-all duration-300
                 ${isDark
-                    ? 'bg-bg-secondary-dark/40'
-                    : 'bg-white/40'
+                    ? 'bg-bg-secondary-dark/10 hover:bg-bg-secondary-dark/20'
+                    : 'bg-white/30 hover:bg-white/50'
                 }
-                backdrop-blur-sm
+                backdrop-blur-xl
             `}
         >
             {/* Content */}
@@ -103,13 +103,13 @@ function ColorfulStatCard({
                 <div className="flex justify-between items-start mb-1.5">
                     <div className="flex-1 min-w-0">
                         {/* Large number - hero element */}
-                        <div className={`text-xl sm:text-2xl font-bold tracking-tight mb-0.5 tabular-nums ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                        <div className={`text-3xl sm:text-4xl font-bold tracking-tight mb-1 tabular-nums ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
                             }`}>
                             {value}
                         </div>
 
                         {/* Label */}
-                        <div className={`text-sm font-medium ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                        <div className={`text-base font-semibold opacity-80 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
                             }`}>
                             {label}
                         </div>
@@ -129,7 +129,7 @@ function ColorfulStatCard({
                 {/* Footer: subtext + change badge */}
                 <div className="flex items-center justify-between gap-2 mt-1">
                     {subtext && (
-                        <span className={`text-[10px] truncate ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                        <span className={`text-sm truncate font-medium opacity-70 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
                             }`}>
                             {subtext}
                         </span>
@@ -139,16 +139,16 @@ function ColorfulStatCard({
                         <span className={`
                             inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded shrink-0
                             ${change.type === 'positive'
-                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                ? `bg-emerald-500/10 ${isDark ? "text-emerald-600" : "text-emerald-600"}`
                                 : change.type === 'negative'
-                                    ? 'bg-red-500/10 text-red-600 dark:text-red-400'
-                                    : 'bg-gray-500/10 text-gray-600 dark:text-gray-400'
+                                    ? `bg-red-500/10 ${isDark ? "text-red-600" : "text-red-600"}`
+                                    : `bg-gray-500/10 ${isDark ? "text-gray-600" : "text-gray-600"}`
                             }
                         `}>
                             {change.type === 'positive' ? (
-                                <MdTrendingUp className="w-2.5 h-2.5" />
+                                <TrendingUp className="w-3 h-3" />
                             ) : (
-                                <MdTrendingDown className="w-2.5 h-2.5" />
+                                <TrendingDown className="w-3 h-3" />
                             )}
                             {change.type === 'positive' ? '+' : ''}{change.value}%
                         </span>
@@ -157,7 +157,7 @@ function ColorfulStatCard({
 
                 {/* Description Footer */}
                 {description && (
-                    <div className={`mt-2 pt-2 border-t text-[10px] leading-tight ${isDark ? "border-white/10 text-white/40" : "border-black/5 text-black/40"}`}>
+                    <div className={`mt-2 pt-2 border-t text-sm font-medium leading-tight ${isDark ? "border-white/10 text-white/60" : "border-black/5 text-black/60"}`}>
                         {description}
                     </div>
                 )}
@@ -185,7 +185,7 @@ function BurningIcon({ isDark }: { isDark: boolean }) {
                 ))}
             </div>
             {/* Main Icon */}
-            <MdLocalFireDepartment
+            <Flame
                 className={`${isDark ? "text-orange-500" : "text-orange-600"} fire-burn`}
                 size={24}
             />
@@ -293,7 +293,7 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
-                                    <MdPerson
+                                    <User
                                         className={isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}
                                         size={24}
                                     />
@@ -321,10 +321,10 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
 
                         {/* Welcome text */}
                         <div className="flex-1 min-w-0">
-                            <div className={`text-xs ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>
+                            <div className={`text-sm font-medium mb-0.5 opacity-80 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}`}>
                                 Welcome back,
                             </div>
-                            <h2 className={`font-bold text-xl tracking-tight truncate ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                            <h2 className={`font-bold text-3xl tracking-tight truncate ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
                                 }`}>
                                 {name}!
                             </h2>
@@ -344,7 +344,7 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                                 animatedStreak > 0 ? (
                                     <BurningIcon isDark={isDark} />
                                 ) : (
-                                    <MdLocalFireDepartment size={24} />
+                                    <Flame size={24} />
                                 )
                             }
                             subtext={`Best: ${analytics?.longest_streak || 0} days`}
@@ -368,7 +368,7 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                                 ? { value: 8, type: 'positive' }
                                 : undefined
                             }
-                            icon={<MdStars size={24} />}
+                            icon={<Sparkles size={24} />}
                             colorScheme="points"
                             isDark={isDark}
                             delay={1}
@@ -390,7 +390,7 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                                     ? { value: 3, type: 'negative' }
                                     : undefined
                             }
-                            icon={<MdTrendingUp size={24} />}
+                            icon={<TrendingUp size={24} />}
                             colorScheme="accuracy"
                             isDark={isDark}
                             delay={2}
@@ -405,7 +405,7 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                                     <span className="text-xl font-normal opacity-60">m</span>
                                 </span>
                             }
-                            icon={<MdTimer size={24} />}
+                            icon={<Timer size={24} />}
                             colorScheme="practice"
                             isDark={isDark}
                             delay={3}
