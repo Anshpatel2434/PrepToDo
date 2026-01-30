@@ -151,7 +151,7 @@ function DockContainer({
 
     return (
         <motion.div
-            onMouseMove={(e) => mouseY.set(e.pageY)}
+            onMouseMove={(e) => mouseY.set(e.clientY)}
             onMouseLeave={() => mouseY.set(Infinity)}
             className={`
                 fixed left-4 top-24 z-30 

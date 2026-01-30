@@ -53,6 +53,73 @@ export async function generateAllVAQuestions(
 
         const { semanticIdeas, authorialPersona, referenceData, passageText } = params;
 
+        // Force valid standard text to avoid hallucinated sentences in question
+        const ODD_ONE_OUT_TEXT = "Five jumbled up sentences, related to a topic, are given below. Four of them can be put together to form a coherent paragraph. Identify the odd one out and key in the number of the sentence as your answer: ";
+        const PARA_JUMBLE_TEXT = "The four sentences (labelled 1, 2, 3 and 4) below, when properly sequenced would yield a coherent paragraph. Decide on the proper sequencing of the order of the sentences and key in the sequence of the four numbers as your answer: ";
+
+        // Helper to shuffle odd one out
+        const shuffleAndFixOddOneOut = (q: any) => {
+            // We expect the LLM to put the odd one at "5" based on our new prompt
+            // But we will treat valid answers as whatever the LLM says, then shuffle
+
+            const originalSentences = [
+                { key: "1", text: q.jumbled_sentences["1"] },
+                { key: "2", text: q.jumbled_sentences["2"] },
+                { key: "3", text: q.jumbled_sentences["3"] },
+                { key: "4", text: q.jumbled_sentences["4"] },
+                { key: "5", text: q.jumbled_sentences["5"] }
+            ];
+
+            // Identify which one is the odd one based on current answer
+            // The answer usually comes as "5" or "1" etc.
+            const oddOneIndex = originalSentences.findIndex(s => s.key === q.correct_answer.answer);
+
+            if (oddOneIndex === -1) {
+                // If we can't find the answer key, just return as is (shouldn't happen with valid LLM output)
+                return {
+                    ...q,
+                    question_text: ODD_ONE_OUT_TEXT
+                };
+            }
+
+            const oddSentenceObj = originalSentences[oddOneIndex];
+
+            // Remove the odd one, then shuffle the rest
+            const otherSentences = originalSentences.filter((_, idx) => idx !== oddOneIndex);
+
+            // Fisher-Yates shuffle for the other 4 sentences
+            for (let i = otherSentences.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [otherSentences[i], otherSentences[j]] = [otherSentences[j], otherSentences[i]];
+            }
+
+            // Insert the odd one at a random position (0 to 4)
+            const newOddIndex = Math.floor(Math.random() * 5);
+            otherSentences.splice(newOddIndex, 0, oddSentenceObj);
+
+            // Reconstruct the jumbled_sentences map with fixed keys "1" to "5"
+            // The sentences are now in a new order in `otherSentences` array
+            const newJumbledMap: Record<string, string> = {};
+            let newAnswerKey = "";
+
+            otherSentences.forEach((item, index) => {
+                const newKey = String(index + 1);
+                newJumbledMap[newKey] = item.text;
+
+                // If this item was the odd one, this is our new answer
+                if (item === oddSentenceObj) {
+                    newAnswerKey = newKey;
+                }
+            });
+
+            return {
+                ...q,
+                question_text: ODD_ONE_OUT_TEXT,
+                jumbled_sentences: newJumbledMap,
+                correct_answer: { answer: newAnswerKey }
+            };
+        };
+
         // Reduce reference data to 2 passages (from 3)
         const reducedReferences = referenceData.slice(0, 2);
 
@@ -416,15 +483,10 @@ BAD OPENING EXAMPLES (WILL BE REJECTED):
 (The five sentences should not be added in the question text)
 
 **Critical Randomization Requirement**:
-- The odd one out sentence MUST NOT always be in position 5
-- You MUST randomize which position (1, 2, 3, 4, or 5) contains the odd sentence
-- The 4 coherent sentences should be distributed across the remaining positions
-- Avoid the pattern where sentences 1-4 always form a paragraph and 5 is always odd
-- Example distributions:
-  * Odd one at position 2: sentences 1,3,4,5 form paragraph, 2 is odd
-  * Odd one at position 3: sentences 1,2,4,5 form paragraph, 3 is odd
-  * Odd one at position 1: sentences 2,3,4,5 form paragraph, 1 is odd
-- The correct answer should vary across questions (not always "5")
+- **ALWAYS place the Odd One Out sentence in position 5** (key "5").
+- The first 4 sentences (1, 2, 3, 4) MUST form the coherent paragraph.
+- (Optimization Note: Our internal system will handle the randomization later. For generation, you MUST standardize by putting the odd at #5).
+- Correct answer should therefore always be "5".
 
 **Coherent Group Characteristics** (4 sentences):
 In CAT:
@@ -454,19 +516,19 @@ Common oddity reasons:
 3. Ensure odd sentence:
    - Cannot be repositioned to fit
 4. Do NOT rely on stylistic difference alone
+5. Place the odd sentence in position 5.
 
 **FORBIDDEN - Will cause REJECTION**:
 - Odd sentence is obviously irrelevant
 - Tense or tone change is the giveaway
 - Odd sentence could logically fit if repositioned
-- Odd sentence always in position 5
-- Vocabulary difficulty is the only difference
+- Base decision on vocabulary difficulty alone
 
 **Technical Requirements**:
-- **CRITICAL: The odd sentence must be randomized (not always position 5)**
+- **CRITICAL: Put odd sentence at key "5"**
 - Put all 5 sentences in jumbled_sentences: {"1": "sentence", "2": "sentence", "3": "sentence", "4": "sentence", "5": "sentence"}
 - Leave options empty: {"A": "", "B": "", "C": "", "D": ""}
-- Correct answer: number of the odd sentence (1-5)
+- Correct answer: "5"
 
 ---
 
@@ -572,7 +634,15 @@ IMPORTANT:
             updated_at: now,
         }));
 
-        return finalQuestions;
+        return finalQuestions.map(q => {
+            if (q.question_type === 'odd_one_out') {
+                return shuffleAndFixOddOneOut(q);
+            }
+            if (q.question_type === 'para_jumble') {
+                return { ...q, question_text: PARA_JUMBLE_TEXT };
+            }
+            return q;
+        });
 
     } catch (error) {
         console.error("❌ [All VA Questions] Error in generateAllVAQuestions:", error);
