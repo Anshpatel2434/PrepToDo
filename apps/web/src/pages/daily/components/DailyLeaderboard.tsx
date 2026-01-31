@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useFetchDailyLeaderboardQuery } from "../redux_usecase/dailyPracticeApi";
 import type { UUID } from "../../../types";
+import { PageLoader } from "../../../ui_components/PageLoader";
 
 interface DailyLeaderboardProps {
     examId: UUID;
@@ -71,14 +72,9 @@ const DailyLeaderboard: React.FC<DailyLeaderboardProps> = ({ examId, isDark }) =
     }, [data, sortField, sortOrder]);
 
     if (isLoading) {
-        return (
-            <div className="flex flex-col items-center justify-center py-16">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary-light mb-4"></div>
-                <p className={`text-lg font-medium ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
-                    Syncing Leaderboard...
-                </p>
-            </div>
-        );
+        if (isLoading) {
+            return <PageLoader variant="inline" size="md" message="Syncing Leaderboard..." className="py-16" />;
+        }
     }
 
     if (error || !data) {
@@ -171,7 +167,7 @@ const DailyLeaderboard: React.FC<DailyLeaderboardProps> = ({ examId, isDark }) =
                                 Rank <ChevronDown size={10} className={`transition-transform ${sortField === "rank" && sortOrder === "desc" ? "rotate-180" : ""}`} />
                             </div>
                             <div className="col-span-1"></div> {/* Avatar Spacer */}
-                            <div className="col-span-4">Explorer</div>
+                            <div className="col-span-4">Participants</div>
                             <div className="col-span-3 text-center flex items-center justify-center gap-2 cursor-pointer hover:opacity-70 transition-opacity" onClick={() => handleSort("accuracy")}>
                                 Precision <ChevronDown size={10} className={`transition-transform ${sortField === "accuracy" && sortOrder === "desc" ? "rotate-180" : ""}`} />
                             </div>

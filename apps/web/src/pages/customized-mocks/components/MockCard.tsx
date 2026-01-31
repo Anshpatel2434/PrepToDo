@@ -192,7 +192,7 @@ const MockCard = React.memo<MockCardProps>(({ mock, index, isDark }) => {
                         {"Customized Sectional Test"}
                     </h3>
 
-                    <div className="flex items-center gap-2 text-2xl opacity-60">
+                    <div className={`flex items-center gap-2 text-2xl opacity-60 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
                         <Clock size={16} />
                         <span>{mock?.created_at ? formatDate(mock.created_at) : "Unknown date"}</span>
                     </div>

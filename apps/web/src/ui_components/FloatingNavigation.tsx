@@ -500,6 +500,33 @@ export const FloatingNavigation: React.FC = () => {
                             </button>
                         </motion.div>
                     )}
+                    {/* Beta Badge */}
+                    <div className="mt-auto pt-8 flex justify-center pb-2">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-medium tracking-widest uppercase ${isDark ? "bg-white/5 text-gray-500 border border-white/5" : "bg-black/5 text-gray-400 border border-black/5"
+                            }`}>
+                            Beta
+                        </span>
+                    </div>
+                </div>
+            </motion.div>
+
+            {/* Persistent Fixed Beta Badge (Bottom Right) */}
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1, duration: 0.5 }}
+                className="fixed bottom-6 right-6 z-50 pointer-events-none select-none"
+            >
+                <div className={`
+                    px-4 py-1.5 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase
+                    border backdrop-blur-xl
+                    transition-all duration-700
+                    ${isDark
+                        ? "bg-bg-primary-dark/80 border-brand-primary-dark/30 text-brand-primary-dark shadow-[0_0_20px_-5px_rgba(52,211,153,0.4)]"
+                        : "bg-white/80 border-brand-primary-light/30 text-brand-primary-light shadow-[0_0_20px_-5px_rgba(5,150,105,0.3)]"
+                    }
+                `}>
+                    Beta
                 </div>
             </motion.div>
 

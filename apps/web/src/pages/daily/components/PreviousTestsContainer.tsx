@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useFetchPreviousDailyTestsQuery } from "../redux_usecase/dailyPracticeApi";
 import { useTheme } from "../../../context/ThemeContext";
+import { PageLoader } from "../../../ui_components/PageLoader";
 
 interface PreviousTestsContainerProps {
     onExamSelect: (examId: string, examDate: string) => void;
@@ -61,11 +62,9 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
     };
 
     if (isLoading) {
-        return (
-            <div className="flex flex-col items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-primary-light"></div>
-            </div>
-        );
+        if (isLoading) {
+            return <PageLoader variant="inline" size="md" className="py-12" />;
+        }
     }
 
     const containerVariants = {

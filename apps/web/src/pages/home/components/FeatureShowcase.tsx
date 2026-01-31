@@ -1,7 +1,13 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { MoveRight } from "lucide-react";
+import { MoveRight, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import dailyPageDark from "../../../assets/daily_page_dark.png";
+import dailyPageLight from "../../../assets/daily_page_light.png";
+import customized_sectional_light from "../../../assets/customized_sectional_light.png";
+import customized_sectional_dark from "../../../assets/customized_sectional_dark.png";
+import dashboard_feature_light from "../../../assets/dashboard_feature_light.png";
+import dashboard_feature_dark from "../../../assets/dashboard_feature_dark.png";
 
 // --- Utility ---
 function cn(...inputs: ClassValue[]) {
@@ -12,14 +18,13 @@ function cn(...inputs: ClassValue[]) {
 interface BlogPost {
 	id: string;
 	title: string;
-	category: string;
 	imageUrl: string;
 	href: string;
 	views: number;
 	readTime?: number;
-	rating?: number;
+	description: string;
 	className?: string;
-	description?: string;
+	features?: string[];
 }
 
 interface FeatureShowcaseProps {
@@ -30,140 +35,175 @@ interface FeatureShowcaseProps {
 export const FeatureShowcase = ({ isDark }: FeatureShowcaseProps) => {
 	const navigate = useNavigate();
 
-	// Mapped Data
 	const posts: BlogPost[] = [
 		{
 			id: "daily-section",
-			title: "Daily Section",
-			category: "Practice",
-			// Unsplash: Study/Library
-			imageUrl: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=1000",
+			title: "Daily Practice",
+			imageUrl: isDark ? dailyPageDark : dailyPageLight,
 			href: "/daily",
 			views: 1240,
-			readTime: 20, // Avg time approx
-			description: "Stay consistent with daily practice. Our AI curates CAT-level verbal sections tailored to your progress.",
+			readTime: 20,
+			description: "Build a strong daily habit with focused VARC practice designed to improve comprehension, consistency, and exam readiness through structured repetition.",
+			features: [
+				"One shared article context to build depth and focus",
+				"Daily practice rhythm that strengthens reading stamina",
+				"Daily Leaderboard to foster healthy competition"
+			]
 		},
 		{
 			id: "customized-mocks",
-			title: "Customized VARC SECTIONAL",
-			category: "Adaptive Practice",
-			// Unsplash: Laptop/Code/Exam
-			imageUrl: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=1000",
+			title: "Adaptive Sectionals",
+			imageUrl: isDark ? customized_sectional_dark : customized_sectional_light,
 			href: "/customized-mocks",
 			views: 890,
-			readTime: 40, // Mock duration approx
-			description: "Turn your weaknesses into strengths. Our AI generates varc sectionals that specifically target your lowest proficiency scores.",
+			readTime: 40,
+			description: "Turn weak areas into strengths with sectional tests that focus your effort where it matters most, helping you improve accuracy and confidence.",
+			features: [
+				"Practice sets focused on your weakest skills and genres",
+				"Difficulty adjustment based on what you want to improve",
+				"Avoids repetition of concepts you’ve already mastered"
+			]
 		},
 		{
 			id: "analytics-dashboard",
-			title: "Dashboard",
-			category: "Analytics",
-			// Unsplash: Data/Graph
-			imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=1000",
+			title: "Deep Analytics",
+			imageUrl: isDark ? dashboard_feature_dark : dashboard_feature_light,
 			href: "/dashboard",
 			views: 2100,
 			readTime: 5,
-			description: "Go beyond simple scores. Our 'Reasoning Engine' diagnoses *why* you got a question wrong—identifying logic gaps.",
-		},
+			description: "Understand not just what you got wrong, but why. Detailed insights help you correct thinking patterns and make lasting improvements.",
+			features: [
+				"Breaks down errors by skill, genres, and speed VS accuracy",
+				"Shows patterns behind repeated mistakes",
+				"Helps you prioritise what to fix next"
+			]
+		}
 	];
 
-	const title = "Master Your Preparation";
-	const description = "Powerful tools designed to accelerate your learning and maximize your score.";
-	const backgroundLabel = "FEATURES";
-	const backgroundPosition = "left";
-	const className = "mb-16";
-
-	const handlePostClick = (post: BlogPost) => {
-		navigate(post.href);
-	};
-
 	return (
-		<section className={cn(
-			"container relative my-12 md:my-24 py-10 mx-auto pl-18 sm:pl-20 md:pl-24 pr-4 sm:pr-6 lg:pr-8",
-			className
-		)}>
-			<h1 className={cn("text-center text-4xl font-serif font-bold tracking-tight capitalize !leading-[1.4] md:text-5xl lg:text-6xl mb-4", isDark ? "text-white" : "text-gray-900")}>
-				{title}
-			</h1>
+		<section className="container relative mx-auto my-12 pl-18 sm:pl-20 md:pl-24 pr-4 lg:pr-8 max-w-screen-2xl py-8 sm:my-10">
+			{/* Header */}
+			<div className="mb-16 text-center">
+				<h2 className={cn(
+					"mb-3 text-3xl font-serif font-bold tracking-tight sm:mb-4 sm:text-4xl md:text-5xl",
+					isDark ? "text-white" : "text-gray-900"
+				)}>
+					Features we offer
+				</h2>
+				<p className={cn(
+					"mx-auto max-w-2xl text-base leading-relaxed sm:text-lg",
+					isDark ? "text-gray-400" : "text-gray-600"
+				)}>
+					Built to sharpen comprehension, expose common traps, and train the exact reasoning patterns that matter in CAT VARC.
+				</p>
+			</div>
 
-			{backgroundLabel && (
-				<span
-					className={cn(
-						"absolute -top-10 -z-50 select-none text-[80px] md:text-[200px] lg:text-[300px] font-extrabold leading-[1]",
-						isDark ? "text-white/[0.03]" : "text-black/[0.03]",
-						backgroundPosition === "left" ? "-left-[10%]" : "-right-[10%]"
-					)}
-				>
-					{backgroundLabel}
-				</span>
-			)}
-
-			<p className={cn("mx-auto max-w-[800px] text-center text-xl !leading-[2] md:text-2xl mb-12", isDark ? "text-gray-400" : "text-gray-500")}>
-				{description}
-			</p>
-
-			<div className="grid h-auto grid-cols-1 gap-5 md:h-[650px] md:grid-cols-2 lg:grid-cols-[1fr_0.5fr]">
+			{/* Zig-Zag Features Layout */}
+			<div className="flex flex-col gap-16 md:gap-24">
 				{posts.map((post, index) => {
-					const {
-						id,
-						title: postTitle,
-						category,
-						imageUrl,
-						readTime,
-						className: postClassName,
-						description: postDesc
-					} = post;
-
-					const isPrimary = index === 0;
+					const { id, title, description, imageUrl, href, features } = post;
+					const isEven = index % 2 === 0;
 
 					return (
 						<div
-							key={id || index}
-							style={{ backgroundImage: `url(${imageUrl})` }}
-							className={cn(
-								"group relative row-span-1 flex size-full cursor-pointer flex-col justify-end overflow-hidden rounded-[20px] bg-cover bg-center bg-no-repeat p-5 text-white max-md:h-[300px] transition-all duration-300 hover:scale-[0.98] hover:rotate-[0.3deg]",
-								isPrimary && "col-span-1 row-span-1 md:col-span-2 md:row-span-2 lg:col-span-1",
-								postClassName
-							)}
-							onClick={() => handlePostClick(post)}
+							key={id}
+							className="group grid grid-cols-1 items-center gap-8 md:grid-cols-2 lg:gap-16 max-w-7xl mx-auto"
 						>
-							<div className="absolute inset-0 -z-0 h-[130%] w-full bg-gradient-to-t from-black/90 via-black/50 to-transparent transition-all duration-500 group-hover:h-full" />
-
-							<article className="relative z-0 flex items-end w-full">
-								<div className="flex flex-1 flex-col gap-3">
-									<h1 className="text-2xl font-bold md:text-4xl text-white">
-										{postTitle}
-									</h1>
-
-									{postDesc && (
-										<p className={cn(
-											"text-gray-200 text-sm md:text-lg line-clamp-2 max-w-lg transition-opacity duration-300",
-											!isPrimary && "text-xs md:text-sm mt-1 opacity-90"
-										)}>
-											{postDesc}
-										</p>
-									)}
-
-									<div className="flex flex-col gap-3 mt-2">
-										<span className="text-sm font-medium capitalize py-1 px-3 rounded-full bg-white/20 w-fit text-white backdrop-blur-md border border-white/10">
-											{category}
-										</span>
-
-										{readTime && (
-											<div className="text-sm font-semibold text-emerald-400">
-												{readTime} {category === "Simulation" ? "mins" : "min activity"}
-											</div>
-										)}
-									</div>
+							{/* Content Column */}
+							<div className={cn(
+								"flex flex-col gap-5 order-2",
+								isEven ? "md:order-1" : "md:order-2"
+							)}>
+								<div className="flex flex-col gap-3">
+									<h3 className={cn(
+										"text-2xl font-bold tracking-tight md:text-3xl lg:text-4xl",
+										isDark ? "text-white" : "text-gray-900"
+									)}>
+										{title}
+									</h3>
+									<p className={cn(
+										"text-base leading-relaxed sm:text-lg",
+										isDark ? "text-gray-300" : "text-gray-600"
+									)}>
+										{description}
+									</p>
 								</div>
-								<MoveRight
-									className="transition-transform duration-300 group-hover:translate-x-2 shrink-0 mb-2"
-									color="white"
-									width={32}
-									height={32}
-									strokeWidth={2}
-								/>
-							</article>
+
+								{features && (
+									<ul className="space-y-2">
+										{features.map((feature, i) => (
+											<li key={i} className="flex items-start gap-2.5">
+												<CheckCircle2 className={cn(
+													"mt-1 h-4.5 w-4.5 flex-shrink-0",
+													isDark ? "text-emerald-400" : "text-emerald-600"
+												)} />
+												<span className={cn(
+													"text-sm font-medium sm:text-base",
+													isDark ? "text-gray-300" : "text-gray-700"
+												)}>
+													{feature}
+												</span>
+											</li>
+										))}
+									</ul>
+								)}
+
+								<div
+									onClick={() => navigate(href)}
+									className={cn(
+										"mt-1 flex cursor-pointer items-center gap-2 text-sm font-semibold uppercase tracking-wide group-hover:gap-3 transition-all",
+										isDark ? "text-emerald-400" : "text-emerald-600"
+									)}
+								>
+									Explore Feature <MoveRight className="h-4 w-4" />
+								</div>
+							</div>
+
+							{/* Image Column - Floating Widget Style */}
+							<div className={cn(
+								"relative order-1",
+								isEven ? "md:order-2" : "md:order-1"
+							)}>
+								<div className={cn(
+									"relative aspect-[16/9] w-full overflow-hidden rounded-2xl border shadow-xl transition-all duration-500 will-change-transform hover:scale-[1.02] hover:-rotate-1",
+									isDark
+										? "border-white/10 bg-neutral-900 shadow-black/50"
+										: "border-black/5 bg-gray-50 shadow-gray-200/50"
+								)}>
+									{/* Browser Chrome / Header Aesthetic */}
+									<div className={cn(
+										"absolute top-0 left-0 right-0 z-20 flex h-7 items-center gap-1.5 border-b px-3",
+										isDark ? "bg-white/5 border-white/5" : "bg-white/50 border-black/5"
+									)}>
+										<div className="h-2 w-2 rounded-full bg-red-400/80" />
+										<div className="h-2 w-2 rounded-full bg-amber-400/80" />
+										<div className="h-2 w-2 rounded-full bg-green-400/80" />
+									</div>
+
+									<img
+										src={imageUrl}
+										alt={title}
+										className="h-full w-full object-cover object-top pt-7"
+										loading="lazy"
+									/>
+
+									{/* Gradient Overlay for Polish */}
+									<div className={cn(
+										"pointer-events-none absolute inset-0 z-10",
+										isDark
+											? "bg-gradient-to-t from-black/20 to-transparent"
+											: "bg-gradient-to-t from-black/5 to-transparent"
+									)} />
+								</div>
+
+								{/* Decorative Blob behind */}
+								<div className={cn(
+									"absolute -inset-4 -z-10 rounded-[2.5rem] blur-3xl opacity-30 transition-all duration-500 group-hover:opacity-50",
+									isDark
+										? "bg-gradient-to-tr from-emerald-500/20 to-blue-500/20"
+										: "bg-gradient-to-tr from-emerald-200/40 to-blue-200/40"
+								)} />
+							</div>
 						</div>
 					);
 				})}

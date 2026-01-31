@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MdNewspaper, MdExpandMore, MdOpenInNew, MdPerson, MdCalendarToday, MdLabel } from "react-icons/md";
 import { useTheme } from "../../../context/ThemeContext";
 import type { Article } from "../../../types";
+import { PageLoader } from "../../../ui_components/PageLoader";
 
 interface ArticleInfoPanelProps {
     articles: Article[];
@@ -39,12 +40,7 @@ const ArticleInfoPanel: React.FC<ArticleInfoPanelProps> = ({ articles, isLoading
                         : "bg-bg-secondary-light border-border-light"}
                 `}
             >
-                <div className="flex items-center gap-3">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary-light"></div>
-                    <p className={`text-sm ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
-                        Loading source articles...
-                    </p>
-                </div>
+                <PageLoader variant="inline" size="sm" message="Loading source articles..." />
             </motion.div>
         );
     }
@@ -82,9 +78,8 @@ const ArticleInfoPanel: React.FC<ArticleInfoPanelProps> = ({ articles, isLoading
                         `}
                     >
                         <MdNewspaper
-                            className={`w-6 h-6 ${
-                                isDark ? "text-brand-primary-dark" : "text-brand-primary-light"
-                            }`}
+                            className={`w-6 h-6 ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"
+                                }`}
                         />
                     </div>
                     <div className="text-left">
@@ -111,9 +106,8 @@ const ArticleInfoPanel: React.FC<ArticleInfoPanelProps> = ({ articles, isLoading
                     transition={{ duration: 0.2 }}
                 >
                     <MdExpandMore
-                        className={`w-6 h-6 ${
-                            isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
-                        }`}
+                        className={`w-6 h-6 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                            }`}
                     />
                 </motion.div>
             </button>
@@ -165,9 +159,8 @@ const ArticleInfoPanel: React.FC<ArticleInfoPanelProps> = ({ articles, isLoading
                                         {article.source_name && (
                                             <div className="flex items-center gap-2">
                                                 <MdNewspaper
-                                                    className={`w-4 h-4 shrink-0 ${
-                                                        isDark ? "text-text-muted-dark" : "text-text-muted-light"
-                                                    }`}
+                                                    className={`w-4 h-4 shrink-0 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                                                        }`}
                                                 />
                                                 <span
                                                     className={`
@@ -184,9 +177,8 @@ const ArticleInfoPanel: React.FC<ArticleInfoPanelProps> = ({ articles, isLoading
                                         {article.author && (
                                             <div className="flex items-center gap-2">
                                                 <MdPerson
-                                                    className={`w-4 h-4 shrink-0 ${
-                                                        isDark ? "text-text-muted-dark" : "text-text-muted-light"
-                                                    }`}
+                                                    className={`w-4 h-4 shrink-0 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                                                        }`}
                                                 />
                                                 <span
                                                     className={`
@@ -203,9 +195,8 @@ const ArticleInfoPanel: React.FC<ArticleInfoPanelProps> = ({ articles, isLoading
                                         {article.published_at && (
                                             <div className="flex items-center gap-2">
                                                 <MdCalendarToday
-                                                    className={`w-4 h-4 shrink-0 ${
-                                                        isDark ? "text-text-muted-dark" : "text-text-muted-light"
-                                                    }`}
+                                                    className={`w-4 h-4 shrink-0 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                                                        }`}
                                                 />
                                                 <span
                                                     className={`
@@ -222,9 +213,8 @@ const ArticleInfoPanel: React.FC<ArticleInfoPanelProps> = ({ articles, isLoading
                                         {article.genre && (
                                             <div className="flex items-center gap-2">
                                                 <MdLabel
-                                                    className={`w-4 h-4 shrink-0 ${
-                                                        isDark ? "text-text-muted-dark" : "text-text-muted-light"
-                                                    }`}
+                                                    className={`w-4 h-4 shrink-0 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                                                        }`}
                                                 />
                                                 <span
                                                     className={`
@@ -290,7 +280,7 @@ const ArticleInfoPanel: React.FC<ArticleInfoPanelProps> = ({ articles, isLoading
                                         : "bg-bg-tertiary-light/50 text-text-muted-light"}
                                 `}
                             >
-                                💡 These articles were used to create the passages and questions in this test. 
+                                💡 These articles were used to create the passages and questions in this test.
                                 Familiarizing yourself with diverse sources helps improve comprehension skills.
                             </motion.div>
                         </div>

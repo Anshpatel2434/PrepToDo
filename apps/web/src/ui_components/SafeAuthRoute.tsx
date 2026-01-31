@@ -7,6 +7,7 @@ import {
 	type AuthPopupCloseReason,
 } from "../pages/auth/components/AuthPopup";
 import { useFetchUserQuery } from "../pages/auth/redux_usecases/authApi";
+import { PageLoader } from "./PageLoader";
 
 interface SafeAuthRouteProps {
 	children: React.ReactNode;
@@ -25,23 +26,7 @@ export const SafeAuthRoute: React.FC<SafeAuthRouteProps> = ({
 	if (user) return <>{children}</>;
 
 	if (isLoading || isFetching) {
-		return (
-			<div
-				className={`min-h-screen flex items-center justify-center ${
-					isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
-				}`}
-			>
-				<p
-					className={`text-sm ${
-						isDark
-							? "text-text-secondary-dark"
-							: "text-text-secondary-light"
-					}`}
-				>
-					Loading…
-				</p>
-			</div>
-		);
+		return <PageLoader variant="fullscreen" message="Loading..." />;
 	}
 
 	const handleClose = (reason?: AuthPopupCloseReason) => {
@@ -62,9 +47,8 @@ export const SafeAuthRoute: React.FC<SafeAuthRouteProps> = ({
 
 	return (
 		<div
-			className={`min-h-screen transition-colors duration-300 ${
-				isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
-			}`}
+			className={`min-h-screen transition-colors duration-300 ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
+				}`}
 		>
 			<AuthPopup
 				isOpen={true}

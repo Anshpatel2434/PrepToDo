@@ -38,6 +38,9 @@ const DailyRCPage = lazy(() => import("./pages/daily/daily_rc/Page/DailyRCPage")
 const DailyVAPage = lazy(() => import("./pages/daily/daily_va/Page/DailyVAPage"));
 const CustomizedMocksPage = lazy(() => import("./pages/customized-mocks/page/CustomizedMocksPage"));
 const MockTestPage = lazy(() => import("./pages/customized-mocks/page/MockTestPage"));
+const PrivacyPolicy = lazy(() => import("./pages/legal/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/legal/TermsOfService"));
+const RefundPolicy = lazy(() => import("./pages/legal/RefundPolicy"));
 
 /* ---------------- ROUTER CONFIG ---------------- */
 
@@ -134,6 +137,30 @@ const router = createBrowserRouter([
                     <MockTestPage />
                 </Suspense>
             </SafeAuthRoute>
+        ),
+    },
+    {
+        path: "/privacy",
+        element: (
+            <Suspense fallback={<PageLoader />}>
+                <PrivacyPolicy />
+            </Suspense>
+        ),
+    },
+    {
+        path: "/terms",
+        element: (
+            <Suspense fallback={<PageLoader />}>
+                <TermsOfService />
+            </Suspense>
+        ),
+    },
+    {
+        path: "/refund",
+        element: (
+            <Suspense fallback={<PageLoader />}>
+                <RefundPolicy />
+            </Suspense>
         ),
     },
 ]);

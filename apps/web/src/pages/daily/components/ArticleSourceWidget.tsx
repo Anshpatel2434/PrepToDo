@@ -34,6 +34,7 @@ export const ArticleSourceWidget: React.FC<ArticleSourceWidgetProps> = ({
             rounded-2xl border overflow-hidden
             ${isDark ? "bg-bg-secondary-dark border-border-dark" : "bg-white border-gray-100"}
         `}>
+            
             <button
                 onClick={() => setIsExpanded(!isExpanded)}
                 className={`

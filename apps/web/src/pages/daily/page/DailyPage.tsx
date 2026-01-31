@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { useTheme } from "../../../context/ThemeContext";
 import { FloatingNavigation } from "../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
+import { PageLoader } from "../../../ui_components/PageLoader";
 import { CalendarCheck } from "lucide-react";
 import type { Exam } from "../../../types";
 import { useFetchDailyTestDataQuery, useFetchPreviousDailyTestsQuery, useFetchArticlesByIdsQuery } from "../redux_usecase/dailyPracticeApi";
@@ -105,16 +106,7 @@ const DailyPage: React.FC = () => {
     );
 
     if (isLoadingToday) {
-        return (
-            <div className={`min-h-screen ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
-                } flex items-center justify-center`}>
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-brand-primary-light"></div>
-                    <p className={`mt-4 text-lg ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
-                        }`}>Loading daily practice...</p>
-                </div>
-            </div>
-        );
+        return <PageLoader variant="fullscreen" message="Loading daily practice..." />;
     }
 
     return (
@@ -136,10 +128,12 @@ const DailyPage: React.FC = () => {
                     className="mb-8"
                 >
                     <h1 className={`font-serif font-bold text-3xl md:text-4xl mb-2 flex items-center gap-3 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
-                        Daily Practice Arena
+                        Daily Practice
                     </h1>
                     <p className={`text-base max-w-3xl ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
-                        Experience fresh, AI-generated CAT-style passages every day. Our content engine builds unique Reasoning Graphs for every question to test your logic, not just your memory.
+                        Work through daily questions grounded in one shared article to build contextual clarity and topic
+                        familiarity. This structure helps you grow knowledge steadily while training the exact skills CAT
+                        VARC demands.
                     </p>
                 </motion.div>
 
@@ -286,6 +280,18 @@ const DailyPage: React.FC = () => {
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.2 }}
                             >
+                                <motion.div
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="mb-8"
+                                >
+                                    <h1 className={`font-serif font-bold text-2xl md:text-3xl mb-2 flex items-center gap-3 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                                        Article
+                                    </h1>
+                                    <p className={`text-lg max-w-3xl ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                                        Source material for today's practice session
+                                    </p>
+                                </motion.div>
                                 <ArticleSourceWidget
                                     articles={articles}
                                     isLoading={isLoadingArticles}
