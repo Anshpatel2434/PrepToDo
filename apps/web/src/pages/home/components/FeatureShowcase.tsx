@@ -2,12 +2,12 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { MoveRight, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import dailyPageDark from "../../../assets/daily_page_dark.png";
-import dailyPageLight from "../../../assets/daily_page_light.png";
-import customized_sectional_light from "../../../assets/customized_sectional_light.png";
-import customized_sectional_dark from "../../../assets/customized_sectional_dark.png";
-import dashboard_feature_light from "../../../assets/dashboard_feature_light.png";
-import dashboard_feature_dark from "../../../assets/dashboard_feature_dark.png";
+import dailyPageDark from "../../../assets/daily_page_dark.jpg";
+import dailyPageLight from "../../../assets/daily_page_light.jpg";
+import customized_sectional_light from "../../../assets/customized_sectional_light.jpg";
+import customized_sectional_dark from "../../../assets/customized_sectional_dark.jpg";
+import dashboard_feature_light from "../../../assets/dashboard_feature_light.jpg";
+import dashboard_feature_dark from "../../../assets/dashboard_feature_dark.jpg";
 
 // --- Utility ---
 function cn(...inputs: ClassValue[]) {

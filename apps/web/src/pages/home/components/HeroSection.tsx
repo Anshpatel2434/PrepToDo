@@ -1,12 +1,12 @@
 import React from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { ArrowRight, PlayCircle } from "lucide-react";
-import lightHeroImg from "../../../assets/light_hero.png";
-import darkHeroImg from "../../../assets/dark_hero.png";
+import lightHeroImg from "../../../assets/light_hero.jpg";
+import darkHeroImg from "../../../assets/dark_hero.jpg";
 
 // Widget Imports
-import widgetUL_light from "../../../assets/dashboard_upper_left_light.png";
-import widgetUL_dark from "../../../assets/dashboard_upper_left_dark.png";
+import widgetUL_light from "../../../assets/dashboard_upper_left_light.jpg";
+import widgetUL_dark from "../../../assets/dashboard_upper_left_dark.jpg";
 import widgetUR_light from "../../../assets/dashboard_upper_right_light.png";
 import widgetUR_dark from "../../../assets/dashboard_upper_right_dark.png";
 import widgetLL_light from "../../../assets/dashboard_lower_left_light.png";
@@ -17,8 +17,8 @@ import widgetLR_dark from "../../../assets/dashboard_lower_right_dark.png";
 // New 3D Hero Assets
 import leaderboard_light from "../../../assets/daily_leaderboard_light.png";
 import leaderboard_dark from "../../../assets/daily_leaderboard_dark.png";
-import insights_light from "../../../assets/ai_insights_light.png";
-import insights_dark from "../../../assets/ai_insights_dark.png";
+import insights_light from "../../../assets/ai_insights_light.jpg";
+import insights_dark from "../../../assets/ai_insights_dark.jpg";
 
 import { useNavigate } from "react-router-dom";
 

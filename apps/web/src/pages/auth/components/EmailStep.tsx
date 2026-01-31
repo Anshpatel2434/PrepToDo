@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { FaEnvelope } from "react-icons/fa";
+import { FaEnvelope, FaSpinner } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { EmailService } from "../../../services/email-handling/emailService";
 import { TurnstileWidget, type TurnstileWidgetRef } from "../../../ui_components/TurnstileWidget";
@@ -13,6 +13,7 @@ interface EmailStepProps {
 	onEmailChange: (email: string) => void;
 	onSubmit: (email: string, captchaToken?: string) => void;
 	isLoading: boolean;
+	isGoogleLoading: boolean;
 	error: string | null;
 	onGoogleLogin: () => void;
 	onSwitchMode: () => void;
@@ -27,6 +28,7 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 	error,
 	onGoogleLogin,
 	onSwitchMode,
+	isGoogleLoading,
 }) => {
 	const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 	const turnstileRef = useRef<TurnstileWidgetRef>(null);
@@ -195,10 +197,10 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 					<button
 						type="button"
 						onClick={onGoogleLogin}
-						disabled={isLoading}
+						disabled={isLoading || isGoogleLoading}
 						className={`
                         w-full py-3 px-4 rounded-xl font-medium transition-all duration-200 border-2 hover:cursor-pointer
-                        ${isLoading
+                        ${isLoading || isGoogleLoading
 								? "bg-gray-300 text-gray-500 cursor-not-allowed"
 								: isDark
 									? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark hover:bg-bg-primary-dark"
@@ -207,7 +209,11 @@ export const EmailStep: React.FC<EmailStepProps> = ({
                       `}
 					>
 						<div className="flex items-center justify-center space-x-2">
-							<FcGoogle size={16} />
+							{isGoogleLoading ? (
+								<FaSpinner className="animate-spin" size={16} />
+							) : (
+								<FcGoogle size={16} />
+							)}
 							<span>Continue with Google</span>
 						</div>
 					</button>

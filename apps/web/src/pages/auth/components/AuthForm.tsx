@@ -44,6 +44,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
     const [otp, setOtp] = useState("");
 
     const [skipPassword, setSkipPassword] = useState(false);
+    const [isGoogleRedirecting, setIsGoogleRedirecting] = useState(false);
 
     // API mutations
     const [sendOtpToEmail, { isLoading: isSendingOtp }] =
@@ -156,6 +157,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
 
     // Handle Google login
     const handleGoogleLogin = async () => {
+        setIsGoogleRedirecting(true);
         try {
             localStorage.setItem(
                 "post_auth_redirect",
@@ -164,6 +166,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
             await loginWithGoogle().unwrap();
             // if (data) toast.success("Successfully Logged In !!!");
         } catch (error) {
+            setIsGoogleRedirecting(false);
             const err = error as { data?: string; message?: string };
             toast.error(err.data || "Google login failed");
         }
@@ -187,7 +190,8 @@ export const AuthForm: React.FC<AuthFormProps> = ({
         isVerifyingOtp ||
         isUpdatingPassword ||
         isLoggingIn ||
-        isGoogleLoading;
+        isGoogleLoading ||
+        isGoogleRedirecting;
     const isSignin = mode === "signin";
 
     return (
@@ -228,6 +232,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                         onGoogleLogin={handleGoogleLogin}
                         onSwitchMode={switchMode}
                         isLoading={isLoading}
+                        isGoogleLoading={isGoogleLoading || isGoogleRedirecting}
                         error={authState?.error || null}
                     />
                 )}
@@ -241,6 +246,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                         onSubmit={handleEmailSubmit}
                         onGoogleLogin={handleGoogleLogin}
                         isLoading={isLoading}
+                        isGoogleLoading={isGoogleLoading || isGoogleRedirecting}
                         error={authState?.error || null}
                         onSwitchMode={switchMode}
                     />

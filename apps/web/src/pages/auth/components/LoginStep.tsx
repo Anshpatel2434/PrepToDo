@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaSpinner } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { EmailService } from "../../../services/email-handling/emailService";
 
@@ -14,6 +14,7 @@ interface LoginStepProps {
 	onGoogleLogin: () => void;
 	onSwitchMode: () => void;
 	isLoading: boolean;
+	isGoogleLoading: boolean;
 	error: string | null;
 }
 
@@ -27,6 +28,7 @@ export const LoginStep: React.FC<LoginStepProps> = ({
 	onGoogleLogin,
 	onSwitchMode,
 	isLoading,
+	isGoogleLoading,
 	error,
 }) => {
 	const [showPassword, setShowPassword] = useState(false);
@@ -76,10 +78,9 @@ export const LoginStep: React.FC<LoginStepProps> = ({
 							placeholder="Enter your email"
 							className={`
                 w-full pl-10 pr-4 py-3 rounded-xl border-2 transition-colors duration-200
-                ${
-									isDark
-										? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark placeholder-text-muted-dark"
-										: "bg-bg-tertiary-light border-border-light text-text-primary-light placeholder-text-muted-light"
+                ${isDark
+									? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark placeholder-text-muted-dark"
+									: "bg-bg-tertiary-light border-border-light text-text-primary-light placeholder-text-muted-light"
 								}
                 focus:border-brand-primary-light dark:focus:border-brand-primary-dark focus:ring-0
               `}
@@ -113,10 +114,9 @@ export const LoginStep: React.FC<LoginStepProps> = ({
 							placeholder="Enter your password"
 							className={`
                 w-full pl-10 pr-12 py-3 rounded-xl border-2 transition-colors duration-200
-                ${
-									isDark
-										? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark placeholder-text-muted-dark"
-										: "bg-bg-tertiary-light border-border-light text-text-primary-light placeholder-text-muted-light"
+                ${isDark
+									? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark placeholder-text-muted-dark"
+									: "bg-bg-tertiary-light border-border-light text-text-primary-light placeholder-text-muted-light"
 								}
                 focus:border-brand-primary-light dark:focus:border-brand-primary-dark focus:ring-0
               `}
@@ -134,10 +134,9 @@ export const LoginStep: React.FC<LoginStepProps> = ({
 							onClick={() => setShowPassword(!showPassword)}
 							className={`
                 absolute right-3 top-1/2 transform -translate-y-1/2 
-                ${
-									isDark
-										? "text-text-muted-dark hover:text-text-secondary-dark"
-										: "text-text-muted-light hover:text-text-secondary-light"
+                ${isDark
+									? "text-text-muted-dark hover:text-text-secondary-dark"
+									: "text-text-muted-light hover:text-text-secondary-light"
 								}
               `}
 						>
@@ -152,10 +151,9 @@ export const LoginStep: React.FC<LoginStepProps> = ({
 						type="button"
 						className={`
               text-sm transition-colors duration-200 hover:cursor-pointer
-              ${
-								isDark
-									? "text-brand-primary-dark hover:text-brand-primary-hover-dark"
-									: "text-brand-primary-light hover:text-brand-primary-hover-light"
+              ${isDark
+								? "text-brand-primary-dark hover:text-brand-primary-hover-dark"
+								: "text-brand-primary-light hover:text-brand-primary-hover-light"
 							}
             `}
 					>
@@ -175,13 +173,12 @@ export const LoginStep: React.FC<LoginStepProps> = ({
 						}
 						className={`
               w-full py-3 px-4 rounded-xl font-medium transition-all duration-200 hover:cursor-pointer
-              ${
-								isLoading ||
+              ${isLoading ||
 								!email ||
 								!password ||
 								!EmailService.isValidEmail(email)
-									? "bg-gray-300 text-gray-500 cursor-not-allowed"
-									: "bg-brand-primary-light hover:bg-brand-primary-hover-light dark:bg-brand-primary-dark dark:hover:bg-brand-primary-hover-dark text-white shadow-lg hover:shadow-xl"
+								? "bg-gray-300 text-gray-500 cursor-not-allowed"
+								: "bg-brand-primary-light hover:bg-brand-primary-hover-light dark:bg-brand-primary-dark dark:hover:bg-brand-primary-hover-dark text-white shadow-lg hover:shadow-xl"
 							}
             `}
 					>
@@ -201,11 +198,10 @@ export const LoginStep: React.FC<LoginStepProps> = ({
 							<span
 								className={`
                 px-2 
-                ${
-									isDark
+                ${isDark
 										? "bg-bg-secondary-dark text-text-secondary-dark"
 										: "bg-bg-secondary-light text-text-secondary-light"
-								}
+									}
               `}
 							>
 								Or
@@ -216,20 +212,23 @@ export const LoginStep: React.FC<LoginStepProps> = ({
 					<button
 						type="button"
 						onClick={onGoogleLogin}
-						disabled={isLoading}
+						disabled={isLoading || isGoogleLoading}
 						className={`
               w-full py-3 px-4 rounded-xl font-medium transition-all duration-200 border-2 hover:cursor-pointer
-              ${
-								isLoading
-									? "bg-gray-300 text-gray-500 cursor-not-allowed"
-									: isDark
+              ${isLoading || isGoogleLoading
+								? "bg-gray-300 text-gray-500 cursor-not-allowed"
+								: isDark
 									? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark hover:bg-bg-primary-dark"
 									: "bg-bg-tertiary-light border-border-light text-text-primary-light hover:bg-bg-primary-light"
 							}
             `}
 					>
 						<div className="flex items-center justify-center space-x-2">
-							<FcGoogle size={16} />
+							{isGoogleLoading ? (
+								<FaSpinner className="animate-spin" size={16} />
+							) : (
+								<FcGoogle size={16} />
+							)}
 							<span>Continue with Google</span>
 						</div>
 					</button>
@@ -249,10 +248,9 @@ export const LoginStep: React.FC<LoginStepProps> = ({
 							onClick={onSwitchMode}
 							className={`
                 font-medium transition-colors duration-200 hover:cursor-pointer
-                ${
-									isDark
-										? "text-brand-primary-dark hover:text-brand-primary-hover-dark"
-										: "text-brand-primary-light hover:text-brand-primary-hover-light"
+                ${isDark
+									? "text-brand-primary-dark hover:text-brand-primary-hover-dark"
+									: "text-brand-primary-light hover:text-brand-primary-hover-light"
 								}
               `}
 						>
