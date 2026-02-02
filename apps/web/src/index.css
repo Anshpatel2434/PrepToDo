@@ -300,6 +300,38 @@
         0 20px 40px -10px rgba(0, 0, 0, 0.2);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   ELITE YC-CALIBER ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Shine/Sheen Effect for Buttons */
+@keyframes shine {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(100%);
+    }
+}
+
+.animate-shine {
+    animation: shine 2s infinite;
+}
+
+/* Liquid Dock Spring */
+@keyframes liquidDockAppear {
+    0% { transform: translateY(100%); opacity: 0; }
+    60% { transform: translateY(-10px); opacity: 1; }
+    80% { transform: translateY(5px); }
+    100% { transform: translateY(0); }
+}
+
+/* Blob Pulse */
+@keyframes blobPulse {
+    0%, 100% { transform: scale(1); opacity: 0.35; }
+    50% { transform: scale(1.1); opacity: 0.45; }
+}
+
 /* Ambient glow utility */
 .ambient-glow {
     animation: ambientGlow 3s ease-in-out infinite;

@@ -1,30 +1,28 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { useFetchUserQuery } from "../../auth/redux_usecases/authApi";
-import { FloatingNavigation } from "../../../ui_components/FloatingNavigation";
-import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
-import { AuthPopup } from "../../auth/components/AuthPopup";
+import { useLocation, useNavigate } from "react-router-dom";
 import { HeroSection } from "../components/HeroSection";
 import { FeatureShowcase } from "../components/FeatureShowcase";
 import { Footer } from "../components/Footer";
+import { FloatingNavigation } from "../../../ui_components/FloatingNavigation";
+import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
 import { useTheme } from "../../../context/ThemeContext";
-import { dailyPracticeApi } from "../../daily/redux_usecase/dailyPracticeApi";
-import { useLocation, useNavigate } from "react-router-dom";
+import { motion, useScroll, useSpring } from "framer-motion";
 
 export const HomePage: React.FC = () => {
 	const { data: authState } = useFetchUserQuery();
 	const location = useLocation();
 	const navigate = useNavigate();
 	const hasScrolled = useRef(false);
-
 	const { isDark } = useTheme();
 
-	// Auth popup state
-	const [authPopupOpen, setAuthPopupOpen] = useState(false);
-	const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
-
-	useEffect(() => {
-		console.log("Auth state:", authState);
-	}, [authState]);
+	// Scroll Progress Logic
+	const { scrollYProgress } = useScroll();
+	const scaleX = useSpring(scrollYProgress, {
+		stiffness: 100,
+		damping: 30,
+		restDelta: 0.001
+	});
 
 	useEffect(() => {
 		if (
@@ -32,73 +30,34 @@ export const HomePage: React.FC = () => {
 			!hasScrolled.current
 		) {
 			hasScrolled.current = true;
-
 			document
 				.querySelector('[data-section="features"]')
 				?.scrollIntoView({ behavior: "smooth" });
-
-			// ✅ remove hash after scrolling
 			navigate("/home", { replace: true });
 		}
 	}, [location, navigate]);
 
-	const handleQuickAuth = (action: "signin" | "signup") => {
-		setAuthMode(action);
-		setAuthPopupOpen(true);
-	};
-
-	const handleCloseAuthPopup = () => {
-		setAuthPopupOpen(false);
-	};
-
-	const { data } =
-		dailyPracticeApi.endpoints.fetchDailyTestData.useQueryState();
-
-	useEffect(() => {
-		console.log("What the hell is the data stored here : ");
-		console.log(data);
-	}, [data]);
-
 	return (
-		<div
-			className={`
-            min-h-screen transition-colors duration-300
-            ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"}
-        `}
-		>
-			{/* Floating Theme Toggle */}
+		<div className={`min-h-screen transition-colors duration-500 ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"}`}>
+
+			{/* Scroll Progress Bar (Fixed Top, z-99) */}
+			<motion.div
+				className={`fixed top-0 left-0 right-0 h-[3px] origin-left z-[99] ${isDark ? "bg-brand-primary-dark" : "bg-brand-primary-light"}`}
+				style={{ scaleX }}
+			/>
+
+			<FloatingNavigation />
 			<FloatingThemeToggle />
 
-			{/* Floating Navigation */}
-			<FloatingNavigation />
-
-			{/* Main Content */}
-			<div className="transition-all duration-500 ease-out">
-				{/* Hero Section */}
-				<section data-section="home">
-					<HeroSection
-						isDark={isDark}
-						isAuthenticated={Boolean(authState)}
-						onQuickAuth={handleQuickAuth}
-					/>
-				</section>
-
-				{/* Feature Showcase */}
-				<section data-section="features">
-					<FeatureShowcase isDark={isDark} />
-				</section>
-
-				{/* Footer */}
-				<Footer isDark={isDark} />
-			</div>
-
-			{/* Auth Popup */}
-			<AuthPopup
-				isOpen={authPopupOpen}
-				onClose={handleCloseAuthPopup}
+			<HeroSection
 				isDark={isDark}
-				initialMode={authMode}
+				isAuthenticated={!!authState}
+				onQuickAuth={(action) => navigate(action === 'signup' ? '/signup' : '/login')}
 			/>
+
+			<FeatureShowcase isDark={isDark} />
+
+			<Footer isDark={isDark} />
 		</div>
 	);
 };
