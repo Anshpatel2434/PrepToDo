@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, timestamp, boolean, integer } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, timestamp, boolean, integer, date, jsonb, numeric, index, uniqueIndex, primaryKey } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // =============================================================================
@@ -202,7 +202,268 @@ export type NewUserProficiencySignals = typeof userProficiencySignals.$inferInse
 export type UserMetricProficiency = typeof userMetricProficiency.$inferSelect;
 export type NewUserMetricProficiency = typeof userMetricProficiency.$inferInsert;
 
+// =============================================================================
+// Articles Table
+// =============================================================================
+export const articles = pgTable('articles', {
+    id: uuid('id').primaryKey(),
+    title: text('title'),
+    url: varchar('url').notNull().unique(),
+    sourceName: text('source_name'),
+    author: text('author'),
+    publishedAt: date('published_at'),
+    genre: text('genre').notNull(),
+    topicTags: text('topic_tags').array(),
+    usedInDaily: boolean('used_in_daily').default(false),
+    usedInCustomExam: boolean('used_in_custom_exam').default(false),
+    dailyUsageCount: integer('daily_usage_count').default(0),
+    customExamUsageCount: integer('custom_exam_usage_count').default(0),
+    lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+    semanticHash: text('semantic_hash'),
+    extractionModel: text('extraction_model'),
+    extractionVersion: text('extraction_version'),
+    isSafeSource: boolean('is_safe_source').default(true),
+    isArchived: boolean('is_archived').default(false),
+    notes: text('notes'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+    semanticIdeasAndPersona: jsonb('semantic_ideas_and_persona'),
+});
+
+// =============================================================================
+// Genres Table
+// =============================================================================
+export const genres = pgTable('genres', {
+    id: uuid('id').primaryKey(),
+    name: varchar('name').notNull().unique(),
+    description: text('description'),
+    dailyUsageCount: integer('daily_usage_count').default(0),
+    customExamUsageCount: integer('custom_exam_usage_count').default(0),
+    lastUsedDailyAt: timestamp('last_used_daily_at', { withTimezone: true }),
+    lastUsedCustomExamAt: timestamp('last_used_custom_exam_at', { withTimezone: true }),
+    cooldownDays: integer('cooldown_days').default(2),
+    avgDifficultyScore: numeric('avg_difficulty_score'),
+    preferredQuestionTypes: text('preferred_question_types').array(),
+    isActive: boolean('is_active').default(true),
+    isHighPriority: boolean('is_high_priority').default(false),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+// =============================================================================
+// Exam Papers Table
+// =============================================================================
+export const examPapers = pgTable('exam_papers', {
+    id: uuid('id').primaryKey(),
+    name: text('name').notNull(),
+    year: integer('year'),
+    examType: text('exam_type').default('CAT'),
+    slot: text('slot'),
+    isOfficial: boolean('is_official').default(true),
+    usedArticlesId: uuid('used_articles_id').array(),
+    generatedByUserId: uuid('generated_by_user_id'),
+    timeLimitMinutes: integer('time_limit_minutes'),
+    generationStatus: text('generation_status').default('completed'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }),
+});
+
+// =============================================================================
+// Passages Table
+// =============================================================================
+export const passages = pgTable('passages', {
+    id: uuid('id').primaryKey(),
+    title: varchar('title', { length: 200 }),
+    content: text('content').notNull(),
+    wordCount: integer('word_count').notNull(),
+    genre: varchar('genre', { length: 50 }).notNull(),
+    difficulty: varchar('difficulty', { length: 20 }).notNull(),
+    source: varchar('source', { length: 100 }),
+    generationModel: varchar('generation_model', { length: 50 }),
+    generationPromptVersion: varchar('generation_prompt_version', { length: 20 }),
+    generationCostCents: integer('generation_cost_cents'),
+    qualityScore: numeric('quality_score', { precision: 3, scale: 2 }),
+    timesUsed: integer('times_used').default(0),
+    avgCompletionTimeSeconds: integer('avg_completion_time_seconds'),
+    avgAccuracy: numeric('avg_accuracy', { precision: 5, scale: 2 }),
+    isDailyPick: boolean('is_daily_pick').default(false),
+    isFeatured: boolean('is_featured').default(false),
+    isArchived: boolean('is_archived').default(false),
+    paperId: uuid('paper_id'),
+    articleId: uuid('article_id'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+// =============================================================================
+// Questions Table
+// =============================================================================
+export const questions = pgTable('questions', {
+    id: uuid('id').primaryKey(),
+    passageId: uuid('passage_id'),
+    questionText: text('question_text').notNull(),
+    questionType: varchar('question_type', { length: 30 }).notNull(),
+    options: jsonb('options'),
+    correctAnswer: jsonb('correct_answer').notNull(),
+    jumbledSentences: jsonb('jumbled_sentences'),
+    rationale: text('rationale').notNull(),
+    rationaleModel: varchar('rationale_model', { length: 50 }),
+    hints: jsonb('hints'),
+    difficulty: varchar('difficulty', { length: 20 }),
+    tags: text('tags').array(),
+    qualityScore: numeric('quality_score', { precision: 3, scale: 2 }),
+    timesAnswered: integer('times_answered').default(0),
+    timesCorrect: integer('times_correct').default(0),
+    avgTimeSeconds: integer('avg_time_seconds'),
+    paperId: uuid('paper_id'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+// =============================================================================
+// Practice Sessions Table
+// =============================================================================
+export const practiceSessions = pgTable('practice_sessions', {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id').notNull(),
+    sessionType: varchar('session_type', { length: 30 }).notNull(),
+    mode: varchar('mode', { length: 20 }),
+    passageIds: uuid('passage_ids').array(),
+    questionIds: uuid('question_ids').array(),
+    targetDifficulty: varchar('target_difficulty', { length: 20 }),
+    targetGenres: text('target_genres').array(),
+    targetQuestionTypes: text('target_question_types').array(),
+    timeLimitSeconds: integer('time_limit_seconds'),
+    timeSpentSeconds: integer('time_spent_seconds').default(0),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    pausedAt: timestamp('paused_at', { withTimezone: true }),
+    pauseDurationSeconds: integer('pause_duration_seconds').default(0),
+    totalQuestions: integer('total_questions').default(0),
+    correctAnswers: integer('correct_answers').default(0),
+    scorePercentage: numeric('score_percentage', { precision: 5, scale: 2 }),
+    pointsEarned: integer('points_earned').default(0),
+    status: varchar('status', { length: 20 }).default('in_progress'),
+    currentQuestionIndex: integer('current_question_index').default(0),
+    sessionData: jsonb('session_data'),
+    isGroupSession: boolean('is_group_session').default(false),
+    groupId: uuid('group_id'),
+    paperId: uuid('paper_id'),
+    isAnalysed: boolean('is_analysed').default(false),
+    analytics: jsonb('analytics'),
+    startedAt: timestamp('started_at', { withTimezone: true }).defaultNow(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+// =============================================================================
+// Question Attempts Table
+// =============================================================================
+export const questionAttempts = pgTable('question_attempts', {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id').notNull(),
+    sessionId: uuid('session_id').notNull(),
+    questionId: uuid('question_id').notNull(),
+    passageId: uuid('passage_id'),
+    userAnswer: jsonb('user_answer'),
+    isCorrect: boolean('is_correct').notNull(),
+    timeSpentSeconds: integer('time_spent_seconds').notNull(),
+    confidenceLevel: integer('confidence_level'),
+    markedForReview: boolean('marked_for_review').default(false),
+    eliminatedOptions: text('eliminated_options').array(),
+    hintUsed: boolean('hint_used').default(false),
+    hintsViewed: integer('hints_viewed').default(0),
+    rationaleViewed: boolean('rationale_viewed').default(false),
+    rationaleHelpful: boolean('rationale_helpful'),
+    userNotes: text('user_notes'),
+    aiGradingScore: numeric('ai_grading_score', { precision: 5, scale: 2 }),
+    aiFeedback: text('ai_feedback'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// =============================================================================
+// Graph Nodes Table
+// =============================================================================
+export const graphNodes = pgTable('graph_nodes', {
+    id: uuid('id').primaryKey(),
+    label: text('label').unique(),
+    type: text('type'),
+});
+
+// =============================================================================
+// Graph Edges Table
+// =============================================================================
+export const graphEdges = pgTable('graph_edges', {
+    id: uuid('id').primaryKey(),
+    sourceNodeId: uuid('source_node_id'),
+    targetNodeId: uuid('target_node_id'),
+    relationship: text('relationship'),
+});
+
+// =============================================================================
+// Exam Generation State Table
+// =============================================================================
+export const examGenerationState = pgTable('exam_generation_state', {
+    examId: uuid('exam_id').primaryKey(),
+    status: text('status').notNull(),
+    currentStep: integer('current_step').default(1),
+    totalSteps: integer('total_steps').default(7),
+    articlesData: jsonb('articles_data'),
+    passagesIds: text('passages_ids').array(),
+    rcQuestionIds: text('rc_question_ids').array(),
+    vaQuestionIds: text('va_question_ids').array(),
+    referencePassagesContent: text('reference_passages_content').array(),
+    referenceDataRc: jsonb('reference_data_rc'),
+    referenceDataVa: jsonb('reference_data_va'),
+    userId: uuid('user_id'),
+    params: jsonb('params').notNull(),
+    errorMessage: text('error_message'),
+    genre: text('genre'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+// =============================================================================
+// Theory Chunks Table
+// =============================================================================
+export const theoryChunks = pgTable('theory_chunks', {
+    id: uuid('id').primaryKey(),
+    topic: text('topic').notNull(),
+    subTopic: text('sub_topic').notNull(),
+    conceptTitle: text('concept_title').notNull(),
+    content: text('content').notNull(),
+    sourcePdf: text('source_pdf'),
+    pageNumber: integer('page_number'),
+    exampleText: text('example_text'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
 // Legacy alias for backwards compatibility
 export const authUsers = users;
 export type AuthUser = User;
 export type NewAuthUser = NewUser;
+
+// =============================================================================
+// Type Exports for New Tables
+// =============================================================================
+export type Article = typeof articles.$inferSelect;
+export type NewArticle = typeof articles.$inferInsert;
+export type Genre = typeof genres.$inferSelect;
+export type NewGenre = typeof genres.$inferInsert;
+export type ExamPaper = typeof examPapers.$inferSelect;
+export type NewExamPaper = typeof examPapers.$inferInsert;
+export type Passage = typeof passages.$inferSelect;
+export type NewPassage = typeof passages.$inferInsert;
+export type Question = typeof questions.$inferSelect;
+export type NewQuestion = typeof questions.$inferInsert;
+export type PracticeSession = typeof practiceSessions.$inferSelect;
+export type NewPracticeSession = typeof practiceSessions.$inferInsert;
+export type QuestionAttempt = typeof questionAttempts.$inferSelect;
+export type NewQuestionAttempt = typeof questionAttempts.$inferInsert;
+export type GraphNode = typeof graphNodes.$inferSelect;
+export type NewGraphNode = typeof graphNodes.$inferInsert;
+export type GraphEdge = typeof graphEdges.$inferSelect;
+export type NewGraphEdge = typeof graphEdges.$inferInsert;
+export type ExamGenerationState = typeof examGenerationState.$inferSelect;
+export type NewExamGenerationState = typeof examGenerationState.$inferInsert;
+export type TheoryChunk = typeof theoryChunks.$inferSelect;
+export type NewTheoryChunk = typeof theoryChunks.$inferInsert;
