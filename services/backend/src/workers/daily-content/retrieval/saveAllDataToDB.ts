@@ -1,38 +1,48 @@
+import { db } from "../../../db/index.js";
+import { examPapers, passages, questions } from "../../../db/schema.js";
+import { createChildLogger } from "../../../common/utils/logger.js";
 
+const logger = createChildLogger("daily-content");
 
 /**
  * Saves article metadata into the database
  */
 export async function saveAllDataToDB({ examData, passageData, questionsData }: any) {
     try {
-        console.log("💾 [Database] Starting save operation...");
+        logger.info("💾 [Database] Starting save operation");
 
         // 1. Save Exam Paper
-        const { data: examResponse, error: examError } = await supabase
-            .from("exam_papers")
-            .insert([examData])
-            .select();
+        const examResponse = await db
+            .insert(examPapers)
+            .values([examData])
+            .returning();
 
-        if (examError) throw new Error(`Exam Insert: ${examError.message}`);
-        console.log("📄 [DB Save] Exam Paper metadata saved");
+        if (!examResponse || examResponse.length === 0) {
+            throw new Error("Exam Insert: No response returned");
+        }
+        logger.info("📄 [DB Save] Exam Paper metadata saved");
 
         // 2. Save Passage
-        const { data: passageResponse, error: passageError } = await supabase
-            .from("passages")
-            .insert([passageData])
-            .select();
+        const passageResponse = await db
+            .insert(passages)
+            .values([passageData])
+            .returning();
 
-        if (passageError) throw new Error(`Passage Insert: ${passageError.message}`);
-        console.log("📄 [DB Save] Passage content saved");
+        if (!passageResponse || passageResponse.length === 0) {
+            throw new Error("Passage Insert: No response returned");
+        }
+        logger.info("📄 [DB Save] Passage content saved");
 
         // 3. Save Questions
-        const { data: questionsResponse, error: questionsError } = await supabase
-            .from("questions")
-            .insert(questionsData) // Assuming questionsData is an array
-            .select();
+        const questionsResponse = await db
+            .insert(questions)
+            .values(questionsData)
+            .returning();
 
-        if (questionsError) throw new Error(`Questions Insert: ${questionsError.message}`);
-        console.log("✅ [DB Save] All data persisted successfully");
+        if (!questionsResponse || questionsResponse.length === 0) {
+            throw new Error("Questions Insert: No response returned");
+        }
+        logger.info("✅ [DB Save] All data persisted successfully");
 
         return {
             exam: examResponse,
@@ -41,11 +51,11 @@ export async function saveAllDataToDB({ examData, passageData, questionsData }: 
         };
 
     } catch (error) {
-        console.error(
-            `❌ [DB Save Failed]:`,
-            error instanceof Error ? error.message : String(error)
+        logger.error(
+            { error },
+            "❌ [DB Save Failed]"
         );
-        // Re-throw the error so the calling function (getValidArticleWithText) can catch it
+        // Re-throw the error so the calling function can catch it
         throw error;
     }
 }

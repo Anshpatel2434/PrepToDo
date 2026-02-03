@@ -1,9 +1,11 @@
 import OpenAI from "openai";
 import { AuthorialPersona, SemanticIdeas } from "../../schemas/types";
 import { CostTracker } from "../utils/CostTracker";
+import { createChildLogger } from "../../../common/utils/logger.js";
 
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
+const logger = createChildLogger("daily-content");
 
 /**
  * Generates a CAT-style RC passage using semantic ideas and reference passages.
@@ -36,7 +38,10 @@ export async function generatePassage(
 ) {
     const { semanticIdeas, authorialPersona, referencePassages } = params;
 
-    console.log(`✍️ [Passage Gen] Starting passage generation (referencePassages=${referencePassages.length})`);
+    logger.debug(
+        { referencePassages: referencePassages.length },
+        "✍️ [Passage Gen] Starting passage generation"
+    );
 
     if (referencePassages.length !== 3) {
         throw new Error(
@@ -288,7 +293,7 @@ If not, expand the analysis until it is.
     //     .replace("{{PASSAGE_4_TEXT}}", referencePassages[3])
     //     .replace("{{PASSAGE_5_TEXT}}", referencePassages[4]);
 
-    console.log("⏳ [Passage Gen] Waiting for LLM response (draft passage)");
+    logger.debug("⏳ [Passage Gen] Waiting for LLM response (draft passage)");
 
     const completion = await client.chat.completions.create({
         model: MODEL,
@@ -320,7 +325,10 @@ If not, expand the analysis until it is.
         );
     }
 
-    console.log(`✅ [Passage Gen] Passage generated (length=${passage.length} chars)`);
+    logger.info(
+        { length: passage.length },
+        "✅ [Passage Gen] Passage generated"
+    );
 
     return passage;
 }
