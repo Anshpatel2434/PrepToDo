@@ -11,6 +11,9 @@ import { errorHandler, notFoundHandler } from './common/middleware/errorHandler.
 import { generalRateLimiter } from './common/middleware/rateLimiter.js';
 import { authRouter, cleanupExpired, verifyEmailConnection } from './features/auth/index.js';
 import dashboardRouter from './features/dashboard/dashboard.routes.js';
+import { dailyContentRouter } from './features/daily-content/index.js';
+import { customizedMocksRouter } from './features/customized-mocks/index.js';
+import { analyticsRouter } from './features/analytics/index.js';
 import { logger, httpLogger } from './common/utils/logger.js';
 import pinoHttp from 'pino-http';
 
@@ -91,9 +94,9 @@ app.get('/health', (_req, res) => {
 // =============================================================================
 app.use('/api/auth', authRouter);
 app.use('/api/dashboard', dashboardRouter);
-
-// Future feature routes will be mounted here:
-// app.use('/api/exams', examsRouter);
+app.use('/api/daily', dailyContentRouter);
+app.use('/api/mocks', customizedMocksRouter);
+app.use('/api/analytics', analyticsRouter);
 
 // =============================================================================
 // Error Handling
