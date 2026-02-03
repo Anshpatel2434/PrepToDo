@@ -1,4 +1,9 @@
+import { db } from "../../../db/index.js";
+import { articles } from "../../../db/schema.js";
+import { eq, and, or, lt, isNull } from "drizzle-orm";
+import { createChildLogger } from "../../../common/utils/logger.js";
 
+const logger = createChildLogger("daily-content");
 
 /**
  * Fetches an article for a given genre and usage type (daily | mock),
@@ -12,8 +17,9 @@ export async function fetchArticleForUsage(params: {
 }) {
     const { genre, usageType } = params;
 
-    console.log(
-        `🚀 [ARTICLE] Fetching article | genre=${genre}, usage=${usageType}`
+    logger.info(
+        { genre, usageType },
+        "🚀 [ARTICLE] Fetching article"
     );
 
     const now = new Date().toISOString();
@@ -31,23 +37,21 @@ export async function fetchArticleForUsage(params: {
      * - Then apply usage-specific eligibility logic in application layer
      */
 
-    let query = supabase
-        .from("articles")
-        .select("*")
-        .eq("genre", genre)
-        .eq("is_archived", false);
-
     // Fetch articles and filter in-memory for complex logic
-    const { data: allArticles, error: fetchError } = await query;
-
-    if (fetchError) {
-        console.error("[ARTICLE] Fetch error:", fetchError);
-        throw new Error(`Failed to fetch articles: ${fetchError.message}`);
-    }
+    const allArticles = await db
+        .select()
+        .from(articles)
+        .where(
+            and(
+                eq(articles.genre, genre),
+                eq(articles.isArchived, false)
+            )
+        );
 
     if (!allArticles || allArticles.length === 0) {
-        console.error(
-            `[ARTICLE] No articles found | genre=${genre}`
+        logger.error(
+            { genre },
+            "[ARTICLE] No articles found"
         );
         throw new Error(
             `No articles found for genre=${genre}`
@@ -80,8 +84,9 @@ export async function fetchArticleForUsage(params: {
     });
 
     if (eligibleArticles.length === 0) {
-        console.error(
-            `[ARTICLE] No eligible articles after filtering | genre=${genre}, usage=${usageType}`
+        logger.error(
+            { genre, usageType },
+            "[ARTICLE] No eligible articles after filtering"
         );
         throw new Error(
             `No eligible articles found for genre=${genre}, usage=${usageType}`
@@ -94,7 +99,7 @@ export async function fetchArticleForUsage(params: {
      * 2. Least-used articles by count
      * 3. Oldest last_used_at
      */
-    eligibleArticles.sort((a, b) => {
+    eligibleArticles.sort((a: any, b: any) => {
         // Prioritize never-used
         const aUsed = a.last_used_at !== null;
         const bUsed = b.last_used_at !== null;
@@ -118,11 +123,9 @@ export async function fetchArticleForUsage(params: {
 
     const selectedArticle = eligibleArticles[0];
 
-    console.log(
-        "📘 [ARTICLE] Article selected:",
-        selectedArticle.title,
-        "|",
-        selectedArticle.url
+    logger.info(
+        { title: selectedArticle.title, url: selectedArticle.url },
+        "📘 [ARTICLE] Article selected"
     );
 
     /**
@@ -145,17 +148,10 @@ export async function fetchArticleForUsage(params: {
                 updated_at: now,
             };
 
-    const { error: updateError } = await supabase
-        .from("articles")
-        .update(updatePayload)
-        .eq("id", selectedArticle.id);
-
-    if (updateError) {
-        console.error("[ARTICLE] Update error:", updateError);
-        throw new Error(
-            `Failed to update article usage: ${updateError.message}`
-        );
-    }
+    await db
+        .update(articles)
+        .set(updatePayload)
+        .where(eq(articles.id, selectedArticle.id));
 
     /**
      * STEP 3: Return selected article
