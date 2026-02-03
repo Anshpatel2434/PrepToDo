@@ -41,6 +41,7 @@ const MockTestPage = lazy(() => import("./pages/customized-mocks/page/MockTestPa
 const PrivacyPolicy = lazy(() => import("./pages/legal/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/legal/TermsOfService"));
 const RefundPolicy = lazy(() => import("./pages/legal/RefundPolicy"));
+const ResetPasswordPage = lazy(() => import("./pages/auth/ResetPasswordPage").then(m => ({ default: m.ResetPasswordPage })));
 
 /* ---------------- ROUTER CONFIG ---------------- */
 
@@ -80,6 +81,14 @@ const router = createBrowserRouter([
         element: (
             <Suspense fallback={<PageLoader />}>
                 <AuthCallback />
+            </Suspense>
+        ),
+    },
+    {
+        path: "/auth/reset-password",
+        element: (
+            <Suspense fallback={<PageLoader />}>
+                <ResetPasswordPage />
             </Suspense>
         ),
     },

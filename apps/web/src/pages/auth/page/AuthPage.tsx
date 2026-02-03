@@ -18,10 +18,16 @@ export const AuthPage: React.FC = () => {
 	useEffect(() => {
 		// Supabase will hydrate session automatically here
 		if (localStorage.getItem("post_auth_redirect")) {
-			const redirectTo = localStorage.getItem("post_auth_redirect") || "/";
-
+			const storedRedirect = localStorage.getItem("post_auth_redirect") || "/";
 			localStorage.removeItem("post_auth_redirect");
 
+			// Auth paths to filter out
+			const authPaths = ['/auth', '/auth/', '/auth/callback', '/auth/reset-password'];
+			const normalized = storedRedirect.toLowerCase().split('?')[0];
+			const isAuthPath = authPaths.some(p => normalized === p || normalized.startsWith('/auth/'));
+
+			// Redirect to stored path if valid, otherwise dashboard
+			const redirectTo = isAuthPath ? '/dashboard' : storedRedirect;
 			navigate(redirectTo, { replace: true });
 		}
 	}, [navigate]);

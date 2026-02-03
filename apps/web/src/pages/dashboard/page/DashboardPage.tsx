@@ -4,12 +4,8 @@ import { useTheme } from "../../../context/ThemeContext";
 import { FloatingNavigation } from "../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
 import { useFetchUserQuery } from "../../auth/redux_usecases/authApi";
-import type { UUID } from "../../../types";
 import {
-    useFetchUserAnalyticsQuery,
-    useFetchUserMetricProficiencyQuery,
-    useFetchUserProfileQuery,
-    useFetchUserProficiencySignalsQuery,
+    useFetchDashboardDataQuery,
 } from "../redux_usecases/dashboardApi";
 import { DashboardSkeleton } from "../components/DashboardSkeleton";
 import { SkillRadarWidget } from "../components/SkillRadarWidget";
@@ -22,27 +18,19 @@ export const DashboardPage: React.FC = () => {
     const { isDark } = useTheme();
     const { data: user, isLoading: isUserLoading } = useFetchUserQuery();
 
-    const userId = (user?.id ?? null) as UUID | null;
-
-    const analyticsQuery = useFetchUserAnalyticsQuery(userId as UUID, {
-        skip: !userId,
-    });
-    const metricQuery = useFetchUserMetricProficiencyQuery(userId as UUID, {
-        skip: !userId,
-    });
-    const signalsQuery = useFetchUserProficiencySignalsQuery(userId as UUID, {
-        skip: !userId,
-    });
-    const profileQuery = useFetchUserProfileQuery(userId as UUID, {
-        skip: !userId,
+    // Use the combined dashboard data endpoint (single request, more efficient)
+    const dashboardQuery = useFetchDashboardDataQuery(undefined, {
+        skip: !user?.id,
     });
 
-    const metricProficiency = metricQuery.data ?? [];
+    const metricProficiency = dashboardQuery.data?.metricProficiency ?? [];
 
     const coreMetrics = metricProficiency.filter(
         (m) => m.dimension_type === "core_metric"
     );
     const genres = metricProficiency.filter((m) => m.dimension_type === "genre");
+
+    const isLoading = isUserLoading || dashboardQuery.isLoading || dashboardQuery.isFetching;
 
     return (
         <div className={`min-h-screen relative ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"}`}>
@@ -58,9 +46,9 @@ export const DashboardPage: React.FC = () => {
             <div className="min-h-screen overflow-x-hidden pl-18 sm:pl-20 md:pl-24 pr-4 lg:pr-8 py-4 sm:py-6 md:py-10 relative z-10 pb-20 sm:pb-24">
 
 
-                {!userId && isUserLoading ? (
+                {!user?.id && isUserLoading ? (
                     <DashboardSkeleton />
-                ) : !userId ? (
+                ) : !user?.id ? (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -75,16 +63,18 @@ export const DashboardPage: React.FC = () => {
                         <div className="font-bold text-3xl mb-4 tracking-tight">Unlock Deep Performance Insights</div>
                         <div className="text-lg leading-relaxed opacity-80">Sign in to access AI-driven diagnostics, track your improved reasoning skills, and visualize your growth across core VARC metrics.</div>
                     </motion.div>
+                ) : isLoading ? (
+                    <DashboardSkeleton />
                 ) : (
                     <div className="space-y-4 sm:space-y-5 max-w-400 mx-auto">
                         {/* Row 1: User Details (left - smaller) + Skill Radar (right - larger) */}
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
                             <div className="lg:col-span-5">
                                 <UserDetailsWidget
-                                    profile={profileQuery.data}
-                                    analytics={analyticsQuery.data}
-                                    isLoadingProfile={profileQuery.isLoading || profileQuery.isFetching}
-                                    isLoadingAnalytics={analyticsQuery.isLoading || analyticsQuery.isFetching}
+                                    profile={dashboardQuery.data?.profile}
+                                    analytics={dashboardQuery.data?.analytics}
+                                    isLoadingProfile={isLoading}
+                                    isLoadingAnalytics={isLoading}
                                     isDark={isDark}
                                 />
                             </div>
@@ -92,10 +82,10 @@ export const DashboardPage: React.FC = () => {
                             <div className="lg:col-span-7">
                                 <SkillRadarWidget
                                     coreMetrics={coreMetrics}
-                                    isLoading={metricQuery.isLoading || metricQuery.isFetching}
+                                    isLoading={isLoading}
                                     isDark={isDark}
                                     index={0}
-                                    error={metricQuery.error}
+                                    error={dashboardQuery.error}
                                 />
                             </div>
                         </div>
@@ -104,28 +94,28 @@ export const DashboardPage: React.FC = () => {
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
                             <GenreHeatmapWidget
                                 genres={genres}
-                                isLoading={metricQuery.isLoading || metricQuery.isFetching}
+                                isLoading={isLoading}
                                 isDark={isDark}
                                 index={1}
-                                error={metricQuery.error}
+                                error={dashboardQuery.error}
                             />
 
                             <WPMAccuracyWidget
                                 metrics={metricProficiency}
-                                isLoading={metricQuery.isLoading || metricQuery.isFetching}
+                                isLoading={isLoading}
                                 isDark={isDark}
                                 index={2}
-                                error={metricQuery.error}
+                                error={dashboardQuery.error}
                             />
                         </div>
 
                         {/* Row 3: Recommendations (full width) */}
                         <RecommendationWidget
-                            signals={signalsQuery.data}
-                            isLoading={signalsQuery.isLoading || signalsQuery.isFetching}
+                            signals={dashboardQuery.data?.proficiencySignals}
+                            isLoading={isLoading}
                             isDark={isDark}
                             index={3}
-                            error={signalsQuery.error}
+                            error={dashboardQuery.error}
                         />
                     </div>
                 )}

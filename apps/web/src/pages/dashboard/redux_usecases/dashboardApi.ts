@@ -1,16 +1,44 @@
-import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
-import { supabase } from "../../../services/apiClient";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type {
     UserAnalytics,
     UserMetricProficiency,
     UserProfile,
     UserProficiencySignals,
-    UUID,
 } from "../../../types";
 
+// =============================================================================
+// Backend API Configuration
+// =============================================================================
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
+
+// =============================================================================
+// Response Types
+// =============================================================================
+interface DashboardDataResponse {
+    profile: UserProfile | null;
+    analytics: UserAnalytics | null;
+    proficiencySignals: UserProficiencySignals | null;
+    metricProficiency: UserMetricProficiency[];
+}
+
+interface ApiResponse<T> {
+    success: boolean;
+    data: T;
+    error?: {
+        code: string;
+        message: string;
+    };
+}
+
+// =============================================================================
+// Dashboard API
+// =============================================================================
 export const dashboardApi = createApi({
     reducerPath: "dashboardApi",
-    baseQuery: fakeBaseQuery(),
+    baseQuery: fetchBaseQuery({
+        baseUrl: `${BACKEND_URL}/api/dashboard`,
+        credentials: 'include', // Include cookies for auth
+    }),
     tagTypes: [
         "Dashboard",
         "UserAnalytics",
@@ -19,162 +47,86 @@ export const dashboardApi = createApi({
         "UserProfile",
     ],
     endpoints: (builder) => ({
-        fetchUserAnalytics: builder.query<UserAnalytics | null, UUID>({
-            queryFn: async (userId) => {
-                console.log("📊 [DashboardApi] fetchUserAnalytics", { userId });
-
-                try {
-                    const { data, error } = await supabase
-                        .from("user_analytics")
-                        .select("*")
-                        .eq("user_id", userId)
-                        .maybeSingle();
-
-                    if (error) {
-                        return {
-                            error: {
-                                status: "CUSTOM_ERROR",
-                                data: error.message,
-                            },
-                        };
-                    }
-
-                    return { data: (data ?? null) as UserAnalytics | null };
-                } catch (err) {
-                    const e = err as { message?: string };
-                    return {
-                        error: {
-                            status: "CUSTOM_ERROR",
-                            data: e.message || "Error fetching user analytics",
-                        },
-                    };
+        // Combined dashboard data (single optimized request)
+        fetchDashboardData: builder.query<DashboardDataResponse, void>({
+            query: () => '/',
+            transformResponse: (response: ApiResponse<DashboardDataResponse>) => {
+                if (!response.success) {
+                    throw new Error(response.error?.message || 'Failed to fetch dashboard data');
                 }
+                return response.data;
             },
-            providesTags: (_result, _error, userId) => [
-                { type: "UserAnalytics", id: userId },
-                "Dashboard",
-            ],
+            providesTags: ["Dashboard"],
         }),
 
-        fetchUserProficiencySignals: builder.query<UserProficiencySignals | null, UUID>({
-            queryFn: async (userId) => {
-                console.log("🎯 [DashboardApi] fetchUserProficiencySignals", { userId });
-
-                try {
-                    const { data, error } = await supabase
-                        .from("user_proficiency_signals")
-                        .select("*")
-                        .eq("user_id", userId)
-                        .maybeSingle();
-
-                    if (error) {
-                        return {
-                            error: {
-                                status: "CUSTOM_ERROR",
-                                data: error.message,
-                            },
-                        };
-                    }
-
-                    return { data: (data ?? null) as UserProficiencySignals | null };
-                } catch (err) {
-                    const e = err as { message?: string };
-                    return {
-                        error: {
-                            status: "CUSTOM_ERROR",
-                            data: e.message || "Error fetching proficiency signals",
-                        },
-                    };
+        // Individual endpoints (for targeted refreshes)
+        fetchUserAnalytics: builder.query<UserAnalytics | null, void>({
+            query: () => '/analytics',
+            transformResponse: (response: ApiResponse<{ analytics: UserAnalytics | null }>) => {
+                if (!response.success) {
+                    throw new Error(response.error?.message || 'Failed to fetch analytics');
                 }
+                return response.data.analytics;
             },
-            providesTags: (_result, _error, userId) => [
-                { type: "UserProficiencySignals", id: userId },
-                "Dashboard",
-            ],
+            providesTags: ["UserAnalytics", "Dashboard"],
         }),
 
-        fetchUserMetricProficiency: builder.query<UserMetricProficiency[], UUID>({
-            queryFn: async (userId) => {
-                console.log("📈 [DashboardApi] fetchUserMetricProficiency", { userId });
-
-                try {
-                    const { data, error } = await supabase
-                        .from("user_metric_proficiency")
-                        .select("*")
-                        .eq("user_id", userId)
-                        .order("dimension_type", { ascending: true })
-                        .order("dimension_key", { ascending: true });
-
-                    if (error) {
-                        return {
-                            error: {
-                                status: "CUSTOM_ERROR",
-                                data: error.message,
-                            },
-                        };
-                    }
-
-                    return { data: (data ?? []) as UserMetricProficiency[] };
-                } catch (err) {
-                    const e = err as { message?: string };
-                    return {
-                        error: {
-                            status: "CUSTOM_ERROR",
-                            data: e.message || "Error fetching metric proficiency",
-                        },
-                    };
+        fetchUserProficiencySignals: builder.query<UserProficiencySignals | null, void>({
+            query: () => '/proficiency-signals',
+            transformResponse: (response: ApiResponse<{ proficiencySignals: UserProficiencySignals | null }>) => {
+                if (!response.success) {
+                    throw new Error(response.error?.message || 'Failed to fetch proficiency signals');
                 }
+                return response.data.proficiencySignals;
             },
-            providesTags: (_result, _error, userId) => [
-                { type: "UserMetricProficiency", id: userId },
-                "Dashboard",
-            ],
+            providesTags: ["UserProficiencySignals", "Dashboard"],
         }),
 
-        fetchUserProfile: builder.query<UserProfile | null, UUID>({
-            queryFn: async (userId) => {
-                console.log("👤 [DashboardApi] fetchUserProfile", { userId });
-
-                try {
-                    const { data, error } = await supabase
-                        .from("user_profiles")
-                        .select(
-                            "id, username, display_name, avatar_url, subscription_tier, preferred_difficulty, theme, daily_goal_minutes, show_on_leaderboard, created_at, updated_at"
-                        )
-                        .eq("id", userId)
-                        .maybeSingle();
-
-                    if (error) {
-                        return {
-                            error: {
-                                status: "CUSTOM_ERROR",
-                                data: error.message,
-                            },
-                        };
-                    }
-
-                    return { data: (data ?? null) as UserProfile | null };
-                } catch (err) {
-                    const e = err as { message?: string };
-                    return {
-                        error: {
-                            status: "CUSTOM_ERROR",
-                            data: e.message || "Error fetching user profile",
-                        },
-                    };
+        fetchUserMetricProficiency: builder.query<UserMetricProficiency[], void>({
+            query: () => '/metric-proficiency',
+            transformResponse: (response: ApiResponse<{ metricProficiency: UserMetricProficiency[] }>) => {
+                if (!response.success) {
+                    throw new Error(response.error?.message || 'Failed to fetch metric proficiency');
                 }
+                return response.data.metricProficiency;
             },
-            providesTags: (_result, _error, userId) => [
-                { type: "UserProfile", id: userId },
-                "Dashboard",
-            ],
+            providesTags: ["UserMetricProficiency", "Dashboard"],
+        }),
+
+        fetchUserProfile: builder.query<UserProfile | null, void>({
+            query: () => '/profile',
+            transformResponse: (response: ApiResponse<{ profile: UserProfile | null }>) => {
+                if (!response.success) {
+                    throw new Error(response.error?.message || 'Failed to fetch profile');
+                }
+                return response.data.profile;
+            },
+            providesTags: ["UserProfile", "Dashboard"],
+        }),
+
+        // Update profile
+        updateUserProfile: builder.mutation<UserProfile, Partial<UserProfile>>({
+            query: (updates) => ({
+                url: '/profile',
+                method: 'PATCH',
+                body: updates,
+            }),
+            transformResponse: (response: ApiResponse<{ profile: UserProfile }>) => {
+                if (!response.success) {
+                    throw new Error(response.error?.message || 'Failed to update profile');
+                }
+                return response.data.profile;
+            },
+            invalidatesTags: ["UserProfile", "Dashboard"],
         }),
     }),
 });
 
 export const {
+    useFetchDashboardDataQuery,
     useFetchUserAnalyticsQuery,
     useFetchUserProficiencySignalsQuery,
     useFetchUserMetricProficiencyQuery,
     useFetchUserProfileQuery,
+    useUpdateUserProfileMutation,
 } = dashboardApi;

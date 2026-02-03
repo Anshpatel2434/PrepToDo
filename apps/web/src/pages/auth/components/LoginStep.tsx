@@ -13,6 +13,7 @@ interface LoginStepProps {
 	onSubmit: () => void;
 	onGoogleLogin: () => void;
 	onSwitchMode: () => void;
+	onForgotPassword: () => void;
 	isLoading: boolean;
 	isGoogleLoading: boolean;
 	error: string | null;
@@ -27,6 +28,7 @@ export const LoginStep: React.FC<LoginStepProps> = ({
 	onSubmit,
 	onGoogleLogin,
 	onSwitchMode,
+	onForgotPassword,
 	isLoading,
 	isGoogleLoading,
 	error,
@@ -149,6 +151,7 @@ export const LoginStep: React.FC<LoginStepProps> = ({
 				<div className="text-right">
 					<button
 						type="button"
+						onClick={onForgotPassword}
 						className={`
               text-sm transition-colors duration-200 hover:cursor-pointer
               ${isDark

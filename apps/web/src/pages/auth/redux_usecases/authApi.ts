@@ -1,367 +1,405 @@
-import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
-import { supabase } from "../../../services/apiClient";
-import { startLoading, otpSent, otpVerified, authError } from "./authSlice";
-import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { startLoading, otpSent, otpVerified, authError, setUser, clearUser, setPendingSignup, clearPendingSignup, setForgotPasswordEmail } from "./authSlice";
+import type { UserResponse } from "../../../services/apiClient";
 
-// Types for form data
-interface AuthCredentials {
+// =============================================================================
+// Backend API Configuration
+// =============================================================================
+// For API calls, use empty string in dev (Vite proxy) or VITE_BACKEND_URL in prod
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
+// For OAuth redirects, we need the actual backend URL (not proxied)
+const OAUTH_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+
+// =============================================================================
+// Request Types
+// =============================================================================
+interface CheckEmailRequest {
     email: string;
-    password: string;
+    captchaToken?: string;
 }
 
-// Types for the 3-step signup process
-interface SendEmailRequest {
+interface SendOtpRequest {
     email: string;
     captchaToken?: string;
 }
 
 interface VerifyOtpRequest {
     email: string;
+    otp: string;
+    pendingSignupId?: string;
+}
+
+interface CompleteSignupRequest {
+    email: string;
+    pendingSignupId: string;
+    password?: string;
+    skipPassword?: boolean;
+}
+
+interface LoginRequest {
+    email: string;
+    password: string;
+    captchaToken?: string;
+}
+
+interface ForgotPasswordRequest {
+    email: string;
+    captchaToken?: string;
+}
+
+interface ResetPasswordRequest {
     token: string;
+    password: string;
 }
 
-interface updateUserPassword {
-    newPassword: string;
+interface SetPasswordRequest {
+    password: string;
 }
-interface CheckUserExistsResponse {
+
+interface ResendOtpRequest {
+    email: string;
+    pendingSignupId: string;
+}
+
+interface CheckPendingSignupRequest {
+    pendingSignupId: string;
+}
+
+// =============================================================================
+// Response Types
+// =============================================================================
+interface CheckEmailResponse {
     exists: boolean;
+    hasPassword: boolean;
 }
 
+interface SendOtpResponse {
+    pendingSignupId: string;
+    expiresAt: string;
+    message: string;
+}
+
+interface VerifyOtpResponse {
+    verified: boolean;
+    pendingSignupId: string;
+    email: string;
+}
+
+interface AuthResponse {
+    user: UserResponse;
+    message: string;
+}
+
+interface MessageResponse {
+    message: string;
+}
+
+interface CheckPendingSignupResponse {
+    valid: boolean;
+    email: string;
+    expiresAt: string;
+}
+
+// =============================================================================
+// API Error Type
+// =============================================================================
+interface BackendError {
+    data: {
+        success: false;
+        error: {
+            code: string;
+            message: string;
+            details?: unknown;
+            retryAfterSeconds?: number;
+        };
+    };
+    status: number;
+}
+
+// Helper to extract error message
+function getErrorMessage(error: unknown): string {
+    if ((error as BackendError)?.data?.error?.message) {
+        return (error as BackendError).data.error.message;
+    }
+    if ((error as { message?: string })?.message) {
+        return (error as { message: string }).message;
+    }
+    return 'An unexpected error occurred';
+}
+
+// =============================================================================
+// Auth API
+// =============================================================================
 export const authApi = createApi({
     reducerPath: "authApi",
-    baseQuery: fakeBaseQuery(),
-    tagTypes: ["Auth"],
+    baseQuery: fetchBaseQuery({
+        baseUrl: `${BACKEND_URL}/api/auth`,
+        credentials: 'include', // Include cookies in requests
+    }),
+    tagTypes: ["Auth", "User"],
     endpoints: (builder) => ({
-        //SIGNUP STEP 1: Send the OTP to the user's email
-        sendOtpToEmail: builder.mutation<unknown, SendEmailRequest>({
-            queryFn: async ({ email, captchaToken }) => {
-                try {
-                    const { data, error } = await supabase.auth.signInWithOtp({
-                        email: email,
-                        options: {
-                            captchaToken: captchaToken,
-                        },
-                    });
+        // Check if email exists
+        checkEmail: builder.mutation<CheckEmailResponse, CheckEmailRequest>({
+            query: (body) => ({
+                url: '/check-email',
+                method: 'POST',
+                body,
+            }),
+            transformResponse: (response: { success: true; data: CheckEmailResponse }) => response.data,
+        }),
 
-                    if (error)
-                        return { error: { status: "CUSTOM_ERROR", data: error.message } };
-                    return {
-                        data: data,
-                        success: true,
-                        message: "OTP sent successfully",
-                    };
-                } catch (err) {
-                    const error = err as { message?: string };
-                    return {
-                        error: {
-                            status: "CUSTOM_ERROR",
-                            data: error.message || "Failed to send OTP",
-                        },
-                    };
-                }
-            },
+        // Send OTP to email for signup
+        sendOtp: builder.mutation<SendOtpResponse, SendOtpRequest>({
+            query: (body) => ({
+                url: '/send-otp',
+                method: 'POST',
+                body,
+            }),
+            transformResponse: (response: { success: true; data: SendOtpResponse }) => response.data,
             onQueryStarted: async ({ email }, { dispatch, queryFulfilled }) => {
                 try {
                     dispatch(startLoading());
-                    await queryFulfilled;
+                    const { data } = await queryFulfilled;
                     dispatch(otpSent({ email }));
+                    dispatch(setPendingSignup({ id: data.pendingSignupId, email, expiresAt: data.expiresAt }));
+                    // Store in localStorage for persistence across refresh
+                    localStorage.setItem('pendingSignupId', data.pendingSignupId);
+                    localStorage.setItem('pendingSignupEmail', email);
                 } catch (err) {
-                    const e = err as { error?: { data?: string } };
-                    dispatch(authError(e.error?.data || "Failed to send OTP"));
+                    dispatch(authError(getErrorMessage(err)));
                 }
             },
         }),
 
-        // Step 2: Verify OTP
-        verifyUserOtp: builder.mutation<unknown, VerifyOtpRequest>({
-            queryFn: async ({ email, token }) => {
-                try {
-                    const { data, error } = await supabase.auth.verifyOtp({
-                        email,
-                        token,
-                        type: "email",
-                    });
-
-                    if (error)
-                        return { error: { status: "CUSTOM_ERROR", data: error.message } };
-                    return { data };
-                } catch (err) {
-                    const error = err as { message?: string };
-                    return {
-                        error: {
-                            status: "CUSTOM_ERROR",
-                            data: error.message || "Failed to verify OTP",
-                        },
-                    };
-                }
-            },
+        // Verify OTP
+        verifyOtp: builder.mutation<VerifyOtpResponse, VerifyOtpRequest>({
+            query: (body) => ({
+                url: '/verify-otp',
+                method: 'POST',
+                body,
+            }),
+            transformResponse: (response: { success: true; data: VerifyOtpResponse }) => response.data,
             onQueryStarted: async (_args, { dispatch, queryFulfilled }) => {
                 try {
                     dispatch(startLoading());
                     await queryFulfilled;
                     dispatch(otpVerified());
-                    dispatch(
-                        authApi.endpoints.fetchUser.initiate(undefined, {
-                            forceRefetch: true,
-                        })
-                    );
                 } catch (err) {
-                    const e = err as { error?: { data?: string } };
-                    dispatch(authError(e.error?.data || "Invalid OTP"));
+                    dispatch(authError(getErrorMessage(err)));
                 }
             },
         }),
 
-        //SIGNUP STEP 3: Set the password for the now-logged-in user
-        updateUserPassword: builder.mutation<unknown, updateUserPassword>({
-            queryFn: async ({ newPassword }) => {
-                try {
-                    console.log(
-                        "$$$$$$$$$$$$$$$$$$$ we have come here in updatePassword call"
-                    );
-                    const { data, error } = await supabase.auth.updateUser({
-                        password: newPassword,
-                    });
-                    console.log("Is the password updated ? ");
-                    console.log(data);
-
-                    if (error) {
-                        console.log("$$$$$$$$$$$$$$$$$$$ error in updateUserPassword");
-                        console.log(error);
-                        return { error: { status: "CUSTOM_ERROR", data: error.message } };
-                    }
-                    return { data };
-                } catch (err) {
-                    const error = err as { message?: string };
-                    console.log("$$$$$$$$$$$$$$$$$$$ error in updateUserPassword");
-                    console.log(err);
-                    return {
-                        error: {
-                            status: "CUSTOM_ERROR",
-                            data: error.message || "Failed to complete signup",
-                        },
-                    };
-                }
-            },
-        }),
-
-        // Traditional signup (fallback)
-        signUp: builder.mutation<unknown, AuthCredentials>({
-            queryFn: async ({ email, password }) => {
-                try {
-                    const { data, error } = await supabase.auth.signUp({
-                        email,
-                        password,
-                    });
-                    if (error)
-                        return { error: { status: "CUSTOM_ERROR", data: error.message } };
-                    return { data };
-                } catch (err) {
-                    const error = err as { message?: string };
-                    return {
-                        error: {
-                            status: "CUSTOM_ERROR",
-                            data: error.message || "Signup failed",
-                        },
-                    };
-                }
-            },
-        }),
-
-        // Traditional login
-        login: builder.mutation<unknown, AuthCredentials>({
-            queryFn: async ({ email, password }) => {
-                try {
-                    const { data, error } = await supabase.auth.signInWithPassword({
-                        email,
-                        password,
-                    });
-                    if (error)
-                        return { error: { status: "CUSTOM_ERROR", data: error.message } };
-                    return { data };
-                } catch (err) {
-                    const error = err as { message?: string };
-                    return {
-                        error: {
-                            status: "CUSTOM_ERROR",
-                            data: error.message || "Login failed",
-                        },
-                    };
-                }
-            },
+        // Complete signup with password
+        completeSignup: builder.mutation<AuthResponse, CompleteSignupRequest>({
+            query: (body) => ({
+                url: '/complete-signup',
+                method: 'POST',
+                body,
+            }),
+            transformResponse: (response: { success: true; data: AuthResponse }) => response.data,
+            invalidatesTags: ['User'],
             onQueryStarted: async (_args, { dispatch, queryFulfilled }) => {
                 try {
-                    await queryFulfilled;
-                    dispatch(
-                        authApi.endpoints.fetchUser.initiate(undefined, {
-                            forceRefetch: true,
-                        })
-                    );
+                    dispatch(startLoading());
+                    const { data } = await queryFulfilled;
+                    dispatch(setUser(data.user));
+                    dispatch(clearPendingSignup());
+                    // Clear localStorage
+                    localStorage.removeItem('pendingSignupId');
+                    localStorage.removeItem('pendingSignupEmail');
                 } catch (err) {
-                    console.log("error in login onQueryStarted");
-                    console.log(err);
+                    dispatch(authError(getErrorMessage(err)));
                 }
             },
         }),
 
-        // Google OAuth login
-        loginWithGoogle: builder.mutation<unknown, void>({
-            queryFn: async () => {
-                try {
-                    console.log("so now what we are not even reaching here???");
-                    const { data, error } = await supabase.auth.signInWithOAuth({
-                        provider: "google",
-                        options: {
-                            redirectTo: `${window.location.origin}/auth/callback`,
-                        },
-                    });
-                    if (error) {
-                        console.log("error while google login");
-                        console.log(error);
-
-                        return { error: { status: "CUSTOM_ERROR", data: error.message } };
-                    }
-                    return { data };
-                } catch (err) {
-                    const error = err as { message?: string };
-                    console.log("error while google login");
-                    console.log(err);
-                    return {
-                        error: {
-                            status: "CUSTOM_ERROR",
-                            data: error.message || "Google login failed",
-                        },
-                    };
-                }
-            },
+        // Login with email and password
+        login: builder.mutation<AuthResponse, LoginRequest>({
+            query: (body) => ({
+                url: '/login',
+                method: 'POST',
+                body,
+            }),
+            transformResponse: (response: { success: true; data: AuthResponse }) => response.data,
+            invalidatesTags: ['User'],
             onQueryStarted: async (_args, { dispatch, queryFulfilled }) => {
                 try {
-                    await queryFulfilled;
-                    dispatch(
-                        authApi.endpoints.fetchUser.initiate(undefined, {
-                            forceRefetch: true,
-                        })
-                    );
+                    dispatch(startLoading());
+                    const { data } = await queryFulfilled;
+                    dispatch(setUser(data.user));
                 } catch (err) {
-                    console.log("error in loginWithGoogle onQueryStarted");
-                    console.log(err);
+                    dispatch(authError(getErrorMessage(err)));
                 }
             },
         }),
 
         // Logout
-        logout: builder.mutation<{ success: boolean }, void>({
-            queryFn: async () => {
-                try {
-                    const { error } = await supabase.auth.signOut();
-                    if (error)
-                        return { error: { status: "CUSTOM_ERROR", data: error.message } };
-
-                    return { data: { success: true } };
-                } catch (err) {
-                    const error = err as { message?: string };
-                    return {
-                        error: {
-                            status: "CUSTOM_ERROR",
-                            data: error.message || "Logout failed",
-                        },
-                    };
-                }
-            },
+        logout: builder.mutation<MessageResponse, void>({
+            query: () => ({
+                url: '/logout',
+                method: 'POST',
+            }),
+            transformResponse: (response: { success: true; data: MessageResponse }) => response.data,
+            invalidatesTags: ['User'],
             onQueryStarted: async (_args, { dispatch, queryFulfilled }) => {
                 try {
                     await queryFulfilled;
-                    dispatch(
-                        authApi.endpoints.fetchUser.initiate(undefined, {
-                            forceRefetch: true,
-                        })
-                    );
+                    dispatch(clearUser());
                 } catch (err) {
-                    console.log("error in logging out onQueryStarted");
-                    console.log(err);
+                    // Still clear user on error
+                    dispatch(clearUser());
+                    console.error('Logout error:', err);
                 }
             },
         }),
 
-        //to get the current user
-        fetchUser: builder.query<SupabaseUser | null, void>({
-            queryFn: async () => {
-                console.log(
-                    "---------------------- Fetch user called --------------------------------------"
-                );
+        // Get current user
+        fetchUser: builder.query<UserResponse | null, void>({
+            query: () => '/me',
+            transformResponse: (response: { success: true; data: { user: UserResponse } }) => response.data.user,
+            transformErrorResponse: () => null,
+            providesTags: ['User'],
+        }),
+
+        // Forgot password
+        forgotPassword: builder.mutation<MessageResponse, ForgotPasswordRequest>({
+            query: (body) => ({
+                url: '/forgot-password',
+                method: 'POST',
+                body,
+            }),
+            transformResponse: (response: { success: true; data: MessageResponse }) => response.data,
+            onQueryStarted: async ({ email }, { dispatch, queryFulfilled }) => {
                 try {
-                    const {
-                        data: { session },
-                        error,
-                    } = await supabase.auth.getSession();
-                    if (error) {
-                        return {
-                            error: { status: "CUSTOM_ERROR", data: error.message },
-                        };
-                    }
-                    return { data: session?.user ?? null };
+                    dispatch(startLoading());
+                    await queryFulfilled;
+                    dispatch(setForgotPasswordEmail(email));
                 } catch (err) {
-                    const error = err as { message?: string };
-                    return {
-                        error: {
-                            status: "CUSTOM_ERROR",
-                            data: error.message || "Fetching User failed",
-                        },
-                    };
+                    dispatch(authError(getErrorMessage(err)));
                 }
             },
         }),
 
-        checkUserExists: builder.mutation<
-            CheckUserExistsResponse,
-            SendEmailRequest
-        >({
-            queryFn: async ({ email }) => {
+        // Reset password
+        resetPassword: builder.mutation<MessageResponse, ResetPasswordRequest>({
+            query: (body) => ({
+                url: '/reset-password',
+                method: 'POST',
+                body,
+            }),
+            transformResponse: (response: { success: true; data: MessageResponse }) => response.data,
+        }),
+
+        // Set password (for OAuth users)
+        setPassword: builder.mutation<MessageResponse, SetPasswordRequest>({
+            query: (body) => ({
+                url: '/set-password',
+                method: 'POST',
+                body,
+            }),
+            transformResponse: (response: { success: true; data: MessageResponse }) => response.data,
+            invalidatesTags: ['User'],
+        }),
+
+        // Resend OTP
+        resendOtp: builder.mutation<SendOtpResponse, ResendOtpRequest>({
+            query: (body) => ({
+                url: '/resend-otp',
+                method: 'POST',
+                body,
+            }),
+            transformResponse: (response: { success: true; data: SendOtpResponse }) => response.data,
+            onQueryStarted: async (_args, { dispatch, queryFulfilled }) => {
                 try {
-                    const { data, error } = await supabase
-                        .from("user_profiles")
-                        .select("id")
-                        .eq("email", email)
-                        .limit(1);
-
-                    if (error) {
-                        return {
-                            error: {
-                                status: "CUSTOM_ERROR",
-                                data: error.message,
-                            },
-                        };
-                    }
-
-                    return {
-                        data: {
-                            exists: data.length > 0,
-                        },
-                    };
+                    dispatch(startLoading());
+                    const { data } = await queryFulfilled;
+                    dispatch(setPendingSignup({
+                        id: data.pendingSignupId,
+                        email: _args.email,
+                        expiresAt: data.expiresAt
+                    }));
                 } catch (err) {
-                    const e = err as { message?: string };
-                    return {
-                        error: {
-                            status: "CUSTOM_ERROR",
-                            data: e.message || "Failed to check user",
-                        },
-                    };
+                    dispatch(authError(getErrorMessage(err)));
                 }
             },
+        }),
+
+        // Check pending signup (for refresh persistence)
+        checkPendingSignup: builder.mutation<CheckPendingSignupResponse, CheckPendingSignupRequest>({
+            query: (body) => ({
+                url: '/check-pending-signup',
+                method: 'POST',
+                body,
+            }),
+            transformResponse: (response: { success: true; data: CheckPendingSignupResponse }) => response.data,
+        }),
+
+        // Exchange OAuth token
+        exchangeToken: builder.mutation<{ message: string }, { token: string }>({
+            query: (body) => ({
+                url: '/exchange-token',
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: ["User"],
         }),
     }),
 });
 
-// Export hooks for usage in functional components
+// =============================================================================
+// Export Hooks
+// =============================================================================
 export const {
-    //function queries
-    useSignUpMutation,
+    useCheckEmailMutation,
+    useSendOtpMutation,
+    useVerifyOtpMutation,
+    useCompleteSignupMutation,
     useLoginMutation,
-    useLoginWithGoogleMutation,
     useLogoutMutation,
     useFetchUserQuery,
-    useSendOtpToEmailMutation,
-    useVerifyUserOtpMutation,
-    useUpdateUserPasswordMutation,
-    useCheckUserExistsMutation,
+    useForgotPasswordMutation,
+    useResetPasswordMutation,
+    useSetPasswordMutation,
+    useResendOtpMutation,
+    useCheckPendingSignupMutation,
+    useExchangeTokenMutation,
 } = authApi;
+
+// =============================================================================
+// Google OAuth Helper
+// =============================================================================
+
+// Auth paths that should never be used as post-login redirect destinations
+const AUTH_PATHS = ['/auth', '/auth/', '/auth/callback', '/auth/reset-password'];
+
+/**
+ * Sanitize redirect URL to prevent redirecting to auth pages after login.
+ * Returns null if the path should be filtered out.
+ */
+function sanitizeRedirectUrl(path: string | undefined | null): string | null {
+    if (!path) return null;
+    // Normalize path
+    const normalizedPath = path.toLowerCase().split('?')[0];
+    // Filter out auth-related paths
+    if (AUTH_PATHS.some(authPath => normalizedPath === authPath || normalizedPath.startsWith('/auth/'))) {
+        return null;
+    }
+    return path;
+}
+
+export function initiateGoogleLogin(returnTo?: string) {
+    const params = new URLSearchParams();
+    if (returnTo) params.set('returnTo', returnTo);
+
+    // Store current path for redirect after auth (if it's not an auth page)
+    const safeRedirect = sanitizeRedirectUrl(returnTo || window.location.pathname);
+    if (safeRedirect) {
+        localStorage.setItem('post_auth_redirect', safeRedirect);
+    } else {
+        localStorage.removeItem('post_auth_redirect');
+    }
+
+    // Redirect to backend OAuth endpoint (must use actual backend URL, not proxy)
+    window.location.href = `${OAUTH_BACKEND_URL}/api/auth/google?${params.toString()}`;
+}

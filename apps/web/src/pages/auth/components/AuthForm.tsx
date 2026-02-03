@@ -1,16 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 
 import {
-    useCheckUserExistsMutation,
+    useCheckEmailMutation,
+    useSendOtpMutation,
+    useVerifyOtpMutation,
+    useCompleteSignupMutation,
     useLoginMutation,
-    useLoginWithGoogleMutation,
-    useSendOtpToEmailMutation,
-    useUpdateUserPasswordMutation,
-    useVerifyUserOtpMutation,
+    useResendOtpMutation,
+    useCheckPendingSignupMutation,
+    initiateGoogleLogin,
 } from "../redux_usecases/authApi";
+import { resetAuth, restoreSignupState, clearError } from "../redux_usecases/authSlice";
 import { EmailService } from "../../../services/email-handling/emailService";
 import type { RootState } from "../../../store";
 
@@ -19,6 +22,7 @@ import { EmailStep } from "./EmailStep";
 import { OtpStep } from "./OtpStep";
 import { PasswordStep } from "./PasswordStep";
 import { LoginStep } from "./LoginStep";
+import { ForgotPasswordStep } from "./ForgotPasswordStep";
 import type { AuthPopupCloseReason } from "./AuthPopup";
 
 interface AuthFormProps {
@@ -34,7 +38,9 @@ export const AuthForm: React.FC<AuthFormProps> = ({
     initialMode,
     onClose,
 }) => {
-    // Get auth state from RTK Query
+    const dispatch = useDispatch();
+
+    // Get auth state from Redux
     const authState = useSelector((state: RootState) => state.auth);
 
     // Local state
@@ -42,23 +48,56 @@ export const AuthForm: React.FC<AuthFormProps> = ({
     const [email, setLocalEmail] = useState("");
     const [password, setPassword] = useState("");
     const [otp, setOtp] = useState("");
-
     const [skipPassword, setSkipPassword] = useState(false);
     const [isGoogleRedirecting, setIsGoogleRedirecting] = useState(false);
+    const [showForgotPassword, setShowForgotPassword] = useState(false);
 
     // API mutations
-    const [sendOtpToEmail, { isLoading: isSendingOtp }] =
-        useSendOtpToEmailMutation();
-    const [verifyUserOtp, { isLoading: isVerifyingOtp }] =
-        useVerifyUserOtpMutation();
-    const [updateUserPassword, { isLoading: isUpdatingPassword }] =
-        useUpdateUserPasswordMutation();
+    const [checkEmail] = useCheckEmailMutation();
+    const [sendOtp, { isLoading: isSendingOtp }] = useSendOtpMutation();
+    const [verifyOtp, { isLoading: isVerifyingOtp }] = useVerifyOtpMutation();
+    const [completeSignup, { isLoading: isCompletingSignup }] = useCompleteSignupMutation();
     const [login, { isLoading: isLoggingIn }] = useLoginMutation();
-    const [loginWithGoogle, { isLoading: isGoogleLoading }] =
-        useLoginWithGoogleMutation();
-    const [checkUserExists] = useCheckUserExistsMutation();
+    const [resendOtp, { isLoading: isResendingOtp }] = useResendOtpMutation();
+    const [checkPendingSignup] = useCheckPendingSignupMutation();
 
-    // Handle email step
+    // Restore signup state from localStorage on mount (fixes refresh bug)
+    useEffect(() => {
+        const pendingSignupId = localStorage.getItem('pendingSignupId');
+        const pendingSignupEmail = localStorage.getItem('pendingSignupEmail');
+
+        if (pendingSignupId && pendingSignupEmail) {
+            // Verify the pending signup is still valid
+            checkPendingSignup({ pendingSignupId })
+                .unwrap()
+                .then((result) => {
+                    if (result.valid) {
+                        dispatch(restoreSignupState({
+                            signupStep: 2, // OTP step
+                            email: result.email,
+                            pendingSignup: {
+                                id: pendingSignupId,
+                                email: result.email,
+                                expiresAt: result.expiresAt,
+                            },
+                        }));
+                        setLocalEmail(result.email);
+                        setMode("signup");
+                    } else {
+                        // Clear invalid pending signup
+                        localStorage.removeItem('pendingSignupId');
+                        localStorage.removeItem('pendingSignupEmail');
+                    }
+                })
+                .catch(() => {
+                    // Clear invalid pending signup
+                    localStorage.removeItem('pendingSignupId');
+                    localStorage.removeItem('pendingSignupEmail');
+                });
+        }
+    }, [checkPendingSignup, dispatch]);
+
+    // Handle email step for signup
     const handleEmailSubmit = async (emailValue: string, captchaToken?: string) => {
         if (!EmailService.isValidEmail(emailValue)) {
             toast.error("Please enter a valid email address");
@@ -66,70 +105,96 @@ export const AuthForm: React.FC<AuthFormProps> = ({
         }
 
         setLocalEmail(emailValue);
+        dispatch(clearError());
 
-        if (mode === "signup") {
-            try {
-                const data = await checkUserExists({
-                    email: emailValue,
-                }).unwrap();
-                console.log("This is the response : ");
-                console.log(data);
-                if (data.exists) {
-                    toast.success("Email already exists, try another !");
-                    return;
-                } else {
-                    await sendOtpToEmail({ email: emailValue, captchaToken }).unwrap();
-                    toast.success("OTP sent successfully");
-                }
-            } catch (error) {
-                console.log(error);
-                const err = error as { data?: string; message?: string };
-                toast.error(err.data || "Failed to send OTP");
+        try {
+            // First check if email exists
+            const checkResult = await checkEmail({ email: emailValue, captchaToken }).unwrap();
+
+            if (checkResult.exists) {
+                toast.error("An account with this email already exists. Please sign in instead.");
+                return;
             }
-        } else {
-            // For signin, we just move to the password step
-            toast.success("Email verified");
+
+            // Send OTP for new user
+            await sendOtp({ email: emailValue, captchaToken }).unwrap();
+            toast.success("Verification code sent to your email!");
+        } catch (error) {
+            const err = error as { data?: { error?: { message?: string } }; message?: string };
+            toast.error(err.data?.error?.message || "Failed to send verification code");
         }
     };
 
     // Handle OTP verification
     const handleOtpSubmit = async () => {
-        if (!otp || otp.length !== 8) {
-            toast.error("Please enter a valid 8-digit OTP");
+        if (!otp || otp.length !== 6) {
+            toast.error("Please enter a valid 6-digit code");
             return;
         }
 
         const currentEmail = authState?.email || email;
+        const pendingSignupId = authState?.pendingSignup?.id;
 
         try {
-            await verifyUserOtp({
+            await verifyOtp({
                 email: currentEmail,
-                token: otp,
+                otp,
+                pendingSignupId,
             }).unwrap();
-            toast.success("OTP verified successfully");
+            toast.success("Email verified successfully!");
+            setOtp("");
         } catch (error) {
-            const err = error as { data?: string; message?: string };
-            toast.error(err.data || "Invalid OTP");
+            const err = error as { data?: { error?: { message?: string } }; message?: string };
+            toast.error(err.data?.error?.message || "Invalid verification code");
         }
     };
 
-    // Handle password/setup step
+    // Handle OTP resend
+    const handleResendOtp = async () => {
+        const currentEmail = authState?.email || email;
+        const pendingSignupId = authState?.pendingSignup?.id;
+
+        if (!pendingSignupId) {
+            toast.error("Session expired. Please start over.");
+            dispatch(resetAuth());
+            return;
+        }
+
+        try {
+            await resendOtp({ email: currentEmail, pendingSignupId }).unwrap();
+            toast.success("New verification code sent!");
+        } catch (error) {
+            const err = error as { data?: { error?: { message?: string; retryAfterSeconds?: number } }; message?: string };
+            toast.error(err.data?.error?.message || "Failed to resend code");
+        }
+    };
+
+    // Handle password/setup step completion
     const handlePasswordSubmit = async () => {
-        if (skipPassword) {
-            onClose("success");
-        } else {
-            try {
-                const result = await updateUserPassword({
-                    newPassword: password,
-                }).unwrap();
-                if (result) toast.success("Password Updated Successfully!!");
-                setTimeout(() => {
-                    onClose("success");
-                }, 1000);
-            } catch (error) {
-                const err = error as { data?: string; message?: string };
-                toast.error(err.data || "Failed to complete signup");
-            }
+        const currentEmail = authState?.email || email;
+        const pendingSignupId = authState?.pendingSignup?.id;
+
+        if (!pendingSignupId) {
+            toast.error("Session expired. Please start over.");
+            dispatch(resetAuth());
+            return;
+        }
+
+        try {
+            await completeSignup({
+                email: currentEmail,
+                pendingSignupId,
+                password: skipPassword ? undefined : password,
+                skipPassword,
+            }).unwrap();
+
+            toast.success(skipPassword ? "Account created!" : "Account created with password!");
+            setTimeout(() => {
+                onClose("success");
+            }, 500);
+        } catch (error) {
+            const err = error as { data?: { error?: { message?: string } }; message?: string };
+            toast.error(err.data?.error?.message || "Failed to create account");
         }
     };
 
@@ -150,26 +215,16 @@ export const AuthForm: React.FC<AuthFormProps> = ({
             toast.success("Logged in successfully!");
             onClose("success");
         } catch (error) {
-            const err = error as { data?: string; message?: string };
-            toast.error(err.data || "Login failed");
+            const err = error as { data?: { error?: { message?: string } }; message?: string };
+            toast.error(err.data?.error?.message || "Login failed");
         }
     };
 
     // Handle Google login
-    const handleGoogleLogin = async () => {
+    const handleGoogleLogin = () => {
         setIsGoogleRedirecting(true);
-        try {
-            localStorage.setItem(
-                "post_auth_redirect",
-                window.location.pathname + window.location.search
-            );
-            await loginWithGoogle().unwrap();
-            // if (data) toast.success("Successfully Logged In !!!");
-        } catch (error) {
-            setIsGoogleRedirecting(false);
-            const err = error as { data?: string; message?: string };
-            toast.error(err.data || "Google login failed");
-        }
+        // Always redirect to dashboard after successful OAuth, not back to auth page
+        initiateGoogleLogin('/dashboard');
     };
 
     // Handle mode switch
@@ -178,6 +233,15 @@ export const AuthForm: React.FC<AuthFormProps> = ({
         setLocalEmail("");
         setPassword("");
         setOtp("");
+        setShowForgotPassword(false);
+        dispatch(resetAuth());
+    };
+
+    // Handle back from OTP step
+    const handleBackFromOtp = () => {
+        dispatch(resetAuth());
+        localStorage.removeItem('pendingSignupId');
+        localStorage.removeItem('pendingSignupEmail');
     };
 
     const signupStep = authState?.signupStep ?? 1;
@@ -188,9 +252,8 @@ export const AuthForm: React.FC<AuthFormProps> = ({
     const isLoading =
         isSendingOtp ||
         isVerifyingOtp ||
-        isUpdatingPassword ||
+        isCompletingSignup ||
         isLoggingIn ||
-        isGoogleLoading ||
         isGoogleRedirecting;
     const isSignin = mode === "signin";
 
@@ -220,7 +283,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
 
             {/* Form Steps */}
             <AnimatePresence mode="wait">
-                {isSignin && (
+                {isSignin && !showForgotPassword && (
                     <LoginStep
                         key="login"
                         isDark={isDark}
@@ -231,9 +294,18 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                         onSubmit={handleLogin}
                         onGoogleLogin={handleGoogleLogin}
                         onSwitchMode={switchMode}
+                        onForgotPassword={() => setShowForgotPassword(true)}
                         isLoading={isLoading}
-                        isGoogleLoading={isGoogleLoading || isGoogleRedirecting}
+                        isGoogleLoading={isGoogleRedirecting}
                         error={authState?.error || null}
+                    />
+                )}
+
+                {isSignin && showForgotPassword && (
+                    <ForgotPasswordStep
+                        key="forgot-password"
+                        isDark={isDark}
+                        onBack={() => setShowForgotPassword(false)}
                     />
                 )}
 
@@ -246,7 +318,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                         onSubmit={handleEmailSubmit}
                         onGoogleLogin={handleGoogleLogin}
                         isLoading={isLoading}
-                        isGoogleLoading={isGoogleLoading || isGoogleRedirecting}
+                        isGoogleLoading={isGoogleRedirecting}
                         error={authState?.error || null}
                         onSwitchMode={switchMode}
                     />
@@ -259,11 +331,10 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                         otp={otp}
                         onOtpChange={setOtp}
                         onSubmit={handleOtpSubmit}
-                        onBack={() => {
-                            // Use manual state management for step navigation
-                            setMode("signup");
-                        }}
+                        onBack={handleBackFromOtp}
+                        onResendOtp={handleResendOtp}
                         isLoading={isLoading}
+                        isResending={isResendingOtp}
                         error={authState?.error || null}
                     />
                 )}
@@ -275,10 +346,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                         password={password}
                         onPasswordChange={setPassword}
                         onSubmit={handlePasswordSubmit}
-                        onBack={() => {
-                            // Use manual state management for step navigation
-                            setMode("signup");
-                        }}
+                        onBack={handleBackFromOtp}
                         isLoading={isLoading}
                         error={authState?.error || null}
                         skipPassword={skipPassword}

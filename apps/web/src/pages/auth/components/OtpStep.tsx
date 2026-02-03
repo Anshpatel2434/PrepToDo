@@ -9,7 +9,9 @@ interface OtpStepProps {
 	onOtpChange: (otp: string) => void;
 	onSubmit: () => void;
 	onBack: () => void;
+	onResendOtp: () => void;
 	isLoading: boolean;
+	isResending: boolean;
 	error: string | null;
 }
 
@@ -19,10 +21,12 @@ export const OtpStep: React.FC<OtpStepProps> = ({
 	onOtpChange,
 	onSubmit,
 	onBack,
+	onResendOtp,
 	isLoading,
+	isResending,
 	error,
 }) => {
-	const { isOnCooldown, startCooldown, remainingSeconds } = useCooldown(300000); // 5 minutes
+	const { isOnCooldown, startCooldown, remainingSeconds } = useCooldown(120000); // 2 minutes (OTP expiry)
 
 	// Start cooldown on mount (since OTP was just sent)
 	useEffect(() => {
@@ -37,16 +41,15 @@ export const OtpStep: React.FC<OtpStepProps> = ({
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
-		if (otp.length === 8 && !isLoading) {
+		if (otp.length === 6 && !isLoading) {
 			onSubmit();
 		}
 	};
 
 	const handleResendOtp = () => {
-		// This would trigger resending the OTP - requires parent handler and CAPTCHA
-		// For now, we just reset the timer to prevent spam clicking
+		if (isResending) return;
+		onResendOtp();
 		startCooldown();
-		console.log("Resend OTP requested");
 	};
 
 	return (
@@ -122,7 +125,7 @@ export const OtpStep: React.FC<OtpStepProps> = ({
           ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}
         `}
 				>
-					We sent a 8-digit code to your email. Enter it below to continue.
+					We sent a 6-digit code to your email. Enter it below to continue.
 				</p>
 			</div>
 
@@ -152,15 +155,17 @@ export const OtpStep: React.FC<OtpStepProps> = ({
 					<button
 						type="button"
 						onClick={handleResendOtp}
+						disabled={isResending}
 						className={`
               ml-3 text-sm font-medium transition-colors duration-200
               ${isDark
 								? "text-brand-primary-dark hover:text-brand-primary-hover-dark"
 								: "text-brand-primary-light hover:text-brand-primary-hover-light"
 							}
+              ${isResending ? 'opacity-50 cursor-not-allowed' : ''}
             `}
 					>
-						Resend
+						{isResending ? 'Sending...' : 'Resend'}
 					</button>
 				)}
 			</div>
@@ -189,7 +194,7 @@ export const OtpStep: React.FC<OtpStepProps> = ({
 						Verification Code
 					</label>
 					<div className="grid grid-cols-6 gap-2">
-						{[0, 1, 2, 3, 4, 5, 6, 7].map((index) => (
+						{[0, 1, 2, 3, 4, 5].map((index) => (
 							<input
 								key={index}
 								type="text"
@@ -200,7 +205,7 @@ export const OtpStep: React.FC<OtpStepProps> = ({
 									newOtp[index] = e.target.value;
 									onOtpChange(newOtp.join(""));
 									// Auto-focus next input
-									if (e.target.value && index < 7) {
+									if (e.target.value && index < 5) {
 										const nextInput = document.querySelector(
 											`input[name="otp-${index + 1}"]`
 										) as HTMLInputElement;
@@ -252,10 +257,10 @@ export const OtpStep: React.FC<OtpStepProps> = ({
 
 					<button
 						type="submit"
-						disabled={isLoading || otp.length !== 8}
+						disabled={isLoading || otp.length !== 6}
 						className={`
               flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 hover:cursor-pointer
-              ${isLoading || otp.length !== 8
+              ${isLoading || otp.length !== 6
 								? "bg-gray-300 text-gray-500 cursor-not-allowed"
 								: "bg-brand-primary-light hover:bg-brand-primary-hover-light dark:bg-brand-primary-dark dark:hover:bg-brand-primary-hover-dark text-white shadow-lg hover:shadow-xl"
 							}

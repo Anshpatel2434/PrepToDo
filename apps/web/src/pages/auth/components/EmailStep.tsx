@@ -43,11 +43,11 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 		}
 
 		// Check for CAPTCHA - only required if the widget is enabled (site key is set)
-		const siteKeyConfigured = !!import.meta.env.VITE_TURNSTILE_SITE_KEY;
-		if (siteKeyConfigured && !captchaToken) {
-			toast.error("Please complete the security verification");
-			return;
-		}
+		// const siteKeyConfigured = !!import.meta.env.VITE_TURNSTILE_SITE_KEY;
+		// if (siteKeyConfigured && !captchaToken) {
+		// 	toast.error("Please complete the security verification");
+		// 	return;
+		// }
 
 		onSubmit(email, captchaToken ?? undefined);
 		startCooldown();
