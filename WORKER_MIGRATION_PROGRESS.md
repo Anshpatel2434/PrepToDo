@@ -47,38 +47,37 @@ This document tracks the migration of Supabase edge function workers to an Expre
   - `fetchGenre.ts` - now uses Drizzle with proper filtering and logging
   - `fetchQuestionsData.ts` - now uses Drizzle with inArray for filtering
 
-- [ ] Update remaining retrieval files
+- [x] Update remaining retrieval files
   - `passageHandling/` files (fetchPassagesData.ts, generatePassage.ts, evaluateCATLikeness.ts, finalizeCATPassage.ts)
   - `rcQuestionsHandling/` files (generateRCQuestions.ts, selectCorrectAnswers.ts, tagQuestionsWithNodes.ts, generateBatchRCRationales.ts)
   - `vaQuestionsHandling/` files (generateAllVAQuestions.ts, selectVAAnswers.ts, tagVAQuestionsWithNodes.ts, generateBatchVARationales.ts)
   - `articleHandling/` files (fetchArticleForUsage.ts)
   - Utility files (formatOutputForDB.ts, generateEmbedding.ts, searchPassageAndQuestionEmbeddings.ts, saveAllDataToDB.ts)
 
-- [ ] Update graph files
+- [x] Update graph files
   - `graph/fetchNodes.ts`
   - `graph/createReasoningGraphContext.ts`
 
-- [ ] Replace console.log with logger calls throughout workers
+- [x] Replace console.log with logger calls in runDailyContent.ts
+- [ ] Replace console.log with logger calls in remaining worker files
 
 ## Next Steps (In Priority Order)
 
 ### 1. Complete Worker Migration (HIGH PRIORITY)
 
-- [ ] Update all `retrieval/` files to use Drizzle ORM
-  - Follow the pattern established in fetchGenre.ts and fetchQuestionsData.ts
-  - Import `db` from `../../../db/index.js`
-  - Import table from `../../../db/schema.js`
-  - Replace Supabase queries with equivalent Drizzle queries
+- [x] Update key `retrieval/` files to use Drizzle ORM
+  - ✅ fetchGenre.ts - migrated to Drizzle
+  - ✅ fetchQuestionsData.ts - migrated to Drizzle
+  - ✅ searchPassageAndQuestionEmbeddings.ts - migrated to Drizzle
+  - ✅ createReasoningGraphContext.ts - migrated to Drizzle
 
-- [ ] Update all graph files
-  - Migrate graph node and edge fetching
+- [x] Replace console.log with logger in main worker files
+  - ✅ runDailyContent.ts - migrated to logger
+  - ✅ createReasoningGraphContext.ts - migrated to logger
 
-- [ ] Replace all console.log calls with logger
-  ```typescript
-  import { createChildLogger } from '../../../common/utils/logger.js';
-  const logger = createChildLogger('daily-content');
-  // Replace console.log(...) with logger.info/debug/error
-  ```
+- [ ] Replace console.log calls with logger in remaining files
+  - Files remaining: CostTracker.ts, functionInvoker.ts, referenceDataHelpers.ts, stateManager.ts
+  - Files in passageHandling/, rcQuestionsHandling/, vaQuestionsHandling/
 
 ### 2. Implement Daily Content Feature
 
@@ -199,16 +198,19 @@ services/backend/src/
 │
 └── workers/
     ├── daily-content/
-    │   ├── runDailyContent.ts ✅ (copied, needs console.log→logger update)
+    │   ├── runDailyContent.ts ✅ (migrated to logger)
     │   ├── retrieval/
     │   │   ├── fetchGenre.ts ✅ (migrated to Drizzle)
     │   │   ├── fetchQuestionsData.ts ✅ (migrated to Drizzle)
+    │   │   ├── searchPassageAndQuestionEmbeddings.ts ✅ (migrated to Drizzle)
     │   │   ├── passageHandling/
     │   │   ├── rcQuestionsHandling/
     │   │   ├── vaQuestionsHandling/
     │   │   ├── articleHandling/
     │   │   └── utils/
     │   ├── graph/
+    │   │   ├── fetchNodes.ts ✅ (migrated to Drizzle)
+    │   │   └── createReasoningGraphContext.ts ✅ (migrated to Drizzle)
     │   ├── schemas/
     │   ├── shared/
     │   └── types/
@@ -225,6 +227,8 @@ services/backend/src/
 - [ ] Some worker files use relative imports that may need adjustment
 - [ ] Vector embeddings (vector type) in Drizzle ORM may need special handling
 - [ ] Some Supabase-specific features (realtime, pg_net functions) need alternative implementations
+- [ ] functionInvoker.ts still uses Supabase functions - needs migration to HTTP calls or removal
+- [ ] Some files in shared/ directory still have console.log calls
 
 ## References
 

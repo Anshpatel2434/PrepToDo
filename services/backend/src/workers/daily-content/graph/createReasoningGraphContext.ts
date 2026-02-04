@@ -1,6 +1,12 @@
 import { metricMappingJson } from "../../../config/core_metric_reasoning_map_v1_0";
+import { db } from "../../db/index.js";
+import { graphEdges } from "../../db/schema.js";
+import { inArray } from "drizzle-orm";
+import { createChildLogger } from "../../common/utils/logger.js";
 
 import {  Node, QuestionMetricTag, ReasoningGraphContext } from "../schemas/types";
+
+const logger = createChildLogger("daily-content");
 
 /**
  * Assembles reasoning graph context for each question using metric_keys and their mapped reasoning nodes.
@@ -17,7 +23,7 @@ export async function getQuestionGraphContext(
     nodes: Node[]
 ): Promise<Record<string, ReasoningGraphContext>> {
 
-    console.log(
+    logger.info(
         `🧩 [Graph] Building reasoning context (questions=${questionTags.length}, nodes=${nodes.length})`
     );
 
@@ -44,7 +50,7 @@ export async function getQuestionGraphContext(
         });
 
         if (sourceNodeIds.length === 0) {
-            console.warn(`⚠️ [Graph] No nodes found for metrics: ${metricKeys.join(", ")}`);
+            logger.warn(`⚠️ [Graph] No nodes found for metrics: ${metricKeys.join(", ")}`);
             result[tag.question_id] = {
                 metric_keys: metricKeys,
                 nodes: [],
@@ -53,22 +59,17 @@ export async function getQuestionGraphContext(
             continue;
         }
 
-        // Fetch outgoing edges for all associated nodes
-        const { data: graphEdges, error } = await supabase
-            .from('graph_edges')
-            .select('source_node_id, target_node_id, relationship')
-            .in('source_node_id', sourceNodeIds);
+        // Fetch outgoing edges for all associated nodes using Drizzle ORM
+        const graphEdgesData = await db
+            .select()
+            .from(graphEdges)
+            .where(inArray(graphEdges.sourceNodeId, sourceNodeIds));
 
-        if (error) {
-            console.error("❌ [Graph] Supabase Error:", error);
-            throw error;
-        }
-
-        const formattedEdges = graphEdges?.map(edge => {
-            const sourceNode = nodeLookup.get(edge.source_node_id);
-            const targetNode = nodeLookup.get(edge.target_node_id);
+        const formattedEdges = graphEdgesData?.map(edge => {
+            const sourceNode = nodeLookup.get(edge.sourceNodeId);
+            const targetNode = nodeLookup.get(edge.targetNodeId);
             if (!targetNode) {
-                console.warn(`⚠️ [Graph] Edge target node ${edge.target_node_id} not found`);
+                logger.warn(`⚠️ [Graph] Edge target node ${edge.targetNodeId} not found`);
             }
             return targetNode ? {
                 relationship: edge.relationship,
@@ -84,6 +85,6 @@ export async function getQuestionGraphContext(
         };
     }
 
-    console.log(`✅ [Graph] Context assembled for ${Object.keys(result).length} questions`);
+    logger.info(`✅ [Graph] Context assembled for ${Object.keys(result).length} questions`);
     return result;
 }
