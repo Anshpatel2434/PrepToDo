@@ -79,8 +79,11 @@ export const dailyPracticeApi = createApi({
     tagTypes: ["DailyPractice", "Session", "Attempts"],
     endpoints: (builder) => ({
         // Get today's daily practice data
-        fetchDailyTestData: builder.query<TestDataState, void>({
-            query: () => "/today",
+        fetchDailyTestData: builder.query<TestDataState, { include_solutions?: boolean } | void>({
+            query: (args) => ({
+                url: "/today",
+                params: args ? { include_solutions: args.include_solutions } : undefined,
+            }),
             transformResponse: (response: ApiResponse<TestDataState>) => {
                 if (!response.success) {
                     throw new Error(response.error?.message || 'Failed to fetch daily test data');
@@ -106,8 +109,11 @@ export const dailyPracticeApi = createApi({
         }),
 
         // Get specific daily test by exam_id
-        fetchDailyTestById: builder.query<TestDataState, { exam_id: UUID }>({
-            query: ({ exam_id }) => `/${exam_id}`,
+        fetchDailyTestById: builder.query<TestDataState, { exam_id: UUID; include_solutions?: boolean }>({
+            query: ({ exam_id, include_solutions }) => ({
+                url: `/${exam_id}`,
+                params: { include_solutions },
+            }),
             transformResponse: (response: ApiResponse<TestDataState>) => {
                 if (!response.success) {
                     throw new Error(response.error?.message || 'Failed to fetch test data');

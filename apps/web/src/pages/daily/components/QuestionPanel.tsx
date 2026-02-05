@@ -40,8 +40,10 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
         (answerValue: string) => {
             if (!isExamMode) return;
 
-            // Determine correctness immediately for the record
-            const isCorrect = answerValue === question.correct_answer?.answer;
+            // Correctness is now determined by the Backend upon submission.
+            // We pass false/null here as a placeholder, or we could update the slice to optional.
+            // For now, we just pass false.
+            const isCorrect = false;
 
             dispatch(
                 submitAnswer({
@@ -86,7 +88,11 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
         const isSelected = selectedOption === option.id;
         const correctAnswerId =
             question.correct_answer?.answer || question.correct_answer;
-        const isCorrect = correctAnswerId === option.id;
+
+        // If correct answer is missing (solution not yet fetched), treat as not visible
+        const hasSolution = !!correctAnswerId;
+        const isCorrect = hasSolution && correctAnswerId === option.id; 
+        console.log("for question id : ", question.id, "isCorrect : ", isCorrect, "hasSolution : ", hasSolution, "correctAnswerId : ", question.correct_answer, "option.id : ", option.id);
 
         if (isExamMode) {
             return `w-full p-4 rounded-xl border-2 text-left transition-all duration-200 ${isSelected
@@ -158,7 +164,6 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (d: any) => d.attempt_id === currentAttempt?.id
         );
-        console.log("diagnostic", diagnostic);
 
         if (!diagnostic) {
             return (
@@ -397,9 +402,12 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                                     Your Answer:{" "}
                                     <span
                                         className={
-                                            question.correct_answer.answer === userAnswer
-                                                ? "text-success"
-                                                : "text-error"
+                                            // Fallback if correct_answer is missing (e.g. before refetch)
+                                            !question.correct_answer?.answer
+                                                ? "text-gray-500"
+                                                : question.correct_answer.answer === userAnswer
+                                                    ? "text-success"
+                                                    : "text-error"
                                         }
                                     >
                                         {userAnswer || "-"}
@@ -407,7 +415,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                                     <br />
                                     Correct:{" "}
                                     <span className="text-success">
-                                        {question.correct_answer.answer}
+                                        {question.correct_answer?.answer || "Loading..."}
                                     </span>
                                 </div>
                             )}

@@ -157,6 +157,9 @@ export async function fetchDailyTestData(req: Request, res: Response, next: Next
         });
 
         // Mapping questions
+        const include_solutions = req.query.include_solutions === 'true';
+
+        // Mapping questions
         const questionData = questionDataRaw.map(q => {
             let parsedOptions = q.options;
             // Parse JSON fields if they are strings (Drizzle text type)
@@ -166,11 +169,15 @@ export async function fetchDailyTestData(req: Request, res: Response, next: Next
             if (typeof q.jumbled_sentences === 'string') { try { parsedJumbled = JSON.parse(q.jumbled_sentences); } catch { } }
 
             let parsedCorrectAnswer = { answer: "" };
-            if (typeof q.correct_answer === 'string') {
-                try {
-                    if (q.correct_answer.trim().startsWith('{')) parsedCorrectAnswer = JSON.parse(q.correct_answer);
-                    else parsedCorrectAnswer = { answer: q.correct_answer };
-                } catch { parsedCorrectAnswer = { answer: q.correct_answer }; }
+            if (include_solutions) {
+                if (typeof q.correct_answer === 'string') {
+                    try {
+                        if (q.correct_answer.trim().startsWith('{')) parsedCorrectAnswer = JSON.parse(q.correct_answer);
+                        else parsedCorrectAnswer = { answer: q.correct_answer };
+                    } catch { parsedCorrectAnswer = { answer: q.correct_answer }; }
+                }
+            } else {
+                parsedCorrectAnswer = { answer: "" }; // Hide answer
             }
 
             return {
@@ -181,7 +188,7 @@ export async function fetchDailyTestData(req: Request, res: Response, next: Next
                 question_type: q.question_type,
                 options: parsedOptions,
                 jumbled_sentences: parsedJumbled,
-                correct_answer: parsedCorrectAnswer,
+                correct_answer: include_solutions ? parsedCorrectAnswer : null,
                 rationale: q.rationale,
                 difficulty: q.difficulty,
                 tags: q.tags,
@@ -190,7 +197,7 @@ export async function fetchDailyTestData(req: Request, res: Response, next: Next
             };
         });
 
-        console.log('[DailyContent] Fetched', questionData.length, 'questions');
+        console.log('[DailyContent] Fetched', questionData.length, 'questions. Include solutions:', include_solutions);
 
         const response = {
             examInfo: examInfo, // Already in snake_case
@@ -291,22 +298,10 @@ export async function fetchDailyTestById(req: Request, res: Response, next: Next
             where: eq(questions.paper_id, exam.id),
         });
 
+        const include_solutions = req.query.include_solutions === 'true';
+
         // Mapping questions
         const questionDataMapped = questionData.map(q => {
-            let parsedOptions = q.options;
-            // Parse JSON fields if they are strings (Drizzle text type)
-            if (typeof q.options === 'string') { try { parsedOptions = JSON.parse(q.options); } catch { } }
-
-            let parsedJumbled = q.jumbled_sentences;
-            if (typeof q.jumbled_sentences === 'string') { try { parsedJumbled = JSON.parse(q.jumbled_sentences); } catch { } }
-
-            let parsedCorrectAnswer = { answer: "" };
-            if (typeof q.correct_answer === 'string') {
-                try {
-                    if (q.correct_answer.trim().startsWith('{')) parsedCorrectAnswer = JSON.parse(q.correct_answer);
-                    else parsedCorrectAnswer = { answer: q.correct_answer };
-                } catch { parsedCorrectAnswer = { answer: q.correct_answer }; }
-            }
 
             return {
                 id: q.id,
@@ -314,9 +309,9 @@ export async function fetchDailyTestById(req: Request, res: Response, next: Next
                 paper_id: q.paper_id,
                 question_text: q.question_text,
                 question_type: q.question_type,
-                options: parsedOptions,
-                jumbled_sentences: parsedJumbled,
-                correct_answer: parsedCorrectAnswer,
+                options: q.options,
+                jumbled_sentences: q.jumbled_sentences,
+                correct_answer: include_solutions ? q.correct_answer : null,
                 rationale: q.rationale,
                 difficulty: q.difficulty,
                 tags: q.tags,
@@ -325,7 +320,7 @@ export async function fetchDailyTestById(req: Request, res: Response, next: Next
             };
         });
 
-        console.log('[DailyContent] Fetched', questionData.length, 'questions');
+        console.log('[DailyContent] Fetched', questionData.length, 'questions. Include solutions:', include_solutions);
 
         const response = {
             examInfo: exam, // already snake_case
@@ -563,23 +558,96 @@ export async function saveQuestionAttempts(req: Request, res: Response, next: Ne
             throw Errors.unauthorized();
         }
 
-        // Prepare attempts for insertion
-        const attemptsToInsert = attempts.map((attempt: any) => ({
-            id: uuidv4(),
-            user_id: attempt.user_id,
-            session_id: attempt.session_id,
-            question_id: attempt.question_id,
-            passage_id: attempt.passage_id || null,
-            user_answer: JSON.stringify(attempt.user_answer),
-            is_correct: attempt.is_correct,
-            time_spent_seconds: attempt.time_spent_seconds,
-            confidence_level: attempt.confidence_level || null,
-            marked_for_review: attempt.marked_for_review,
-            rationale_viewed: attempt.rationale_viewed,
-            rationale_helpful: attempt.rationale_helpful || null,
-            ai_feedback: attempt.ai_feedback || null,
-            created_at: new Date(),
-        }));
+        // Fetch all related questions to verify answers
+        const questionIds = attempts.map((a: any) => a.question_id);
+        const questionsData = await db.query.questions.findMany({
+            where: inArray(questions.id, questionIds),
+        });
+
+        const questionsMap = new Map(questionsData.map(q => [q.id, q]));
+
+        // Prepare attempts for insertion with server-side verification
+        const attemptsToInsert = attempts.map((attempt: any) => {
+            const question = questionsMap.get(attempt.question_id);
+            if (!question) {
+                console.warn(`[DailyContent] Question not found for verification: ${attempt.question_id}`);
+                // Fallback to what client sent or false if question missing (shouldn't happen)
+                // In a stricter system, we might throw an error.
+            }
+
+            // --- Server-Side Verification ---
+            let isCorrect = false;
+            let realCorrectAnswerStr = "";
+            let userAnswerStr = "";
+
+            if (question) {
+                // Parse the stored correct answer
+                let realCorrectAnswer: any = { answer: "" };
+                try {
+                    if (typeof question.correct_answer === 'string') {
+                        if (question.correct_answer.trim().startsWith('{')) realCorrectAnswer = JSON.parse(question.correct_answer);
+                        else realCorrectAnswer = { answer: question.correct_answer };
+                    } else {
+                        realCorrectAnswer = question.correct_answer;
+                    }
+                } catch (e) {
+                    console.error("Error parsing correct answer for verification:", e);
+                }
+
+                // Get the string value of correct answer
+                realCorrectAnswerStr = realCorrectAnswer?.answer || "";
+
+                // Get user answer string
+                // attempt.user_answer might be an object {user_answer: "A"} or just string "A" depending on frontend
+                // The frontend seems to send { user_answer: "A" } inside the user_answer field based on schema usage?
+                // Let's inspect what we receive.
+                // Based on `daily-content.controller.ts` before edit: `user_answer: JSON.stringify(attempt.user_answer)`
+                // schema says `user_answer` is text (jsonb).
+                // Frontend usually sends the raw value or wrapped object.
+                // Let's normalize.
+
+                let userAnswerVal: any = attempt.user_answer;
+                if (typeof userAnswerVal === 'string') {
+                    try {
+                        // Check if it's stringified JSON
+                        if (userAnswerVal.trim().startsWith('{')) {
+                            userAnswerVal = JSON.parse(userAnswerVal);
+                            userAnswerStr = userAnswerVal?.user_answer || userAnswerVal?.answer || userAnswerVal;
+                        } else {
+                            userAnswerStr = userAnswerVal;
+                        }
+                    } catch {
+                        userAnswerStr = userAnswerVal;
+                    }
+                } else if (typeof userAnswerVal === 'object') {
+                    userAnswerStr = userAnswerVal?.user_answer || userAnswerVal?.answer || "";
+                }
+
+                // Normalize for comparison (trim, uppercase if needed, though IDs are usually specific)
+                // Assuming Option IDs like "A", "B", "C" or values.
+                isCorrect = String(userAnswerStr).trim() === String(realCorrectAnswerStr).trim();
+
+                console.log(`[DailyContent] Verification [Q:${question.id}]: User: "${userAnswerStr}" | Real: "${realCorrectAnswerStr}" | Correct: ${isCorrect}`);
+            }
+
+
+            return {
+                id: uuidv4(),
+                user_id: attempt.user_id,
+                session_id: attempt.session_id,
+                question_id: attempt.question_id,
+                passage_id: attempt.passage_id || null,
+                user_answer: JSON.stringify(attempt.user_answer), // Store raw as received/expected
+                is_correct: isCorrect, // OVERRIDE client value
+                time_spent_seconds: attempt.time_spent_seconds,
+                confidence_level: attempt.confidence_level || null,
+                marked_for_review: attempt.marked_for_review,
+                rationale_viewed: attempt.rationale_viewed,
+                rationale_helpful: attempt.rationale_helpful || null,
+                ai_feedback: attempt.ai_feedback || null,
+                created_at: new Date(),
+            };
+        });
 
         // Batch insert
         const insertedAttempts = await db
@@ -596,7 +664,7 @@ export async function saveQuestionAttempts(req: Request, res: Response, next: Ne
             })
             .returning();
 
-        console.log('[DailyContent] Question attempts saved successfully');
+        console.log('[DailyContent] Question attempts saved successfully with server-side verification.');
         res.json(successResponse(insertedAttempts));
     } catch (error) {
         console.error('[DailyContent] Error in saveQuestionAttempts:', error);

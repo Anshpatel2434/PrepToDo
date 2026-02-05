@@ -64,15 +64,22 @@ const DailyVAPage: React.FC = () => {
     // Get exam_id from URL params
     const examId = searchParams.get('exam_id');
 
+    // Redux Selectors (Moved up to use in queries)
+    const viewMode = useSelector(selectViewMode);
+    const shouldFetchSolutions = viewMode === "solution";
+
     // 1. Data Fetching
     // Fetch test data - use specific exam if provided, otherwise fetch today's test
     const { data: testData, isLoading: isTestDataLoading } = useFetchDailyTestDataQuery(
-        undefined,
+        { include_solutions: shouldFetchSolutions },
         { skip: !!examId }
     );
 
     const { data: specificTestData, isLoading: isSpecificTestDataLoading } = useFetchDailyTestByIdQuery(
-        { exam_id: examId ? examId : "" },
+        {
+            exam_id: examId ? examId : "",
+            include_solutions: shouldFetchSolutions
+        },
         { skip: !examId }
     );
 
@@ -87,7 +94,6 @@ const DailyVAPage: React.FC = () => {
     const [saveAttempts] = useSaveQuestionAttemptsMutation();
 
     // Redux Selectors
-    const viewMode = useSelector(selectViewMode);
     const currentQuestionIndex = useSelector(selectCurrentQuestionIndex);
     const attempts = useSelector(selectAttempts);
     const pendingAttempts = useSelector(selectPendingAttempts);

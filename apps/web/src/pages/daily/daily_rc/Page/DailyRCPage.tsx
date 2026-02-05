@@ -72,14 +72,23 @@ export default function DailyRCPage() {
     // Fetch user (Auth source of truth)
     const { data: user, isLoading: isUserLoading } = useFetchUserQuery();
 
+    // Redux Selectors
+    const viewMode = useSelector(selectViewMode);
+
     // Fetch test data - use specific exam if provided, otherwise fetch today's test
+    // We fetch solutions only if viewMode is 'solution'
+    const shouldFetchSolutions = viewMode === 'solution';
+
     const { data: testData, isLoading: isTestDataLoading } = useFetchDailyTestDataQuery(
-        undefined,
+        { include_solutions: shouldFetchSolutions },
         { skip: !!examId }
     );
 
     const { data: specificTestData, isLoading: isSpecificTestDataLoading } = useFetchDailyTestByIdQuery(
-        { exam_id: examId ? examId : "" },
+        {
+            exam_id: examId ? examId : "",
+            include_solutions: shouldFetchSolutions
+        },
         { skip: !examId }
     );
 
@@ -97,7 +106,6 @@ export default function DailyRCPage() {
     const [saveAttempts] = useSaveQuestionAttemptsMutation();
 
     // Redux Selectors
-    const viewMode = useSelector(selectViewMode);
     const currentQuestionIndex = useSelector(selectCurrentQuestionIndex);
     const attempts = useSelector(selectAttempts);
     const pendingAttempts = useSelector(selectPendingAttempts);
