@@ -70,18 +70,18 @@ interface CheckPendingSignupRequest {
 // =============================================================================
 interface CheckEmailResponse {
     exists: boolean;
-    hasPassword: boolean;
+    has_password: boolean;
 }
 
 interface SendOtpResponse {
-    pendingSignupId: string;
-    expiresAt: string;
+    pending_signup_id: string;
+    expires_at: string;
     message: string;
 }
 
 interface VerifyOtpResponse {
     verified: boolean;
-    pendingSignupId: string;
+    pending_signup_id: string;
     email: string;
 }
 
@@ -97,7 +97,7 @@ interface MessageResponse {
 interface CheckPendingSignupResponse {
     valid: boolean;
     email: string;
-    expiresAt: string;
+    expires_at: string;
 }
 
 // =============================================================================
@@ -161,9 +161,9 @@ export const authApi = createApi({
                     dispatch(startLoading());
                     const { data } = await queryFulfilled;
                     dispatch(otpSent({ email }));
-                    dispatch(setPendingSignup({ id: data.pendingSignupId, email, expiresAt: data.expiresAt }));
+                    dispatch(setPendingSignup({ id: data.pending_signup_id, email, expiresAt: data.expires_at }));
                     // Store in localStorage for persistence across refresh
-                    localStorage.setItem('pendingSignupId', data.pendingSignupId);
+                    localStorage.setItem('pendingSignupId', data.pending_signup_id);
                     localStorage.setItem('pendingSignupEmail', email);
                 } catch (err) {
                     dispatch(authError(getErrorMessage(err)));
@@ -315,9 +315,9 @@ export const authApi = createApi({
                     dispatch(startLoading());
                     const { data } = await queryFulfilled;
                     dispatch(setPendingSignup({
-                        id: data.pendingSignupId,
+                        id: data.pending_signup_id,
                         email: _args.email,
-                        expiresAt: data.expiresAt
+                        expiresAt: data.expires_at
                     }));
                 } catch (err) {
                     dispatch(authError(getErrorMessage(err)));

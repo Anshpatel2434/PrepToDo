@@ -28,13 +28,13 @@ export async function fetchGenreForToday() {
      */
     const eligibleGenres = await db.query.genres.findMany({
         where: and(
-            eq(genres.isActive, true),
+            eq(genres.is_active, true),
             or(
-                isNull(genres.lastUsedDailyAt),
-                lt(genres.lastUsedDailyAt, cooldownDate)
+                isNull(genres.last_used_daily_at),
+                lt(genres.last_used_daily_at, cooldownDate)
             )
         ),
-        orderBy: [asc(genres.dailyUsageCount)],
+        orderBy: [asc(genres.daily_usage_count)],
         limit: 1,
     });
 
@@ -51,9 +51,9 @@ export async function fetchGenreForToday() {
      */
     await db.update(genres)
         .set({
-            dailyUsageCount: (selectedGenre.dailyUsageCount || 0) + 1,
-            lastUsedDailyAt: now,
-            updatedAt: now,
+            daily_usage_count: (selectedGenre.daily_usage_count || 0) + 1,
+            last_used_daily_at: now,
+            updated_at: now,
         })
         .where(eq(genres.id, selectedGenre.id));
 
@@ -64,6 +64,6 @@ export async function fetchGenreForToday() {
         id: selectedGenre.id,
         name: selectedGenre.name,
         description: selectedGenre.description,
-        cooldown_days: selectedGenre.cooldownDays,
+        cooldown_days: selectedGenre.cooldown_days,
     };
 }

@@ -26,8 +26,33 @@ function generateUUID(): string {
     });
 }
 
+const VAQuestionSchema = z.object({
+    passage_id: z.string().nullish(), // Can be empty/null
+    question_text: z.string(),
+    question_type: z.enum(["para_summary", "para_completion", "para_jumble", "odd_one_out"]),
+    options: z.object({
+        A: z.string(),
+        B: z.string(),
+        C: z.string(),
+        D: z.string(),
+    }),
+    jumbled_sentences: z.object({
+        1: z.string(),
+        2: z.string(),
+        3: z.string(),
+        4: z.string(),
+        5: z.string(),
+    }),
+    correct_answer: z.object({
+        answer: z.string()
+    }),
+    rationale: z.string(),
+    difficulty: z.enum(["easy", "medium", "hard", "expert"]),
+    tags: z.array(z.string()),
+});
+
 const AllVAQuestionsResponseSchema = z.object({
-    questions: z.array(z.any()),
+    questions: z.array(VAQuestionSchema),
 });
 
 interface GenerateAllVAQuestionsParams {

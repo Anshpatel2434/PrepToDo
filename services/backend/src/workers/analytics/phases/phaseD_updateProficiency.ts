@@ -23,27 +23,27 @@ export async function phaseD_updateProficiency(
         // 1. Fetch existing proficiency record for this specific metric
         const existing = await db.query.userMetricProficiency.findFirst({
             where: and(
-                eq(userMetricProficiency.userId, user_id),
-                eq(userMetricProficiency.dimensionType, dimension_type),
-                eq(userMetricProficiency.dimensionKey, dimension_key)
+                eq(userMetricProficiency.user_id, user_id),
+                eq(userMetricProficiency.dimension_type, dimension_type),
+                eq(userMetricProficiency.dimension_key, dimension_key)
             )
         });
 
         // 2. Idempotence check: skip if already updated for this session
-        if (existing && existing.lastSessionId === session_id) {
+        if (existing && existing.last_session_id === session_id) {
             console.log(`⚠️ [Phase D] ${dimension_type}:${dimension_key} already updated for session ${session_id}, skipping`);
             continue;
         }
 
         // 3. Aggregate totals
-        const totalAttempts = (existing?.totalAttempts || 0) + incoming.total_attempts;
-        const correctAttempts = (existing?.correctAttempts || 0) + incoming.correct_attempts;
+        const totalAttempts = (existing?.total_attempts || 0) + incoming.total_attempts;
+        const correctAttempts = (existing?.correct_attempts || 0) + incoming.correct_attempts;
 
         // 4. Calculate weighted confidence 
         const confidence = calculateConfidence(totalAttempts);
 
         // 5. Calculate new proficiency score
-        const oldProficiency = existing ? existing.proficiencyScore : 50;
+        const oldProficiency = existing ? existing.proficiency_score : 50;
         const sessionProficiency = incoming.proficiency_score;
 
         const newProficiency = calculateNewProficiency(
@@ -58,20 +58,20 @@ export async function phaseD_updateProficiency(
 
         // 7. Prepare final record for database
         const updateData = {
-            userId: user_id,
-            dimensionType: dimension_type,
-            dimensionKey: dimension_key,
-            proficiencyScore: newProficiency,
-            confidenceScore: confidence.toFixed(2), // Keep as number with 2 decimal places
-            totalAttempts,
-            correctAttempts,
-            lastSessionId: session_id,
+            user_id: user_id,
+            dimension_type: dimension_type,
+            dimension_key: dimension_key,
+            proficiency_score: newProficiency,
+            confidence_score: confidence.toFixed(2), // Keep as number with 2 decimal places
+            total_attempts: totalAttempts,
+            correct_attempts: correctAttempts,
+            last_session_id: session_id,
             trend,
-            updatedAt: new Date(),
+            updated_at: new Date(),
             // Ensure createdAt is preserved or set
-            createdAt: existing?.createdAt || new Date(),
+            created_at: existing?.created_at || new Date(),
             // Preserve speedVsAccuracyData if it exists (for reading speed metric mostly, but good practice)
-            speedVsAccuracyData: existing?.speedVsAccuracyData,
+            speed_vs_accuracy_data: existing?.speed_vs_accuracy_data,
             id: existing?.id || uuidv4(),
         };
 
@@ -81,7 +81,7 @@ export async function phaseD_updateProficiency(
             await db.insert(userMetricProficiency)
                 .values(updateData)
                 .onConflictDoUpdate({
-                    target: [userMetricProficiency.userId, userMetricProficiency.dimensionType, userMetricProficiency.dimensionKey],
+                    target: [userMetricProficiency.user_id, userMetricProficiency.dimension_type, userMetricProficiency.dimension_key],
                     set: updateData
                 });
 

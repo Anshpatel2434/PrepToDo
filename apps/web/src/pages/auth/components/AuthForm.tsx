@@ -78,7 +78,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                             pendingSignup: {
                                 id: pendingSignupId,
                                 email: result.email,
-                                expiresAt: result.expiresAt,
+                                expiresAt: result.expires_at,
                             },
                         }));
                         setLocalEmail(result.email);

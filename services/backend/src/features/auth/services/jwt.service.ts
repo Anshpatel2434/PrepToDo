@@ -51,8 +51,8 @@ export async function verifyAccessToken(token: string): Promise<JwtPayload | nul
             .where(
                 and(
                     eq(authSessions.id, payload.sessionId),
-                    eq(authSessions.userId, payload.userId),
-                    gt(authSessions.expiresAt, new Date())
+                    eq(authSessions.user_id, payload.userId),
+                    gt(authSessions.expires_at, new Date())
                 )
             )
             .limit(1);

@@ -98,6 +98,7 @@ Return STRICT JSON only.
     }
 
     console.log(`✅ [VA Metric Tagging] Tags generated for ${parsed.questionsTagged.length} questions`);
+    console.log("---------------------------------------- VA Tags Generated: ", JSON.stringify(parsed.questionsTagged, null, 2));
 
     // Returns raw array matching QuestionMetricTagArraySchema, exactly like the RC function
     return parsed.questionsTagged;

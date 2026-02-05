@@ -34,7 +34,7 @@ export async function fetchArticleForUsage(params: {
     const allArticles = await db.query.articles.findMany({
         where: and(
             eq(articles.genre, genre),
-            eq(articles.isArchived, false)
+            eq(articles.is_archived, false)
         ),
     });
 
@@ -49,20 +49,20 @@ export async function fetchArticleForUsage(params: {
     const eligibleArticles = allArticles.filter((article) => {
         if (usageType === "daily") {
             // For daily: prefer never-used, or allow custom_exam articles past cooldown
-            const neverUsed = !article.usedInDaily && !article.usedInCustomExam;
+            const neverUsed = !article.used_in_daily && !article.used_in_custom_exam;
             const customExamReusable =
-                article.usedInCustomExam &&
-                article.lastUsedAt &&
-                new Date(article.lastUsedAt) < cooldownDate;
+                article.used_in_custom_exam &&
+                article.last_used_at &&
+                new Date(article.last_used_at) < cooldownDate;
 
             return neverUsed || customExamReusable;
         } else {
             // For mock: prefer never-used, or allow daily articles past cooldown
-            const neverUsed = !article.usedInDaily && !article.usedInCustomExam;
+            const neverUsed = !article.used_in_daily && !article.used_in_custom_exam;
             const dailyReusable =
-                article.usedInDaily &&
-                article.lastUsedAt &&
-                new Date(article.lastUsedAt) < cooldownDate;
+                article.used_in_daily &&
+                article.last_used_at &&
+                new Date(article.last_used_at) < cooldownDate;
 
             return neverUsed || dailyReusable;
         }
@@ -85,24 +85,24 @@ export async function fetchArticleForUsage(params: {
      */
     eligibleArticles.sort((a, b) => {
         // Prioritize never-used
-        const aUsed = a.lastUsedAt !== null;
-        const bUsed = b.lastUsedAt !== null;
+        const aUsed = a.last_used_at !== null;
+        const bUsed = b.last_used_at !== null;
         if (aUsed !== bUsed) return aUsed ? 1 : -1;
 
         // Then by usage count
         const aCount = usageType === "daily"
-            ? (a.customExamUsageCount ?? 0)
-            : (a.dailyUsageCount ?? 0);
+            ? (a.custom_exam_usage_count ?? 0)
+            : (a.daily_usage_count ?? 0);
         const bCount = usageType === "daily"
-            ? (b.customExamUsageCount ?? 0)
-            : (b.dailyUsageCount ?? 0);
+            ? (b.custom_exam_usage_count ?? 0)
+            : (b.daily_usage_count ?? 0);
 
         if (aCount !== bCount) return aCount - bCount;
 
         // Then by oldest last_used_at
-        if (!a.lastUsedAt) return -1;
-        if (!b.lastUsedAt) return 1;
-        return new Date(a.lastUsedAt).getTime() - new Date(b.lastUsedAt).getTime();
+        if (!a.last_used_at) return -1;
+        if (!b.last_used_at) return 1;
+        return new Date(a.last_used_at).getTime() - new Date(b.last_used_at).getTime();
     });
 
     const selectedArticle = eligibleArticles[0];
@@ -114,25 +114,23 @@ export async function fetchArticleForUsage(params: {
         selectedArticle.url
     );
 
-    /**
-     * STEP 2: Update usage metadata
-     */
+    // STEP 2: Update usage metadata
     if (usageType === "daily") {
         await db.update(articles)
             .set({
-                usedInDaily: true,
-                dailyUsageCount: (selectedArticle.dailyUsageCount ?? 0) + 1,
-                lastUsedAt: now,
-                updatedAt: now,
+                used_in_daily: true,
+                daily_usage_count: (selectedArticle.daily_usage_count ?? 0) + 1,
+                last_used_at: now,
+                updated_at: now,
             })
             .where(eq(articles.id, selectedArticle.id));
     } else {
         await db.update(articles)
             .set({
-                usedInCustomExam: true,
-                customExamUsageCount: (selectedArticle.customExamUsageCount ?? 0) + 1,
-                lastUsedAt: now,
-                updatedAt: now,
+                used_in_custom_exam: true,
+                custom_exam_usage_count: (selectedArticle.custom_exam_usage_count ?? 0) + 1,
+                last_used_at: now,
+                updated_at: now,
             })
             .where(eq(articles.id, selectedArticle.id));
     }
@@ -141,9 +139,10 @@ export async function fetchArticleForUsage(params: {
      * STEP 3: Return selected article
      */
     // Parse semantic ideas if stored as JSON string
-    const semanticData = typeof selectedArticle.semanticIdeasAndPersona === 'string'
-        ? JSON.parse(selectedArticle.semanticIdeasAndPersona)
-        : selectedArticle.semanticIdeasAndPersona || {};
+    // Parse semantic ideas if stored as JSON string
+    const semanticData = typeof selectedArticle.semantic_ideas_and_persona === 'string'
+        ? JSON.parse(selectedArticle.semantic_ideas_and_persona)
+        : selectedArticle.semantic_ideas_and_persona || {};
 
     return {
         articleMeta: selectedArticle,

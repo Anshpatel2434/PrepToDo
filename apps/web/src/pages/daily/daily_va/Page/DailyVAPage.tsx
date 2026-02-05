@@ -1,8 +1,8 @@
 import React, { useEffect, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useTheme } from "../../../../context/ThemeContext";
-import { supabase } from "../../../../services/apiClient";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useFetchUserQuery } from "../../../auth/redux_usecases/authApi";
 import { QuestionPalette } from "../../components/QuestionPalette";
 import { QuestionPanel } from "../../components/QuestionPanel";
 import { motion, AnimatePresence } from "framer-motion";
@@ -68,7 +68,11 @@ const DailyVAPage: React.FC = () => {
     const viewMode = useSelector(selectViewMode);
     const shouldFetchSolutions = viewMode === "solution";
 
-    // 1. Data Fetching
+    // 1. Data Fetching & Initialization
+
+    // Fetch user (Auth source of truth)
+    const { data: user, isLoading: isUserLoading } = useFetchUserQuery();
+
     // Fetch test data - use specific exam if provided, otherwise fetch today's test
     const { data: testData, isLoading: isTestDataLoading } = useFetchDailyTestDataQuery(
         { include_solutions: shouldFetchSolutions },
@@ -140,7 +144,8 @@ const DailyVAPage: React.FC = () => {
     const currentQuestion = questions.find((q) => q.id === currentQuestionId);
 
     const [showPalette, setShowPalette] = React.useState(true);
-    const isLoading = isTestDataLoading || isSpecificTestDataLoading || isSessionLoading || isCreatingSession;
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const isLoading = isTestDataLoading || isSpecificTestDataLoading || isSessionLoading || isCreatingSession || isUserLoading || isSubmitting;
 
     // Polling for session updates in solution mode
     const { data: polledSessionData } = useFetchExistingSessionDetailsQuery(
@@ -174,20 +179,14 @@ const DailyVAPage: React.FC = () => {
     useEffect(() => {
         // Only run if test data is ready and we haven't initialized a session yet
         // Also check if initialization is already in progress to prevent duplicate calls
-        if (!currentTestData || session.id || isLoading || isInitializingRef.current) return;
+        if (!currentTestData || session.id || isLoading || isInitializingRef.current || !user) return;
 
         const init = async () => {
             // Mark initialization as in progress
             isInitializingRef.current = true;
+            console.log("[DailyVAPage] Starting initialization...", { examPaperId: currentTestData.examInfo.id, userId: user.id });
 
             try {
-                const {
-                    data: { user },
-                } = await supabase.auth.getUser();
-                if (!user) {
-                    return;
-                }
-
                 const sessionResult = await fetchExistingSession({
                     user_id: user.id,
                     paper_id: currentTestData.examInfo.id,
@@ -196,7 +195,7 @@ const DailyVAPage: React.FC = () => {
 
                 const questionIds = questions.map((q) => q.id);
 
-                if (sessionResult.data) {
+                if (sessionResult.data && sessionResult.data.session) {
                     // Resume existing session
                     dispatch(
                         initializeSession({
@@ -224,6 +223,8 @@ const DailyVAPage: React.FC = () => {
                         })
                     );
                 }
+            } catch (err) {
+                console.error("[DailyVAPage] Initialization failed:", err);
             } finally {
                 // Reset initialization flag
                 isInitializingRef.current = false;
@@ -237,6 +238,7 @@ const DailyVAPage: React.FC = () => {
         dispatch,
         isLoading,
         questions,
+        user
         // Note: fetchExistingSession and startNewSession are NOT in dependencies
         // to prevent the effect from running multiple times due to hook reference changes
     ]);
@@ -263,6 +265,8 @@ const DailyVAPage: React.FC = () => {
 
         const confirmSubmit = window.confirm(`Finish VA Practice?`);
         if (!confirmSubmit) return;
+
+        setIsSubmitting(true);
 
         try {
             // 1. Prepare Data
@@ -308,6 +312,8 @@ const DailyVAPage: React.FC = () => {
         } catch (e) {
             console.error("Failed to submit exam:", e);
             alert("Failed to submit. Please check your connection.");
+        } finally {
+            setIsSubmitting(false);
         }
     }, [
         session.id,

@@ -484,6 +484,9 @@ export async function fetchExistingSessionDetails(req: Request, res: Response, n
 // =============================================================================
 // Save Session Details
 // =============================================================================
+// =============================================================================
+// Save Session Details
+// =============================================================================
 export async function saveSessionDetails(req: Request, res: Response, next: NextFunction): Promise<void> {
     const {
         session_id,
@@ -491,13 +494,10 @@ export async function saveSessionDetails(req: Request, res: Response, next: Next
         completed_at,
         status,
         total_questions,
-        correct_answers,
-        score_percentage,
         current_question_index,
     } = req.body;
 
     console.log('[DailyContent] saveSessionDetails called for session:', session_id);
-    console.log('[DailyContent] Session status:', status, 'Time spent:', time_spent_seconds, 'Score:', score_percentage);
 
     try {
         // Verify user is authenticated
@@ -505,13 +505,26 @@ export async function saveSessionDetails(req: Request, res: Response, next: Next
             throw Errors.unauthorized();
         }
 
+        // --- Server-Side Score Calculation ---
+        // Fetch all attempts for this session to verify score source of truth
+        const sessionAttempts = await db.query.questionAttempts.findMany({
+            where: eq(questionAttempts.session_id, session_id),
+        });
+
+        const backendCorrectCount = sessionAttempts.filter(a => a.is_correct).length;
+        const totalQs = total_questions || sessionAttempts.length || 1; // Avoid div/0
+        // Calculate score
+        const backendScorePercentage = (backendCorrectCount / totalQs) * 100;
+
+        console.log(`[DailyContent] Server-Side Score: ${backendCorrectCount}/${totalQs} (${backendScorePercentage}%)`);
+
         // Update session
         const updateData: any = {
             time_spent_seconds: time_spent_seconds,
             status,
-            total_questions: total_questions,
-            correct_answers: correct_answers,
-            score_percentage: score_percentage.toString(),
+            total_questions: total_questions, // Trust client for total count (or could count from exam, but client context is okay here)
+            correct_answers: backendCorrectCount, // OVERRIDE client value
+            score_percentage: backendScorePercentage.toFixed(2), // OVERRIDE client value
             current_question_index: current_question_index,
             updated_at: new Date(),
         };

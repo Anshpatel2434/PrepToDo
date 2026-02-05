@@ -169,10 +169,6 @@ router.post(
 // TODO: Add admin middleware or API key authentication
 router.post(
     '/generate',
-    [
-        body('force').optional().isBoolean(),
-        validate,
-    ],
     generateDailyContent
 );
 

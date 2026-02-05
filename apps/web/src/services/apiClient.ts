@@ -62,7 +62,7 @@ export class BackendApiError extends Error {
 }
 
 // Fetch wrapper with error handling
-async function apiFetch<T>(
+export async function apiFetch<T>(
 	endpoint: string,
 	options: RequestInit = {}
 ): Promise<T> {
@@ -92,9 +92,9 @@ async function apiFetch<T>(
 export interface UserResponse {
 	id: string;
 	email: string;
-	emailConfirmedAt: string | null;
+	email_confirmed_at: string | null;
 	provider: string | null;
-	hasPassword: boolean;
-	createdAt: string | null;
-	updatedAt: string | null;
+	has_password: boolean;
+	created_at: string | null;
+	updated_at: string | null;
 }

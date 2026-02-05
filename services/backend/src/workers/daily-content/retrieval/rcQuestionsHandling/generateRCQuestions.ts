@@ -18,8 +18,36 @@ interface ReferenceDataSchema {
     questions: any[];
 }
 
+// OpenAI requires strict usage for structured outputs
+const RCQuestionSchema = z.object({
+    passage_id: z.string().nullish(),
+    question_text: z.string(),
+    question_type: z.enum([
+        "rc_question"
+    ]),
+    options: z.object({
+        A: z.string(),
+        B: z.string(),
+        C: z.string(),
+        D: z.string(),
+    }),
+    jumbled_sentences: z.object({
+        1: z.string(),
+        2: z.string(),
+        3: z.string(),
+        4: z.string(),
+        5: z.string(),
+    }).nullish(),
+    correct_answer: z.object({
+        answer: z.string()
+    }),
+    rationale: z.string(),
+    difficulty: z.enum(["easy", "medium", "hard", "expert"]),
+    tags: z.array(z.string()),
+});
+
 const ResponseSchema = z.object({
-    questions: z.array(z.any()),
+    questions: z.array(RCQuestionSchema),
 });
 
 type Difficulty = "easy" | "medium" | "hard";

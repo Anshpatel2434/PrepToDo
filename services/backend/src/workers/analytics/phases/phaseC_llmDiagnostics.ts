@@ -72,12 +72,12 @@ export async function phaseC_llmDiagnostics(
     // Fetch user proficiency metrics
     console.log('📊 [Phase C] Fetching user proficiency context...');
     const proficiencies = await db.query.userMetricProficiency.findMany({
-        where: eq(userMetricProficiency.userId, userId)
+        where: eq(userMetricProficiency.user_id, userId)
     });
 
     // Fetch user proficiency signals
     const signals = await db.query.userProficiencySignals.findFirst({
-        where: eq(userProficiencySignals.userId, userId)
+        where: eq(userProficiencySignals.user_id, userId)
     });
 
     // Build user context for LLM
@@ -92,10 +92,10 @@ export async function phaseC_llmDiagnostics(
 
     const userContext = {
         proficiencies: proficiencies || [],
-        weak_topics: parseJsonArray(signals?.weakTopics),
-        weak_question_types: parseJsonArray(signals?.weakQuestionTypes),
-        genre_strengths: parseJsonArray(signals?.genreStrengths),
-        recommended_difficulty: signals?.recommendedDifficulty || 'medium',
+        weak_topics: parseJsonArray(signals?.weak_topics),
+        weak_question_types: parseJsonArray(signals?.weak_question_types),
+        genre_strengths: parseJsonArray(signals?.genre_strengths),
+        recommended_difficulty: signals?.recommended_difficulty || 'medium',
     };
 
     console.log(`   - User proficiencies loaded: ${userContext.proficiencies.length} metrics`);

@@ -109,7 +109,7 @@ export async function runDailyContent(): Promise<DailyContentResult> {
             content: passageData,
             genre: genre.name,
             articleId: articleMeta.id,
-            articleSource: articleMeta.sourceName || "",
+            articleSource: articleMeta.source_name || "",
         });
 
         const passageText = dataManager.getPassageContent();

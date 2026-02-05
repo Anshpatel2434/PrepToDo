@@ -29,7 +29,7 @@ export async function fetchQuestionsData(questionsIds: string[], passageIds: str
         conditions.push(inArray(questions.id, questionsIds));
     }
     if (passageIds.length > 0) {
-        conditions.push(inArray(questions.passageId, passageIds));
+        conditions.push(inArray(questions.passage_id, passageIds));
     }
 
     const data = await db.query.questions.findMany({
@@ -45,44 +45,44 @@ export async function fetchQuestionsData(questionsIds: string[], passageIds: str
             try { parsedOptions = JSON.parse(q.options); } catch (e) { console.error("Failed to parse options", e); }
         }
 
-        let parsedJumbled = q.jumbledSentences;
-        if (typeof q.jumbledSentences === 'string') {
-            try { parsedJumbled = JSON.parse(q.jumbledSentences); } catch (e) { console.error("Failed to parse jumbledSentences", e); }
+        let parsedJumbled = q.jumbled_sentences;
+        if (typeof q.jumbled_sentences === 'string') {
+            try { parsedJumbled = JSON.parse(q.jumbled_sentences); } catch (e) { console.error("Failed to parse jumbledSentences", e); }
         }
 
         let parsedCorrectAnswer = { answer: "" };
-        if (typeof q.correctAnswer === 'string') {
+        if (typeof q.correct_answer === 'string') {
             try {
                 // Check if it's a JSON string or just the answer string
-                if (q.correctAnswer.trim().startsWith('{')) {
-                    parsedCorrectAnswer = JSON.parse(q.correctAnswer);
+                if (q.correct_answer.trim().startsWith('{')) {
+                    parsedCorrectAnswer = JSON.parse(q.correct_answer);
                 } else {
-                    parsedCorrectAnswer = { answer: q.correctAnswer };
+                    parsedCorrectAnswer = { answer: q.correct_answer };
                 }
             } catch (e) {
                 console.error("Failed to parse correctAnswer", e);
-                parsedCorrectAnswer = { answer: q.correctAnswer };
+                parsedCorrectAnswer = { answer: q.correct_answer };
             }
         }
         // Handle explicit object case if drizzle already parsed it (unlikely with 'text' type but possible if schema changed)
-        else if (typeof q.correctAnswer === 'object' && q.correctAnswer !== null) {
-            parsedCorrectAnswer = q.correctAnswer as any;
+        else if (typeof q.correct_answer === 'object' && q.correct_answer !== null) {
+            parsedCorrectAnswer = q.correct_answer as any;
         }
 
         return {
             id: q.id,
-            passage_id: q.passageId,
-            paper_id: q.paperId,
-            question_text: q.questionText,
-            question_type: q.questionType as any,
+            passage_id: q.passage_id,
+            paper_id: q.paper_id,
+            question_text: q.question_text,
+            question_type: q.question_type as any,
             options: parsedOptions as any,
             jumbled_sentences: parsedJumbled as any,
             correct_answer: parsedCorrectAnswer,
             rationale: q.rationale,
             difficulty: (q.difficulty as "easy" | "medium" | "hard" | "expert") || "medium",
             tags: q.tags || [],
-            created_at: q.createdAt?.toISOString() || new Date().toISOString(),
-            updated_at: q.updatedAt?.toISOString() || new Date().toISOString(),
+            created_at: q.created_at?.toISOString() || new Date().toISOString(),
+            updated_at: q.updated_at?.toISOString() || new Date().toISOString(),
         };
     });
 }

@@ -5,11 +5,11 @@
 export interface UserResponse {
     id: string;
     email: string;
-    emailConfirmedAt: string | null;
+    email_confirmed_at: string | null;
     provider: string; // Derived from raw_app_meta_data
-    hasPassword: boolean;
-    createdAt: string | null;
-    updatedAt: string | null;
+    has_password: boolean;
+    created_at: string | null;
+    updated_at: string | null;
 }
 
 export interface CheckEmailResponse {
@@ -18,14 +18,14 @@ export interface CheckEmailResponse {
 }
 
 export interface SendOtpResponse {
-    pendingSignupId: string;
-    expiresAt: string;
+    pending_signup_id: string;
+    expires_at: string;
     message: string;
 }
 
 export interface VerifyOtpResponse {
     verified: boolean;
-    pendingSignupId: string;
+    pending_signup_id: string;
     email: string;
 }
 
@@ -37,7 +37,7 @@ export interface LoginResponse {
 export interface CheckPendingSignupResponse {
     valid: boolean;
     email?: string;
-    expiresAt?: string;
+    expires_at?: string;
 }
 
 export interface GoogleUserInfo {

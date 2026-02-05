@@ -27,6 +27,7 @@ export async function getQuestionGraphContext(
     console.log(
         `🧩 [Graph] Building reasoning context (questions=${questionTags.length}, nodes=${nodes.length})`
     );
+    console.log("---------------------------------------- Graph Input Tags: ", JSON.stringify(questionTags, null, 2));
 
     // Load core metric reasoning map
     const metricMapData = metricMappingJson;
@@ -60,16 +61,18 @@ export async function getQuestionGraphContext(
             continue;
         }
 
+        console.log(`---------------------------------------- (${tag.question_id}) Associates Nodes Found: `, JSON.stringify(associatedNodes, null, 2));
+
         // Fetch outgoing edges for all associated nodes using Drizzle
         const edgesData = await db.query.graphEdges.findMany({
-            where: inArray(graphEdges.sourceNodeId, sourceNodeIds),
+            where: inArray(graphEdges.source_node_id, sourceNodeIds),
         });
 
         const formattedEdges = edgesData?.map(edge => {
-            const sourceNode = nodeLookup.get(edge.sourceNodeId);
-            const targetNode = nodeLookup.get(edge.targetNodeId);
+            const sourceNode = nodeLookup.get(edge.source_node_id);
+            const targetNode = nodeLookup.get(edge.target_node_id);
             if (!targetNode) {
-                console.warn(`⚠️ [Graph] Edge target node ${edge.targetNodeId} not found`);
+                console.warn(`⚠️ [Graph] Edge target node ${edge.target_node_id} not found`);
             }
             return targetNode ? {
                 relationship: edge.relationship,
@@ -83,6 +86,7 @@ export async function getQuestionGraphContext(
             nodes: associatedNodes,
             edges: formattedEdges
         };
+        console.log(`---------------------------------------- (${tag.question_id}) Final Context Built (Edges: ${formattedEdges.length})`);
     }
 
     console.log(`✅ [Graph] Context assembled for ${Object.keys(result).length} questions`);

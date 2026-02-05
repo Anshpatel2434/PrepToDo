@@ -5,25 +5,28 @@ import { pgTable, uuid, varchar, text, timestamp, boolean, integer } from 'drizz
 // =============================================================================
 // Users Table (in public schema)
 // =============================================================================
+// =============================================================================
+// Users Table (in public schema)
+// =============================================================================
 export const users = pgTable('users', {
     id: uuid('id').primaryKey().defaultRandom(),
     email: varchar('email', { length: 255 }).notNull().unique(),
-    encryptedPassword: varchar('encrypted_password', { length: 255 }),
-    emailConfirmedAt: timestamp('email_confirmed_at', { withTimezone: true }),
-    lastSignInAt: timestamp('last_sign_in_at', { withTimezone: true }),
+    encrypted_password: varchar('encrypted_password', { length: 255 }),
+    email_confirmed_at: timestamp('email_confirmed_at', { withTimezone: true }),
+    last_sign_in_at: timestamp('last_sign_in_at', { withTimezone: true }),
 
     // Provider info
     provider: varchar('provider', { length: 50 }).default('email'),
-    googleId: varchar('google_id', { length: 255 }),
+    google_id: varchar('google_id', { length: 255 }),
 
     // Metadata
-    rawAppMetaData: text('raw_app_meta_data'),
-    rawUserMetaData: text('raw_user_meta_data'),
-    isSsoUser: boolean('is_sso_user').default(false),
+    raw_app_meta_data: text('raw_app_meta_data'),
+    raw_user_meta_data: text('raw_user_meta_data'),
+    is_sso_user: boolean('is_sso_user').default(false),
 
     // Timestamps
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
 // =============================================================================
@@ -31,12 +34,12 @@ export const users = pgTable('users', {
 // =============================================================================
 export const authSessions = pgTable('auth_sessions', {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-    refreshTokenHash: varchar('refresh_token_hash', { length: 255 }).notNull(),
-    userAgent: text('user_agent'),
+    user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    refresh_token_hash: varchar('refresh_token_hash', { length: 255 }).notNull(),
+    user_agent: text('user_agent'),
     ip: varchar('ip', { length: 45 }),
-    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    expires_at: timestamp('expires_at', { withTimezone: true }).notNull(),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
 // =============================================================================
@@ -45,10 +48,10 @@ export const authSessions = pgTable('auth_sessions', {
 export const authPendingSignups = pgTable('auth_pending_signups', {
     id: uuid('id').primaryKey().defaultRandom(),
     email: varchar('email', { length: 255 }).notNull(),
-    otpHash: varchar('otp_hash', { length: 255 }).notNull(),
+    otp_hash: varchar('otp_hash', { length: 255 }).notNull(),
     attempts: varchar('attempts', { length: 10 }).default('0'),
-    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    expires_at: timestamp('expires_at', { withTimezone: true }).notNull(),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
 // =============================================================================
@@ -56,11 +59,11 @@ export const authPendingSignups = pgTable('auth_pending_signups', {
 // =============================================================================
 export const authPasswordResetTokens = pgTable('auth_password_reset_tokens', {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-    tokenHash: varchar('token_hash', { length: 255 }).notNull(),
-    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
-    usedAt: timestamp('used_at', { withTimezone: true }),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    token_hash: varchar('token_hash', { length: 255 }).notNull(),
+    expires_at: timestamp('expires_at', { withTimezone: true }).notNull(),
+    used_at: timestamp('used_at', { withTimezone: true }),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
 // =============================================================================
@@ -69,19 +72,19 @@ export const authPasswordResetTokens = pgTable('auth_password_reset_tokens', {
 export const userProfiles = pgTable('user_profiles', {
     id: uuid('id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
     username: varchar('username', { length: 50 }).notNull().unique(),
-    displayName: varchar('display_name', { length: 100 }),
-    avatarUrl: text('avatar_url'),
-    subscriptionTier: varchar('subscription_tier', { length: 20 }).default('free'),
-    subscriptionExpiresAt: timestamp('subscription_expires_at', { withTimezone: true }),
-    dailyGoalMinutes: integer('daily_goal_minutes').default(30),
-    preferredDifficulty: varchar('preferred_difficulty', { length: 20 }).default('medium'),
+    display_name: varchar('display_name', { length: 100 }),
+    avatar_url: text('avatar_url'),
+    subscription_tier: varchar('subscription_tier', { length: 20 }).default('free'),
+    subscription_expires_at: timestamp('subscription_expires_at', { withTimezone: true }),
+    daily_goal_minutes: integer('daily_goal_minutes').default(30),
+    preferred_difficulty: varchar('preferred_difficulty', { length: 20 }).default('medium'),
     theme: varchar('theme', { length: 20 }).default('light'),
-    dataConsentGiven: boolean('data_consent_given').default(false),
-    showOnLeaderboard: boolean('show_on_leaderboard').default(true),
-    lastActiveAt: timestamp('last_active_at', { withTimezone: true }).defaultNow(),
+    data_consent_given: boolean('data_consent_given').default(false),
+    show_on_leaderboard: boolean('show_on_leaderboard').default(true),
+    last_active_at: timestamp('last_active_at', { withTimezone: true }).defaultNow(),
     email: text('email').unique(),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
 // =============================================================================
@@ -89,24 +92,24 @@ export const userProfiles = pgTable('user_profiles', {
 // =============================================================================
 export const userAnalytics = pgTable('user_analytics', {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull().unique().references(() => userProfiles.id, { onDelete: 'cascade' }),
-    minutesPracticed: integer('minutes_practiced').default(0),
-    questionsAttempted: integer('questions_attempted').default(0),
-    questionsCorrect: integer('questions_correct').default(0),
-    accuracyPercentage: integer('accuracy_percentage').default(0),
-    isActiveDay: boolean('is_active_day').default(false),
-    currentStreak: integer('current_streak').default(0),
-    longestStreak: integer('longest_streak').default(0),
-    pointsEarnedToday: integer('points_earned_today').default(0),
-    totalPoints: integer('total_points').default(0),
-    genrePerformance: text('genre_performance'), // JSONB stored as text
-    difficultyPerformance: text('difficulty_performance'),
-    questionTypePerformance: text('question_type_performance'),
-    newWordsLearned: integer('new_words_learned').default(0),
-    wordsReviewed: integer('words_reviewed').default(0),
-    lastActiveDate: varchar('last_active_date', { length: 20 }),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+    user_id: uuid('user_id').notNull().unique().references(() => userProfiles.id, { onDelete: 'cascade' }),
+    minutes_practiced: integer('minutes_practiced').default(0),
+    questions_attempted: integer('questions_attempted').default(0),
+    questions_correct: integer('questions_correct').default(0),
+    accuracy_percentage: integer('accuracy_percentage').default(0),
+    is_active_day: boolean('is_active_day').default(false),
+    current_streak: integer('current_streak').default(0),
+    longest_streak: integer('longest_streak').default(0),
+    points_earned_today: integer('points_earned_today').default(0),
+    total_points: integer('total_points').default(0),
+    genre_performance: text('genre_performance'), // JSONB stored as text
+    difficulty_performance: text('difficulty_performance'),
+    question_type_performance: text('question_type_performance'),
+    new_words_learned: integer('new_words_learned').default(0),
+    words_reviewed: integer('words_reviewed').default(0),
+    last_active_date: varchar('last_active_date', { length: 20 }),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
 // =============================================================================
@@ -114,21 +117,21 @@ export const userAnalytics = pgTable('user_analytics', {
 // =============================================================================
 export const userProficiencySignals = pgTable('user_proficiency_signals', {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull().unique().references(() => userProfiles.id, { onDelete: 'cascade' }),
-    overallPercentile: integer('overall_percentile'),
-    estimatedCatPercentile: integer('estimated_cat_percentile'),
-    genreStrengths: text('genre_strengths'), // JSONB stored as text
-    inferenceSkill: integer('inference_skill'),
-    toneAnalysisSkill: integer('tone_analysis_skill'),
-    mainIdeaSkill: integer('main_idea_skill'),
-    detailComprehensionSkill: integer('detail_comprehension_skill'),
-    recommendedDifficulty: varchar('recommended_difficulty', { length: 20 }),
-    weakTopics: text('weak_topics').array(), // Update to match DB real type
-    weakQuestionTypes: text('weak_question_types').array(),
-    calculatedAt: timestamp('calculated_at', { withTimezone: true }).defaultNow(),
-    dataPointsCount: integer('data_points_count'),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+    user_id: uuid('user_id').notNull().unique().references(() => userProfiles.id, { onDelete: 'cascade' }),
+    overall_percentile: integer('overall_percentile'),
+    estimated_cat_percentile: integer('estimated_cat_percentile'),
+    genre_strengths: text('genre_strengths'), // JSONB stored as text
+    inference_skill: integer('inference_skill'),
+    tone_analysis_skill: integer('tone_analysis_skill'),
+    main_idea_skill: integer('main_idea_skill'),
+    detail_comprehension_skill: integer('detail_comprehension_skill'),
+    recommended_difficulty: varchar('recommended_difficulty', { length: 20 }),
+    weak_topics: text('weak_topics').array(), // Update to match DB real type
+    weak_question_types: text('weak_question_types').array(),
+    calculated_at: timestamp('calculated_at', { withTimezone: true }).defaultNow(),
+    data_points_count: integer('data_points_count'),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
 // =============================================================================
@@ -136,21 +139,21 @@ export const userProficiencySignals = pgTable('user_proficiency_signals', {
 // =============================================================================
 export const userMetricProficiency = pgTable('user_metric_proficiency', {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull().references(() => userProfiles.id, { onDelete: 'cascade' }),
-    dimensionType: text('dimension_type').notNull(),
-    dimensionKey: text('dimension_key').notNull(),
-    proficiencyScore: integer('proficiency_score').notNull(),
-    confidenceScore: varchar('confidence_score', { length: 10 }).notNull(),
-    totalAttempts: integer('total_attempts').default(0),
-    correctAttempts: integer('correct_attempts').default(0),
-    lastSessionId: uuid('last_session_id'),
+    user_id: uuid('user_id').notNull().references(() => userProfiles.id, { onDelete: 'cascade' }),
+    dimension_type: text('dimension_type').notNull(),
+    dimension_key: text('dimension_key').notNull(),
+    proficiency_score: integer('proficiency_score').notNull(),
+    confidence_score: varchar('confidence_score', { length: 10 }).notNull(),
+    total_attempts: integer('total_attempts').default(0),
+    correct_attempts: integer('correct_attempts').default(0),
+    last_session_id: uuid('last_session_id'),
     trend: text('trend'),
-    speedVsAccuracyData: text('speed_vs_accuracy_data'), // JSONB stored as text
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+    speed_vs_accuracy_data: text('speed_vs_accuracy_data'), // JSONB stored as text
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 }, (table) => {
     return {
-        dimensionTypeCheck: ps.check('user_metric_proficiency_dimension_type_check', sql`${table.dimensionType} IN ('core_metric', 'genre', 'question_type', 'reasoning_step', 'error_pattern', 'difficulty')`),
+        dimensionTypeCheck: ps.check('user_metric_proficiency_dimension_type_check', sql`${table.dimension_type} IN ('core_metric', 'genre', 'question_type', 'reasoning_step', 'error_pattern', 'difficulty')`),
     }
 });
 
@@ -346,14 +349,14 @@ export const usersRelations = relations(users, ({ many, one }) => ({
 
 export const authSessionsRelations = relations(authSessions, ({ one }) => ({
     user: one(users, {
-        fields: [authSessions.userId],
+        fields: [authSessions.user_id],
         references: [users.id],
     }),
 }));
 
 export const authPasswordResetTokensRelations = relations(authPasswordResetTokens, ({ one }) => ({
     user: one(users, {
-        fields: [authPasswordResetTokens.userId],
+        fields: [authPasswordResetTokens.user_id],
         references: [users.id],
     }),
 }));
@@ -449,26 +452,23 @@ export const graphNodes = pgTable('graph_nodes', {
     id: uuid('id').primaryKey().defaultRandom(),
     label: text('label').notNull(),
     type: varchar('type', { length: 50 }),
-    description: text('description'),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
 export const graphEdges = pgTable('graph_edges', {
     id: uuid('id').primaryKey().defaultRandom(),
-    sourceNodeId: uuid('source_node_id').notNull().references(() => graphNodes.id, { onDelete: 'cascade' }),
-    targetNodeId: uuid('target_node_id').notNull().references(() => graphNodes.id, { onDelete: 'cascade' }),
+    source_node_id: uuid('source_node_id').notNull().references(() => graphNodes.id, { onDelete: 'cascade' }),
+    target_node_id: uuid('target_node_id').notNull().references(() => graphNodes.id, { onDelete: 'cascade' }),
     relationship: text('relationship').notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
 export const graphEdgesRelations = relations(graphEdges, ({ one }) => ({
     sourceNode: one(graphNodes, {
-        fields: [graphEdges.sourceNodeId],
+        fields: [graphEdges.source_node_id],
         references: [graphNodes.id],
         relationName: 'sourceNode',
     }),
     targetNode: one(graphNodes, {
-        fields: [graphEdges.targetNodeId],
+        fields: [graphEdges.target_node_id],
         references: [graphNodes.id],
         relationName: 'targetNode',
     }),

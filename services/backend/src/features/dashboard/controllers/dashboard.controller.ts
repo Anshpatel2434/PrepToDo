@@ -35,9 +35,9 @@ export async function getDashboardData(req: Request, res: Response, next: NextFu
         // Fetch all data in parallel for better performance
         const [profileData, analyticsData, signalsData, metricsData] = await Promise.all([
             db.select().from(userProfiles).where(eq(userProfiles.id, userId)).limit(1),
-            db.select().from(userAnalytics).where(eq(userAnalytics.userId, userId)).limit(1),
-            db.select().from(userProficiencySignals).where(eq(userProficiencySignals.userId, userId)).limit(1),
-            db.select().from(userMetricProficiency).where(eq(userMetricProficiency.userId, userId)),
+            db.select().from(userAnalytics).where(eq(userAnalytics.user_id, userId)).limit(1),
+            db.select().from(userProficiencySignals).where(eq(userProficiencySignals.user_id, userId)).limit(1),
+            db.select().from(userMetricProficiency).where(eq(userMetricProficiency.user_id, userId)),
         ]);
 
         const response: DashboardDataResponse = {
@@ -96,7 +96,7 @@ export async function getUserAnalytics(req: Request, res: Response, next: NextFu
         const [analytics] = await db
             .select()
             .from(userAnalytics)
-            .where(eq(userAnalytics.userId, userId))
+            .where(eq(userAnalytics.user_id, userId))
             .limit(1);
 
         // It's okay if analytics doesn't exist yet (new user)
@@ -120,7 +120,7 @@ export async function getUserProficiencySignals(req: Request, res: Response, nex
         const [signals] = await db
             .select()
             .from(userProficiencySignals)
-            .where(eq(userProficiencySignals.userId, userId))
+            .where(eq(userProficiencySignals.user_id, userId))
             .limit(1);
 
         // It's okay if signals don't exist yet (new user)
@@ -144,7 +144,7 @@ export async function getUserMetricProficiency(req: Request, res: Response, next
         const metrics = await db
             .select()
             .from(userMetricProficiency)
-            .where(eq(userMetricProficiency.userId, userId));
+            .where(eq(userMetricProficiency.user_id, userId));
 
         res.json(successResponse({ metricProficiency: metrics || [] }));
     } catch (error) {
@@ -167,14 +167,14 @@ export async function updateUserProfile(req: Request, res: Response, next: NextF
 
         // Only update fields that are provided
         const updateData: Partial<typeof userProfiles.$inferInsert> = {
-            updatedAt: new Date(),
+            updated_at: new Date(),
         };
 
-        if (displayName !== undefined) updateData.displayName = displayName;
-        if (preferredDifficulty !== undefined) updateData.preferredDifficulty = preferredDifficulty;
+        if (displayName !== undefined) updateData.display_name = displayName;
+        if (preferredDifficulty !== undefined) updateData.preferred_difficulty = preferredDifficulty;
         if (theme !== undefined) updateData.theme = theme;
-        if (dailyGoalMinutes !== undefined) updateData.dailyGoalMinutes = dailyGoalMinutes;
-        if (showOnLeaderboard !== undefined) updateData.showOnLeaderboard = showOnLeaderboard;
+        if (dailyGoalMinutes !== undefined) updateData.daily_goal_minutes = dailyGoalMinutes;
+        if (showOnLeaderboard !== undefined) updateData.show_on_leaderboard = showOnLeaderboard;
 
         await db
             .update(userProfiles)

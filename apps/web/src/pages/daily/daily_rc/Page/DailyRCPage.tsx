@@ -154,7 +154,8 @@ export default function DailyRCPage() {
 
     const [showPalette, setShowPalette] = React.useState(true);
     const [initError, setInitError] = React.useState<string | null>(null);
-    const isLoading = isTestDataLoading || isSpecificTestDataLoading || isSessionLoading || isCreatingSession || isUserLoading;
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const isLoading = isTestDataLoading || isSpecificTestDataLoading || isSessionLoading || isCreatingSession || isUserLoading || isSubmitting;
 
     // ... (debug logs omitted for brevity in search, but preserving them in file)
 
@@ -170,6 +171,7 @@ export default function DailyRCPage() {
             isSessionLoading,
             isCreatingSession,
             isUserLoading,
+            isSubmitting,
             hasUser: !!user,
             userId: user?.id,
             hasTestData: !!testData,
@@ -177,7 +179,7 @@ export default function DailyRCPage() {
             currentTestDataId: currentTestData?.examInfo?.id,
             examIdParam: examId
         });
-    }, [isLoading, isTestDataLoading, isSpecificTestDataLoading, isSessionLoading, isCreatingSession, isUserLoading, user, testData, specificTestData, currentTestData, examId]);
+    }, [isLoading, isTestDataLoading, isSpecificTestDataLoading, isSessionLoading, isCreatingSession, isUserLoading, isSubmitting, user, testData, specificTestData, currentTestData, examId]);
 
 
     // Polling for session updates in solution mode (to detect when AI analysis is done)
@@ -313,6 +315,8 @@ export default function DailyRCPage() {
         );
         if (!confirmSubmit) return;
 
+        setIsSubmitting(true);
+
         try {
             // 1. Prepare Data
             const timeNow = Date.now();
@@ -359,6 +363,8 @@ export default function DailyRCPage() {
         } catch (err) {
             console.error("Failed to submit exam:", err);
             alert("Failed to submit. Please check your connection.");
+        } finally {
+            setIsSubmitting(false);
         }
     }, [
         session.id,

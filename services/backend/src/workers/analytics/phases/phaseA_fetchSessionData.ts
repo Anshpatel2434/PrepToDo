@@ -180,6 +180,8 @@ export async function phaseA_fetchSessionData(
             throw new Error(`Question ${attempt.question_id} not found`);
         }
 
+        console.log("---------------------------------------- Question dataset is generated here and we are checking if the metric keys are perfectly set or not: ", question.tags);
+
         return {
             attempt_id: attempt.id,
             question_id: attempt.question_id,

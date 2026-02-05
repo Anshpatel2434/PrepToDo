@@ -32,9 +32,9 @@ async function ensureUserProfile(userId: string, email: string): Promise<void> {
                 id: userId,
                 email,
                 username,
-                displayName: email.split('@')[0],
-                createdAt: new Date(),
-                updatedAt: new Date(),
+                display_name: email.split('@')[0],
+                created_at: new Date(),
+                updated_at: new Date(),
             });
         }
     } catch (err) {
@@ -45,13 +45,14 @@ function formatUserResponse(user: typeof authUsers.$inferSelect): UserResponse {
     return {
         id: user.id,
         email: user.email,
-        emailConfirmedAt: user.emailConfirmedAt?.toISOString() || null,
+        email_confirmed_at: user.email_confirmed_at?.toISOString() || null,
         provider: user.provider || 'email',
-        hasPassword: !!user.encryptedPassword,
-        createdAt: user.createdAt?.toISOString() || null,
-        updatedAt: user.updatedAt?.toISOString() || null,
+        has_password: !!user.encrypted_password,
+        created_at: user.created_at?.toISOString() || null,
+        updated_at: user.updated_at?.toISOString() || null,
     };
 }
+
 
 function setAuthCookie(res: Response, token: string): void {
     res.cookie(config.jwt.cookieName, token, {
@@ -94,11 +95,11 @@ async function createSession(userId: string, email: string, req: Request, res: R
     // Store session in database
     await db.insert(authSessions).values({
         id: sessionId,
-        userId,
-        refreshTokenHash: await hashToken(refreshToken),
-        userAgent: req.headers['user-agent'] || null,
+        user_id: userId,
+        refresh_token_hash: await hashToken(refreshToken),
+        user_agent: req.headers['user-agent'] || null,
         ip: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || null,
-        expiresAt,
+        expires_at: expiresAt,
     });
 
     // Generate JWT and set cookie
@@ -128,7 +129,7 @@ export async function checkEmail(req: Request, res: Response, next: NextFunction
 
         const response: CheckEmailResponse = {
             exists: !!existingUser,
-            hasPassword: existingUser?.encryptedPassword ? true : false,
+            hasPassword: existingUser?.encrypted_password ? true : false,
         };
 
         res.json(successResponse(response));
@@ -168,14 +169,14 @@ export async function sendOtp(req: Request, res: Response, next: NextFunction): 
             .where(
                 and(
                     eq(authPendingSignups.email, email.toLowerCase()),
-                    gt(authPendingSignups.expiresAt, new Date())
+                    gt(authPendingSignups.expires_at, new Date())
                 )
             )
             .limit(1);
 
         // If recent OTP exists and was sent less than 60 seconds ago, reject
         if (existingPending) {
-            const createdAt = existingPending.createdAt!;
+            const createdAt = existingPending.created_at!;
             const secondsSinceCreated = (Date.now() - createdAt.getTime()) / 1000;
             if (secondsSinceCreated < 60) {
                 throw Errors.otpAlreadySent();
@@ -194,16 +195,16 @@ export async function sendOtp(req: Request, res: Response, next: NextFunction): 
         await db.insert(authPendingSignups).values({
             id: pendingSignupId,
             email: email.toLowerCase(),
-            otpHash,
-            expiresAt,
+            otp_hash: otpHash,
+            expires_at: expiresAt,
         });
 
         // Send OTP email
         await sendOtpEmail(email.toLowerCase(), otp);
 
         const response: SendOtpResponse = {
-            pendingSignupId,
-            expiresAt: expiresAt.toISOString(),
+            pending_signup_id: pendingSignupId,
+            expires_at: expiresAt.toISOString(),
             message: 'Verification code sent to your email.',
         };
 
@@ -237,14 +238,14 @@ export async function verifyOtpController(req: Request, res: Response, next: Nex
         }
 
         // Check expiration
-        if (pendingSignup.expiresAt < new Date()) {
+        if (pendingSignup.expires_at < new Date()) {
             // Clean up expired signup
             await db.delete(authPendingSignups).where(eq(authPendingSignups.id, pendingSignup.id));
             throw Errors.otpExpired();
         }
 
         // Verify OTP
-        if (!verifyOtp(otp, pendingSignup.otpHash)) {
+        if (!verifyOtp(otp, pendingSignup.otp_hash)) {
             // Increment attempts
             const attempts = parseInt(pendingSignup.attempts || '0', 10) + 1;
 
@@ -264,7 +265,7 @@ export async function verifyOtpController(req: Request, res: Response, next: Nex
 
         const response: VerifyOtpResponse = {
             verified: true,
-            pendingSignupId: pendingSignup.id,
+            pending_signup_id: pendingSignup.id,
             email: pendingSignup.email,
         };
 
@@ -297,7 +298,7 @@ export async function completeSignup(req: Request, res: Response, next: NextFunc
             throw Errors.pendingSignupNotFound();
         }
 
-        if (pendingSignup.expiresAt < new Date()) {
+        if (pendingSignup.expires_at < new Date()) {
             await db.delete(authPendingSignups).where(eq(authPendingSignups.id, pendingSignup.id));
             throw Errors.pendingSignupExpired();
         }
@@ -309,11 +310,11 @@ export async function completeSignup(req: Request, res: Response, next: NextFunc
         await db.insert(authUsers).values({
             id: userId,
             email: email.toLowerCase(),
-            encryptedPassword,
-            emailConfirmedAt: new Date(),
+            encrypted_password: encryptedPassword,
+            email_confirmed_at: new Date(),
             provider: 'email',
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            created_at: new Date(),
+            updated_at: new Date(),
         });
 
         // Delete pending signup
@@ -358,12 +359,12 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
         }
 
         // Check if user has password
-        if (!user.encryptedPassword) {
+        if (!user.encrypted_password) {
             throw Errors.passwordNotSet();
         }
 
         // Verify password
-        const isValid = await verifyPassword(password, user.encryptedPassword);
+        const isValid = await verifyPassword(password, user.encrypted_password);
         if (!isValid) {
             authLogger.warn({ email, userId: user.id, action: 'login' }, 'Login failed: invalid password');
             throw Errors.invalidCredentials();
@@ -372,7 +373,7 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
         // Update last sign in
         await db
             .update(authUsers)
-            .set({ lastSignInAt: new Date(), updatedAt: new Date() })
+            .set({ last_sign_in_at: new Date(), updated_at: new Date() })
             .where(eq(authUsers.id, user.id));
 
         // Create session
@@ -505,13 +506,13 @@ export async function googleOAuthCallback(req: Request, res: Response, next: Nex
 
         if (user) {
             // Update existing user with Google info if not already linked
-            if (!user.googleId) {
+            if (!user.google_id) {
                 await db
                     .update(authUsers)
                     .set({
-                        googleId: userInfo.id,
-                        isSsoUser: true,
-                        updatedAt: new Date(),
+                        google_id: userInfo.id,
+                        is_sso_user: true,
+                        updated_at: new Date(),
                     })
                     .where(eq(authUsers.id, user.id));
             }
@@ -519,7 +520,7 @@ export async function googleOAuthCallback(req: Request, res: Response, next: Nex
             // Update last sign in
             await db
                 .update(authUsers)
-                .set({ lastSignInAt: new Date(), updatedAt: new Date() })
+                .set({ last_sign_in_at: new Date(), updated_at: new Date() })
                 .where(eq(authUsers.id, user.id));
         } else {
             // Create new user
@@ -527,18 +528,18 @@ export async function googleOAuthCallback(req: Request, res: Response, next: Nex
             await db.insert(authUsers).values({
                 id: userId,
                 email: userInfo.email.toLowerCase(),
-                emailConfirmedAt: new Date(),
+                email_confirmed_at: new Date(),
                 provider: 'google',
-                googleId: userInfo.id,
-                isSsoUser: true,
-                rawUserMetaData: JSON.stringify({
+                google_id: userInfo.id,
+                is_sso_user: true,
+                raw_user_meta_data: JSON.stringify({
                     name: userInfo.name,
                     given_name: userInfo.given_name,
                     family_name: userInfo.family_name,
                     picture: userInfo.picture,
                 }),
-                createdAt: new Date(),
-                updatedAt: new Date(),
+                created_at: new Date(),
+                updated_at: new Date(),
             });
 
 
@@ -564,11 +565,11 @@ export async function googleOAuthCallback(req: Request, res: Response, next: Nex
         // Store session in database
         await db.insert(authSessions).values({
             id: sessionId,
-            userId: user!.id,
-            refreshTokenHash: await hashToken(refreshToken),
-            userAgent: req.headers['user-agent'] || null,
+            user_id: user!.id,
+            refresh_token_hash: await hashToken(refreshToken),
+            user_agent: req.headers['user-agent'] || null,
             ip: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || null,
-            expiresAt,
+            expires_at: expiresAt,
         });
 
         // Generate JWT token
@@ -680,7 +681,7 @@ export async function forgotPassword(req: Request, res: Response, next: NextFunc
         // Delete any existing reset tokens
         await db
             .delete(authPasswordResetTokens)
-            .where(eq(authPasswordResetTokens.userId, user.id));
+            .where(eq(authPasswordResetTokens.user_id, user.id));
 
         // Generate reset token
         const resetToken = generateSecureToken();
@@ -689,9 +690,9 @@ export async function forgotPassword(req: Request, res: Response, next: NextFunc
 
         // Store token
         await db.insert(authPasswordResetTokens).values({
-            userId: user.id,
-            tokenHash,
-            expiresAt,
+            user_id: user.id,
+            token_hash: tokenHash,
+            expires_at: expiresAt,
         });
 
         // Send email
@@ -715,12 +716,12 @@ export async function resetPassword(req: Request, res: Response, next: NextFunct
         const allTokens = await db
             .select()
             .from(authPasswordResetTokens)
-            .where(gt(authPasswordResetTokens.expiresAt, new Date()));
+            .where(gt(authPasswordResetTokens.expires_at, new Date()));
 
         // Find the matching token
         let matchedToken = null;
         for (const t of allTokens) {
-            if (verifyTokenHash(token, t.tokenHash)) {
+            if (verifyTokenHash(token, t.token_hash)) {
                 matchedToken = t;
                 break;
             }
@@ -731,7 +732,7 @@ export async function resetPassword(req: Request, res: Response, next: NextFunct
             throw Errors.resetTokenInvalid();
         }
 
-        if (matchedToken.usedAt) {
+        if (matchedToken.used_at) {
             throw Errors.resetTokenExpired();
         }
 
@@ -739,21 +740,20 @@ export async function resetPassword(req: Request, res: Response, next: NextFunct
         const encryptedPassword = await hashPassword(password);
         await db
             .update(authUsers)
-            .set({ encryptedPassword, updatedAt: new Date() })
-            .where(eq(authUsers.id, matchedToken.userId));
+            .set({ encrypted_password: encryptedPassword, updated_at: new Date() })
+            .where(eq(authUsers.id, matchedToken.user_id));
 
         // Mark token as used
         await db
             .update(authPasswordResetTokens)
-            .set({ usedAt: new Date() })
+            .set({ used_at: new Date() })
             .where(eq(authPasswordResetTokens.id, matchedToken.id));
 
         // Invalidate all sessions
         await db
             .delete(authSessions)
-            .where(eq(authSessions.userId, matchedToken.userId));
-
-        authLogger.info({ userId: matchedToken.userId, action: 'reset_password' }, 'Password reset successfully, all sessions invalidated');
+            .where(eq(authSessions.user_id, matchedToken.user_id));
+        authLogger.info({ userId: matchedToken.user_id, action: 'reset_password' }, 'Password reset successfully, all sessions invalidated');
         res.json(successResponse({ message: 'Password reset successfully. Please log in with your new password.' }));
     } catch (error) {
         next(error);
@@ -774,7 +774,7 @@ export async function setPassword(req: Request, res: Response, next: NextFunctio
         const encryptedPassword = await hashPassword(password);
         await db
             .update(authUsers)
-            .set({ encryptedPassword, updatedAt: new Date() })
+            .set({ encrypted_password: encryptedPassword, updated_at: new Date() })
             .where(eq(authUsers.id, req.user.userId));
 
         res.json(successResponse({ message: 'Password set successfully. You can now login with email and password.' }));
@@ -802,7 +802,7 @@ export async function resendOtp(req: Request, res: Response, next: NextFunction)
         }
 
         // Check cooldown (60 seconds)
-        const createdAt = pendingSignup.createdAt!;
+        const createdAt = pendingSignup.created_at!;
         const secondsSinceCreated = (Date.now() - createdAt.getTime()) / 1000;
         if (secondsSinceCreated < 60) {
             const waitSeconds = Math.ceil(60 - secondsSinceCreated);
@@ -826,9 +826,9 @@ export async function resendOtp(req: Request, res: Response, next: NextFunction)
         await db
             .update(authPendingSignups)
             .set({
-                otpHash,
-                expiresAt,
-                createdAt: new Date(),
+                otp_hash: otpHash,
+                expires_at: expiresAt,
+                created_at: new Date(),
                 attempts: '0',
             })
             .where(eq(authPendingSignups.id, pendingSignup.id));
@@ -837,8 +837,8 @@ export async function resendOtp(req: Request, res: Response, next: NextFunction)
         await sendOtpEmail(email.toLowerCase(), otp);
 
         res.json(successResponse({
-            pendingSignupId: pendingSignup.id,
-            expiresAt: expiresAt.toISOString(),
+            pending_signup_id: pendingSignup.id,
+            expires_at: expiresAt.toISOString(),
             message: 'New verification code sent.',
         }));
     } catch (error) {
@@ -859,7 +859,7 @@ export async function checkPendingSignup(req: Request, res: Response, next: Next
             .where(
                 and(
                     eq(authPendingSignups.id, pendingSignupId),
-                    gt(authPendingSignups.expiresAt, new Date())
+                    gt(authPendingSignups.expires_at, new Date())
                 )
             )
             .limit(1);
@@ -872,7 +872,7 @@ export async function checkPendingSignup(req: Request, res: Response, next: Next
         const response: CheckPendingSignupResponse = {
             valid: true,
             email: pendingSignup.email,
-            expiresAt: pendingSignup.expiresAt.toISOString(),
+            expires_at: pendingSignup.expires_at.toISOString(),
         };
 
         res.json(successResponse(response));
@@ -890,17 +890,17 @@ export async function cleanupExpired(): Promise<void> {
     // Delete expired pending signups
     await db
         .delete(authPendingSignups)
-        .where(lt(authPendingSignups.expiresAt, now));
+        .where(lt(authPendingSignups.expires_at, now));
 
     // Delete expired password reset tokens
     await db
         .delete(authPasswordResetTokens)
-        .where(lt(authPasswordResetTokens.expiresAt, now));
+        .where(lt(authPasswordResetTokens.expires_at, now));
 
     // Delete expired sessions
     await db
         .delete(authSessions)
-        .where(lt(authSessions.expiresAt, now));
+        .where(lt(authSessions.expires_at, now));
 
     console.log('[Cleanup] Expired data cleaned up');
 }

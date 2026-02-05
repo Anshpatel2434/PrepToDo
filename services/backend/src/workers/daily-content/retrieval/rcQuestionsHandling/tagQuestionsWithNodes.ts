@@ -102,6 +102,7 @@ Return STRICT JSON only.
     }
 
     console.log(`✅ [Metric Tagging] Tags generated for ${parsed.questionsTagged.length} questions`);
+    console.log("---------------------------------------- RC Tags Generated: ", JSON.stringify(parsed.questionsTagged, null, 2));
 
     // Validate that we got tags for ALL questions
     if (parsed.questionsTagged.length !== questions.length) {

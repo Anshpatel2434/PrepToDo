@@ -80,7 +80,7 @@ export async function phaseF_updateUserAnalytics(
 
     // 7. Fetch existing analytics for this user
     const existingAnalytics = await db.query.userAnalytics.findFirst({
-        where: eq(userAnalytics.userId, user_id)
+        where: eq(userAnalytics.user_id, user_id)
     });
 
     // 8. Check if user has >= 10 minutes of practice today for streak calculation
@@ -123,7 +123,7 @@ export async function phaseF_updateUserAnalytics(
     const streakData = await calculateStreaks(user_id, today, hasSessionToday, existingAnalytics);
 
     // 10. Determine if we need to reset daily stats (new day)
-    const lastActiveDate = existingAnalytics?.lastActiveDate;
+    const lastActiveDate = existingAnalytics?.last_active_date;
     const isNewDay = !lastActiveDate || lastActiveDate !== today;
 
     // 11. Calculate points earned today (with streak bonus)
@@ -138,11 +138,11 @@ export async function phaseF_updateUserAnalytics(
         points_earned_today = pointsWithBonus;
     } else {
         // Same day - accumulate points
-        points_earned_today = (existingAnalytics?.pointsEarnedToday || 0) + pointsWithBonus;
+        points_earned_today = (existingAnalytics?.points_earned_today || 0) + pointsWithBonus;
     }
 
     // 12. Calculate total points (with streak bonus applied)
-    const total_points = (existingAnalytics?.totalPoints || 0) + pointsWithBonus;
+    const total_points = (existingAnalytics?.total_points || 0) + pointsWithBonus;
 
     // 13. Prepare final upsert data
     const genre_performance = await fetchProficiencyMap(user_id, 'genre');
@@ -150,27 +150,27 @@ export async function phaseF_updateUserAnalytics(
     const question_type_performance = await fetchProficiencyMap(user_id, 'question_type');
 
     const upsertData = {
-        userId: user_id,
-        lastActiveDate: today,
-        minutesPracticed: (existingAnalytics?.minutesPracticed || 0) + minutes_practiced,
-        questionsAttempted: (existingAnalytics?.questionsAttempted || 0) + questions_attempted,
-        questionsCorrect: (existingAnalytics?.questionsCorrect || 0) + questions_correct,
-        accuracyPercentage: calculateWeightedAccuracy(
-            existingAnalytics?.questionsAttempted || 0,
-            existingAnalytics?.accuracyPercentage || 0,
+        user_id,
+        last_active_date: today,
+        minutes_practiced: (existingAnalytics?.minutes_practiced || 0) + minutes_practiced,
+        questions_attempted: (existingAnalytics?.questions_attempted || 0) + questions_attempted,
+        questions_correct: (existingAnalytics?.questions_correct || 0) + questions_correct,
+        accuracy_percentage: calculateWeightedAccuracy(
+            existingAnalytics?.questions_attempted || 0,
+            existingAnalytics?.accuracy_percentage || 0,
             questions_attempted,
             accuracy_percentage
         ), // Keep as number with 2 decimal places
-        currentStreak: streakData.currentStreak,
-        longestStreak: streakData.longestStreak,
-        pointsEarnedToday: points_earned_today,
-        totalPoints: total_points,
-        genrePerformance: JSON.stringify(genre_performance),
-        difficultyPerformance: JSON.stringify(difficulty_performance),
-        questionTypePerformance: JSON.stringify(question_type_performance),
-        newWordsLearned: existingAnalytics?.newWordsLearned || 0,
-        wordsReviewed: existingAnalytics?.wordsReviewed || 0,
-        updatedAt: new Date(),
+        current_streak: streakData.currentStreak,
+        longest_streak: streakData.longestStreak,
+        points_earned_today: points_earned_today,
+        total_points: total_points,
+        genre_performance: JSON.stringify(genre_performance),
+        difficulty_performance: JSON.stringify(difficulty_performance),
+        question_type_performance: JSON.stringify(question_type_performance),
+        new_words_learned: existingAnalytics?.new_words_learned || 0,
+        words_reviewed: existingAnalytics?.words_reviewed || 0,
+        updated_at: new Date(),
     };
 
     // 14. Upsert into user_analytics table
@@ -178,7 +178,7 @@ export async function phaseF_updateUserAnalytics(
         await db.insert(userAnalytics)
             .values({ ...upsertData, id: existingAnalytics?.id || uuidv4() })
             .onConflictDoUpdate({
-                target: [userAnalytics.userId],
+                target: [userAnalytics.user_id],
                 set: upsertData
             });
     } catch (upsertError: any) {
@@ -236,16 +236,16 @@ async function updateReadingSpeedProficiency(
     // Check if there's an existing record
     const existing = await db.query.userMetricProficiency.findFirst({
         where: and(
-            eq(userMetricProficiency.userId, user_id),
-            eq(userMetricProficiency.dimensionType, 'core_metric'),
-            eq(userMetricProficiency.dimensionKey, 'reading_speed_wpm')
+            eq(userMetricProficiency.user_id, user_id),
+            eq(userMetricProficiency.dimension_type, 'core_metric'),
+            eq(userMetricProficiency.dimension_key, 'reading_speed_wpm')
         )
     });
 
     let newScore: number;
     if (existing) {
         // Use EMA to smooth the score
-        const oldScore = existing.proficiencyScore;
+        const oldScore = existing.proficiency_score;
         const alpha = 0.3; // Learning rate for reading speed
         newScore = Math.round(oldScore * (1 - alpha) + normalizedScore * alpha);
     } else {
@@ -267,8 +267,8 @@ async function updateReadingSpeedProficiency(
 
     let speedVsAccuracyData: Array<{ date: string; wpm: number; accuracy: number; sessions_count: number }> = [];
 
-    if (existing?.speedVsAccuracyData) {
-        let rawData = parseSpeedData(existing.speedVsAccuracyData);
+    if (existing?.speed_vs_accuracy_data) {
+        let rawData = parseSpeedData(existing.speed_vs_accuracy_data);
 
         // Handle old format (with session_id) vs new format (with sessions_count)
         if (rawData.length > 0 && 'session_id' in rawData[0]) {
@@ -350,25 +350,25 @@ async function updateReadingSpeedProficiency(
 
     // Upsert
     const upsert = {
-        userId: user_id,
-        dimensionType: 'core_metric' as const,
-        dimensionKey: 'reading_speed_wpm',
-        proficiencyScore: newScore,
-        confidenceScore: "0.80", // Keep as string with 2 decimal places
-        totalAttempts: (existing?.totalAttempts || 0) + 1,
-        correctAttempts: newScore, // Store score as "correct" for this metric
-        lastSessionId: session_id,
-        trend: existing ? (newScore > existing.proficiencyScore ? 'improving' as const : newScore < existing.proficiencyScore ? 'declining' as const : 'stagnant' as const) : null,
-        speedVsAccuracyData: JSON.stringify(speedVsAccuracyData),
-        updatedAt: new Date(),
-        createdAt: existing?.createdAt || new Date(),
+        user_id,
+        dimension_type: 'core_metric' as const,
+        dimension_key: 'reading_speed_wpm',
+        proficiency_score: newScore,
+        confidence_score: "0.80", // Keep as string with 2 decimal places
+        total_attempts: (existing?.total_attempts || 0) + 1,
+        correct_attempts: newScore, // Store score as "correct" for this metric
+        last_session_id: session_id,
+        trend: existing ? (newScore > existing.proficiency_score ? 'improving' as const : newScore < existing.proficiency_score ? 'declining' as const : 'stagnant' as const) : null,
+        speed_vs_accuracy_data: JSON.stringify(speedVsAccuracyData),
+        updated_at: new Date(),
+        created_at: existing?.created_at || new Date(),
     };
 
     try {
         await db.insert(userMetricProficiency)
             .values(upsert)
             .onConflictDoUpdate({
-                target: [userMetricProficiency.userId, userMetricProficiency.dimensionType, userMetricProficiency.dimensionKey],
+                target: [userMetricProficiency.user_id, userMetricProficiency.dimension_type, userMetricProficiency.dimension_key],
                 set: upsert
             });
         console.log(`✅ [Phase F] Reading speed proficiency updated: ${newScore}, days tracked: ${speedVsAccuracyData.length}`);
@@ -505,18 +505,18 @@ async function fetchProficiencyMap(
 ): Promise<Record<string, number>> {
     const data = await db.query.userMetricProficiency.findMany({
         where: and(
-            eq(userMetricProficiency.userId, user_id),
-            eq(userMetricProficiency.dimensionType, dimension_type)
+            eq(userMetricProficiency.user_id, user_id),
+            eq(userMetricProficiency.dimension_type, dimension_type)
         ),
         columns: {
-            dimensionKey: true,
-            proficiencyScore: true
+            dimension_key: true,
+            proficiency_score: true
         }
     });
 
     const map: Record<string, number> = {};
     for (const row of data) {
-        map[row.dimensionKey] = row.proficiencyScore;
+        map[row.dimension_key] = row.proficiency_score;
     }
     return map;
 }
@@ -535,9 +535,9 @@ async function calculateStreaks(
             return { currentStreak: hasSessionToday ? 1 : 0, longestStreak: hasSessionToday ? 1 : 0 };
         }
 
-        const lastActiveDate = existingAnalytics.lastActiveDate;
-        const previousStreak = existingAnalytics.currentStreak || 0;
-        const previousLongestStreak = existingAnalytics.longestStreak || 0;
+        const lastActiveDate = existingAnalytics.last_active_date;
+        const previousStreak = existingAnalytics.current_streak || 0;
+        const previousLongestStreak = existingAnalytics.longest_streak || 0;
 
         console.log(`   - Previous analytics: lastActiveDate=${lastActiveDate}, previousStreak=${previousStreak}, previousLongestStreak=${previousLongestStreak}`);
 

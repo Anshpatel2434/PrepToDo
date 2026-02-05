@@ -58,12 +58,14 @@ export function phaseB_computeProficiencyMetrics(
         // Dimension: reasoning_step & core_metric
         for (const metric_key of attempt.metric_keys) {
             // Update core_metric directly
+            console.log("---------------------------------------- Updating core metric for key: ", metric_key);
             update("core_metric", metric_key, attempt.correct, attempt.confidence_level);
 
             // Look up for the reasoning nodes associated with this metric_key
             const linkedNodes = mapping.metricToNodes.get(metric_key);
             if (linkedNodes) {
                 for (const nodeLabel of Array.from(linkedNodes)) {
+                    console.log("---------------------------------------- Updating reasoning step for node: ", nodeLabel);
                     update("reasoning_step", nodeLabel, attempt.correct, attempt.confidence_level);
                 }
             }
