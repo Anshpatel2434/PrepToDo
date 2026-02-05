@@ -8,7 +8,7 @@ import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
 import { PageLoader } from "../../../ui_components/PageLoader";
 import { CalendarCheck } from "lucide-react";
 import type { Exam } from "../../../types";
-import { useFetchDailyTestDataQuery, useFetchPreviousDailyTestsQuery, useFetchArticlesByIdsQuery } from "../redux_usecase/dailyPracticeApi";
+import { useFetchDailyTestDataQuery, useFetchDailyTestByIdQuery, useFetchArticlesByIdsQuery } from "../redux_usecase/dailyPracticeApi";
 import PreviousTestsContainer from "../components/PreviousTestsContainer";
 import DailyLeaderboard from "../components/DailyLeaderboard";
 import { DailyFeatureWidget } from "../components/DailyFeatureWidget";
@@ -35,15 +35,24 @@ const DailyPage: React.FC = () => {
     // Fetch today's daily test data
     const { data: todayData, isLoading: isLoadingToday } = useFetchDailyTestDataQuery();
 
-    // Fetch previous daily tests (first page only, for getting exam info when selected via URL)
-    const { data: previousTests } = useFetchPreviousDailyTestsQuery({ page: 1, limit: 20 });
-
     // Check if there's a test for today
     const hasTodayTest = !!todayData?.examInfo;
 
     // Compute selected exam ID from URL params or default to today's exam
     const urlExamId = searchParams.get('exam_id');
     const selectedExamId = urlExamId || todayData?.examInfo?.id || null;
+
+    // Check if the selected exam is today's exam
+    const isSelectedToday = !!(todayData?.examInfo && selectedExamId === todayData.examInfo.id);
+
+    // Fetch specific exam details if it's not today's exam
+    const { data: selectedTestData } = useFetchDailyTestByIdQuery(
+        { exam_id: selectedExamId! },
+        { skip: !selectedExamId || isSelectedToday }
+    );
+
+    // Derive the selected exam object
+    const selectedExam = isSelectedToday ? todayData?.examInfo : selectedTestData?.examInfo;
 
     const handleStartPractice = async (type: "rc" | "va") => {
         if (!selectedExamId) {
@@ -54,15 +63,7 @@ const DailyPage: React.FC = () => {
         navigate(`/daily/${type}?exam_id=${selectedExamId}`);
     };
 
-    const getSelectedExamInfo = (): Exam | null => {
-        // If we have today's data and it's selected, return it
-        if (todayData?.examInfo && selectedExamId === todayData.examInfo.id) {
-            return todayData.examInfo;
-        }
 
-        // Otherwise, search in previous tests
-        return previousTests?.find(exam => exam.id === selectedExamId) || null;
-    };
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -96,7 +97,7 @@ const DailyPage: React.FC = () => {
 
 
 
-    const selectedExam = getSelectedExamInfo();
+
 
     // Fetch articles using used_articles_id from the selected exam
     const articleIds = selectedExam?.used_articles_id || [];

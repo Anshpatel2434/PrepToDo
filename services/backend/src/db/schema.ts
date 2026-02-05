@@ -1,5 +1,6 @@
+import { relations, sql, } from 'drizzle-orm';
+import * as ps from 'drizzle-orm/pg-core';
 import { pgTable, uuid, varchar, text, timestamp, boolean, integer } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
 
 // =============================================================================
 // Users Table (in public schema)
@@ -122,8 +123,8 @@ export const userProficiencySignals = pgTable('user_proficiency_signals', {
     mainIdeaSkill: integer('main_idea_skill'),
     detailComprehensionSkill: integer('detail_comprehension_skill'),
     recommendedDifficulty: varchar('recommended_difficulty', { length: 20 }),
-    weakTopics: text('weak_topics'), // Array stored as text
-    weakQuestionTypes: text('weak_question_types'),
+    weakTopics: text('weak_topics').array(), // Update to match DB real type
+    weakQuestionTypes: text('weak_question_types').array(),
     calculatedAt: timestamp('calculated_at', { withTimezone: true }).defaultNow(),
     dataPointsCount: integer('data_points_count'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
@@ -147,6 +148,10 @@ export const userMetricProficiency = pgTable('user_metric_proficiency', {
     speedVsAccuracyData: text('speed_vs_accuracy_data'), // JSONB stored as text
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => {
+    return {
+        dimensionTypeCheck: ps.check('user_metric_proficiency_dimension_type_check', sql`${table.dimensionType} IN ('core_metric', 'genre', 'question_type', 'reasoning_step', 'error_pattern', 'difficulty')`),
+    }
 });
 
 // =============================================================================
@@ -157,174 +162,174 @@ export const articles = pgTable('articles', {
     id: uuid('id').primaryKey().defaultRandom(),
     title: text('title'),
     url: text('url').notNull().unique(),
-    sourceName: text('source_name'),
+    source_name: text('source_name'),
     author: text('author'),
-    publishedAt: timestamp('published_at', { mode: 'date' }), // date type in SQL
+    published_at: timestamp('published_at', { mode: 'date' }),
     genre: text('genre').notNull(),
-    topicTags: text('topic_tags').array(), // text[]
-    usedInDaily: boolean('used_in_daily').default(false),
-    usedInCustomExam: boolean('used_in_custom_exam').default(false),
-    dailyUsageCount: integer('daily_usage_count').default(0),
-    customExamUsageCount: integer('custom_exam_usage_count').default(0),
-    lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
-    semanticHash: text('semantic_hash'),
-    extractionModel: text('extraction_model'),
-    extractionVersion: text('extraction_version'),
-    isSafeSource: boolean('is_safe_source').default(true),
-    isArchived: boolean('is_archived').default(false),
+    topic_tags: text('topic_tags').array(), // text[]
+    used_in_daily: boolean('used_in_daily').default(false),
+    used_in_custom_exam: boolean('used_in_custom_exam').default(false),
+    daily_usage_count: integer('daily_usage_count').default(0),
+    custom_exam_usage_count: integer('custom_exam_usage_count').default(0),
+    last_used_at: timestamp('last_used_at', { withTimezone: true }),
+    semantic_hash: text('semantic_hash'),
+    extraction_model: text('extraction_model'),
+    extraction_version: text('extraction_version'),
+    is_safe_source: boolean('is_safe_source').default(true),
+    is_archived: boolean('is_archived').default(false),
     notes: text('notes'),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-    semanticIdeasAndPersona: text('semantic_ideas_and_persona'), // jsonb
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+    semantic_ideas_and_persona: text('semantic_ideas_and_persona'), // jsonb
 });
 
 export const coreMetrics = pgTable('core_metrics', {
     key: text('key').primaryKey(),
     description: text('description').notNull(),
     version: text('version').default('v1.0').notNull(),
-    isActive: boolean('is_active').default(true).notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-    mappingLogic: text('mapping_logic').notNull(),
+    is_active: boolean('is_active').default(true).notNull(),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    mapping_logic: text('mapping_logic').notNull(),
 });
 
 export const genres = pgTable('genres', {
     id: uuid('id').primaryKey().defaultRandom(),
     name: text('name').notNull().unique(),
     description: text('description'),
-    dailyUsageCount: integer('daily_usage_count').default(0),
-    customExamUsageCount: integer('custom_exam_usage_count').default(0),
-    // total_usage_count is generated column, omitted for now in drizzle definition if not needed for insert
-    lastUsedDailyAt: timestamp('last_used_daily_at', { withTimezone: true }),
-    lastUsedCustomExamAt: timestamp('last_used_custom_exam_at', { withTimezone: true }),
-    cooldownDays: integer('cooldown_days').default(2),
-    avgDifficultyScore: text('avg_difficulty_score'), // numeric
-    preferredQuestionTypes: text('preferred_question_types').array(),
-    isActive: boolean('is_active').default(true),
-    isHighPriority: boolean('is_high_priority').default(false),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+    daily_usage_count: integer('daily_usage_count').default(0),
+    custom_exam_usage_count: integer('custom_exam_usage_count').default(0),
+    last_used_daily_at: timestamp('last_used_daily_at', { withTimezone: true }),
+    last_used_custom_exam_at: timestamp('last_used_custom_exam_at', { withTimezone: true }),
+    cooldown_days: integer('cooldown_days').default(2),
+    avg_difficulty_score: text('avg_difficulty_score'), // numeric
+    preferred_question_types: text('preferred_question_types').array(),
+    is_active: boolean('is_active').default(true),
+    is_high_priority: boolean('is_high_priority').default(false),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
 export const examPapers = pgTable('exam_papers', {
     id: uuid('id').primaryKey().defaultRandom(),
     name: text('name').notNull(),
     year: integer('year'),
-    examType: text('exam_type').default('CAT'),
+    exam_type: text('exam_type').default('CAT'),
     slot: text('slot'),
-    isOfficial: boolean('is_official').default(true),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    usedArticlesId: uuid('used_articles_id').array(),
-    generatedByUserId: uuid('generated_by_user_id').references(() => users.id, { onDelete: 'cascade' }),
-    timeLimitMinutes: integer('time_limit_minutes'),
-    generationStatus: text('generation_status').default('completed'),
-    updatedAt: timestamp('updated_at', { withTimezone: true }),
+    is_official: boolean('is_official').default(true),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    used_articles_id: uuid('used_articles_id').array(),
+    generated_by_user_id: uuid('generated_by_user_id').references(() => users.id, { onDelete: 'cascade' }),
+    time_limit_minutes: integer('time_limit_minutes'),
+    generation_status: text('generation_status').default('completed'),
+    updated_at: timestamp('updated_at', { withTimezone: true }),
 });
 
 export const passages = pgTable('passages', {
     id: uuid('id').primaryKey().defaultRandom(),
     title: varchar('title', { length: 200 }),
     content: text('content').notNull(),
-    wordCount: integer('word_count').notNull(),
+    word_count: integer('word_count').notNull(),
     genre: varchar('genre', { length: 50 }).notNull(),
     difficulty: varchar('difficulty', { length: 20 }).notNull(),
     source: varchar('source', { length: 100 }),
-    generationModel: varchar('generation_model', { length: 50 }),
-    generationPromptVersion: varchar('generation_prompt_version', { length: 20 }),
-    generationCostCents: integer('generation_cost_cents'),
-    qualityScore: text('quality_score'), // numeric
-    timesUsed: integer('times_used').default(0),
-    avgCompletionTimeSeconds: integer('avg_completion_time_seconds'),
-    avgAccuracy: text('avg_accuracy'), // numeric
-    isDailyPick: boolean('is_daily_pick').default(false),
-    isFeatured: boolean('is_featured').default(false),
-    isArchived: boolean('is_archived').default(false),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-    paperId: uuid('paper_id').references(() => examPapers.id, { onDelete: 'cascade' }),
-    articleId: uuid('article_id').references(() => articles.id),
+    generation_model: varchar('generation_model', { length: 50 }),
+    generation_prompt_version: varchar('generation_prompt_version', { length: 20 }),
+    generation_cost_cents: integer('generation_cost_cents'),
+    quality_score: text('quality_score'), // numeric
+    times_used: integer('times_used').default(0),
+    avg_completion_time_seconds: integer('avg_completion_time_seconds'),
+    avg_accuracy: text('avg_accuracy'), // numeric
+    is_daily_pick: boolean('is_daily_pick').default(false),
+    is_featured: boolean('is_featured').default(false),
+    is_archived: boolean('is_archived').default(false),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+    paper_id: uuid('paper_id').references(() => examPapers.id, { onDelete: 'cascade' }),
+    article_id: uuid('article_id').references(() => articles.id),
 });
 
 export const practiceSessions = pgTable('practice_sessions', {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull().references(() => userProfiles.id, { onDelete: 'cascade' }),
-    sessionType: varchar('session_type', { length: 30 }).notNull(),
+    user_id: uuid('user_id').notNull().references(() => userProfiles.id, { onDelete: 'cascade' }),
+    session_type: varchar('session_type', { length: 30 }).notNull(),
     mode: varchar('mode', { length: 20 }),
-    passageIds: uuid('passage_ids').array(),
-    questionIds: uuid('question_ids').array(),
-    targetDifficulty: varchar('target_difficulty', { length: 20 }),
-    targetGenres: text('target_genres').array(),
-    targetQuestionTypes: text('target_question_types').array(),
-    timeLimitSeconds: integer('time_limit_seconds'),
-    timeSpentSeconds: integer('time_spent_seconds').default(0),
-    startedAt: timestamp('started_at', { withTimezone: true }).defaultNow(),
-    completedAt: timestamp('completed_at', { withTimezone: true }),
-    pausedAt: timestamp('paused_at', { withTimezone: true }),
-    pauseDurationSeconds: integer('pause_duration_seconds').default(0),
-    totalQuestions: integer('total_questions').default(0),
-    correctAnswers: integer('correct_answers').default(0),
-    scorePercentage: text('score_percentage'), // numeric
-    pointsEarned: integer('points_earned').default(0),
+    passage_ids: uuid('passage_ids').array(),
+    question_ids: uuid('question_ids').array(),
+    target_difficulty: varchar('target_difficulty', { length: 20 }),
+    target_genres: text('target_genres').array(),
+    target_question_types: text('target_question_types').array(),
+    time_limit_seconds: integer('time_limit_seconds'),
+    time_spent_seconds: integer('time_spent_seconds').default(0),
+    started_at: timestamp('started_at', { withTimezone: true }).defaultNow(),
+    completed_at: timestamp('completed_at', { withTimezone: true }),
+    paused_at: timestamp('paused_at', { withTimezone: true }),
+    pause_duration_seconds: integer('pause_duration_seconds').default(0),
+    total_questions: integer('total_questions').default(0),
+    correct_answers: integer('correct_answers').default(0),
+    score_percentage: text('score_percentage'), // numeric
+    points_earned: integer('points_earned').default(0),
     status: varchar('status', { length: 20 }).default('in_progress'),
-    currentQuestionIndex: integer('current_question_index').default(0),
-    sessionData: text('session_data'), // jsonb
-    isGroupSession: boolean('is_group_session').default(false),
-    groupId: uuid('group_id'),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-    paperId: uuid('paper_id').references(() => examPapers.id, { onDelete: 'cascade' }),
-    isAnalysed: boolean('is_analysed').default(false),
+    current_question_index: integer('current_question_index').default(0),
+    session_data: text('session_data'), // jsonb
+    is_group_session: boolean('is_group_session').default(false),
+    group_id: uuid('group_id'),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+    paper_id: uuid('paper_id').references(() => examPapers.id, { onDelete: 'cascade' }),
+    is_analysed: boolean('is_analysed').default(false),
     analytics: text('analytics'), // jsonb
 });
 
 export const questionTypes = pgTable('question_types', {
-    key: text('key').primaryKey(), // Using key as PK based on schema.sql
+    key: text('key').primaryKey(),
     description: text('description').notNull(),
-    isActive: boolean('is_active').default(true).notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    is_active: boolean('is_active').default(true).notNull(),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
 export const questions = pgTable('questions', {
     id: uuid('id').primaryKey().defaultRandom(),
-    passageId: uuid('passage_id').references(() => passages.id, { onDelete: 'cascade' }),
-    questionText: text('question_text').notNull(),
-    questionType: varchar('question_type', { length: 30 }).notNull(),
+    passage_id: uuid('passage_id').references(() => passages.id, { onDelete: 'cascade' }),
+    question_text: text('question_text').notNull(),
+    question_type: varchar('question_type', { length: 30 }).notNull(),
     options: text('options'), // jsonb
-    correctAnswer: text('correct_answer').notNull(), // jsonb
-    jumbledSentences: text('jumbled_sentences'), // jsonb
+    correct_answer: text('correct_answer').notNull(), // jsonb
+    jumbled_sentences: text('jumbled_sentences'), // jsonb
     rationale: text('rationale').notNull(),
-    rationaleModel: varchar('rationale_model', { length: 50 }),
+    rationale_model: varchar('rationale_model', { length: 50 }),
     hints: text('hints'), // jsonb
     difficulty: varchar('difficulty', { length: 20 }),
     tags: text('tags').array(), // text[]
-    qualityScore: text('quality_score'), // numeric
-    timesAnswered: integer('times_answered').default(0),
-    timesCorrect: integer('times_correct').default(0),
-    avgTimeSeconds: integer('avg_time_seconds'),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-    paperId: uuid('paper_id').references(() => examPapers.id, { onDelete: 'cascade' }),
+    quality_score: text('quality_score'), // numeric
+    times_answered: integer('times_answered').default(0),
+    times_correct: integer('times_correct').default(0),
+    avg_time_seconds: integer('avg_time_seconds'),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+    paper_id: uuid('paper_id').references(() => examPapers.id, { onDelete: 'cascade' }),
 });
 
 export const questionAttempts = pgTable('question_attempts', {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull().references(() => userProfiles.id, { onDelete: 'cascade' }),
-    sessionId: uuid('session_id').notNull().references(() => practiceSessions.id, { onDelete: 'cascade' }),
-    questionId: uuid('question_id').notNull().references(() => questions.id, { onDelete: 'cascade' }),
-    passageId: uuid('passage_id').references(() => passages.id, { onDelete: 'cascade' }),
-    userAnswer: text('user_answer'), // jsonb
-    isCorrect: boolean('is_correct').notNull(),
-    timeSpentSeconds: integer('time_spent_seconds').notNull(),
-    confidenceLevel: integer('confidence_level'),
-    markedForReview: boolean('marked_for_review').default(false),
-    eliminatedOptions: text('eliminated_options').array(), // text[]
-    hintUsed: boolean('hint_used').default(false),
-    hintsViewed: integer('hints_viewed').default(0),
-    rationaleViewed: boolean('rationale_viewed').default(false),
-    rationaleHelpful: boolean('rationale_helpful'),
-    userNotes: text('user_notes'),
-    aiGradingScore: text('ai_grading_score'), // numeric
-    aiFeedback: text('ai_feedback'),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    user_id: uuid('user_id').notNull().references(() => userProfiles.id, { onDelete: 'cascade' }),
+    session_id: uuid('session_id').notNull().references(() => practiceSessions.id, { onDelete: 'cascade' }),
+    question_id: uuid('question_id').notNull().references(() => questions.id, { onDelete: 'cascade' }),
+    passage_id: uuid('passage_id').references(() => passages.id, { onDelete: 'cascade' }),
+    user_answer: text('user_answer'), // jsonb
+    is_correct: boolean('is_correct').notNull(),
+    time_spent_seconds: integer('time_spent_seconds').notNull(),
+    confidence_level: integer('confidence_level'),
+    marked_for_review: boolean('marked_for_review').default(false),
+    eliminated_options: text('eliminated_options').array(), // text[]
+    hint_used: boolean('hint_used').default(false),
+    hints_viewed: integer('hints_viewed').default(0),
+    rationale_viewed: boolean('rationale_viewed').default(false),
+    rationale_helpful: boolean('rationale_helpful'),
+    user_notes: text('user_notes'),
+    ai_grading_score: text('ai_grading_score'), // numeric
+    ai_feedback: text('ai_feedback'),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
 // =============================================================================
@@ -363,34 +368,34 @@ export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
 // Added relations for new tables
 export const practiceSessionsRelations = relations(practiceSessions, ({ one, many }) => ({
     user: one(userProfiles, {
-        fields: [practiceSessions.userId],
+        fields: [practiceSessions.user_id],
         references: [userProfiles.id],
     }),
     attempts: many(questionAttempts),
     paper: one(examPapers, {
-        fields: [practiceSessions.paperId],
+        fields: [practiceSessions.paper_id],
         references: [examPapers.id],
     }),
 }));
 
 export const questionAttemptsRelations = relations(questionAttempts, ({ one }) => ({
     session: one(practiceSessions, {
-        fields: [questionAttempts.sessionId],
+        fields: [questionAttempts.session_id],
         references: [practiceSessions.id],
     }),
     question: one(questions, {
-        fields: [questionAttempts.questionId],
+        fields: [questionAttempts.question_id],
         references: [questions.id],
     }),
     user: one(userProfiles, {
-        fields: [questionAttempts.userId],
+        fields: [questionAttempts.user_id],
         references: [userProfiles.id],
     }),
 }));
 
 export const questionsRelations = relations(questions, ({ one, many }) => ({
     passage: one(passages, {
-        fields: [questions.passageId],
+        fields: [questions.passage_id],
         references: [passages.id],
     }),
     attempts: many(questionAttempts),
@@ -399,7 +404,7 @@ export const questionsRelations = relations(questions, ({ one, many }) => ({
 export const passagesRelations = relations(passages, ({ one, many }) => ({
     questions: many(questions),
     article: one(articles, {
-        fields: [passages.articleId],
+        fields: [passages.article_id],
         references: [articles.id],
     }),
 }));
@@ -436,3 +441,38 @@ export type NewPracticeSession = typeof practiceSessions.$inferInsert;
 export const authUsers = users;
 export type AuthUser = User;
 export type NewAuthUser = NewUser;
+
+// =============================================================================
+// Graph Tables (Reasoning Graph)
+// =============================================================================
+export const graphNodes = pgTable('graph_nodes', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    label: text('label').notNull(),
+    type: varchar('type', { length: 50 }),
+    description: text('description'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const graphEdges = pgTable('graph_edges', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    sourceNodeId: uuid('source_node_id').notNull().references(() => graphNodes.id, { onDelete: 'cascade' }),
+    targetNodeId: uuid('target_node_id').notNull().references(() => graphNodes.id, { onDelete: 'cascade' }),
+    relationship: text('relationship').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const graphEdgesRelations = relations(graphEdges, ({ one }) => ({
+    sourceNode: one(graphNodes, {
+        fields: [graphEdges.sourceNodeId],
+        references: [graphNodes.id],
+        relationName: 'sourceNode',
+    }),
+    targetNode: one(graphNodes, {
+        fields: [graphEdges.targetNodeId],
+        references: [graphNodes.id],
+        relationName: 'targetNode',
+    }),
+}));
+
+export type GraphNode = typeof graphNodes.$inferSelect;
+export type GraphEdge = typeof graphEdges.$inferSelect;

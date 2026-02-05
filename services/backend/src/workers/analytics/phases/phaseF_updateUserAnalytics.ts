@@ -91,13 +91,13 @@ export async function phaseF_updateUserAnalytics(
     // Drizzle timestamps are distinct, we need dates
     const daySessions = await db.query.practiceSessions.findMany({
         where: and(
-            eq(practiceSessions.userId, user_id),
+            eq(practiceSessions.user_id, user_id),
             eq(practiceSessions.status, 'completed'),
-            gte(practiceSessions.completedAt, dayStart),
-            lt(practiceSessions.completedAt, dayEndDate)
+            gte(practiceSessions.completed_at, dayStart),
+            lt(practiceSessions.completed_at, dayEndDate)
         ),
         columns: {
-            timeSpentSeconds: true
+            time_spent_seconds: true
         }
     });
 
@@ -105,7 +105,7 @@ export async function phaseF_updateUserAnalytics(
     let totalSecondsToday = 0;
 
     if (daySessions && daySessions.length > 0) {
-        totalSecondsToday = daySessions.reduce((sum, s) => sum + (s.timeSpentSeconds || 0), 0);
+        totalSecondsToday = daySessions.reduce((sum, s) => sum + (s.time_spent_seconds || 0), 0);
     }
 
     // If we're processing a real session (not just a streak update), add its time
@@ -437,7 +437,7 @@ async function calculateReadingSpeedWpm(
         });
 
         for (const p of fetchedPassages) {
-            passageWordCount.set(p.id, p.wordCount || 0);
+            passageWordCount.set(p.id, p.word_count || 0);
         }
     }
 
@@ -455,13 +455,13 @@ async function calculateReadingSpeedWpm(
             where: inArray(questions.id, paraJumbleQuestionIds),
             columns: {
                 id: true,
-                jumbledSentences: true
+                jumbled_sentences: true
             }
         });
 
         for (const q of fetchedQuestions) {
             // jumbledSentences is text/json
-            const js = typeof q.jumbledSentences === 'string' ? JSON.parse(q.jumbledSentences) : q.jumbledSentences;
+            const js = typeof q.jumbled_sentences === 'string' ? JSON.parse(q.jumbled_sentences) : q.jumbled_sentences;
             jumbledByQuestionId.set(q.id, js);
         }
     }

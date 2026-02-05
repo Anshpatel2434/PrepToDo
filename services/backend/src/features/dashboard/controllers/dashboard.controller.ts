@@ -1,4 +1,4 @@
-import type { Request, Response } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { eq } from 'drizzle-orm';
 
 import { db } from '../../../db/index.js';
@@ -22,150 +22,174 @@ interface DashboardDataResponse {
 // =============================================================================
 // Get Dashboard Data (Combined - Optimized for Single Request)
 // =============================================================================
-export async function getDashboardData(req: Request, res: Response): Promise<void> {
-    const userId = req.user?.userId;
+export async function getDashboardData(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        const userId = req.user?.userId;
 
-    if (!userId) {
-        throw Errors.unauthorized();
+        if (!userId) {
+            throw Errors.unauthorized();
+        }
+
+        dashboardLogger.info({ userId, action: 'get_dashboard' }, 'Fetching dashboard data');
+
+        // Fetch all data in parallel for better performance
+        const [profileData, analyticsData, signalsData, metricsData] = await Promise.all([
+            db.select().from(userProfiles).where(eq(userProfiles.id, userId)).limit(1),
+            db.select().from(userAnalytics).where(eq(userAnalytics.userId, userId)).limit(1),
+            db.select().from(userProficiencySignals).where(eq(userProficiencySignals.userId, userId)).limit(1),
+            db.select().from(userMetricProficiency).where(eq(userMetricProficiency.userId, userId)),
+        ]);
+
+        const response: DashboardDataResponse = {
+            profile: profileData[0] || null,
+            analytics: analyticsData[0] || null,
+            proficiencySignals: signalsData[0] || null,
+            metricProficiency: metricsData || [],
+        };
+
+        dashboardLogger.info({ userId, action: 'get_dashboard' }, 'Dashboard data fetched successfully');
+        res.json(successResponse(response));
+    } catch (error) {
+        next(error);
     }
-
-    dashboardLogger.info({ userId, action: 'get_dashboard' }, 'Fetching dashboard data');
-
-    // Fetch all data in parallel for better performance
-    const [profileData, analyticsData, signalsData, metricsData] = await Promise.all([
-        db.select().from(userProfiles).where(eq(userProfiles.id, userId)).limit(1),
-        db.select().from(userAnalytics).where(eq(userAnalytics.userId, userId)).limit(1),
-        db.select().from(userProficiencySignals).where(eq(userProficiencySignals.userId, userId)).limit(1),
-        db.select().from(userMetricProficiency).where(eq(userMetricProficiency.userId, userId)),
-    ]);
-
-    const response: DashboardDataResponse = {
-        profile: profileData[0] || null,
-        analytics: analyticsData[0] || null,
-        proficiencySignals: signalsData[0] || null,
-        metricProficiency: metricsData || [],
-    };
-
-    dashboardLogger.info({ userId, action: 'get_dashboard' }, 'Dashboard data fetched successfully');
-    res.json(successResponse(response));
 }
 
 // =============================================================================
 // Get User Profile
 // =============================================================================
-export async function getUserProfile(req: Request, res: Response): Promise<void> {
-    const userId = req.user?.userId;
+export async function getUserProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        const userId = req.user?.userId;
 
-    if (!userId) {
-        throw Errors.unauthorized();
+        if (!userId) {
+            throw Errors.unauthorized();
+        }
+
+        const [profile] = await db
+            .select()
+            .from(userProfiles)
+            .where(eq(userProfiles.id, userId))
+            .limit(1);
+
+        if (!profile) {
+            dashboardLogger.warn({ userId, action: 'get_profile' }, 'User profile not found');
+            throw Errors.notFound('User profile not found');
+        }
+
+        res.json(successResponse({ profile }));
+    } catch (error) {
+        next(error);
     }
-
-    const [profile] = await db
-        .select()
-        .from(userProfiles)
-        .where(eq(userProfiles.id, userId))
-        .limit(1);
-
-    if (!profile) {
-        dashboardLogger.warn({ userId, action: 'get_profile' }, 'User profile not found');
-        throw Errors.notFound('User profile not found');
-    }
-
-    res.json(successResponse({ profile }));
 }
 
 // =============================================================================
 // Get User Analytics
 // =============================================================================
-export async function getUserAnalytics(req: Request, res: Response): Promise<void> {
-    const userId = req.user?.userId;
+export async function getUserAnalytics(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        const userId = req.user?.userId;
 
-    if (!userId) {
-        throw Errors.unauthorized();
+        if (!userId) {
+            throw Errors.unauthorized();
+        }
+
+        const [analytics] = await db
+            .select()
+            .from(userAnalytics)
+            .where(eq(userAnalytics.userId, userId))
+            .limit(1);
+
+        // It's okay if analytics doesn't exist yet (new user)
+        res.json(successResponse({ analytics: analytics || null }));
+    } catch (error) {
+        next(error);
     }
-
-    const [analytics] = await db
-        .select()
-        .from(userAnalytics)
-        .where(eq(userAnalytics.userId, userId))
-        .limit(1);
-
-    // It's okay if analytics doesn't exist yet (new user)
-    res.json(successResponse({ analytics: analytics || null }));
 }
 
 // =============================================================================
 // Get User Proficiency Signals
 // =============================================================================
-export async function getUserProficiencySignals(req: Request, res: Response): Promise<void> {
-    const userId = req.user?.userId;
+export async function getUserProficiencySignals(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        const userId = req.user?.userId;
 
-    if (!userId) {
-        throw Errors.unauthorized();
+        if (!userId) {
+            throw Errors.unauthorized();
+        }
+
+        const [signals] = await db
+            .select()
+            .from(userProficiencySignals)
+            .where(eq(userProficiencySignals.userId, userId))
+            .limit(1);
+
+        // It's okay if signals don't exist yet (new user)
+        res.json(successResponse({ proficiencySignals: signals || null }));
+    } catch (error) {
+        next(error);
     }
-
-    const [signals] = await db
-        .select()
-        .from(userProficiencySignals)
-        .where(eq(userProficiencySignals.userId, userId))
-        .limit(1);
-
-    // It's okay if signals don't exist yet (new user)
-    res.json(successResponse({ proficiencySignals: signals || null }));
 }
 
 // =============================================================================
 // Get User Metric Proficiency
 // =============================================================================
-export async function getUserMetricProficiency(req: Request, res: Response): Promise<void> {
-    const userId = req.user?.userId;
+export async function getUserMetricProficiency(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        const userId = req.user?.userId;
 
-    if (!userId) {
-        throw Errors.unauthorized();
+        if (!userId) {
+            throw Errors.unauthorized();
+        }
+
+        const metrics = await db
+            .select()
+            .from(userMetricProficiency)
+            .where(eq(userMetricProficiency.userId, userId));
+
+        res.json(successResponse({ metricProficiency: metrics || [] }));
+    } catch (error) {
+        next(error);
     }
-
-    const metrics = await db
-        .select()
-        .from(userMetricProficiency)
-        .where(eq(userMetricProficiency.userId, userId));
-
-    res.json(successResponse({ metricProficiency: metrics || [] }));
 }
 
 // =============================================================================
 // Update User Profile
 // =============================================================================
-export async function updateUserProfile(req: Request, res: Response): Promise<void> {
-    const userId = req.user?.userId;
+export async function updateUserProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        const userId = req.user?.userId;
 
-    if (!userId) {
-        throw Errors.unauthorized();
+        if (!userId) {
+            throw Errors.unauthorized();
+        }
+
+        const { displayName, preferredDifficulty, theme, dailyGoalMinutes, showOnLeaderboard } = req.body;
+
+        // Only update fields that are provided
+        const updateData: Partial<typeof userProfiles.$inferInsert> = {
+            updatedAt: new Date(),
+        };
+
+        if (displayName !== undefined) updateData.displayName = displayName;
+        if (preferredDifficulty !== undefined) updateData.preferredDifficulty = preferredDifficulty;
+        if (theme !== undefined) updateData.theme = theme;
+        if (dailyGoalMinutes !== undefined) updateData.dailyGoalMinutes = dailyGoalMinutes;
+        if (showOnLeaderboard !== undefined) updateData.showOnLeaderboard = showOnLeaderboard;
+
+        await db
+            .update(userProfiles)
+            .set(updateData)
+            .where(eq(userProfiles.id, userId));
+
+        const [updatedProfile] = await db
+            .select()
+            .from(userProfiles)
+            .where(eq(userProfiles.id, userId))
+            .limit(1);
+
+        dashboardLogger.info({ userId, action: 'update_profile' }, 'User profile updated');
+        res.json(successResponse({ profile: updatedProfile, message: 'Profile updated successfully' }));
+    } catch (error) {
+        next(error);
     }
-
-    const { displayName, preferredDifficulty, theme, dailyGoalMinutes, showOnLeaderboard } = req.body;
-
-    // Only update fields that are provided
-    const updateData: Partial<typeof userProfiles.$inferInsert> = {
-        updatedAt: new Date(),
-    };
-
-    if (displayName !== undefined) updateData.displayName = displayName;
-    if (preferredDifficulty !== undefined) updateData.preferredDifficulty = preferredDifficulty;
-    if (theme !== undefined) updateData.theme = theme;
-    if (dailyGoalMinutes !== undefined) updateData.dailyGoalMinutes = dailyGoalMinutes;
-    if (showOnLeaderboard !== undefined) updateData.showOnLeaderboard = showOnLeaderboard;
-
-    await db
-        .update(userProfiles)
-        .set(updateData)
-        .where(eq(userProfiles.id, userId));
-
-    const [updatedProfile] = await db
-        .select()
-        .from(userProfiles)
-        .where(eq(userProfiles.id, userId))
-        .limit(1);
-
-    dashboardLogger.info({ userId, action: 'update_profile' }, 'User profile updated');
-    res.json(successResponse({ profile: updatedProfile, message: 'Profile updated successfully' }));
 }

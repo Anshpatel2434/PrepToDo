@@ -1,0 +1,49 @@
+// =============================================================================
+// Daily Content Worker - Search Passage and Question Embeddings
+// =============================================================================
+// Refactored for Drizzle ORM - Uses raw SQL for vector search
+
+import { db } from "../../../db/index";
+import { sql } from "drizzle-orm";
+
+/**
+ * Searches for similar passages and questions using vector embeddings.
+ * Uses raw SQL since Drizzle doesn't have native pgvector support.
+ */
+export async function searchPassageAndQuestionEmbeddings(
+    queryEmbedding: number[],
+    topK = 5
+) {
+    console.log(`🔎 [Vector Search] Searching similar passages/questions (topK=${topK})`);
+
+    // Convert embedding array to postgres vector format
+    const embeddingStr = `[${queryEmbedding.join(',')}]`;
+
+    // Search passages using custom function
+    const passageData = await db.execute(sql`
+        SELECT * FROM search_passage_embeddings(
+            ${embeddingStr}::vector,
+            ${topK}
+        )
+    `);
+
+    console.log(`🔎 [Vector Search] Searching similar questions by type (perType=${topK})`);
+
+    // Search questions using custom function
+    const questionsData = await db.execute(sql`
+        SELECT * FROM search_question_embeddings_by_type(
+            ${embeddingStr}::vector,
+            ${topK}
+        )
+    `);
+
+    const passages = passageData.rows || [];
+    const questions = questionsData.rows || [];
+
+    console.log(`✅ [Vector Search] Retrieved ${passages.length} passages, ${questions.length} questions`);
+
+    return {
+        passages,
+        questions
+    };
+}

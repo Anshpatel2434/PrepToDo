@@ -12,6 +12,15 @@ import { db } from "../../../db";
 import { practiceSessions, questionAttempts, questions, passages } from "../../../db/schema";
 import { eq, inArray, and } from "drizzle-orm";
 
+// Helper to safely parse JSON if it's a string
+const safeParseJson = (val: any): any => {
+    if (!val) return null;
+    if (typeof val === 'string') {
+        try { return JSON.parse(val); } catch (e) { return null; }
+    }
+    return val;
+};
+
 export async function phaseA_fetchSessionData(
     session_id: string,
     user_id: string
@@ -23,14 +32,35 @@ export async function phaseA_fetchSessionData(
     const session = await db.query.practiceSessions.findFirst({
         where: and(
             eq(practiceSessions.id, session_id),
-            eq(practiceSessions.userId, user_id)
+            eq(practiceSessions.user_id, user_id)
         ),
     });
 
     if (!session) throw new Error(`Session fetch failed: session not found`);
 
+    // Normalize session data for Zod
+    // Drizzle now returns snake_case, but we ensure types match Zod expectations (JSON parsing, dates)
+    const sessionMapped = {
+        ...session,
+        // Parse JSON fields if they are strings (Drizzle text columns)
+        passage_ids: session.passage_ids, // UUID array, handled by Drizzle
+        question_ids: session.question_ids, // UUID array
+        target_genres: safeParseJson(session.target_genres),
+        target_question_types: safeParseJson(session.target_question_types),
+        analytics: safeParseJson(session.analytics),
+
+        // Ensure numbers are numbers (Drizzle numeric/decimal returns string)
+        score_percentage: typeof session.score_percentage === 'string' ? parseFloat(session.score_percentage) : session.score_percentage,
+
+        // Ensure dates are strings for Zod (if Zod expects ISO strings)
+        started_at: session.started_at instanceof Date ? session.started_at.toISOString() : session.started_at,
+        completed_at: session.completed_at instanceof Date ? session.completed_at.toISOString() : session.completed_at,
+        paused_at: session.paused_at instanceof Date ? session.paused_at.toISOString() : session.paused_at,
+        created_at: session.created_at instanceof Date ? session.created_at.toISOString() : session.created_at,
+        updated_at: session.updated_at instanceof Date ? session.updated_at.toISOString() : session.updated_at,
+    };
+
     // Validate session with Zod schema
-    const sessionMapped = mapSessionToSnakeCase(session);
     const sessionParsed = PracticeSessionSchema.safeParse(sessionMapped);
     if (!sessionParsed.success) {
         console.error("Validation failed for session:", sessionParsed.error.issues[0]);
@@ -53,13 +83,19 @@ export async function phaseA_fetchSessionData(
     // Fetch all attempts for this session
     const attempts = await db.query.questionAttempts.findMany({
         where: and(
-            eq(questionAttempts.sessionId, session_id),
-            eq(questionAttempts.userId, user_id)
+            eq(questionAttempts.session_id, session_id),
+            eq(questionAttempts.user_id, user_id)
         ),
     });
 
+    // Normalize attempts
+    const attemptsMapped = attempts.map(attempt => ({
+        ...attempt,
+        user_answer: safeParseJson(attempt.user_answer),
+        created_at: attempt.created_at instanceof Date ? attempt.created_at.toISOString() : attempt.created_at,
+    }));
+
     // Validate attempts with Zod schema
-    const attemptsMapped = attempts.map(mapAttemptToSnakeCase);
     const attemptsParsed = QuestionAttemptArraySchema.safeParse(attemptsMapped);
     if (!attemptsParsed.success) {
         console.error("Validation failed for attempts:", attemptsParsed.error.issues[0]);
@@ -84,8 +120,17 @@ export async function phaseA_fetchSessionData(
         })
         : [];
 
+    // Normalize questions
+    const questionsMapped = questionsData.map(q => ({
+        ...q,
+        options: safeParseJson(q.options),
+        jumbled_sentences: safeParseJson(q.jumbled_sentences),
+        correct_answer: safeParseJson(q.correct_answer),
+        created_at: q.created_at instanceof Date ? q.created_at.toISOString() : q.created_at,
+        updated_at: q.updated_at instanceof Date ? q.updated_at.toISOString() : q.updated_at,
+    }));
+
     // Validate questions with Zod schema
-    const questionsMapped = questionsData.map(mapQuestionToSnakeCase);
     const questionsParsed = QuestionArraySchema.safeParse(questionsMapped);
     if (!questionsParsed.success) {
         console.error("Validation failed for questions:", questionsParsed.error.issues[0]);
@@ -106,8 +151,14 @@ export async function phaseA_fetchSessionData(
             where: inArray(passages.id, passageIds as string[])
         });
 
+        // Normalize passages
+        const passagesMapped = passagesData.map(p => ({
+            ...p,
+            created_at: p.created_at instanceof Date ? p.created_at.toISOString() : p.created_at,
+            updated_at: p.updated_at instanceof Date ? p.updated_at.toISOString() : p.updated_at,
+        }));
+
         // Validate passages with Zod schema
-        const passagesMapped = passagesData.map(mapPassageToSnakeCase);
         const passagesParsed = PassageArraySchema.safeParse(passagesMapped);
         if (!passagesParsed.success) {
             console.error("Validation failed for passages:", passagesParsed.error.issues[0]);
@@ -167,116 +218,4 @@ export async function phaseA_fetchSessionData(
             session_type: sessionVerified.session_type,
         }
     }
-}
-
-// Helper to map Drizzle CamelCase result to Zod SnakeCase schema expected by logic
-function mapSessionToSnakeCase(session: any): any {
-    const safeParseJson = (val: any): any => {
-        if (!val) return null;
-        if (typeof val === 'string') {
-            try { return JSON.parse(val); } catch (e) { return null; }
-        }
-        return val;
-    };
-
-    return {
-        id: session.id,
-        user_id: session.userId,
-        paper_id: session.paperId || "",
-        session_type: session.sessionType,
-        mode: session.mode,
-        passage_ids: safeParseJson(session.passageIds),
-        question_ids: safeParseJson(session.questionIds),
-        target_difficuly: session.targetDifficulty, // Note: typo in original schema
-        target_genres: safeParseJson(session.targetGenres),
-        target_question_types: safeParseJson(session.targetQuestionTypes),
-        time_limit_seconds: session.timeLimitSeconds,
-        time_spent_seconds: session.timeSpentSeconds,
-        started_at: session.startedAt?.toISOString() || new Date().toISOString(),
-        completed_at: session.completedAt?.toISOString() || new Date().toISOString(),
-        paused_at: session.pausedAt?.toISOString(),
-        pause_duration_seconds: session.pauseDurationSeconds || 0,
-        total_questions: session.totalQuestions || 0,
-        correct_answers: session.correctAnswers || 0,
-        current_question_index: session.currentQuestionIndex || 0,
-        is_group_session: session.isGroupSession || false,
-        group_id: session.groupId,
-        status: session.status,
-        score_percentage: parseFloat(session.scorePercentage || "0"),
-        points_earned: session.pointsEarned || 0,
-        created_at: session.createdAt?.toISOString() || new Date().toISOString(),
-        updated_at: session.updatedAt?.toISOString(),
-        analytics: safeParseJson(session.analytics),
-        is_analysed: session.isAnalysed,
-    };
-}
-
-function mapAttemptToSnakeCase(attempt: any): any {
-    const safeParseJson = (val: any): any => {
-        if (!val) return null;
-        if (typeof val === 'string') {
-            try { return JSON.parse(val); } catch (e) { return null; }
-        }
-        return val;
-    };
-
-    return {
-        id: attempt.id,
-        user_id: attempt.userId,
-        session_id: attempt.sessionId,
-        question_id: attempt.questionId,
-        passage_id: attempt.passageId,
-        user_answer: safeParseJson(attempt.userAnswer),
-        is_correct: attempt.isCorrect,
-        time_spent_seconds: attempt.timeSpentSeconds,
-        confidence_level: attempt.confidenceLevel,
-        marked_for_review: attempt.markedForReview,
-        rationale_viewed: attempt.rationaleViewed,
-        rationale_helpful: attempt.rationaleHelpful,
-        ai_feedback: attempt.aiFeedback,
-        created_at: attempt.createdAt?.toISOString() || new Date().toISOString(),
-    };
-}
-
-function mapQuestionToSnakeCase(question: any): any {
-    const safeParseJson = (val: any): any => {
-        if (!val) return null;
-        if (typeof val === 'string') {
-            try { return JSON.parse(val); } catch (e) { return null; }
-        }
-        return val;
-    };
-
-    return {
-        id: question.id,
-        passage_id: question.passageId,
-        question_text: question.questionText,
-        question_type: question.questionType,
-        options: safeParseJson(question.options),
-        jumbled_sentences: safeParseJson(question.jumbledSentences),
-        correct_answer: safeParseJson(question.correctAnswer),
-        rationale: question.rationale,
-        difficulty: question.difficulty,
-        tags: question.tags || [],
-        created_at: question.createdAt?.toISOString() || new Date().toISOString(),
-        updated_at: question.updatedAt?.toISOString() || new Date().toISOString(),
-    };
-}
-
-function mapPassageToSnakeCase(passage: any): any {
-    return {
-        id: passage.id,
-        title: passage.title,
-        content: passage.content,
-        word_count: passage.wordCount,
-        genre: passage.genre,
-        difficulty: passage.difficulty,
-        source: passage.source,
-        paper_id: passage.paperId,
-        is_daily_pick: passage.isDailyPick || false,
-        is_featured: passage.isFeatured || false,
-        is_archived: passage.isArchived || false,
-        created_at: passage.createdAt?.toISOString() || new Date().toISOString(),
-        updated_at: passage.updatedAt?.toISOString() || new Date().toISOString(),
-    };
 }

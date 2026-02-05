@@ -29,14 +29,14 @@ export async function runAnalytics(params: {
 
         const unanalyzedSessions = await db.query.practiceSessions.findMany({
             where: and(
-                eq(practiceSessions.userId, user_id),
-                eq(practiceSessions.isAnalysed, false),
+                eq(practiceSessions.user_id, user_id),
+                eq(practiceSessions.is_analysed, false),
                 eq(practiceSessions.status, 'completed')
             ),
-            orderBy: (sessions, { asc }) => [asc(sessions.completedAt)],
+            orderBy: (sessions, { asc }) => [asc(sessions.completed_at)],
             columns: {
                 id: true,
-                completedAt: true,
+                completed_at: true,
             }
         });
 
@@ -105,7 +105,7 @@ export async function runAnalytics(params: {
                 if (dataset.length === 0) {
                     console.log("⚠️ No attempts to process, marking as analysed");
                     await db.update(practiceSessions)
-                        .set({ isAnalysed: true, updatedAt: new Date() })
+                        .set({ is_analysed: true, updated_at: new Date() })
                         .where(eq(practiceSessions.id, session_id));
                     continue;
                 }
@@ -117,7 +117,7 @@ export async function runAnalytics(params: {
 
                 // --- PHASE C: LLM DIAGNOSTICS ---
                 console.log("\n🧠 [Phase C/6] Running LLM diagnostics on incorrect attempts");
-                const incorrectAttempts = dataset.filter(a => (!a.correct && !!a.user_answer));
+                const incorrectAttempts = dataset.filter(a => (!a.correct && a.user_answer?.user_answer));
                 console.log(`   - Incorrect attempts: ${incorrectAttempts.length}`);
 
                 const diagnostics = await phaseC_llmDiagnostics(user_id, incorrectAttempts);
@@ -167,7 +167,7 @@ export async function runAnalytics(params: {
                 // --- FINALIZATION: MARK AS ANALYSED ---
                 console.log("\n🔒 [Finalization] Marking session as analysed");
                 await db.update(practiceSessions)
-                    .set({ isAnalysed: true, updatedAt: new Date() })
+                    .set({ is_analysed: true, updated_at: new Date() })
                     .where(eq(practiceSessions.id, session_id));
 
                 // Helper to count updated unique dimensions for the log

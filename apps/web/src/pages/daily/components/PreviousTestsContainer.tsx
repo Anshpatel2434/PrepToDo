@@ -105,7 +105,7 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
             </div>
 
             {/* Content Area */}
-            {previousTests && previousTests.length > 0 ? (
+            {!isLoading && previousTests && previousTests.length > 0 ? (
                 <div className="space-y-6">
                     <motion.div
                         variants={containerVariants}

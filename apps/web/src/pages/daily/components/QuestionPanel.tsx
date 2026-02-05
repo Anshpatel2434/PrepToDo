@@ -154,10 +154,11 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
             );
         }
 
-        const diagnostic = session.analytics?.analytics?.diagnostics?.find(
+        const diagnostic = session.analytics?.diagnostics?.find(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (d: any) => d.attempt_id === currentAttempt?.id
         );
+        console.log("diagnostic", diagnostic);
 
         if (!diagnostic) {
             return (

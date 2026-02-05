@@ -283,21 +283,20 @@ const DailyVAPage: React.FC = () => {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
             }) as any;
 
-            await Promise.all([
-                saveSession({
-                    session_id: session.id,
-                    status: "completed",
-                    completed_at: new Date().toISOString(),
-                    time_spent_seconds: elapsedTime,
-                    total_questions: questions.length,
-                    correct_answers: progress.correct,
-                    score_percentage: progress.percentage,
-                    current_question_index: currentQuestionIndex,
-                }).unwrap(),
-                attemptList.length > 0
-                    ? saveAttempts({ attempts: attemptList }).unwrap()
-                    : Promise.resolve(),
-            ]);
+            if (attemptList.length > 0) {
+                await saveAttempts({ attempts: attemptList }).unwrap();
+            }
+
+            await saveSession({
+                session_id: session.id,
+                status: "completed",
+                completed_at: new Date().toISOString(),
+                time_spent_seconds: elapsedTime,
+                total_questions: questions.length,
+                correct_answers: progress.correct,
+                score_percentage: progress.percentage,
+                current_question_index: currentQuestionIndex,
+            }).unwrap();
 
             dispatch(setViewMode("solution"));
         } catch (e) {

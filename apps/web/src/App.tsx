@@ -4,12 +4,10 @@ import {
     createBrowserRouter,
 } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import { useEffect, lazy, Suspense } from "react";
+import { lazy, Suspense } from "react";
 
 import { ThemeProvider } from "./context/ThemeContext";
 import { SafeAuthRoute } from "./ui_components/SafeAuthRoute";
-import { supabase } from "./services/apiClient";
-import { useLazyFetchDailyTestDataQuery } from "./pages/daily/redux_usecase/dailyPracticeApi";
 import { PageLoader } from "./ui_components/PageLoader";
 
 import "./App.css";
@@ -177,24 +175,6 @@ const router = createBrowserRouter([
 /* ---------------- APP ---------------- */
 
 function AppContent() {
-    const [triggerFetchDailyPracticeFunction, { error }] =
-        useLazyFetchDailyTestDataQuery();
-
-    if (error) console.error(error);
-
-    useEffect(() => {
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange((event, session) => {
-            if (event === "SIGNED_IN" && session) {
-                triggerFetchDailyPracticeFunction().catch((err) =>
-                    console.error("Error fetching daily practice:", err)
-                );
-            }
-        });
-
-        return () => subscription.unsubscribe();
-    }, [triggerFetchDailyPracticeFunction]);
 
     return (
         <>

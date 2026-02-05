@@ -62,9 +62,9 @@ export async function phaseE_rollupSignals(
     // 8. Prepare summary record matching UserProficiencySignalsSchema
     const signalData = {
         userId: user_id,
-        genreStrengths: JSON.stringify(genre_strengths), // Now an Array
-        weakTopics: JSON.stringify(weak_topics),
-        weakQuestionTypes: JSON.stringify(weak_question_types),
+        genreStrengths: JSON.stringify(genre_strengths), // Keep as JSON string for now as schema says 'text'
+        weakTopics: weak_topics, // Pass as array, let Drizzle handle it (if schema is updated)
+        weakQuestionTypes: weak_question_types, // Pass as array
         recommendedDifficulty: recommended_difficulty,
         calculatedAt: new Date(),
         dataPointsCount: proficiencies.length,

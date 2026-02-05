@@ -12,6 +12,7 @@ import { generalRateLimiter } from './common/middleware/rateLimiter.js';
 import { authRouter, cleanupExpired, verifyEmailConnection } from './features/auth/index.js';
 import dashboardRouter from './features/dashboard/dashboard.routes.js';
 import analyticsRouter from './features/analytics/analytics.routes.js';
+import { dailyContentRouter } from './features/daily-content/index.js';
 import { logger, httpLogger } from './common/utils/logger.js';
 import pinoHttp from 'pino-http';
 
@@ -93,6 +94,7 @@ app.get('/health', (_req, res) => {
 app.use('/api/auth', authRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/analytics', analyticsRouter);
+app.use('/api/daily-content', dailyContentRouter);
 
 // Future feature routes will be mounted here:
 // app.use('/api/exams', examsRouter);

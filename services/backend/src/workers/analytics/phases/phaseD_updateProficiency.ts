@@ -6,6 +6,7 @@ import { calculateConfidence, calculateNewProficiency, calculateTrend } from "..
 import { db } from "../../../db";
 import { userMetricProficiency } from "../../../db/schema";
 import { and, eq } from "drizzle-orm";
+import { v4 as uuidv4 } from 'uuid';
 
 export async function phaseD_updateProficiency(
     user_id: string,
@@ -71,6 +72,7 @@ export async function phaseD_updateProficiency(
             createdAt: existing?.createdAt || new Date(),
             // Preserve speedVsAccuracyData if it exists (for reading speed metric mostly, but good practice)
             speedVsAccuracyData: existing?.speedVsAccuracyData,
+            id: existing?.id || uuidv4(),
         };
 
         // 8. Upsert into database

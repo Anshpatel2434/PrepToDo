@@ -4,7 +4,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { MdChevronLeft, MdChevronRight, MdArrowBack } from "react-icons/md";
 import { useTheme } from "../../../../context/ThemeContext";
-import { supabase } from "../../../../services/apiClient";
 
 // Redux
 import {
@@ -36,6 +35,7 @@ import {
     useSaveSessionDetailsMutation,
     useSaveQuestionAttemptsMutation,
 } from "../../redux_usecase/dailyPracticeApi";
+import { useFetchUserQuery } from "../../../auth/redux_usecases/authApi";
 
 import { SplitPaneLayout } from "../Component/SplitPaneLayout";
 import { QuestionPalette } from "../../components/QuestionPalette";
@@ -45,7 +45,7 @@ import type { Question } from "../../../../types";
 import { v4 as uuid4 } from "uuid";
 import { useExamNavigationGuard } from "../../navigation_hook/useExamNavigation";
 
-const DailyRCPage: React.FC = () => {
+export default function DailyRCPage() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -68,6 +68,9 @@ const DailyRCPage: React.FC = () => {
     const examId = searchParams.get('exam_id');
 
     // --- 1. Data Fetching & Initialization ---
+
+    // Fetch user (Auth source of truth)
+    const { data: user, isLoading: isUserLoading } = useFetchUserQuery();
 
     // Fetch test data - use specific exam if provided, otherwise fetch today's test
     const { data: testData, isLoading: isTestDataLoading } = useFetchDailyTestDataQuery(
@@ -142,7 +145,32 @@ const DailyRCPage: React.FC = () => {
         : null;
 
     const [showPalette, setShowPalette] = React.useState(true);
-    const isLoading = isTestDataLoading || isSpecificTestDataLoading || isSessionLoading || isCreatingSession;
+    const [initError, setInitError] = React.useState<string | null>(null);
+    const isLoading = isTestDataLoading || isSpecificTestDataLoading || isSessionLoading || isCreatingSession || isUserLoading;
+
+    // ... (debug logs omitted for brevity in search, but preserving them in file)
+
+    // ...
+
+    // --- 5. Render ---
+    // DEBUG LOGS
+    useEffect(() => {
+        console.log("[DailyRCPage] isLoading status:", {
+            isLoading,
+            isTestDataLoading,
+            isSpecificTestDataLoading,
+            isSessionLoading,
+            isCreatingSession,
+            isUserLoading,
+            hasUser: !!user,
+            userId: user?.id,
+            hasTestData: !!testData,
+            hasSpecificTestData: !!specificTestData,
+            currentTestDataId: currentTestData?.examInfo?.id,
+            examIdParam: examId
+        });
+    }, [isLoading, isTestDataLoading, isSpecificTestDataLoading, isSessionLoading, isCreatingSession, isUserLoading, user, testData, specificTestData, currentTestData, examId]);
+
 
     // Polling for session updates in solution mode (to detect when AI analysis is done)
     const { data: polledSessionData } = useFetchExistingSessionDetailsQuery(
@@ -176,26 +204,24 @@ const DailyRCPage: React.FC = () => {
     useEffect(() => {
         // Only run if test data is ready and we haven't initialized a session yet
         // Also check if initialization is already in progress to prevent duplicate calls
-        if (!currentTestData || session.id || isLoading || isInitializingRef.current) return;
+        if (!currentTestData || session.id || isLoading || isInitializingRef.current || !user || initError) return;
 
         const init = async () => {
             // Mark initialization as in progress
             isInitializingRef.current = true;
+            console.log("[DailyRCPage] Starting initialization...", { examPaperId: currentTestData.examInfo.id, userId: user.id });
 
             try {
-                const {
-                    data: { user },
-                } = await supabase.auth.getUser();
-                if (!user) {
-                    return;
-                }
+                console.log("[DailyRCPage] User confirmed:", user.id);
 
                 // 1. Check for existing session
+                console.log("[DailyRCPage] Fetching existing session...");
                 const sessionResult = await fetchExistingSession({
                     user_id: user.id,
                     paper_id: currentTestData.examInfo.id,
                     session_type: "daily_challenge_rc",
                 });
+                console.log("[DailyRCPage] Existing session result:", sessionResult);
 
                 // Prepare Question IDs
                 const rcQuestions = currentTestData.questions.filter(
@@ -204,7 +230,7 @@ const DailyRCPage: React.FC = () => {
                 );
                 const questionIds = rcQuestions.map((q) => q.id);
 
-                if (sessionResult.data) {
+                if (sessionResult.data && sessionResult.data.session) {
                     // Resume existing session
                     dispatch(
                         initializeSession({
@@ -221,12 +247,14 @@ const DailyRCPage: React.FC = () => {
                         new Set(rcQuestions.map((q) => q.passage_id).filter(Boolean))
                     ) as string[];
 
+                    console.log("[DailyRCPage] Starting new session with passageIds:", passageIds);
                     const newSession = await startNewSession({
                         user_id: user.id,
                         paper_id: currentTestData.examInfo.id,
                         passage_ids: passageIds,
                         question_ids: questionIds,
                     }).unwrap();
+                    console.log("[DailyRCPage] New session created:", newSession);
 
                     dispatch(
                         initializeSession({
@@ -236,6 +264,9 @@ const DailyRCPage: React.FC = () => {
                         })
                     );
                 }
+            } catch (err) {
+                console.error("[DailyRCPage] Initialization failed:", err);
+                setInitError("Failed to start session. Please try again.");
             } finally {
                 // Reset initialization flag
                 isInitializingRef.current = false;
@@ -249,6 +280,7 @@ const DailyRCPage: React.FC = () => {
         session.id,
         dispatch,
         isLoading,
+        initError,
         // Note: fetchExistingSession and startNewSession are NOT in dependencies
         // to prevent the effect from running multiple times due to hook reference changes
     ]);
@@ -298,23 +330,21 @@ const DailyRCPage: React.FC = () => {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
             }) as any;
 
-            // 2. Perform Backend Calls (Parallelized for speed)
-            await Promise.all([
-                saveSession({
-                    session_id: session.id,
-                    status: "completed",
-                    completed_at: new Date().toISOString(),
-                    time_spent_seconds: elapsedTime,
-                    total_questions: questions.length,
-                    correct_answers: progress.correct,
-                    score_percentage: progress.percentage,
-                    current_question_index: currentQuestionIndex,
-                }).unwrap(),
+            // 2. Perform Backend Calls (Sequential to ensure attempts are saved before session completion)
+            if (attemptList.length > 0) {
+                await saveAttempts({ attempts: attemptList }).unwrap();
+            }
 
-                attemptList.length > 0
-                    ? saveAttempts({ attempts: attemptList }).unwrap()
-                    : Promise.resolve(),
-            ]);
+            await saveSession({
+                session_id: session.id,
+                status: "completed",
+                completed_at: new Date().toISOString(),
+                time_spent_seconds: elapsedTime,
+                total_questions: questions.length,
+                correct_answers: progress.correct,
+                score_percentage: progress.percentage,
+                current_question_index: currentQuestionIndex,
+            }).unwrap();
 
             // 3. Update UI Mode ONLY after success
             dispatch(setViewMode("solution"));
@@ -377,6 +407,23 @@ const DailyRCPage: React.FC = () => {
     }, [dispatch]);
 
     // --- 5. Render ---
+    if (initError) {
+        return (
+            <div className={`h-screen flex items-center justify-center ${isDark ? "bg-bg-primary-dark text-white" : "bg-bg-primary-light text-black"}`}>
+                <div className="text-center">
+                    <h2 className="text-xl font-bold mb-2">Error</h2>
+                    <p>{initError}</p>
+                    <button
+                        onClick={() => navigate("/daily")}
+                        className="mt-4 px-4 py-2 bg-brand-primary-light text-white rounded-lg"
+                    >
+                        Go Back
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     if (isLoading || !currentQuestion) {
         return <DailyRCVAPageSkeleton isRC={true} />;
     }
@@ -591,4 +638,4 @@ const DailyRCPage: React.FC = () => {
     );
 };
 
-export default DailyRCPage;
+
