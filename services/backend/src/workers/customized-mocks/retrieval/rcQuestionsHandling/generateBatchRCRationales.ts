@@ -1,10 +1,5 @@
-// =============================================================================
-// Daily Content Worker - Generate Batch RC Rationales
-// =============================================================================
-// OpenAI-based batch rationale generation - simplified with updated imports
-
 import OpenAI from "openai";
-import { Passage, Question, ReasoningGraphContext } from "../../types";
+import { Passage, Question, ReasoningGraphContext } from "../../schemas/types";
 import { CostTracker } from "../utils/CostTracker";
 
 const client = new OpenAI();
@@ -67,7 +62,6 @@ export async function generateBatchRCRationales(
     const { passageText, questions, reasoningContexts, referenceData } = params;
 
     console.log(`🧾 [Batch RC Rationales] Generating rationales for ${questions.length} questions in single API call`);
-    console.log("Input Reference Data:", JSON.stringify(referenceData, null, 2));
 
     // Reduce reference data to 2 passages (from 3)
     const reducedReferences = referenceData.slice(0, 2);
@@ -135,7 +129,7 @@ IMPORTANT STYLE RULE:
 ---
 
 USER:
-Write CAT-style rationales for ALL ${questions.length} TARGET QUESTIONS below.
+Write CAT-style rationales for ALL ${validQuestions.length} TARGET QUESTIONS below.
 
 You are given REFERENCE MATERIAL from actual CAT papers.
 Study it to match the usual level of precision, tone, and concision.
@@ -223,9 +217,10 @@ Return STRICT JSON in this format:
   ]
 }
 
-Generate exactly ${questions.length} rationale objects, one for each question IN THE SAME ORDER.`;
+Generate exactly ${validQuestions.length} rationale objects, one for each question IN THE SAME ORDER.`;
 
-    console.log(`⏳ [Batch RC Rationales] Waiting for LLM response for ${questions.length} questions`);
+    console.log(`⏳ [Batch RC Rationales] Waiting for LLM response for ${validQuestions.length} questions`);
+    console.log("📝 [Batch RC Rationales] Ref Data (Overview):", JSON.stringify(reducedReferences.map(r => ({ passage_id: r.passage.id, q_count: r.questions.length }))).substring(0, 500));
 
     const completion = await client.chat.completions.create({
         model: MODEL,
@@ -280,14 +275,23 @@ Generate exactly ${questions.length} rationale objects, one for each question IN
     const updatedQuestions = questions.map((q) => {
         // Check if this question had a reasoning context
         const context = reasoningContexts[q.id];
-        // Get the rationale data for this question
-        const rationaleData = rationaleMap.get(q.id) as { question_id: string; rationale: string; metric_keys?: string[] } | undefined;
-        if (!rationaleData || !context) {
-            console.warn(`⚠️ [Batch RC Rationales] Fallback for question ${q.id}`);
+        if (!context) {
             return {
                 ...q,
-                rationale: rationaleData?.rationale || "Rationale generation incomplete.",
-                tags: context?.metric_keys || [],
+                rationale: "Rationale generation skipped - missing reasoning context.",
+                tags: [],
+                updated_at: new Date().toISOString(),
+            };
+        }
+
+        // Get the rationale data for this question
+        const rationaleData = rationaleMap.get(q.id) as { question_id: string; rationale: string; metric_keys?: string[] } | undefined;
+        if (!rationaleData) {
+            console.warn(`⚠️ [Batch RC Rationales] Missing rationale for question ${q.id}`);
+            return {
+                ...q,
+                rationale: "Rationale generation incomplete.",
+                tags: context.metric_keys,
                 updated_at: new Date().toISOString(),
             };
         }

@@ -384,14 +384,6 @@ const DailyVAPage: React.FC = () => {
         return () => window.removeEventListener("beforeunload", handler);
     }, [saveSession, session.id, viewMode, elapsedTime, currentQuestionIndex, attempts]);
 
-    //Just to check the updated attempts on each change if happenning or not
-    useEffect(() => {
-        console.log(
-            "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%changes in attempts%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-        );
-        console.log(attempts);
-    }, [attempts]);
-
     if (isLoading || !currentQuestion) {
         return <DailyRCVAPageSkeleton isRC={false} />;
     }

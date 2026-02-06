@@ -227,6 +227,30 @@ export const examPapers = pgTable('exam_papers', {
     updated_at: timestamp('updated_at', { withTimezone: true }),
 });
 
+export const examGenerationState = pgTable('exam_generation_state', {
+    exam_id: uuid('exam_id').primaryKey().references(() => examPapers.id, { onDelete: 'cascade' }),
+    status: text('status').notNull(),
+    current_step: integer('current_step').default(1),
+    total_steps: integer('total_steps').default(7),
+    articles_data: ps.jsonb('articles_data'),
+    passages_ids: text('passages_ids').array(),
+    rc_question_ids: text('rc_question_ids').array(),
+    va_question_ids: text('va_question_ids').array(),
+    reference_passages_content: text('reference_passages_content').array(),
+    reference_data_rc: ps.jsonb('reference_data_rc'),
+    reference_data_va: ps.jsonb('reference_data_va'),
+    user_id: uuid('user_id'),
+    params: ps.jsonb('params').notNull(),
+    error_message: text('error_message'),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+    genre: text('genre'),
+}, (table) => {
+    return {
+        statusCheck: ps.check('exam_generation_state_status_check', sql`${table.status} IN ('initializing', 'generating_passages', 'generating_rc_questions', 'generating_va_questions', 'selecting_answers', 'generating_rc_rationales', 'generating_va_rationales', 'completed', 'failed')`),
+    }
+});
+
 export const passages = pgTable('passages', {
     id: uuid('id').primaryKey().defaultRandom(),
     title: varchar('title', { length: 200 }),
@@ -439,6 +463,8 @@ export type Question = typeof questions.$inferSelect;
 export type QuestionAttempt = typeof questionAttempts.$inferSelect;
 export type PracticeSession = typeof practiceSessions.$inferSelect;
 export type NewPracticeSession = typeof practiceSessions.$inferInsert;
+export type ExamGenerationState = typeof examGenerationState.$inferSelect;
+export type NewExamGenerationState = typeof examGenerationState.$inferInsert;
 
 // Legacy alias for backwards compatibility
 export const authUsers = users;

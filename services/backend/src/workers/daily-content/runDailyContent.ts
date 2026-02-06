@@ -84,14 +84,17 @@ export async function runDailyContent(): Promise<DailyContentResult> {
         // Strategy 6: Reduce from 3 to 2 references
         const referenceDataRC = passages.slice(0, 2).map((p: any) => ({
             passage: p,
-            questions: questions.filter((q: any) => q.passageId === p.id)
+            questions: questions.filter((q: any) => q.passage_id === p.id)
         }));
 
         // Format reference data for VA (Standalone questions/PYQs)
-        // Strategy 6: Reduce from 3 to 2 references
+        // Separate logic for VA references: we want standalone questions mostly.
+        const allReferenceQuestions = questions.filter((q: any) => q.passage_id === null || q.passage_id === undefined);
+
+        // We still keep referenceDataVA for passage style context if needed, but primary is Questions
         const referenceDataVA = passages.slice(0, 2).map((p: any) => ({
             passage: p,
-            questions: questions.filter((q: any) => q.passageId === null || q.passageId === undefined)
+            questions: [] // No specific attached questions for these passages in VA context usually
         }));
 
         // --- PHASE 2: PASSAGE GENERATION ---
@@ -134,6 +137,7 @@ export async function runDailyContent(): Promise<DailyContentResult> {
             semanticIdeas: semantic_ideas,
             authorialPersona: authorial_persona,
             referenceData: referenceDataVA,
+            referenceQuestions: { questions: allReferenceQuestions },
             passageText,
         }, costTracker);
 
@@ -192,7 +196,7 @@ export async function runDailyContent(): Promise<DailyContentResult> {
         const vaQuestionsFinal = await generateBatchVARationales({
             questions: updatedVAQuestions,
             reasoningContexts: vaContext,
-            referenceData: referenceDataVA,
+            referenceQuestions: allReferenceQuestions
         }, costTracker);
 
         // Update VA questions with rationales and tags

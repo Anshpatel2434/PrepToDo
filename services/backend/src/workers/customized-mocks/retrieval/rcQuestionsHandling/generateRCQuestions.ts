@@ -1,53 +1,33 @@
-// =============================================================================
-// Daily Content Worker - Generate RC Questions
-// =============================================================================
-// OpenAI-based RC question generation - copied with updated imports
-
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
-import { Passage, Question, QuestionSchema } from "../../types";
+import { Passage, Question, QuestionSchema } from "../../schemas/types";
+import { v4 as uuidv4 } from 'uuid';
 import { CostTracker } from "../utils/CostTracker";
 import { user_core_metrics_definition_v1 } from "../../../../config/user_core_metrics_definition_v1";
 
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
-interface ReferenceDataSchema {
-    passage: any;
-    questions: any[];
+/**
+ * Groups questions with their associated passages for use as reference data.
+ */
+export function groupQuestionsWithPassages(passages: Passage[], questions: Question[]) {
+    return passages.slice(0, 3).map(passage => {
+        return {
+            passage: passage,
+            questions: questions.filter(q => q.passage_id === passage.id)
+        };
+    });
 }
 
-// OpenAI requires strict usage for structured outputs
-const RCQuestionSchema = z.object({
-    passage_id: z.string().nullish(),
-    question_text: z.string(),
-    question_type: z.enum([
-        "rc_question"
-    ]),
-    options: z.object({
-        A: z.string(),
-        B: z.string(),
-        C: z.string(),
-        D: z.string(),
-    }),
-    jumbled_sentences: z.object({
-        1: z.string(),
-        2: z.string(),
-        3: z.string(),
-        4: z.string(),
-        5: z.string(),
-    }).nullish(),
-    correct_answer: z.object({
-        answer: z.string()
-    }),
-    rationale: z.string(),
-    difficulty: z.enum(["easy", "medium", "hard", "expert"]),
-    tags: z.array(z.string()),
-});
+interface ReferenceDataSchema {
+    passage: Passage;
+    questions: Question[];
+}
 
 const ResponseSchema = z.object({
-    questions: z.array(RCQuestionSchema),
+    questions: z.array(QuestionSchema),
 });
 
 type Difficulty = "easy" | "medium" | "hard";
@@ -57,34 +37,75 @@ function getDefaultDifficultyTargets(questionCount: number): Difficulty[] {
     if (questionCount === 1) return ["medium"];
     if (questionCount === 2) return ["easy", "hard"];
     if (questionCount === 3) return ["easy", "medium", "hard"];
+
+    // For 4+ questions
     const targets: Difficulty[] = ["hard", "medium", "easy"];
     while (targets.length < questionCount) targets.push("medium");
     return targets;
 }
 
-function generateUUID(): string {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
+function ensureDifficultyVariety(questions: Question[], questionCount: number): Question[] {
+    const present = questions
+        .map((q) => q.difficulty)
+        .filter((d): d is Exclude<Question["difficulty"], null> => d !== null);
+
+    const unique = new Set(present);
+
+    if (present.length === 0 || unique.size <= 1) {
+        const targets = getDefaultDifficultyTargets(questionCount);
+        return questions.map((q, i) => ({
+            ...q,
+            difficulty: targets[i] ?? "medium",
+        }));
+    }
+
+    return questions;
 }
 
 export async function generateRCQuestions(
     params: {
-        passageText: string;
+        passageData: any;
         referenceData: ReferenceDataSchema[];
         questionCount: number;
+        personalization?: {
+            targetMetrics?: string[];
+            weakAreas?: string[];
+        };
     },
     costTracker?: CostTracker
 ) {
-    const { passageText, referenceData, questionCount } = params;
+    const { passageData, referenceData, questionCount, personalization } = params;
 
     console.log(`🧩 [RC Questions] Starting generation (${questionCount} questions)`);
 
     const difficultyTargets = getDefaultDifficultyTargets(questionCount);
 
-    console.log("Input Reference Data:", JSON.stringify(referenceData, null, 2));
+    // Build personalization instructions
+    let personalizationInstructions = "";
+    if (personalization) {
+        const instructions = [];
+
+        if (personalization.targetMetrics && personalization.targetMetrics.length > 0) {
+            instructions.push(`Target Metrics: Design questions to specifically test these core metrics - ${personalization.targetMetrics.join(", ")}`);
+        }
+
+        if (personalization.weakAreas && personalization.weakAreas.length > 0) {
+            instructions.push(`Weak Areas: Include question types that challenge these areas - ${personalization.weakAreas.join(", ")}`);
+        }
+
+        if (instructions.length > 0) {
+            personalizationInstructions = `
+
+### PERSONALIZATION INSTRUCTIONS
+
+The following user-specific customization should guide question generation:
+
+${instructions.map((instr, i) => `${i + 1}. ${instr}`).join("\n")}
+
+IMPORTANT: Apply personalization naturally while maintaining CAT quality.
+`;
+        }
+    }
 
     const prompt = `SYSTEM:
 You are a CAT VARC examiner with 15+ years of experience.
@@ -235,7 +256,7 @@ ANALYSIS FOCUS:
 ## STEP 2: GENERATE QUESTIONS FOR NEW PASSAGE
 
 NEW PASSAGE (TARGET):
-${passageText}
+${passageData.passageData.content}
 
 ---
 
@@ -256,6 +277,7 @@ QUESTION SELECTION STRATEGY:
 - Vary cognitive demands: some literal, some inferential, some meta-level
 - Mix passage-level questions with detail-oriented questions
 - Balance abstract reasoning with concrete evidence-based questions
+${personalizationInstructions}
 
 ---
 
@@ -344,10 +366,12 @@ IMPORTANT:
 - Leave rationale empty
 - Generate EXACTLY ${questionCount} questions
 - No additional text or commentary
-- The question should be able to assess the metrics from ${JSON.stringify(user_core_metrics_definition_v1)} file and try to divide all the metrics across 4 questions.
+- The question should be able to assess the metrics from
+- The question should be able to assess the metrics from ${JSON.stringify(user_core_metrics_definition_v1)} file and try to divide all the metrics across 4 questions. file and try to divide all the metrics across all questions.
 `;
 
     console.log("⏳ [RC Questions] Waiting for LLM to generate questions");
+    console.log("📝 [RC Questions] Ref Data (First Item):", JSON.stringify(referenceData[0] || {}).substring(0, 500) + "...");
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
@@ -355,7 +379,8 @@ IMPORTANT:
         messages: [
             {
                 role: "system",
-                content: "You are a CAT VARC examiner. You design reasoning questions with carefully constructed traps. You do not solve questions or provide explanations.",
+                content:
+                    "You are a CAT VARC examiner. You design reasoning questions with carefully constructed traps. You do not solve questions or provide explanations.",
             },
             {
                 role: "user",
@@ -373,6 +398,7 @@ IMPORTANT:
         throw new Error("Invalid RC question generation output");
     }
 
+    // Log token usage to cost tracker
     if (costTracker && completion.usage) {
         costTracker.logCall(
             "generateRCQuestions",
@@ -384,9 +410,10 @@ IMPORTANT:
     console.log(`✅ [RC Questions] Generated ${parsed.questions.length} questions`);
 
     const now = new Date().toISOString();
-    return parsed.questions.map((q: any) => ({
+    return parsed.questions.map(q => ({
         ...q,
-        id: generateUUID(),
+        id: uuidv4(),
+        passage_id: passageData.passageData.id,
         created_at: now,
         updated_at: now
     }));

@@ -4,7 +4,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { MdChevronLeft, MdChevronRight, MdArrowBack } from "react-icons/md";
 import { useTheme } from "../../../context/ThemeContext";
-import { supabase } from "../../../services/apiClient";
 import { v4 as uuid4 } from "uuid";
 
 // Redux
@@ -52,6 +51,7 @@ import { SplitPaneLayout } from "../components/SplitPaneLayout";
 import type { SolutionViewType } from "../components/SolutionToggle";
 import type { UUID } from "../../../types";
 import { useExamNavigationGuard } from "../../daily/navigation_hook/useExamNavigation";
+import { useFetchUserQuery } from "../../auth/redux_usecases/authApi";
 
 const MockTestPage: React.FC = () => {
     const dispatch = useDispatch();
@@ -74,10 +74,23 @@ const MockTestPage: React.FC = () => {
 
     const examId = searchParams.get('exam_id');
 
+    // Redux Selectors
+    const viewMode = useSelector(selectViewMode);
+    const session = useSelector(selectSession);
+
+    // Determine if we should fetch solutions
+    const shouldFetchSolutions = viewMode === "solution" || session.status === "completed";
+
     // --- 1. Data Fetching & Initialization ---
     const { data: testData, isLoading: isTestDataLoading } = useFetchMockTestByIdQuery(
-        { exam_id: examId ? examId : "" },
-        { skip: !examId }
+        {
+            exam_id: examId ? examId : "",
+            include_solutions: shouldFetchSolutions
+        },
+        {
+            skip: !examId,
+            refetchOnMountOrArgChange: true
+        }
     );
 
     const [fetchExistingSession, { isFetching: isSessionLoading }] =
@@ -88,14 +101,12 @@ const MockTestPage: React.FC = () => {
     const [saveSession] = useSaveMockSessionDetailsMutation();
     const [saveAttempts] = useSaveMockQuestionAttemptsMutation();
 
-    // Redux Selectors
-    const viewMode = useSelector(selectViewMode);
+    // Other Redux Selectors
     const currentQuestionIndex = useSelector(selectCurrentQuestionIndex);
     const attempts = useSelector(selectAttempts);
     const pendingAttempts = useSelector(selectPendingAttempts);
     const currentQuestionId = useSelector(selectCurrentQuestionId);
     const progress = useSelector(selectProgressStats);
-    const session = useSelector(selectSession);
     const elapsedTime = useSelector(selectElapsedTime);
     const startTime = useSelector(selectStartTime);
     const timeRemaining = useSelector(selectTimeRemaining);
@@ -160,19 +171,19 @@ const MockTestPage: React.FC = () => {
     // --- 2. Session Setup Logic ---
     const isInitializingRef = useRef(false);
 
+    // Fetch user (Auth source of truth)
+    const { data: user, isLoading: isUserLoading } = useFetchUserQuery();
+
     useEffect(() => {
-        if (!testData || session.id || isLoading || isInitializingRef.current || questionOrder.length === 0) {
+        if (!testData || session.id || isLoading || isInitializingRef.current || questionOrder.length === 0 || !user || isUserLoading || !examId) {
             return;
         }
 
         const init = async () => {
             isInitializingRef.current = true;
             try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) return;
-
                 const sessionResult = await fetchExistingSession({
-                    user_id: user.id,
+                    user_id: user?.id || "",
                     paper_id: testData.examInfo.id,
                 });
 
@@ -191,7 +202,7 @@ const MockTestPage: React.FC = () => {
                         : 3600;
 
                     const newSession = await startNewSession({
-                        user_id: user.id,
+                        user_id: user?.id || "",
                         paper_id: testData.examInfo.id,
                         passage_ids: passageIds,
                         question_ids: questionOrder,
@@ -212,7 +223,7 @@ const MockTestPage: React.FC = () => {
         };
 
         init();
-    }, [testData, session.id, dispatch, isLoading, questionOrder, passages, fetchExistingSession, startNewSession]);
+    }, [testData, session.id, dispatch, isLoading, questionOrder, passages, fetchExistingSession, startNewSession, user]);
 
     // --- 3. Timer Logic ---
 

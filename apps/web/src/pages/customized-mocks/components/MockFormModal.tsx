@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { useCreateCustomizedMockMutation, useFetchUserMetricProficiencyQuery, useFetchAvailableGenresQuery } from "../redux_usecase/customizedMocksApi";
 import { useFetchUserQuery } from "../../auth/redux_usecases/authApi";
-import { supabase } from "../../../services/apiClient";
 import { X, ChevronDown, ChevronUp, Timer, BookOpen, ClipboardList, Sparkles, Check } from "lucide-react";
 
 interface MockFormModalProps {
@@ -22,7 +21,7 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
 }) => {
     const [createMock, { isLoading }] = useCreateCustomizedMockMutation();
 
-    const { data: user } = useFetchUserQuery();
+    const { data: user, error: userError } = useFetchUserQuery();
     const { data: proficiencyData } = useFetchUserMetricProficiencyQuery(
         user?.id || "",
         { skip: !user?.id }
@@ -91,6 +90,11 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (userError || !user) {
+            toast.error("You must be logged in to create a mock test");
+            return;
+        }
+
         console.log("[MockFormModal] Form submitted");
 
         // Rate limiting: Check if last mock generation was within 20 minutes
@@ -155,13 +159,6 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
         console.log("[MockFormModal] Validation passed");
 
         try {
-            // Get current user
-            const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-            if (userError || !user) {
-                toast.error("You must be logged in to create a mock test");
-                return;
-            }
 
             const params = {
                 user_id: user.id,

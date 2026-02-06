@@ -4,7 +4,7 @@ import { CheckCircle2, Play, Clock, AlertCircle, Loader2, ArrowRight, FileText, 
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import type { CustomizedMockWithSession } from "../redux_usecase/customizedMocksApi";
-import { useFetchGenerationStateQuery, getStatusMessage } from "../redux_usecase/customizedMocksApi";
+import { useFetchGenerationStatusQuery, getStatusMessage } from "../redux_usecase/customizedMocksApi";
 
 interface MockCardProps {
     mock: CustomizedMockWithSession;
@@ -15,16 +15,33 @@ interface MockCardProps {
 const MockCard = React.memo<MockCardProps>(({ mock, index, isDark }) => {
     const navigate = useNavigate();
 
+    const [pollingInterval, setPollingInterval] = React.useState(
+        mock.generation_status === 'generating' || mock.generation_status === 'initializing'
+            ? 5000
+            : 0
+    );
+
     const {
         data: generationData,
-    } = useFetchGenerationStateQuery(
-        mock.id,
+    } = useFetchGenerationStatusQuery(
+        { exam_id: mock.id || "" },
         {
             skip: !mock.id || mock.id.startsWith('temp-'),
-            pollingInterval: 0, // Rely on subscription only
+            pollingInterval,
             refetchOnMountOrArgChange: true,
         }
     );
+
+    React.useEffect(() => {
+        if (
+            generationData?.state?.status === 'completed' ||
+            generationData?.state?.status === 'failed' ||
+            mock.generation_status === 'completed' ||
+            mock.generation_status === 'failed'
+        ) {
+            setPollingInterval(0);
+        }
+    }, [generationData, mock.generation_status]);
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString("en-US", {

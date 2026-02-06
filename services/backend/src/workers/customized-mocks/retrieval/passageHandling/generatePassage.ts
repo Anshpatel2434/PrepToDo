@@ -1,6 +1,6 @@
 import OpenAI from "openai";
+import { AuthorialPersona, SemanticIdeas } from "../../schemas/types";
 import { CostTracker } from "../utils/CostTracker";
-import { AuthorialPersona, SemanticIdeas } from "../../types";
 
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
@@ -8,33 +8,23 @@ const MODEL = "gpt-4o-mini";
 /**
  * Generates a CAT-style RC passage using semantic ideas and reference passages.
  *
- * Inputs:
- * - semanticIdeas: Abstracted content ideas representing what the passage should discuss
- * - authorialPersona: Style guide extracted from source text (not content)
- * - referencePassages: 5 actual CAT passages for style calibration only
- *
- * Key design principles:
- * - Semantic ideas provide the content structure
- * - Authorial persona provides the writing style
- * - Reference passages provide CAT-style anchors (not content to copy)
- * - Anti-overfitting: passage must be distinguishable as new content
- *
- * The prompt enforces CAT characteristics:
- * - 450-600 words, 3-5 paragraphs
- * - Argumentative spine with position advancement
- * - Authorial voice: evaluative, not neutral
- * - Syntactic friction: semicolons, em-dashes, qualifying clauses
- * - No neat conclusions, leave conceptual tension unresolved
+ * For custom mocks, this includes personalized touches based on user analytics
+ * (weak areas, target metrics, difficulty preferences).
  */
 export async function generatePassage(
     params: {
         semanticIdeas: SemanticIdeas;
         authorialPersona: AuthorialPersona;
-        referencePassages: string[]; // exactly 3 passages
+        referencePassages: string[];
+        personalization?: {
+            targetMetrics?: string[];
+            difficultyTarget?: "easy" | "medium" | "hard" | "mixed";
+            weakAreas?: string[];
+        };
     },
     costTracker?: CostTracker
 ) {
-    const { semanticIdeas, authorialPersona, referencePassages } = params;
+    const { semanticIdeas, authorialPersona, referencePassages, personalization } = params;
 
     console.log(`✍️ [Passage Gen] Starting passage generation (referencePassages=${referencePassages.length})`);
 
@@ -44,7 +34,36 @@ export async function generatePassage(
         );
     }
 
-    console.log("Input Reference Data:", JSON.stringify(referencePassages, null, 2));
+    // Build personalization instructions
+    let personalizationInstructions = "";
+    if (personalization) {
+        const instructions = [];
+
+        if (personalization.targetMetrics && personalization.targetMetrics.length > 0) {
+            instructions.push(`Target Metrics: Focus on testing these reasoning skills - ${personalization.targetMetrics.join(", ")}`);
+        }
+
+        if (personalization.difficultyTarget && personalization.difficultyTarget !== "mixed") {
+            instructions.push(`Difficulty Target: Overall passage should be ${personalization.difficultyTarget} difficulty`);
+        }
+
+        if (personalization.weakAreas && personalization.weakAreas.length > 0) {
+            instructions.push(`Weak Areas to Test: Include elements that challenge these areas - ${personalization.weakAreas.join(", ")}`);
+        }
+
+        if (instructions.length > 0) {
+            personalizationInstructions = `
+
+### PERSONALIZATION INSTRUCTIONS
+
+The following user-specific customization should guide passage generation (apply subtly):
+
+${instructions.map((instr, i) => `${i + 1}. ${instr}`).join("\n")}
+
+IMPORTANT: These personalizations should feel natural, not forced. Maintain CAT quality.
+`;
+        }
+    }
 
     const prompt = `SYSTEM:
 You are a senior CAT VARC paper setter with over 15 years of experience.
@@ -62,15 +81,16 @@ Only output the final passage.
 ---
 
 USER:
-Your task is to generate ONE NEW Reading Comprehension passage for daily practice.
+Your task is to generate ONE NEW Reading Comprehension passage for custom mock practice.
 
 You are given THREE types of inputs:
 
 1) SEMANTIC IDEAS (abstracted, copyright-safe)
 2) AUTHORIAL PERSONA (STYLE ONLY)
 3) REFERENCE PASSAGES from previous year CAT papers (NO QUESTIONS)
+${personalizationInstructions ? `4) PERSONALIZATION INSTRUCTIONS` : ""}
 
-You must use ALL THREE, but follow the rules strictly.
+You must use ALL THREE${personalizationInstructions ? `, plus personalization if provided` : ""}, but follow the rules strictly.
 
 ---
 
@@ -99,7 +119,7 @@ RULES:
 - Use the persona ONLY to guide tone, posture, and argumentative stance
 
 <AUTHORIAL_PERSONA>
-${JSON.stringify(authorialPersona, null, 2)}}
+${JSON.stringify(authorialPersona, null, 2)}
 </AUTHORIAL_PERSONA>
 
 ---
@@ -226,8 +246,8 @@ You MUST reflect these traits using FORM, not just vocabulary.
 
 
 ### CRITICAL LENGTH CONSTRAINT:
-- You MUST produce at least 400 words.
-- If the passage is shorter than 400 words, it is INVALID.
+- You MUST produce at least 500 words.
+- If the passage is shorter than 500 words, it is INVALID.
 - If necessary, deepen arguments rather than summarizing.
 - Do NOT conclude early.
 
@@ -281,16 +301,10 @@ Before responding, verify that the passage length is between 400 and 500 words.
 If not, expand the analysis until it is.
 `
 
-    // // Inject dynamic values into the already-approved prompt
-    // const prompt = GENERATE_PASSAGE_PROMPT
-    //     .replace("{{SEMANTIC_IDEAS_JSON}}", JSON.stringify(semanticIdeas, null, 2))
-    //     .replace("{{PASSAGE_1_TEXT}}", referencePassages[0])
-    //     .replace("{{PASSAGE_2_TEXT}}", referencePassages[1])
-    //     .replace("{{PASSAGE_3_TEXT}}", referencePassages[2])
-    //     .replace("{{PASSAGE_4_TEXT}}", referencePassages[3])
-    //     .replace("{{PASSAGE_5_TEXT}}", referencePassages[4]);
-
     console.log("⏳ [Passage Gen] Waiting for LLM response (draft passage)");
+    console.log("📝 [Passage Gen] Ref Data (Ideas):", JSON.stringify(semanticIdeas).substring(0, 500) + "...");
+    console.log("📝 [Passage Gen] Ref Data (Passages):", JSON.stringify(referencePassages).substring(0, 500) + "...");
+
 
     const completion = await client.chat.completions.create({
         model: MODEL,

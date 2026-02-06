@@ -1,17 +1,12 @@
-// =============================================================================
-// Daily Content Worker - Generate Batch VA Rationales
-// =============================================================================
-// OpenAI-based batch rationale generation for VA questions
-
+// generateBatchVARationales.ts
 import OpenAI from "openai";
-import { Passage, Question, ReasoningGraphContext } from "../../types";
+import { Passage, Question, ReasoningGraphContext } from "../../schemas/types";
 import { CostTracker } from "../utils/CostTracker";
 
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
-interface ReferenceDataSchema {
-    passage: Passage;
+interface QAReferenceDataSchema {
     questions: Question[];
 }
 
@@ -53,7 +48,7 @@ export async function generateBatchVARationales(
     params: {
         questions: any[];
         reasoningContexts: Record<string, ReasoningGraphContext>;
-        referenceQuestions: any[];
+        referenceQuestions: Question[];
     },
     costTracker?: CostTracker
 ) {
@@ -61,9 +56,9 @@ export async function generateBatchVARationales(
         const { questions, reasoningContexts, referenceQuestions } = params;
 
         console.log(`🧾 [Batch VA Rationales] Generating rationales for ${questions.length} questions in single API call`);
-        console.log("Input Reference Questions:", JSON.stringify(referenceQuestions, null, 2));
 
-        // Group questions by type for better reference matching
+        // Use top 10 reference questions (should be plenty)
+        const reducedReferences = referenceQuestions;
 
         // Group questions by type for better reference matching
         const questionsByType = questions.reduce((acc, q) => {
@@ -104,7 +99,7 @@ Elimination cues: ${context.edges.slice(0, 2).map(e => `${e.relationship} from $
 
         // Build reference examples grouped by question type
         const referenceExamples = Object.keys(questionsByType).map(qType => {
-            const examples = referenceQuestions
+            const examples = reducedReferences
                 .filter(q => q.question_type === qType)
                 .slice(0, 2);
 
@@ -199,6 +194,7 @@ Return STRICT JSON:
 Generate exactly ${questions.length} rationales IN THE SAME ORDER.`;
 
         console.log(`⏳ [Batch VA Rationales] Waiting for LLM response for ${questions.length} questions`);
+        console.log("📝 [Batch VA Rationales] Ref Data (Count):", reducedReferences.length);
 
         const completion = await client.chat.completions.create({
             model: MODEL,

@@ -59,6 +59,7 @@ interface GenerateAllVAQuestionsParams {
     semanticIdeas: SemanticIdeas;
     authorialPersona: AuthorialPersona;
     referenceData: ReferenceDataSchema[];
+    referenceQuestions: { questions: any[] };
     passageText: string;
 }
 
@@ -68,7 +69,10 @@ export async function generateAllVAQuestions(
 ): Promise<any[]> {
     console.log(`🧩 [All VA Questions] Starting consolidated generation`);
 
-    const { semanticIdeas, authorialPersona, referenceData, passageText } = params;
+    const { semanticIdeas, authorialPersona, referenceData, referenceQuestions, passageText } = params;
+
+    console.log("Input Reference Data:", JSON.stringify(referenceData, null, 2));
+    console.log("Input Reference Questions:", JSON.stringify(referenceQuestions, null, 2));
     // Force valid standard text to avoid hallucinated sentences in question
     const ODD_ONE_OUT_TEXT = "Five jumbled up sentences, related to a topic, are given below. Four of them can be put together to form a coherent paragraph. Identify the odd one out and key in the number of the sentence as your answer: ";
     const PARA_JUMBLE_TEXT = "The four sentences (labelled 1, 2, 3 and 4) below, when properly sequenced would yield a coherent paragraph. Decide on the proper sequencing of the order of the sentences and key in the sequence of the four numbers as your answer: ";
@@ -136,24 +140,24 @@ export async function generateAllVAQuestions(
         };
     };
 
-    // Reduce reference data to 2 passages (from 3)
-    const reducedReferences = referenceData.slice(0, 2);
+
+    const allRefQuestions = referenceQuestions.questions || [];
 
     // Filter reference data by question type for examples
-    const getSummaryRefs = () => reducedReferences
-        .flatMap(rd => rd.questions.filter(q => q.question_type === "para_summary"))
+    const getSummaryRefs = () => allRefQuestions
+        .filter((q: any) => q.question_type === "para_summary")
         .slice(0, 2);
 
-    const getCompletionRefs = () => reducedReferences
-        .flatMap(rd => rd.questions.filter(q => q.question_type === "para_completion"))
+    const getCompletionRefs = () => allRefQuestions
+        .filter((q: any) => q.question_type === "para_completion")
         .slice(0, 2);
 
-    const getJumbleRefs = () => reducedReferences
-        .flatMap(rd => rd.questions.filter(q => q.question_type === "para_jumble"))
+    const getJumbleRefs = () => allRefQuestions
+        .filter((q: any) => q.question_type === "para_jumble")
         .slice(0, 2);
 
-    const getOddOneOutRefs = () => reducedReferences
-        .flatMap(rd => rd.questions.filter(q => q.question_type === "odd_one_out"))
+    const getOddOneOutRefs = () => allRefQuestions
+        .filter((q: any) => q.question_type === "odd_one_out")
         .slice(0, 2);
 
     const summaryRefs = getSummaryRefs();
