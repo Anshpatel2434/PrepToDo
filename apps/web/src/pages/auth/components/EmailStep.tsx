@@ -14,7 +14,6 @@ interface EmailStepProps {
 	onSubmit: (email: string, captchaToken?: string) => void;
 	isLoading: boolean;
 	isGoogleLoading: boolean;
-	error: string | null;
 	onGoogleLogin: () => void;
 	onSwitchMode: () => void;
 }
@@ -25,7 +24,6 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 	onEmailChange,
 	onSubmit,
 	isLoading,
-	error,
 	onGoogleLogin,
 	onSwitchMode,
 	isGoogleLoading,
@@ -95,16 +93,7 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 
 			{/* Email form */}
 			<form onSubmit={handleSubmit} className="space-y-4">
-				{/* Error message */}
-				{error && (
-					<motion.div
-						initial={{ opacity: 0, y: -10 }}
-						animate={{ opacity: 1, y: 0 }}
-						className="p-3 rounded-lg bg-red-100 border border-red-300 text-red-700 text-sm"
-					>
-						{error}
-					</motion.div>
-				)}
+				{/* Email input */}
 
 				{/* Email input */}
 				<div>

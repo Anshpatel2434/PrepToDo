@@ -297,7 +297,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                         onForgotPassword={() => setShowForgotPassword(true)}
                         isLoading={isLoading}
                         isGoogleLoading={isGoogleRedirecting}
-                        error={authState?.error || null}
                     />
                 )}
 
@@ -319,7 +318,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                         onGoogleLogin={handleGoogleLogin}
                         isLoading={isLoading}
                         isGoogleLoading={isGoogleRedirecting}
-                        error={authState?.error || null}
                         onSwitchMode={switchMode}
                     />
                 )}
@@ -335,7 +333,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                         onResendOtp={handleResendOtp}
                         isLoading={isLoading}
                         isResending={isResendingOtp}
-                        error={authState?.error || null}
                     />
                 )}
 
@@ -348,7 +345,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                         onSubmit={handlePasswordSubmit}
                         onBack={handleBackFromOtp}
                         isLoading={isLoading}
-                        error={authState?.error || null}
                         skipPassword={skipPassword}
                         setSkipPassword={setSkipPassword}
                     />

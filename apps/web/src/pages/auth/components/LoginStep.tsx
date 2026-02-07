@@ -16,7 +16,6 @@ interface LoginStepProps {
 	onForgotPassword: () => void;
 	isLoading: boolean;
 	isGoogleLoading: boolean;
-	error: string | null;
 }
 
 export const LoginStep: React.FC<LoginStepProps> = ({
@@ -31,7 +30,6 @@ export const LoginStep: React.FC<LoginStepProps> = ({
 	onForgotPassword,
 	isLoading,
 	isGoogleLoading,
-	error,
 }) => {
 	const [showPassword, setShowPassword] = useState(false);
 
@@ -51,17 +49,6 @@ export const LoginStep: React.FC<LoginStepProps> = ({
 		>
 			{/* Login form */}
 			<form onSubmit={handleSubmit} className="space-y-4">
-				{/* Error message */}
-				{error && (
-					<motion.div
-						initial={{ opacity: 0, y: -10 }}
-						animate={{ opacity: 1, y: 0 }}
-						className="p-3 rounded-lg bg-red-100 border border-red-300 text-red-700 text-sm"
-					>
-						{error}
-					</motion.div>
-				)}
-
 				{/* Email input */}
 				<div>
 					<label

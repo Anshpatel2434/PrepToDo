@@ -9,7 +9,6 @@ interface PasswordStepProps {
 	onSubmit: () => void;
 	onBack: () => void;
 	isLoading: boolean;
-	error: string | null;
 	skipPassword: boolean;
 	setSkipPassword: (skipPassword: boolean) => void;
 }
@@ -21,7 +20,6 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({
 	onSubmit,
 	onBack,
 	isLoading,
-	error,
 	skipPassword,
 	setSkipPassword,
 }) => {
@@ -77,11 +75,10 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({
 					<div
 						className={`
             w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-            ${
-							isDark
+            ${isDark
 								? "bg-brand-primary-dark text-white"
 								: "bg-brand-primary-light text-white"
-						}
+							}
           `}
 					>
 						1
@@ -92,11 +89,10 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({
 					<div
 						className={`
             w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-            ${
-							isDark
+            ${isDark
 								? "bg-brand-primary-dark text-white"
 								: "bg-brand-primary-light text-white"
-						}
+							}
           `}
 					>
 						2
@@ -107,11 +103,10 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({
 					<div
 						className={`
             w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-            ${
-							isDark
+            ${isDark
 								? "bg-brand-primary-dark text-white"
 								: "bg-brand-primary-light text-white"
-						}
+							}
           `}
 					>
 						3
@@ -179,16 +174,7 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({
 
 			{/* Password form */}
 			<form onSubmit={handleSubmit} className="space-y-4">
-				{/* Error message */}
-				{error && (
-					<motion.div
-						initial={{ opacity: 0, y: -10 }}
-						animate={{ opacity: 1, y: 0 }}
-						className="p-3 rounded-lg bg-red-100 border border-red-300 text-red-700 text-sm"
-					>
-						{error}
-					</motion.div>
-				)}
+				{/* Password input */}
 
 				{/* Password input */}
 				{!skipPassword && (
@@ -209,10 +195,9 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({
 								placeholder="Enter your password"
 								className={`
                   w-full pl-10 pr-12 py-3 rounded-xl border-2 transition-colors duration-200
-                  ${
-										isDark
-											? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark placeholder-text-muted-dark"
-											: "bg-bg-tertiary-light border-border-light text-text-primary-light placeholder-text-muted-light"
+                  ${isDark
+										? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark placeholder-text-muted-dark"
+										: "bg-bg-tertiary-light border-border-light text-text-primary-light placeholder-text-muted-light"
 									}
                   focus:border-brand-primary-light dark:focus:border-brand-primary-dark focus:ring-0
                 `}
@@ -231,10 +216,9 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({
 								onClick={() => setShowPassword(!showPassword)}
 								className={`
                   absolute right-3 top-1/2 transform -translate-y-1/2 
-                  ${
-										isDark
-											? "text-text-muted-dark hover:text-text-secondary-dark"
-											: "text-text-muted-light hover:text-text-secondary-light"
+                  ${isDark
+										? "text-text-muted-dark hover:text-text-secondary-dark"
+										: "text-text-muted-light hover:text-text-secondary-light"
 									}
                 `}
 							>
@@ -279,10 +263,9 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({
 						onClick={onBack}
 						className={`
               flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200
-              ${
-								isDark
-									? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark hover:bg-bg-primary-dark"
-									: "bg-bg-tertiary-light border-border-light text-text-primary-light hover:bg-bg-primary-light"
+              ${isDark
+								? "bg-bg-tertiary-dark border-border-dark text-text-primary-dark hover:bg-bg-primary-dark"
+								: "bg-bg-tertiary-light border-border-light text-text-primary-light hover:bg-bg-primary-light"
 							}
             `}
 					>
@@ -297,18 +280,17 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({
 						disabled={isLoading || (!skipPassword && password.length < 6)}
 						className={`
               flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200
-              ${
-								isLoading || (!skipPassword && password.length < 6)
-									? "bg-gray-300 text-gray-500 cursor-not-allowed"
-									: "bg-brand-primary-light hover:bg-brand-primary-hover-light dark:bg-brand-primary-dark dark:hover:bg-brand-primary-hover-dark text-white shadow-lg hover:shadow-xl"
+              ${isLoading || (!skipPassword && password.length < 6)
+								? "bg-gray-300 text-gray-500 cursor-not-allowed"
+								: "bg-brand-primary-light hover:bg-brand-primary-hover-light dark:bg-brand-primary-dark dark:hover:bg-brand-primary-hover-dark text-white shadow-lg hover:shadow-xl"
 							}
             `}
 					>
 						{isLoading
 							? "Creating Account..."
 							: skipPassword
-							? "Continue"
-							: "Create Account"}
+								? "Continue"
+								: "Create Account"}
 					</button>
 				</div>
 			</form>

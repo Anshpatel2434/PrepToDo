@@ -12,7 +12,6 @@ interface OtpStepProps {
 	onResendOtp: () => void;
 	isLoading: boolean;
 	isResending: boolean;
-	error: string | null;
 }
 
 export const OtpStep: React.FC<OtpStepProps> = ({
@@ -24,7 +23,6 @@ export const OtpStep: React.FC<OtpStepProps> = ({
 	onResendOtp,
 	isLoading,
 	isResending,
-	error,
 }) => {
 	const { isOnCooldown, startCooldown, remainingSeconds } = useCooldown(120000); // 2 minutes (OTP expiry)
 
@@ -172,16 +170,7 @@ export const OtpStep: React.FC<OtpStepProps> = ({
 
 			{/* OTP input form */}
 			<form onSubmit={handleSubmit} className="space-y-4">
-				{/* Error message */}
-				{error && (
-					<motion.div
-						initial={{ opacity: 0, y: -10 }}
-						animate={{ opacity: 1, y: 0 }}
-						className="p-3 rounded-lg bg-red-100 border border-red-300 text-red-700 text-sm"
-					>
-						{error}
-					</motion.div>
-				)}
+				{/* OTP input */}
 
 				{/* OTP input */}
 				<div>
