@@ -38,13 +38,38 @@ export function generateAccessToken(
 }
 
 // =============================================================================
-// Verify Access Token
+// Verify Access Token (Fast - JWT Signature Only)
 // =============================================================================
-export async function verifyAccessToken(token: string): Promise<JwtPayload | null> {
+// This is the PRIMARY verification method. It only checks:
+// 1. JWT signature is valid (token wasn't tampered with)
+// 2. Token hasn't expired (exp claim)
+// 
+// This is the standard JWT pattern - we trust the token if it's valid and not expired.
+// Session invalidation is handled by short token expiry + refresh token mechanism.
+// =============================================================================
+export function verifyAccessToken(token: string): JwtPayload | null {
+    try {
+        const payload = jwt.verify(token, config.jwt.secret) as JwtPayload;
+        return payload;
+    } catch {
+        return null;
+    }
+}
+
+// =============================================================================
+// Verify Access Token WITH Session Check (Slow - Uses DB)
+// =============================================================================
+// Use this ONLY when you need to guarantee the session is still valid in DB:
+// - Logout operations
+// - Password changes
+// - Critical security operations
+// - Token refresh
+// =============================================================================
+export async function verifyAccessTokenWithSession(token: string): Promise<JwtPayload | null> {
     try {
         const payload = jwt.verify(token, config.jwt.secret) as JwtPayload;
 
-        // Verify session still exists and is not expired
+        // Verify session still exists and is not expired in database
         const session = await db
             .select()
             .from(authSessions)
@@ -73,6 +98,19 @@ export async function verifyAccessToken(token: string): Promise<JwtPayload | nul
 export function decodeToken(token: string): JwtPayload | null {
     try {
         return jwt.decode(token) as JwtPayload;
+    } catch {
+        return null;
+    }
+}
+
+// =============================================================================
+// Verify Access Token (Fast - No DB Call)
+// Use this for non-critical endpoints where token validity check is sufficient
+// =============================================================================
+export function verifyAccessTokenFast(token: string): JwtPayload | null {
+    try {
+        const payload = jwt.verify(token, config.jwt.secret) as JwtPayload;
+        return payload;
     } catch {
         return null;
     }

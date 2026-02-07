@@ -1,6 +1,36 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { startLoading, otpSent, otpVerified, authError, setUser, clearUser, setPendingSignup, clearPendingSignup, setForgotPasswordEmail } from "./authSlice";
 import type { UserResponse } from "../../../services/apiClient";
+
+// =============================================================================
+// Token Storage Utilities
+// =============================================================================
+const TOKEN_STORAGE_KEY = 'preptodo_access_token';
+
+export function getStoredToken(): string | null {
+    try {
+        return localStorage.getItem(TOKEN_STORAGE_KEY);
+    } catch {
+        return null;
+    }
+}
+
+export function setStoredToken(token: string): void {
+    try {
+        localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    } catch {
+        console.error('Failed to store token');
+    }
+}
+
+export function clearStoredToken(): void {
+    try {
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
+    } catch {
+        console.error('Failed to clear token');
+    }
+}
 
 // =============================================================================
 // Backend API Configuration
@@ -94,6 +124,12 @@ interface MessageResponse {
     message: string;
 }
 
+interface AuthResponseWithToken {
+    user: UserResponse;
+    message: string;
+    accessToken?: string;
+}
+
 interface CheckPendingSignupResponse {
     valid: boolean;
     email: string;
@@ -130,12 +166,39 @@ function getErrorMessage(error: unknown): string {
 // =============================================================================
 // Auth API
 // =============================================================================
+// Custom base query that automatically includes Authorization header
+const rawBaseQuery = fetchBaseQuery({
+    baseUrl: `${BACKEND_URL}/api/auth`,
+    credentials: 'include', // Include cookies in requests
+    prepareHeaders: (headers) => {
+        const token = getStoredToken();
+        if (token) {
+            headers.set('Authorization', `Bearer ${token}`);
+        }
+        return headers;
+    },
+});
+
+// Wrapper to handle token expiration
+const baseQueryWithAuth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
+    args,
+    api,
+    extraOptions
+) => {
+    const result = await rawBaseQuery(args, api, extraOptions);
+
+    // If unauthorized, clear token and user state
+    if (result.error && result.error.status === 401) {
+        clearStoredToken();
+        api.dispatch(clearUser());
+    }
+
+    return result;
+};
+
 export const authApi = createApi({
     reducerPath: "authApi",
-    baseQuery: fetchBaseQuery({
-        baseUrl: `${BACKEND_URL}/api/auth`,
-        credentials: 'include', // Include cookies in requests
-    }),
+    baseQuery: baseQueryWithAuth,
     tagTypes: ["Auth", "User"],
     endpoints: (builder) => ({
         // Check if email exists
@@ -191,18 +254,22 @@ export const authApi = createApi({
         }),
 
         // Complete signup with password
-        completeSignup: builder.mutation<AuthResponse, CompleteSignupRequest>({
+        completeSignup: builder.mutation<AuthResponseWithToken, CompleteSignupRequest>({
             query: (body) => ({
                 url: '/complete-signup',
                 method: 'POST',
                 body,
             }),
-            transformResponse: (response: { success: true; data: AuthResponse }) => response.data,
+            transformResponse: (response: { success: true; data: AuthResponseWithToken }) => response.data,
             invalidatesTags: ['User'],
             onQueryStarted: async (_args, { dispatch, queryFulfilled }) => {
                 try {
                     dispatch(startLoading());
                     const { data } = await queryFulfilled;
+                    // Store access token in localStorage
+                    if (data.accessToken) {
+                        setStoredToken(data.accessToken);
+                    }
                     dispatch(setUser(data.user));
                     dispatch(clearPendingSignup());
                     // Clear localStorage
@@ -215,18 +282,22 @@ export const authApi = createApi({
         }),
 
         // Login with email and password
-        login: builder.mutation<AuthResponse, LoginRequest>({
+        login: builder.mutation<AuthResponseWithToken, LoginRequest>({
             query: (body) => ({
                 url: '/login',
                 method: 'POST',
                 body,
             }),
-            transformResponse: (response: { success: true; data: AuthResponse }) => response.data,
+            transformResponse: (response: { success: true; data: AuthResponseWithToken }) => response.data,
             invalidatesTags: ['User'],
             onQueryStarted: async (_args, { dispatch, queryFulfilled }) => {
                 try {
                     dispatch(startLoading());
                     const { data } = await queryFulfilled;
+                    // Store access token in localStorage
+                    if (data.accessToken) {
+                        setStoredToken(data.accessToken);
+                    }
                     dispatch(setUser(data.user));
                 } catch (err) {
                     dispatch(authError(getErrorMessage(err)));
@@ -245,9 +316,12 @@ export const authApi = createApi({
             onQueryStarted: async (_args, { dispatch, queryFulfilled }) => {
                 try {
                     await queryFulfilled;
+                    // Clear token from localStorage
+                    clearStoredToken();
                     dispatch(clearUser());
                 } catch (err) {
-                    // Still clear user on error
+                    // Still clear user and token on error
+                    clearStoredToken();
                     dispatch(clearUser());
                     console.error('Logout error:', err);
                 }

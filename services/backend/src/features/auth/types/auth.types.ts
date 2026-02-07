@@ -32,6 +32,7 @@ export interface VerifyOtpResponse {
 export interface LoginResponse {
     user: UserResponse;
     message: string;
+    accessToken?: string; // JWT for localStorage storage
 }
 
 export interface CheckPendingSignupResponse {

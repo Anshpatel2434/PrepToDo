@@ -84,7 +84,7 @@ function generateUsername(email: string, userId: string): string {
     return `${sanitizedEmailPrefix}preptodo${userIdPrefix}`;
 }
 
-async function createSession(userId: string, email: string, req: Request, res: Response): Promise<void> {
+async function createSession(userId: string, email: string, req: Request, res: Response): Promise<string> {
     const sessionId = uuidv4();
     const refreshToken = generateSecureToken();
     const expiresAt = getSessionExpiryDate();
@@ -102,9 +102,13 @@ async function createSession(userId: string, email: string, req: Request, res: R
         expires_at: expiresAt,
     });
 
-    // Generate JWT and set cookie
+    // Generate JWT
     const token = generateAccessToken(userId, email, sessionId);
+
+    // Set cookie (for backwards compatibility) AND return token for localStorage
     setAuthCookie(res, token);
+
+    return token;
 }
 
 // =============================================================================
@@ -144,6 +148,7 @@ export async function checkEmail(req: Request, res: Response, next: NextFunction
 export async function sendOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
         const { email } = req.body;
+        const normalizedEmail = email.toLowerCase();
 
         // Validate email
         const validation = await validateEmail(email);
@@ -151,56 +156,122 @@ export async function sendOtp(req: Request, res: Response, next: NextFunction): 
             throw Errors.invalidEmail(validation.reason);
         }
 
-        // Check if email already exists
+        // Check if email already exists as a registered user
         const [existingUser] = await db
             .select()
             .from(authUsers)
-            .where(eq(authUsers.email, email.toLowerCase()))
+            .where(eq(authUsers.email, normalizedEmail))
             .limit(1);
 
         if (existingUser) {
             throw Errors.emailAlreadyExists();
         }
 
-        // Check for existing pending signup (to prevent spam)
+        // Check for existing pending signup
         const [existingPending] = await db
             .select()
             .from(authPendingSignups)
-            .where(
-                and(
-                    eq(authPendingSignups.email, email.toLowerCase()),
-                    gt(authPendingSignups.expires_at, new Date())
-                )
-            )
+            .where(eq(authPendingSignups.email, normalizedEmail))
             .limit(1);
 
-        // If recent OTP exists and was sent less than 60 seconds ago, reject
+        // Check if user is banned from sending OTPs
+        if (existingPending?.banned_until && existingPending.banned_until > new Date()) {
+            const minutesLeft = Math.ceil((existingPending.banned_until.getTime() - Date.now()) / 60000);
+            res.status(429).json({
+                success: false,
+                error: {
+                    code: 'RATE_LIMITED',
+                    message: `Too many attempts. Please try again in ${minutesLeft} minutes.`,
+                    bannedUntil: existingPending.banned_until.toISOString(),
+                },
+            });
+            return;
+        }
+
+        // If existing pending signup, check rate limiting
         if (existingPending) {
             const createdAt = existingPending.created_at!;
             const secondsSinceCreated = (Date.now() - createdAt.getTime()) / 1000;
+            const sendCount = existingPending.otp_send_count || 1;
+
+            // Check cooldown (60 seconds between OTPs)
             if (secondsSinceCreated < 60) {
-                throw Errors.otpAlreadySent();
+                const waitSeconds = Math.ceil(60 - secondsSinceCreated);
+                res.status(429).json({
+                    success: false,
+                    error: {
+                        code: 'OTP_ALREADY_SENT',
+                        message: `Please wait ${waitSeconds} seconds before requesting a new code.`,
+                        retryAfterSeconds: waitSeconds,
+                    },
+                });
+                return;
             }
-            // Delete old pending signup
-            await db.delete(authPendingSignups).where(eq(authPendingSignups.id, existingPending.id));
+
+            // Check if max attempts reached (3 attempts = ban for 1 hour)
+            if (sendCount >= 3) {
+                const bannedUntil = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+                await db
+                    .update(authPendingSignups)
+                    .set({ banned_until: bannedUntil })
+                    .where(eq(authPendingSignups.id, existingPending.id));
+
+                res.status(429).json({
+                    success: false,
+                    error: {
+                        code: 'RATE_LIMITED',
+                        message: 'Too many attempts. Please try again in 1 hour.',
+                        bannedUntil: bannedUntil.toISOString(),
+                    },
+                });
+                return;
+            }
+
+            // Update existing pending signup with new OTP
+            const otp = generateOtp();
+            const otpHash = hashOtp(otp);
+            const expiresAt = getOtpExpiryDate();
+
+            await db
+                .update(authPendingSignups)
+                .set({
+                    otp_hash: otpHash,
+                    expires_at: expiresAt,
+                    created_at: new Date(),
+                    attempts: '0',
+                    otp_send_count: sendCount + 1,
+                })
+                .where(eq(authPendingSignups.id, existingPending.id));
+
+            // Send OTP email
+            await sendOtpEmail(normalizedEmail, otp);
+
+            const response: SendOtpResponse = {
+                pending_signup_id: existingPending.id,
+                expires_at: expiresAt.toISOString(),
+                message: 'Verification code sent to your email.',
+            };
+
+            res.json(successResponse(response));
+            return;
         }
 
-        // Generate OTP
+        // No existing pending signup - create new one
         const otp = generateOtp();
         const otpHash = hashOtp(otp);
         const expiresAt = getOtpExpiryDate();
         const pendingSignupId = uuidv4();
 
-        // Store pending signup
         await db.insert(authPendingSignups).values({
             id: pendingSignupId,
-            email: email.toLowerCase(),
+            email: normalizedEmail,
             otp_hash: otpHash,
             expires_at: expiresAt,
+            otp_send_count: 1,
         });
 
         // Send OTP email
-        await sendOtpEmail(email.toLowerCase(), otp);
+        await sendOtpEmail(normalizedEmail, otp);
 
         const response: SendOtpResponse = {
             pending_signup_id: pendingSignupId,
@@ -320,8 +391,8 @@ export async function completeSignup(req: Request, res: Response, next: NextFunc
         // Delete pending signup
         await db.delete(authPendingSignups).where(eq(authPendingSignups.id, pendingSignup.id));
 
-        // Create session
-        await createSession(userId, email.toLowerCase(), req, res);
+        // Create session and get token
+        const accessToken = await createSession(userId, email.toLowerCase(), req, res);
 
         // Get created user
         const [user] = await db
@@ -331,7 +402,7 @@ export async function completeSignup(req: Request, res: Response, next: NextFunc
             .limit(1);
 
         res.status(201).json(successResponse(
-            { user: formatUserResponse(user!) },
+            { user: formatUserResponse(user!), accessToken },
             skipPassword ? 'Account created! You can set a password later.' : 'Account created successfully!'
         ));
     } catch (error) {
@@ -376,12 +447,13 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
             .set({ last_sign_in_at: new Date(), updated_at: new Date() })
             .where(eq(authUsers.id, user.id));
 
-        // Create session
-        await createSession(user.id, user.email!, req, res);
+        // Create session and get token
+        const accessToken = await createSession(user.id, user.email!, req, res);
 
         const response: LoginResponse = {
             user: formatUserResponse(user),
             message: 'Logged in successfully!',
+            accessToken,
         };
 
         authLogger.info({ email, userId: user.id, action: 'login' }, 'User logged in successfully');

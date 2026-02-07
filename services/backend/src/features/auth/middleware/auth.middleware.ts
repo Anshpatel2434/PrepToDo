@@ -2,7 +2,7 @@
 // Auth Feature - JWT Middleware
 // =============================================================================
 import type { Request, Response, NextFunction } from 'express';
-import { verifyAccessToken, type JwtPayload } from '../services/jwt.service.js';
+import { verifyAccessToken, verifyAccessTokenWithSession, type JwtPayload } from '../services/jwt.service.js';
 import { Errors } from '../../../common/utils/errors.js';
 
 // Extend Express Request type
@@ -16,23 +16,82 @@ declare global {
 }
 
 // =============================================================================
-// Require Authentication
+// Helper: Extract Token from Request
+// Supports both Authorization header and cookies
 // =============================================================================
-export const requireAuth = async (
+function extractToken(req: Request): string | null {
+    // First check Authorization header (for localStorage tokens)
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        return authHeader.substring(7);
+    }
+
+    // Fall back to cookie
+    return req.cookies?.preptodo_token || null;
+}
+
+// =============================================================================
+// Require Authentication (Fast - JWT Only)
+// =============================================================================
+// This is the PRIMARY middleware for protected routes.
+// Uses fast JWT-only verification (no database call).
+// 
+// Trust model: If the JWT is valid and not expired, the user is authenticated.
+// Session invalidation is handled by short token expiry + refresh tokens.
+// =============================================================================
+export const requireAuth = (
     req: Request,
     res: Response,
     next: NextFunction
-): Promise<void> => {
+): void => {
     try {
-        // Get token from cookie
-        const token = req.cookies?.preptodo_token;
+        const token = extractToken(req);
 
         if (!token) {
             throw Errors.unauthorized();
         }
 
-        // Verify token
-        const payload = await verifyAccessToken(token);
+        // Fast verification - only checks JWT signature and expiry
+        const payload = verifyAccessToken(token);
+
+        if (!payload) {
+            throw Errors.sessionExpired();
+        }
+
+        // Attach user info to request
+        req.user = payload;
+        req.token = token;
+
+        next();
+    } catch (error) {
+        next(error);
+    }
+};
+
+// =============================================================================
+// Require Authentication WITH Session Check (Slow - Uses DB)
+// =============================================================================
+// Use this ONLY for critical operations where you need to guarantee
+// the session hasn't been invalidated:
+// - Logout
+// - Password change
+// - Account deletion
+// - Session management
+// =============================================================================
+export const requireAuthWithSession = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const token = extractToken(req);
+
+        if (!token) {
+            throw Errors.unauthorized();
+        }
+
+        // Full verification with database session check
+        const payload = await verifyAccessTokenWithSession(token);
 
         if (!payload) {
             throw Errors.sessionExpired();
@@ -51,16 +110,17 @@ export const requireAuth = async (
 // =============================================================================
 // Optional Authentication (doesn't fail if no token)
 // =============================================================================
-export const optionalAuth = async (
+export const optionalAuth = (
     req: Request,
     _res: Response,
     next: NextFunction
-): Promise<void> => {
+): void => {
     try {
-        const token = req.cookies?.auth_token;
+        const token = extractToken(req);
 
         if (token) {
-            const payload = await verifyAccessToken(token);
+            // Use fast verification for optional auth
+            const payload = verifyAccessToken(token);
             if (payload) {
                 req.user = payload;
                 req.token = token;
@@ -73,3 +133,6 @@ export const optionalAuth = async (
         next();
     }
 };
+
+// Backwards compatibility aliases
+export const requireAuthFast = requireAuth;

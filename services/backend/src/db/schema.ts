@@ -50,6 +50,8 @@ export const authPendingSignups = pgTable('auth_pending_signups', {
     email: varchar('email', { length: 255 }).notNull(),
     otp_hash: varchar('otp_hash', { length: 255 }).notNull(),
     attempts: varchar('attempts', { length: 10 }).default('0'),
+    otp_send_count: integer('otp_send_count').default(1), // Track how many times OTP was sent
+    banned_until: timestamp('banned_until', { withTimezone: true }), // Ban timestamp for rate limiting
     expires_at: timestamp('expires_at', { withTimezone: true }).notNull(),
     created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });

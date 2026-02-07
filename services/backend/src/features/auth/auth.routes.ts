@@ -4,7 +4,8 @@
 import { Router } from 'express';
 
 // Middleware
-import { requireAuth } from './middleware/auth.middleware.js';
+// Middleware
+import { requireAuth, requireAuthWithSession } from './middleware/auth.middleware.js';
 import { verifyCaptcha, optionalCaptcha } from './middleware/captcha.middleware.js';
 import { loginRateLimiter, otpRateLimiter, passwordResetRateLimiter } from './middleware/rateLimiters.js';
 
@@ -77,8 +78,9 @@ router.post('/reset-password', validateResetPassword, resetPassword);
 // =============================================================================
 
 // Auth required
-router.post('/logout', requireAuth, logout);
+// Auth required
+router.post('/logout', requireAuthWithSession, logout);
 router.get('/me', requireAuth, getCurrentUser);
-router.post('/set-password', requireAuth, validateSetPassword, setPassword);
+router.post('/set-password', requireAuthWithSession, validateSetPassword, setPassword);
 
 export const authRouter = router;
