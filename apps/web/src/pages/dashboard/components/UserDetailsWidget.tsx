@@ -5,8 +5,7 @@ import {
     Flame,
     Sparkles,
     Timer,
-    TrendingUp,
-    TrendingDown,
+    Target,
 } from "lucide-react";
 import type { UserAnalytics, UserProfile } from "../../../types";
 import { useAnimatedCounter, useAnimatedPercentage } from "../hooks/useAnimatedCounter";
@@ -24,7 +23,6 @@ interface ColorfulStatCardProps {
     label: string;
     value: React.ReactNode;
     subtext?: string;
-    change?: { value: number; type: 'positive' | 'negative' | 'neutral' };
     icon: React.ReactNode;
     colorScheme: 'streak' | 'points' | 'accuracy' | 'practice';
     isDark: boolean;
@@ -71,7 +69,6 @@ function ColorfulStatCard({
     label,
     value,
     subtext,
-    change,
     icon,
     colorScheme,
     isDark,
@@ -126,31 +123,12 @@ function ColorfulStatCard({
                     </div>
                 </div>
 
-                {/* Footer: subtext + change badge */}
+                {/* Footer:  */}
                 <div className="flex items-center justify-between gap-2 mt-1">
                     {subtext && (
                         <span className={`text-sm truncate font-medium opacity-70 ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
                             }`}>
                             {subtext}
-                        </span>
-                    )}
-
-                    {change && change.value !== 0 && (
-                        <span className={`
-                            inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded shrink-0
-                            ${change.type === 'positive'
-                                ? `bg-emerald-500/10 ${isDark ? "text-emerald-600" : "text-emerald-600"}`
-                                : change.type === 'negative'
-                                    ? `bg-red-500/10 ${isDark ? "text-red-600" : "text-red-600"}`
-                                    : `bg-gray-500/10 ${isDark ? "text-gray-600" : "text-gray-600"}`
-                            }
-                        `}>
-                            {change.type === 'positive' ? (
-                                <TrendingUp className="w-3 h-3" />
-                            ) : (
-                                <TrendingDown className="w-3 h-3" />
-                            )}
-                            {change.type === 'positive' ? '+' : ''}{change.value}%
                         </span>
                     )}
                 </div>
@@ -348,7 +326,6 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                                 )
                             }
                             subtext={`Best: ${analytics?.longest_streak || 0} days`}
-                            change={animatedStreak > 3 ? { value: 15, type: 'positive' } : undefined}
 
                             colorScheme="streak"
                             isDark={isDark}
@@ -364,10 +341,6 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                                 </span>
                             }
                             subtext={practicedToday ? `+${analytics?.points_earned_today || 0} today` : "Practice to earn"}
-                            change={practicedToday && analytics?.points_earned_today
-                                ? { value: 8, type: 'positive' }
-                                : undefined
-                            }
                             icon={<Sparkles size={24} />}
                             colorScheme="points"
                             isDark={isDark}
@@ -384,13 +357,7 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                                 </span>
                             }
                             subtext={`${analytics?.questions_attempted || 0} questions`}
-                            change={(analytics?.accuracy_percentage || 0) >= 70
-                                ? { value: 5, type: 'positive' }
-                                : (analytics?.accuracy_percentage || 0) < 50
-                                    ? { value: 3, type: 'negative' }
-                                    : undefined
-                            }
-                            icon={<TrendingUp size={24} />}
+                            icon={<Target size={24} />}
                             colorScheme="accuracy"
                             isDark={isDark}
                             delay={2}

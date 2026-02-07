@@ -2,8 +2,6 @@
 
 // Constants
 export const CALIBRATION_THRESHOLD = 20; // Number of attempts before switching to trend-based scoring
-export const BAYESIAN_PRIOR_WEIGHT = 2; // "Fake" attempts to stabilize early scores
-export const BAYESIAN_PRIOR_SCORE = 0.5; // Assume 50% start
 export const EMA_ALPHA = 0.2; // Learning rate for established users
 export const TREND_DELTA_THRESHOLD = 3;
 
@@ -23,9 +21,9 @@ export function calculateConfidence(attempts: number): number {
  * 
  * Logic:
  * 1. Calibration Phase (Attempts < Threshold):
- *    Uses Bayesian Average to stabilize early scores while remaining responsive.
- *    Formula: (Correct + PriorCorrect) / (Total + PriorWeight)
- *    This prevents wild swings (0% or 100%) on first try but respects the user's actual performance (e.g. 3/4 -> ~67-70%).
+ *    Uses raw accuracy for exact transparency.
+ *    Formula: (Correct / Total) * 100
+ *    This ensures that 4/4 is 100% and 0/1 is 0%.
  * 
  * 2. Growth Phase (Attempts >= Threshold):
  *    Uses Exponential Moving Average (EMA) to track skill evolution over time.
@@ -41,13 +39,10 @@ export function calculateNewProficiency(
     let newScore: number;
 
     if (totalAttempts <= CALIBRATION_THRESHOLD) {
-        // [Hybrid Phase 1] Bayesian Average (Stabilized Exact History)
-        // We calculate what the "True" score likely is based on history + priors
-        const priorCorrect = BAYESIAN_PRIOR_WEIGHT * BAYESIAN_PRIOR_SCORE;
-        const adjustedCorrect = totalCorrect + priorCorrect;
-        const adjustedTotal = totalAttempts + BAYESIAN_PRIOR_WEIGHT;
-
-        newScore = (adjustedCorrect / adjustedTotal) * 100;
+        // [Hybrid Phase 1] Direct Accuracy (Raw History)
+        // Calculating total accuracy based on exact history
+        // No Bayesian priors or smoothing to ensure user sees raw performance.
+        newScore = (totalCorrect / totalAttempts) * 100;
     } else {
         // [Hybrid Phase 2] Adaptive EMA (Trend Tracking)
         // Adjust Alpha based on confidence? For now standard EMA is robust for tracking.

@@ -21,14 +21,18 @@ import {
     Sliders,
     Menu,
     X,
-    ArrowRight
+    ArrowRight,
+    Loader2
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import {
+    authApi,
     useFetchUserQuery,
     useLogoutMutation,
     clearStoredToken,
 } from "../pages/auth/redux_usecases/authApi";
+import { resetAuth } from "../pages/auth/redux_usecases/authSlice";
 import toast from "react-hot-toast";
 import { useTheme } from "../context/ThemeContext";
 // Import UserResponse type
@@ -235,6 +239,7 @@ export const FloatingNavigation: React.FC = () => {
     const { isDark } = useTheme();
     const navigate = useNavigate();
     const location = useLocation();
+    const dispatch = useDispatch();
 
     // Mouse Tracking for Desktop Dock
     const mouseX = useMotionValue(Infinity);
@@ -243,7 +248,7 @@ export const FloatingNavigation: React.FC = () => {
     const { data: authState } = useFetchUserQuery();
     const user = authState ?? null;
     const isAuthenticated = user !== null;
-    const [logout] = useLogoutMutation();
+    const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
 
     // Mobile Menu State
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -275,16 +280,28 @@ export const FloatingNavigation: React.FC = () => {
     // Perform actual logout
     const handleLogout = useCallback(async () => {
         try {
-            setShowLogoutConfirm(false);
+            // Wait for logout request to complete
             await logout().unwrap();
-            // Also clear the stored token
+
+            // Clear token and Redux state specifically
             clearStoredToken();
+            dispatch(resetAuth());
+            dispatch(authApi.util.resetApiState()); // Force clear RTK Query cache
+
             toast.success("Logged out successfully");
+            setShowLogoutConfirm(false);
             navigate('/');
-        } catch {
-            toast.error("Logout failed");
+        } catch (error) {
+            console.error("Logout failed", error);
+            // Even on error, force logout for the user
+            clearStoredToken();
+            dispatch(resetAuth());
+            dispatch(authApi.util.resetApiState()); // Force clear RTK Query cache
+            setShowLogoutConfirm(false);
+            navigate('/');
+            toast.error("Logged out (session expired)");
         }
-    }, [logout, navigate]);
+    }, [logout, navigate, dispatch]);
 
     // Determine active tab
     const getActiveId = () => {
@@ -516,7 +533,7 @@ export const FloatingNavigation: React.FC = () => {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm"
-                        onClick={() => setShowLogoutConfirm(false)}
+                        onClick={() => !isLoggingOut && setShowLogoutConfirm(false)}
                     >
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -547,27 +564,38 @@ export const FloatingNavigation: React.FC = () => {
                                 <div className="flex gap-3">
                                     <button
                                         onClick={() => setShowLogoutConfirm(false)}
+                                        disabled={isLoggingOut}
                                         className={`
                                             flex-1 py-2.5 px-4 rounded-xl font-medium transition-colors
                                             ${isDark
                                                 ? "bg-white/10 hover:bg-white/15 text-white"
                                                 : "bg-gray-100 hover:bg-gray-200 text-gray-700"
                                             }
+                                            ${isLoggingOut ? "opacity-50 cursor-not-allowed" : ""}
                                         `}
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={handleLogout}
+                                        disabled={isLoggingOut}
                                         className={`
-                                            flex-1 py-2.5 px-4 rounded-xl font-medium transition-colors
+                                            flex-1 py-2.5 px-4 rounded-xl font-medium transition-colors flex items-center justify-center gap-2
                                             ${isDark
                                                 ? "bg-red-500/90 hover:bg-red-500 text-white"
                                                 : "bg-red-600 hover:bg-red-700 text-white"
                                             }
+                                            ${isLoggingOut ? "opacity-75 cursor-not-allowed" : ""}
                                         `}
                                     >
-                                        Sign Out
+                                        {isLoggingOut ? (
+                                            <>
+                                                <Loader2 size={16} className="animate-spin" />
+                                                <span>Signing Out...</span>
+                                            </>
+                                        ) : (
+                                            "Sign Out"
+                                        )}
                                     </button>
                                 </div>
                             </div>
