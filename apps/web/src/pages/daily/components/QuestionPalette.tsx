@@ -162,12 +162,6 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
         ? getAttemptForQuestion(currentQuestion.id)
         : undefined;
 
-    const currentUserAnswer = getUserAnswer(currentAttempt);
-    const currentCorrectAnswer = currentQuestion ? getCorrectAnswer(currentQuestion) : "";
-
-    const isCurrentAnswered =
-        currentUserAnswer != null && String(currentUserAnswer).length > 0;
-
     return (
         <motion.div
             className={`h-full w-full shrink-0 backdrop-blur-xl border-l shadow-xl flex flex-col ${
@@ -357,30 +351,6 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
                                     : "text-text-secondary-light"
                             }`}
                         >
-                            <div className="flex items-center justify-between gap-3">
-                                <span className="opacity-70">Type</span>
-                                <span className="font-medium">
-                                    {currentQuestion.question_type.replace(/_/g, " ")}
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between gap-3">
-                                <span className="opacity-70">Difficulty</span>
-                                <span className="font-medium">
-                                    {currentQuestion.difficulty || "-"}
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between gap-3">
-                                <span className="opacity-70">Your answer</span>
-                                <span className="font-medium">
-                                    {isCurrentAnswered ? String(currentUserAnswer) : "-"}
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between gap-3">
-                                <span className="opacity-70">Correct answer</span>
-                                <span className="font-medium text-success">
-                                    {currentCorrectAnswer || "-"}
-                                </span>
-                            </div>
                             <div className="flex items-center justify-between gap-3">
                                 <span className="opacity-70">Your time</span>
                                 <span className="font-medium">

@@ -316,14 +316,15 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
         <div className={`h-full flex flex-col ${isDark ? "scrollbar-dark" : "scrollbar-light"}`}>
             <div className="flex-1 overflow-y-auto">
                 <div className="p-4 md:p-6 space-y-6">
-                    <div className="flex items-center gap-2">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wide ${isDark ? "bg-brand-primary-dark/30 text-brand-primary-dark" : "bg-brand-primary-light/20 text-brand-primary-light"}`}>
-                            {question.question_type.replace(/_/g, " ")}
-                        </span>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${question.difficulty === "easy" ? "bg-success/80" : question.difficulty === "medium" ? "bg-warning/80" : "bg-error/80"} ${isDark ? "bg-bg-tertiary-dark text-text-primary-dark" : "bg-bg-tertiary-light text-text-primary-light"}`}>
-                            {question.difficulty || "Medium"}
-                        </span>
-                    </div>
+                    {!isExamMode && 
+                        (<div className="flex items-center gap-2">
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wide ${isDark ? "bg-brand-primary-dark/30 text-brand-primary-dark" : "bg-brand-primary-light/20 text-brand-primary-light"}`}>
+                                {question.question_type.replace(/_/g, " ")}
+                            </span>
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${question.difficulty === "easy" ? "bg-success/80" : question.difficulty === "medium" ? "bg-warning/80" : "bg-error/80"} ${isDark ? "bg-bg-tertiary-dark text-text-primary-dark" : "bg-bg-tertiary-light text-text-primary-light"}`}>
+                                {question.difficulty || "Medium"}
+                            </span>
+                        </div>)}
 
                     <motion.h3 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`text-lg font-semibold whitespace-pre-line ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
                         {question.question_text}

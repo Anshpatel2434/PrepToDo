@@ -59,7 +59,7 @@ const DailyPage: React.FC = () => {
             console.error("No exam_id selected");
             return;
         }
-        console.log("[DailyPage] handleStartPractice called for type:", type);
+
         navigate(`/daily/${type}?exam_id=${selectedExamId}`);
     };
 
@@ -275,7 +275,7 @@ const DailyPage: React.FC = () => {
                     {/* Right Column: Sidebar (4 cols) */}
                     <div className="lg:col-span-4 space-y-6">
                         {/* Article Source Widget */}
-                        {selectedExam && viewMode === "test" && (
+                        {selectedExam && (
                             <motion.div
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}

@@ -95,8 +95,6 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
             return;
         }
 
-        console.log("[MockFormModal] Form submitted");
-
         // Rate limiting: Check if last mock generation was within 20 minutes
         const RATE_LIMIT_KEY = 'lastMockGenerationTime';
         const RATE_LIMIT_MINUTES = 20;
@@ -107,15 +105,8 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
             const currentTime = new Date().getTime();
             const timeDiffMinutes = (currentTime - lastTime) / (1000 * 60);
 
-            console.log("[MockFormModal] Rate limit check:", {
-                lastGenerationTime,
-                timeDiffMinutes: timeDiffMinutes.toFixed(2),
-                rateLimitMinutes: RATE_LIMIT_MINUTES,
-            });
-
             if (timeDiffMinutes < RATE_LIMIT_MINUTES) {
                 const remainingMinutes = Math.ceil(RATE_LIMIT_MINUTES - timeDiffMinutes);
-                console.log("[MockFormModal] Rate limit exceeded, remaining minutes:", remainingMinutes);
                 toast.error(
                     `⏱️ Please wait ${remainingMinutes} more minute${remainingMinutes > 1 ? 's' : ''} before generating another mock test.`,
                     {
@@ -129,37 +120,27 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
                 );
                 return;
             } else {
-                // More than 20 minutes have passed, clear the old timestamp
-                console.log("[MockFormModal] Rate limit passed, clearing old timestamp");
                 localStorage.removeItem(RATE_LIMIT_KEY);
             }
-        } else {
-            console.log("[MockFormModal] No previous generation timestamp found");
         }
 
         // Validation
         if (selectedGenres.length !== 4) {
-            console.log("[MockFormModal] Validation failed: Invalid genre count:", selectedGenres.length);
             toast.error("Please select exactly 4 genres");
             return;
         }
 
         if (numPassages < 1 || numPassages > 5) {
-            console.log("[MockFormModal] Validation failed: Invalid passage count:", numPassages);
             toast.error("Number of passages must be between 1 and 5");
             return;
         }
 
         if (totalQuestions < 5 || totalQuestions > 50) {
-            console.log("[MockFormModal] Validation failed: Invalid question count:", totalQuestions);
             toast.error("Total questions must be between 5 and 50");
             return;
         }
 
-        console.log("[MockFormModal] Validation passed");
-
         try {
-
             const params = {
                 user_id: user.id,
                 mock_name: mockName,
@@ -178,26 +159,12 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
                 target_metrics: targetMetrics,
             };
 
-            console.log("[MockFormModal] Creating mock with params:", params);
-
             // Save current timestamp to localStorage for rate limiting
             localStorage.setItem(RATE_LIMIT_KEY, new Date().toISOString());
-            console.log("[MockFormModal] Rate limit timestamp saved");
 
             // Fire-and-forget: Start the mutation but don't wait for it
             createMock(params).unwrap().then((result) => {
-                console.log("[MockFormModal] Mock creation response received:", {
-                    success: result.success,
-                    examId: result.exam_id,
-                    mockName: result.mock_name,
-                    message: result.message,
-                });
-
                 if (result.success && result.exam_id) {
-                    // The optimistic update already added the mock
-                    // The fetchGenerationState subscription will handle updates
-                    console.log("[MockFormModal] Mock generation started successfully, exam_id:", result.exam_id);
-
                     toast.success(
                         `Mock "${result.mock_name || mockName}" generation started!`,
                         {
@@ -211,25 +178,19 @@ const MockFormModal: React.FC<MockFormModalProps> = ({
                 } else {
                     console.error("[MockFormModal] Mock creation failed:", result.message);
                     toast.error(result.message || "Failed to create mock test");
-                    // Remove timestamp if generation failed
                     localStorage.removeItem(RATE_LIMIT_KEY);
-                    console.log("[MockFormModal] Rate limit timestamp removed due to failure");
                 }
             }).catch((error) => {
                 console.error("[MockFormModal] Error creating mock:", error);
                 toast.error("An error occurred while creating your mock test");
-                // Remove timestamp if generation failed
                 localStorage.removeItem(RATE_LIMIT_KEY);
-                console.log("[MockFormModal] Rate limit timestamp removed due to error");
             });
 
             // Close modal immediately and trigger UI update
-            console.log("[MockFormModal] Closing modal and triggering UI update");
             onSuccess();
         } catch (error) {
             console.error("[MockFormModal] Error creating mock:", error);
             toast.error("An error occurred while creating your mock test");
-            // Remove timestamp if there was an error
             localStorage.removeItem(RATE_LIMIT_KEY);
         }
     };

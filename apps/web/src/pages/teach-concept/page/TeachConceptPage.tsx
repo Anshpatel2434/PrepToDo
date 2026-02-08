@@ -15,7 +15,7 @@ const TeachConceptPage = () => {
 	async function handleSendRequest() {
 		try {
 			// Note: Unwrap is often cleaner here, but keeping your logic distinct
-			console.log("we are here hehe");
+
 			const data = await teachConcept({ conceptQuery: theoryQuery }).unwrap();
 			if (data?.explanation) {
 				const temp = data?.explanation;

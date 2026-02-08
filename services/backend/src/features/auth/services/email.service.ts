@@ -45,39 +45,46 @@ export async function verifyEmailConnection(): Promise<boolean> {
 export async function sendOtpEmail(to: string, otp: string): Promise<void> {
   const html = `
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Verification Code</title>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #f9fafb; color: #111827; -webkit-font-smoothing: antialiased; }
+        .wrapper { max-width: 600px; margin: 40px auto; padding: 0 20px; }
+        .container { background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .header { background: linear-gradient(135deg, #0F5F53 0%, #14B8A6 100%); padding: 48px 32px; text-align: center; }
+        .logo { color: #ffffff; font-size: 32px; font-weight: 700; letter-spacing: -0.025em; margin: 0; }
+        .tagline { color: rgba(255, 255, 255, 0.9); font-size: 16px; margin: 8px 0 0 0; }
+        .content { padding: 48px 40px; }
+        .title { font-size: 24px; font-weight: 700; color: #111827; margin: 0 0 16px 0; letter-spacing: -0.025em; }
+        .text { font-size: 16px; line-height: 1.6; color: #4b5563; margin: 0 0 32px 0; }
+        .otp-container { background-color: #f3f4f6; border-radius: 16px; padding: 32px; text-align: center; margin: 0 0 32px 0; border: 1px border #e5e7eb; }
+        .otp-code { font-family: 'Inter', monospace; font-size: 48px; font-weight: 700; letter-spacing: 0.15em; color: #0F5F53; margin: 0; }
+        .footer { padding: 32px 40px; text-align: center; border-top: 1px solid #f3f4f6; }
+        .footer-text { font-size: 14px; color: #9ca3af; margin: 0; }
+      </style>
     </head>
-    <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f5;">
-      <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px 16px 0 0; padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">PrepToDo</h1>
-          <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 14px;">Your learning journey starts here</p>
-        </div>
-        
-        <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-          <h2 style="color: #1f2937; margin: 0 0 12px 0; font-size: 22px;">Verify Your Email</h2>
-          <p style="color: #6b7280; margin: 0 0 24px 0; font-size: 15px; line-height: 1.6;">
-            Use this code to complete your verification. It expires in <strong>10 minutes</strong>.
-          </p>
-          
-          <div style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0;">
-            <div style="font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #1f2937; font-family: 'Courier New', monospace;">
-              ${otp}
-            </div>
+    <body>
+      <div class="wrapper">
+        <div class="container">
+          <div class="header">
+            <h1 class="logo">PrepToDo</h1>
+            <p class="tagline">Your learning journey starts here</p>
           </div>
-          
-          <p style="color: #9ca3af; margin: 24px 0 0 0; font-size: 13px; text-align: center;">
-            If you didn't request this, please ignore this email.
-          </p>
+          <div class="content">
+            <h2 class="title">Verify your email</h2>
+            <p class="text">Please enter the following verification code to complete your sign-in. This code will expire in 10 minutes.</p>
+            <div class="otp-container">
+              <p class="otp-code">${otp}</p>
+            </div>
+            <p class="text" style="font-size: 14px; text-align: center; margin-bottom: 0;">If you didn't request this code, you can safely ignore this email.</p>
+          </div>
+          <div class="footer">
+            <p class="footer-text">© ${new Date().getFullYear()} PrepToDo.</p>
+          </div>
         </div>
-        
-        <p style="color: #9ca3af; font-size: 12px; text-align: center; margin-top: 24px;">
-          © ${new Date().getFullYear()} PrepToDo. All rights reserved.
-        </p>
       </div>
     </body>
     </html>
@@ -102,39 +109,43 @@ export async function sendPasswordResetEmail(
 
   const html = `
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Reset Password</title>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #f9fafb; color: #111827; -webkit-font-smoothing: antialiased; }
+        .wrapper { max-width: 600px; margin: 40px auto; padding: 0 20px; }
+        .container { background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .header { background: linear-gradient(135deg, #0F5F53 0%, #14B8A6 100%); padding: 48px 32px; text-align: center; }
+        .logo { color: #ffffff; font-size: 32px; font-weight: 700; letter-spacing: -0.025em; margin: 0; }
+        .tagline { color: rgba(255, 255, 255, 0.9); font-size: 16px; margin: 8px 0 0 0; }
+        .content { padding: 48px 40px; text-align: center; }
+        .title { font-size: 24px; font-weight: 700; color: #111827; margin: 0 0 16px 0; letter-spacing: -0.025em; }
+        .text { font-size: 16px; line-height: 1.6; color: #4b5563; margin: 0 0 32px 0; }
+        .button { display: inline-block; background-color: #0F5F53; color: #ffffff !important; padding: 16px 32px; border-radius: 12px; font-size: 16px; font-weight: 600; text-decoration: none; transition: background-color 0.2s; }
+        .footer { padding: 32px 40px; text-align: center; border-top: 1px solid #f3f4f6; }
+        .footer-text { font-size: 14px; color: #9ca3af; margin: 0; }
+      </style>
     </head>
-    <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f5;">
-      <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px 16px 0 0; padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">PrepToDo</h1>
-          <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 14px;">Password Reset Request</p>
-        </div>
-        
-        <div style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-          <h2 style="color: #1f2937; margin: 0 0 12px 0; font-size: 22px;">Reset Your Password</h2>
-          <p style="color: #6b7280; margin: 0 0 24px 0; font-size: 15px; line-height: 1.6;">
-            Click the button below to reset your password. This link expires in <strong>1 hour</strong>.
-          </p>
-          
-          <div style="text-align: center; margin: 32px 0;">
-            <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-              Reset Password
-            </a>
+    <body>
+      <div class="wrapper">
+        <div class="container">
+          <div class="header">
+            <h1 class="logo">PrepToDo</h1>
+            <p class="tagline">Your learning journey starts here</p>
           </div>
-          
-          <p style="color: #9ca3af; margin: 24px 0 0 0; font-size: 13px; text-align: center;">
-            If you didn't request this, please ignore this email.
-          </p>
+          <div class="content">
+            <h2 class="title">Reset your password</h2>
+            <p class="text">We received a request to reset your password. Click the button below to choose a new one. This link will expire in 1 hour.</p>
+            <a href="${resetUrl}" class="button">Reset Password</a>
+            <p class="text" style="font-size: 14px; margin-top: 32px; margin-bottom: 0;">If you didn't request a password reset, you can safely ignore this email.</p>
+          </div>
+          <div class="footer">
+            <p class="footer-text">© ${new Date().getFullYear()} PrepToDo.</p>
+          </div>
         </div>
-        
-        <p style="color: #9ca3af; font-size: 12px; text-align: center; margin-top: 24px;">
-          © ${new Date().getFullYear()} PrepToDo. All rights reserved.
-        </p>
       </div>
     </body>
     </html>

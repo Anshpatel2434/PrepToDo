@@ -6,7 +6,6 @@ import {
     HelpCircle,
     ChevronDown,
     UserCircle,
-    X
 } from "lucide-react";
 import { useFetchDailyLeaderboardQuery } from "../redux_usecase/dailyPracticeApi";
 import type { UUID } from "../../../types";
@@ -24,7 +23,6 @@ const DailyLeaderboard: React.FC<DailyLeaderboardProps> = ({ examId, isDark }) =
     const { data, isLoading, error } = useFetchDailyLeaderboardQuery({ exam_id: examId });
     const [sortField, setSortField] = useState<SortField | null>(null);
     const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
-    const [selectedEntryDetail, setSelectedEntryDetail] = useState<any | null>(null);
     const shouldReduceMotion = useReducedMotion();
 
     const formatTime = (seconds: number) => {
@@ -189,7 +187,6 @@ const DailyLeaderboard: React.FC<DailyLeaderboardProps> = ({ examId, isDark }) =
                                         key={entry.user_id}
                                         variants={!shouldReduceMotion ? rowVariants : {}}
                                         layout
-                                        onClick={() => setSelectedEntryDetail(entry)}
                                         className={`grid grid-cols-12 gap-4 px-8 py-4 items-center group cursor-pointer transition-all ${entry.rank === currentUserRank ? (isDark ? "bg-brand-primary-dark/10" : "bg-brand-primary-light/5") : (isDark ? "hover:bg-white/5" : "hover:bg-gray-50")}`}
                                     >
                                         <div className="col-span-1">
@@ -274,68 +271,6 @@ const DailyLeaderboard: React.FC<DailyLeaderboardProps> = ({ examId, isDark }) =
                     </div>
                 </motion.div>
             )}
-
-            {/* Details Modal */}
-            <AnimatePresence>
-                {selectedEntryDetail && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 shadow-2xl overflow-hidden">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setSelectedEntryDetail(null)}
-                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                        />
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            className={`w-full max-w-sm rounded-[2.5rem] p-8 border relative z-10 ${isDark ? "bg-bg-secondary-dark border-white/10" : "bg-white border-gray-100"}`}
-                        >
-                            <button onClick={() => setSelectedEntryDetail(null)} className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
-                                <X className="opacity-40" />
-                            </button>
-
-                            <div className="flex flex-col items-center text-center space-y-6">
-                                <div className={`w-24 h-24 rounded-full flex items-center justify-center border-4 ${isDark ? "bg-bg-tertiary-dark border-brand-primary-dark/20" : "bg-gray-50 border-brand-primary-light/20"}`}>
-                                    <UserCircle size={60} className="opacity-20 text-brand-primary-light" />
-                                </div>
-
-                                <div>
-                                    <h3 className={`text-2xl font-black ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
-                                        {selectedEntryDetail.username || "Anonymous Scout"}
-                                    </h3>
-                                    <div className={`mt-2 inline-flex items-center gap-2 px-4 py-1.5 rounded-full font-bold text-sm ${getRankBg(selectedEntryDetail.rank)} ${getRankColor(selectedEntryDetail.rank)}`}>
-                                        <Trophy size={14} /> Rank #{selectedEntryDetail.rank}
-                                    </div>
-                                </div>
-
-                                <div className="w-full grid grid-cols-2 gap-4 pt-4">
-                                    <div className={`p-4 rounded-3xl border ${isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-100 shadow-inner"}`}>
-                                        <p className="text-[10px] uppercase font-black opacity-40">Precision</p>
-                                        <p className={`text-xl font-black ${isDark ? "text-blue-400" : "text-blue-600"}`}>
-                                            {selectedEntryDetail.accuracy.toFixed(1)}%
-                                        </p>
-                                    </div>
-                                    <div className={`p-4 rounded-3xl border ${isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-100 shadow-inner"}`}>
-                                        <p className="text-[10px] uppercase font-black opacity-40">Duration</p>
-                                        <p className={`text-xl font-black ${isDark ? "text-orange-400" : "text-orange-600"}`}>
-                                            {formatTime(selectedEntryDetail.time_taken_seconds)}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <button
-                                    onClick={() => setSelectedEntryDetail(null)}
-                                    className={`w-full py-4 rounded-2xl font-bold uppercase tracking-wider transition-all transform hover:scale-[1.02] active:scale-95 ${isDark ? "bg-brand-primary-dark text-white shadow-brand-primary-dark/20 shadow-lg" : "bg-brand-primary-light text-white shadow-brand-primary-light/20 shadow-lg"}`}
-                                >
-                                    Dismiss Profile
-                                </button>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
         </div>
     );
 };

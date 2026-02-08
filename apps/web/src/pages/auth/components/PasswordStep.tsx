@@ -157,7 +157,7 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({
 						checked={skipPassword}
 						onChange={(e) => {
 							setSkipPassword(e.target.checked);
-							console.log("skip password ? ", skipPassword);
+
 						}}
 						className="mr-2"
 					/>

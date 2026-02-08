@@ -64,52 +64,53 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
                 `}
                 >
                     {/* Passage Header */}
-                    <div
+                    {!isExamMode &&
+                       ( < div
                         className={`
                         shrink-0 p-4 border-b
                         ${isDark ? "border-border-dark" : "border-border-light"}
                     `}
                     >
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h2
-                                    className={`
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2
+                                className={`
                                     font-serif font-semibold text-lg
                                     ${isDark
-                                            ? "text-text-primary-dark"
-                                            : "text-text-primary-light"
-                                        }
+                                        ? "text-text-primary-dark"
+                                        : "text-text-primary-light"
+                                    }
                                 `}
-                                >
-                                    {passage?.title || "Passage"}
-                                </h2>
-                                <p
-                                    className={`
+                            >
+                                {passage?.title || "Passage"}
+                            </h2>
+                            <p
+                                className={`
                                     text-xs mt-1
                                     ${isDark
-                                            ? "text-text-muted-dark"
-                                            : "text-text-muted-light"
-                                        }
+                                        ? "text-text-muted-dark"
+                                        : "text-text-muted-light"
+                                    }
                                 `}
-                                >
-                                    {passage?.genre && `${passage.genre} • `}
-                                    {passage?.content &&
-                                        `${passage.content.split(/\s+/).length} words`}
-                                </p>
-                            </div>
-                            <span
-                                className={`
+                            >
+                                {passage?.genre && `${passage.genre} • `}
+                                {passage?.content &&
+                                    `${passage.content.split(/\s+/).length} words`}
+                            </p>
+                        </div>
+                        <span
+                            className={`
                                 px-2 py-1 rounded text-xs font-medium uppercase
                                 ${isDark
-                                        ? "bg-brand-primary-dark/30 text-brand-primary-dark"
-                                        : "bg-brand-primary-light/20 text-brand-primary-light"
-                                    }
+                                    ? "bg-brand-primary-dark/30 text-brand-primary-dark"
+                                    : "bg-brand-primary-light/20 text-brand-primary-light"
+                                }
                             `}
-                            >
-                                {isExamMode ? "Exam Mode" : "Solution Mode"}
-                            </span>
-                        </div>
+                        >
+                            {isExamMode ? "Exam Mode" : "Solution Mode"}
+                        </span>
                     </div>
+                </div>)}
 
                     {/* Passage Content */}
                     <div

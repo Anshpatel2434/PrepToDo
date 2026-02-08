@@ -148,25 +148,10 @@ export const MockQuestionPalette: React.FC<QuestionPaletteProps> = ({
         return { buttonPx, gapPx, verticalPaddingPx, heightPx };
     }, [gridRows]);
 
-    const timeStats = React.useMemo(() => {
-        const times = Object.values(allAttempts)
-            .map((a) => a.time_spent_seconds)
-            .filter((t): t is number => typeof t === "number" && !Number.isNaN(t));
-        const total = times.reduce((sum, t) => sum + t, 0);
-        const avg = times.length > 0 ? Math.round(total / times.length) : 0;
-        return { avgSeconds: avg, attemptedCount: times.length };
-    }, [allAttempts]);
-
     const currentQuestion = questions[currentIndex];
     const currentAttempt = currentQuestion
         ? getAttemptForQuestion(currentQuestion.id)
         : undefined;
-
-    const currentUserAnswer = getUserAnswer(currentAttempt);
-    const currentCorrectAnswer = currentQuestion ? getCorrectAnswer(currentQuestion) : "";
-
-    const isCurrentAnswered =
-        currentUserAnswer != null && String(currentUserAnswer).length > 0;
 
     return (
         <motion.div
@@ -350,41 +335,9 @@ export const MockQuestionPalette: React.FC<QuestionPaletteProps> = ({
                             }`}
                         >
                             <div className='flex items-center justify-between gap-3'>
-                                <span className='opacity-70'>Type</span>
-                                <span className='font-medium'>
-                                    {currentQuestion.question_type.replace(/_/g, ' ')}
-                                </span>
-                            </div>
-                            <div className='flex items-center justify-between gap-3'>
-                                <span className='opacity-70'>Difficulty</span>
-                                <span className='font-medium'>
-                                    {currentQuestion.difficulty || '-'}
-                                </span>
-                            </div>
-                            <div className='flex items-center justify-between gap-3'>
-                                <span className='opacity-70'>Your answer</span>
-                                <span className='font-medium'>
-                                    {isCurrentAnswered ? String(currentUserAnswer) : '-'}
-                                </span>
-                            </div>
-                            <div className='flex items-center justify-between gap-3'>
-                                <span className='opacity-70'>Correct answer</span>
-                                <span className='font-medium text-success'>
-                                    {currentCorrectAnswer || '-'}
-                                </span>
-                            </div>
-                            <div className='flex items-center justify-between gap-3'>
                                 <span className='opacity-70'>Your time</span>
                                 <span className='font-medium'>
                                     {formatTime(currentAttempt?.time_spent_seconds)}
-                                </span>
-                            </div>
-                            <div className='flex items-center justify-between gap-3'>
-                                <span className='opacity-70'>Avg time</span>
-                                <span className='font-medium'>
-                                    {timeStats.attemptedCount > 0
-                                        ? formatTime(timeStats.avgSeconds)
-                                        : '-'}
                                 </span>
                             </div>
                             {typeof currentAttempt?.confidence_level === 'number' && (

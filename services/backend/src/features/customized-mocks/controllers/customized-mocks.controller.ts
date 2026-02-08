@@ -178,6 +178,21 @@ export async function createCustomizedMock(req: Request, res: Response, next: Ne
     try {
         if (!user_id || user_id !== params.user_id) throw Errors.unauthorized();
 
+        // --- Beta Limit Check ---
+        const BETA_MOCK_LIMIT = 2;
+        const activeMocks = await db.query.examPapers.findMany({
+            where: and(
+                eq(examPapers.generated_by_user_id, user_id),
+                inArray(examPapers.generation_status, ['completed', 'generating', 'initializing'])
+            ),
+            columns: { id: true }
+        });
+
+        if (activeMocks.length >= BETA_MOCK_LIMIT) {
+            throw Errors.badRequest(`Beta version is limited to ${BETA_MOCK_LIMIT} customized mocks.`);
+        }
+        // ------------------------
+
         // Prepare parameters (assign exam_id here to control it)
         // Wait: runCustomizedMocks orchestrator usually creates the ID if not passed, 
         // but to return it immediately, we should generate it here.

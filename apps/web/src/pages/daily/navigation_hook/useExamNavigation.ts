@@ -8,15 +8,8 @@ export function useExamNavigationGuard(
     const handledRef = useRef(false);
 
     useEffect(() => {
-        console.group("[ExamGuard]");
-        console.log("shouldBlock:", shouldBlock);
-        console.log("blocker.state:", blocker.state);
-        console.log("handledRef:", handledRef.current);
-        console.groupEnd();
-
         if (blocker.state !== "blocked") return;
         if (handledRef.current) {
-            console.warn("[ExamGuard] Already handled this block");
             return;
         }
 
@@ -26,10 +19,7 @@ export function useExamNavigationGuard(
             "You have unsaved progress, all you progress will be lost. Are you sure you want to leave?"
         );
 
-        console.log("[ExamGuard] confirmLeave:", confirmLeave);
-
         if (!confirmLeave) {
-            console.log("[ExamGuard] User cancelled navigation");
             handledRef.current = false;
             blocker.reset();
             return;

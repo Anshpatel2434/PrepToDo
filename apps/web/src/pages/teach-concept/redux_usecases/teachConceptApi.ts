@@ -1,13 +1,13 @@
-import {createApi, fakeBaseQuery} from "@reduxjs/toolkit/query/react"
+import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react"
 import { supabase } from "../../../services/apiClient"
 
 // Types for the concept teaching feature
 export interface ConceptTeachingRequest {
-  conceptQuery?: string;
+    conceptQuery?: string;
 }
 
 export interface ConceptTeachingResponse {
-  explanation?: string;
+    explanation?: string;
 }
 
 
@@ -18,40 +18,39 @@ export const conceptTeachingApi = createApi({
     endpoints: (builder) => ({
         //Teach a concept using AI system
         teachConcept: builder.mutation<ConceptTeachingResponse, ConceptTeachingRequest>({
-    queryFn: async ({ conceptQuery }) => {
-        try {
-            console.log("We are even here sending the request")
-            const { data, error } = await supabase.functions.invoke("teach-concept", {
-                body: { conceptQuery: conceptQuery }
-            })
+            queryFn: async ({ conceptQuery }) => {
+                try {
 
-            console.log("This is the data we got : ")
-            console.log(data)
+                    const { data, error } = await supabase.functions.invoke("teach-concept", {
+                        body: { conceptQuery: conceptQuery }
+                    })
 
-            if (error)
-                return { error: { status: "CUSTOM_ERROR", data: error.message } }
 
-            // ✅ FIX: Wrap the response in a 'data' property
-            return {
-                data: {
-                    explanation: data,
-                    // Note: 'success' is not in your ConceptTeachingResponse interface. 
-                    // If you need it, add it to the interface, otherwise remove it here.
+
+                    if (error)
+                        return { error: { status: "CUSTOM_ERROR", data: error.message } }
+
+                    // ✅ FIX: Wrap the response in a 'data' property
+                    return {
+                        data: {
+                            explanation: data,
+                            // Note: 'success' is not in your ConceptTeachingResponse interface. 
+                            // If you need it, add it to the interface, otherwise remove it here.
+                        }
+                    }
+                } catch (err) {
+                    console.log("OOOOOPPPSS error")
+                    console.log(err)
+                    const error = err as { message?: string };
+                    return {
+                        error: {
+                            status: "CUSTOM_ERROR",
+                            data: error.message || "Failed to get response",
+                        },
+                    };
                 }
-            }
-        } catch (err) {
-            console.log("OOOOOPPPSS error")
-            console.log(err)
-            const error = err as { message?: string };
-            return {
-                error: {
-                    status: "CUSTOM_ERROR",
-                    data: error.message || "Failed to get response",
-                },
-            };
-        }
-    },
-})
+            },
+        })
     })
 })
 

@@ -44,6 +44,7 @@ import { DailyRCVAPageSkeleton } from "../../components/DailySkeleton";
 import type { Question } from "../../../../types";
 import { v4 as uuid4 } from "uuid";
 import { useExamNavigationGuard } from "../../navigation_hook/useExamNavigation";
+import { showToast } from "../../../../ui_components/CustomToaster";
 
 export default function DailyRCPage() {
     const dispatch = useDispatch();
@@ -115,18 +116,6 @@ export default function DailyRCPage() {
     const elapsedTime = useSelector(selectElapsedTime);
     const startTime = useSelector(selectStartTime);
 
-    // Toast logic for AI Insights
-    const [showToast, setShowToast] = React.useState(false);
-    const prevIsAnalysed = useRef(session.is_analysed);
-
-    useEffect(() => {
-        if (viewMode === "solution" && !prevIsAnalysed.current && session.is_analysed) {
-            setShowToast(true);
-            setTimeout(() => setShowToast(false), 5000);
-        }
-        prevIsAnalysed.current = session.is_analysed;
-    }, [session.is_analysed, viewMode]);
-
     // Timer format helper
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -157,31 +146,6 @@ export default function DailyRCPage() {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const isLoading = isTestDataLoading || isSpecificTestDataLoading || isSessionLoading || isCreatingSession || isUserLoading || isSubmitting;
 
-    // ... (debug logs omitted for brevity in search, but preserving them in file)
-
-    // ...
-
-    // --- 5. Render ---
-    // DEBUG LOGS
-    useEffect(() => {
-        console.log("[DailyRCPage] isLoading status:", {
-            isLoading,
-            isTestDataLoading,
-            isSpecificTestDataLoading,
-            isSessionLoading,
-            isCreatingSession,
-            isUserLoading,
-            isSubmitting,
-            hasUser: !!user,
-            userId: user?.id,
-            hasTestData: !!testData,
-            hasSpecificTestData: !!specificTestData,
-            currentTestDataId: currentTestData?.examInfo?.id,
-            examIdParam: examId
-        });
-    }, [isLoading, isTestDataLoading, isSpecificTestDataLoading, isSessionLoading, isCreatingSession, isUserLoading, isSubmitting, user, testData, specificTestData, currentTestData, examId]);
-
-
     // Polling for session updates in solution mode (to detect when AI analysis is done)
     const { data: polledSessionData } = useFetchExistingSessionDetailsQuery(
         {
@@ -197,6 +161,11 @@ export default function DailyRCPage() {
 
     useEffect(() => {
         if (polledSessionData) {
+            // Check if analysis just finished
+            if (!session.is_analysed && polledSessionData.session.is_analysed) {
+                showToast.success("AI Insights are now available.", "ai-analysis-done");
+            }
+
             dispatch(
                 updateSessionAnalytics({
                     session: polledSessionData.session,
@@ -204,7 +173,7 @@ export default function DailyRCPage() {
                 })
             );
         }
-    }, [polledSessionData, dispatch]);
+    }, [polledSessionData, dispatch, session.is_analysed]);
 
     // --- 2. Session Setup Logic ---
 
@@ -219,19 +188,19 @@ export default function DailyRCPage() {
         const init = async () => {
             // Mark initialization as in progress
             isInitializingRef.current = true;
-            console.log("[DailyRCPage] Starting initialization...", { examPaperId: currentTestData.examInfo.id, userId: user.id });
+
 
             try {
-                console.log("[DailyRCPage] User confirmed:", user.id);
+
 
                 // 1. Check for existing session
-                console.log("[DailyRCPage] Fetching existing session...");
+
                 const sessionResult = await fetchExistingSession({
                     user_id: user.id,
                     paper_id: currentTestData.examInfo.id,
                     session_type: "daily_challenge_rc",
                 });
-                console.log("[DailyRCPage] Existing session result:", sessionResult);
+
 
                 // Prepare Question IDs
                 const rcQuestions = currentTestData.questions.filter(
@@ -257,14 +226,12 @@ export default function DailyRCPage() {
                         new Set(rcQuestions.map((q) => q.passage_id).filter(Boolean))
                     ) as string[];
 
-                    console.log("[DailyRCPage] Starting new session with passageIds:", passageIds);
                     const newSession = await startNewSession({
                         user_id: user.id,
                         paper_id: currentTestData.examInfo.id,
                         passage_ids: passageIds,
                         question_ids: questionIds,
                     }).unwrap();
-                    console.log("[DailyRCPage] New session created:", newSession);
 
                     dispatch(
                         initializeSession({
@@ -498,20 +465,6 @@ export default function DailyRCPage() {
                     </span>
                 </div>
             </header>
-
-            {/* Toast Notification for AI Insights */}
-            <AnimatePresence>
-                {showToast && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -20, x: "-50%" }}
-                        animate={{ opacity: 1, y: 20, x: "-50%" }}
-                        exit={{ opacity: 0, y: -20, x: "-50%" }}
-                        className="fixed top-20 left-1/2 z-50 px-6 py-3 rounded-full bg-brand-primary-light text-white shadow-2xl font-medium"
-                    >
-                        AI Insights are now available.
-                    </motion.div>
-                )}
-            </AnimatePresence>
 
             {/* Main Body */}
             <div className="flex-1 flex relative overflow-hidden">

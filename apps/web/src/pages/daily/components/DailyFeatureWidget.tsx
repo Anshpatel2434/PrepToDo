@@ -52,10 +52,6 @@ export const DailyFeatureWidget: React.FC<DailyFeatureWidgetProps> = ({
 
     return (
         <div className="w-full">
-            <h3 className={`text-lg font-semibold mb-4 px-1 flex items-center gap-2 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
-                <span className={`w-2 h-2 rounded-full ${isDark ? "bg-brand-accent-dark" : "bg-brand-accent-light"}`} />
-                Today's Focus
-            </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {features.map((feature, index) => {

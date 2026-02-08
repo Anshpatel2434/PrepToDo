@@ -44,7 +44,7 @@ const CustomizedMocksPage: React.FC = () => {
     };
 
     const handleCreateSuccess = () => {
-        console.log("[CustomizedMocksPage] Mock creation started");
+
         setIsModalOpen(false);
         // No need to refetch - RTK Query's optimistic update and invalidatesTags handle this
     };

@@ -3,12 +3,12 @@ import {
     RouterProvider,
     createBrowserRouter,
 } from "react-router-dom";
-import { Toaster } from "react-hot-toast";
 import { lazy, Suspense } from "react";
 
 import { ThemeProvider } from "./context/ThemeContext";
 import { SafeAuthRoute } from "./ui_components/SafeAuthRoute";
 import { PageLoader } from "./ui_components/PageLoader";
+import { CustomToaster } from "./ui_components/CustomToaster";
 
 import "./App.css";
 
@@ -175,33 +175,10 @@ const router = createBrowserRouter([
 /* ---------------- APP ---------------- */
 
 function AppContent() {
-
     return (
         <>
             <RouterProvider router={router} />
-            <Toaster
-                position="top-right"
-                toastOptions={{
-                    duration: 4000,
-                    style: {
-                        borderRadius: "12px",
-                        fontSize: "14px",
-                        fontWeight: "500",
-                    },
-                    success: {
-                        iconTheme: {
-                            primary: "#10b981",
-                            secondary: "#ffffff",
-                        },
-                    },
-                    error: {
-                        iconTheme: {
-                            primary: "#ef4444",
-                            secondary: "#ffffff",
-                        },
-                    },
-                }}
-            />
+            <CustomToaster />
         </>
     );
 }

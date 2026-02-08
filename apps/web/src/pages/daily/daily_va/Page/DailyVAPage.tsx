@@ -41,6 +41,7 @@ import { MdChevronLeft, MdChevronRight, MdArrowBack } from "react-icons/md";
 import { DailyRCVAPageSkeleton } from "../../components/DailySkeleton";
 import { v4 as uuid4 } from "uuid";
 import { useExamNavigationGuard } from "../../navigation_hook/useExamNavigation";
+import { showToast } from "../../../../ui_components/CustomToaster";
 
 const DailyVAPage: React.FC = () => {
     const dispatch = useDispatch();
@@ -107,18 +108,6 @@ const DailyVAPage: React.FC = () => {
     const elapsedTime = useSelector(selectElapsedTime);
     const startTime = useSelector(selectStartTime);
 
-    // Toast logic for AI Insights
-    const [showToast, setShowToast] = React.useState(false);
-    const prevIsAnalysed = useRef(session.is_analysed);
-
-    useEffect(() => {
-        if (viewMode === "solution" && !prevIsAnalysed.current && session.is_analysed) {
-            setShowToast(true);
-            setTimeout(() => setShowToast(false), 5000);
-        }
-        prevIsAnalysed.current = session.is_analysed;
-    }, [session.is_analysed, viewMode]);
-
     // Timer format helper
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -162,6 +151,9 @@ const DailyVAPage: React.FC = () => {
 
     useEffect(() => {
         if (polledSessionData) {
+            if (!session.is_analysed && polledSessionData.session.is_analysed) {
+                showToast.success("AI Insights are now available.", "ai-analysis-done");
+            }
             dispatch(
                 updateSessionAnalytics({
                     session: polledSessionData.session,
@@ -169,7 +161,7 @@ const DailyVAPage: React.FC = () => {
                 })
             );
         }
-    }, [polledSessionData, dispatch]);
+    }, [polledSessionData, dispatch, session.is_analysed]);
 
     // 2. Initialization
 
@@ -184,7 +176,7 @@ const DailyVAPage: React.FC = () => {
         const init = async () => {
             // Mark initialization as in progress
             isInitializingRef.current = true;
-            console.log("[DailyVAPage] Starting initialization...", { examPaperId: currentTestData.examInfo.id, userId: user.id });
+
 
             try {
                 const sessionResult = await fetchExistingSession({
@@ -445,20 +437,6 @@ const DailyVAPage: React.FC = () => {
                     </span>
                 </div>
             </header>
-
-            {/* Toast Notification for AI Insights */}
-            <AnimatePresence>
-                {showToast && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -20, x: "-50%" }}
-                        animate={{ opacity: 1, y: 20, x: "-50%" }}
-                        exit={{ opacity: 0, y: -20, x: "-50%" }}
-                        className="fixed top-20 left-1/2 z-50 px-6 py-3 rounded-full bg-brand-primary-light text-white shadow-2xl font-medium"
-                    >
-                        AI Insights are now available.
-                    </motion.div>
-                )}
-            </AnimatePresence>
 
             {/* Main Body */}
             <div className="flex-1 flex relative overflow-hidden">
