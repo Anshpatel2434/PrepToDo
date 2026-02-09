@@ -367,10 +367,27 @@ export const authApi = createApi({
         }),
 
         // Get current user
+        // Uses queryFn to validate token existence first - prevents stale cache data
+        // when OAuth flow is cancelled via browser back button
         fetchUser: builder.query<UserResponse | null, void>({
-            query: () => '/me',
-            transformResponse: (response: { success: true; data: { user: UserResponse } }) => response.data.user,
-            transformErrorResponse: () => null,
+            queryFn: async (_arg, _queryApi, _extraOptions, fetchWithBQ) => {
+                // If no token exists, return null immediately without making a network request
+                // This prevents RTK Query from returning stale cached user data
+                const token = getStoredToken();
+                if (!token) {
+                    return { data: null };
+                }
+
+                // Token exists, make the API call
+                const result = await fetchWithBQ('/me');
+                if (result.error) {
+                    // On error (e.g., 401), return null
+                    return { data: null };
+                }
+
+                const response = result.data as { success: true; data: { user: UserResponse } };
+                return { data: response.data.user };
+            },
             providesTags: ['User'],
         }),
 

@@ -123,7 +123,7 @@ const DailyLeaderboard: React.FC<DailyLeaderboardProps> = ({ examId, isDark }) =
                 animate={{ opacity: 1, scale: 1 }}
                 className={`p-6 rounded-3xl border ${isDark ? "bg-bg-secondary-dark/40 border-border-dark backdrop-blur-md" : "bg-white border-border-light shadow-sm"} relative overflow-hidden`}
             >
-                <div className="absolute top-0 right-0 p-8 opacity-5">
+                <div className={`absolute top-0 right-0 p-8 opacity-5 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
                     <Trophy size={120} />
                 </div>
 
@@ -197,7 +197,7 @@ const DailyLeaderboard: React.FC<DailyLeaderboardProps> = ({ examId, isDark }) =
 
                                         <div className="col-span-1 flex justify-center">
                                             <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${isDark ? "bg-bg-tertiary-dark border-white/10" : "bg-gray-100 border-white"}`}>
-                                                <UserCircle size={24} className="opacity-40" />
+                                                <UserCircle size={24} className={`opacity-40 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`} />
                                             </div>
                                         </div>
 

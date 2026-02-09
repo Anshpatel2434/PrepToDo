@@ -26,14 +26,15 @@ import {
     useFetchUserQuery,
     useLogoutMutation,
     clearStoredToken,
+    getStoredToken,
 } from "../pages/auth/redux_usecases/authApi";
 import { resetAuth } from "../pages/auth/redux_usecases/authSlice";
 import toast from "react-hot-toast";
 import { useTheme } from "../context/ThemeContext";
 // Import UserResponse type
 import type { UserResponse } from "../services/apiClient";
-import logo from "/logo_new.png";
-
+// import logo from "/logo_new.png";
+import logo from "../assets/l6.png";
 // ----------------------------------------------------------------------------
 // TYPES
 // ----------------------------------------------------------------------------
@@ -176,8 +177,14 @@ export const FloatingNavigation: React.FC = () => {
     const dispatch = useDispatch();
 
     // Auth State
-    const { data: authState } = useFetchUserQuery();
-    const user = authState ?? null;
+    const { data: authState } = useFetchUserQuery(undefined, {
+        refetchOnMountOrArgChange: true,
+        refetchOnFocus: true,
+    });
+    // Validate that both user data exists AND a valid token is present
+    // This prevents showing stale user data in navbar when OAuth is cancelled
+    const hasValidToken = getStoredToken() !== null;
+    const user = (authState && hasValidToken) ? authState : null;
     const isAuthenticated = user !== null;
     const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
 
@@ -287,7 +294,6 @@ export const FloatingNavigation: React.FC = () => {
                             <div className={`
                                 flex items-center justify-center
                                 w-11 h-11 rounded-xl p-0.5 transition-all duration-300
-                                ${isDark ? "bg-white/10 hover:bg-white/15" : "bg-black/5 hover:bg-black/10"}
                             `}>
                                 <img
                                     src={logo}
@@ -360,7 +366,6 @@ export const FloatingNavigation: React.FC = () => {
                         >
                             <div className={`
                                 w-9 h-9 rounded-lg p-1.5 flex items-center justify-center
-                                ${isDark ? "bg-white/10" : "bg-black/5"}
                             `}>
                                 <img
                                     src={logo}

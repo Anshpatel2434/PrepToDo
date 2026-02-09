@@ -46,6 +46,17 @@ import {
 const router = Router();
 
 // =============================================================================
+// Global Middleware
+// =============================================================================
+// Disable caching for all auth endpoints to prevent "zombie" user state
+router.use((_req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    next();
+});
+
+// =============================================================================
 // Public Routes
 // =============================================================================
 

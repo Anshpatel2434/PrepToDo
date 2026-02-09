@@ -6,7 +6,7 @@ import {
 	AuthPopup,
 	type AuthPopupCloseReason,
 } from "../pages/auth/components/AuthPopup";
-import { useFetchUserQuery } from "../pages/auth/redux_usecases/authApi";
+import { useFetchUserQuery, getStoredToken } from "../pages/auth/redux_usecases/authApi";
 import { PageLoader } from "./PageLoader";
 
 interface SafeAuthRouteProps {
@@ -21,9 +21,18 @@ export const SafeAuthRoute: React.FC<SafeAuthRouteProps> = ({
 	const navigate = useNavigate();
 	const location = useLocation();
 	const { isDark } = useTheme();
-	const { data: user, isLoading, isFetching } = useFetchUserQuery();
+	const { data: user, isLoading, isFetching } = useFetchUserQuery(undefined, {
+		refetchOnMountOrArgChange: true,
+		refetchOnFocus: true,
+	});
 
-	if (user) return <>{children}</>;
+	// Validate that both user data exists AND a valid token is present
+	// This prevents showing authenticated content when OAuth was cancelled
+	// and stale cache data might briefly exist
+	const hasValidToken = getStoredToken() !== null;
+	const isAuthenticated = user !== null && hasValidToken;
+
+	if (isAuthenticated) return <>{children}</>;
 
 	if (isLoading || isFetching) {
 		return <PageLoader variant="fullscreen" message="Loading..." />;
