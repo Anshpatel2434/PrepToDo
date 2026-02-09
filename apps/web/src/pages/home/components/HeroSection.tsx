@@ -241,7 +241,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 >
                     <button
                         onClick={() => !isAuthenticated ? onQuickAuth?.('signup') : navigate('/dashboard')}
-                        className={`group relative h-12 px-8 rounded-xl font-semibold text-white shadow-lg shadow-brand-primary-light/20 transition-all duration-300 hover:shadow-brand-primary-light/50 hover:-translate-y-0.5 flex items-center gap-2 overflow-hidden ${isDark
+                        className={`group relative h-12 px-8 rounded-xl font-semibold text-white shadow-lg shadow-brand-primary-light/20 transition-all duration-300 hover:shadow-brand-primary-light/50 hover:-translate-y-0.5 flex items-center gap-2 overflow-hidden hover:cursor-pointer ${isDark
                             ? "bg-linear-to-r from-brand-primary-dark to-brand-secondary-dark"
                             : "bg-linear-to-r from-brand-primary-light to-brand-secondary-light"
                             }`}
@@ -258,7 +258,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                             const featuresSection = document.querySelector('[data-section="features"]');
                             featuresSection?.scrollIntoView({ behavior: 'smooth' });
                         }}
-                        className={`group h-12 px-8 rounded-xl font-medium border backdrop-blur-sm transition-all duration-300 hover:bg-white/10 flex items-center gap-2 ${isDark
+                        className={`group h-12 px-8 rounded-xl font-medium border backdrop-blur-sm transition-all duration-300 hover:bg-white/10 flex items-center gap-2 hover:cursor-pointer ${isDark
                             ? "bg-white/5 border-white/10 text-white"
                             : "bg-black/5 border-black/10 text-gray-900"
                             }`}

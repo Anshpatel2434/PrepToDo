@@ -1,18 +1,13 @@
 // ============================================================================
 // FLUID MINIMALISM NAVIGATION COMPONENT
-// Top-fixed on all screen sizes, fluid MacBook dock effect, hover-to-text
+// Top-fixed on all screen sizes, always visible text, new logo
 // ============================================================================
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
     motion,
-    useMotionValue,
-    useTransform,
-    useSpring,
     AnimatePresence,
-    MotionValue
 } from "framer-motion";
 import {
-    Home,
     LayoutGrid,
     CalendarCheck,
     PieChart,
@@ -37,6 +32,7 @@ import toast from "react-hot-toast";
 import { useTheme } from "../context/ThemeContext";
 // Import UserResponse type
 import type { UserResponse } from "../services/apiClient";
+import logo from "../../public/logo_new.png";
 
 // ----------------------------------------------------------------------------
 // TYPES
@@ -54,136 +50,90 @@ interface NavigationItem {
 // DATA
 // ----------------------------------------------------------------------------
 const navigationItems: NavigationItem[] = [
-    {
-        id: "home",
-        label: "Home",
-        icon: <Home size={22} strokeWidth={2} />,
-        path: "/",
-        description: "Dashboard",
-    },
+    // Home item removed as per request
     {
         id: "daily",
-        label: "Practice",
-        icon: <CalendarCheck size={22} strokeWidth={2} />,
+        label: "Daily",
+        icon: <CalendarCheck size={20} strokeWidth={2} />,
         path: "/daily",
         description: "Daily Exercises",
     },
     {
         id: "features",
         label: "Features",
-        icon: <LayoutGrid size={22} strokeWidth={2} />,
+        icon: <LayoutGrid size={20} strokeWidth={2} />,
         path: "/home#features",
         description: "Tools",
     },
     {
         id: "about",
-        label: "Analysis",
-        icon: <PieChart size={22} strokeWidth={2} />,
+        label: "Dashboard",
+        icon: <PieChart size={20} strokeWidth={2} />,
         path: "/dashboard",
         description: "Analytics",
     },
-    // Adding extra item that might be hidden on mobile depending on logic
     {
         id: "customized-mocks",
-        label: "Custom Mocks",
-        icon: <Sliders size={22} strokeWidth={2} />,
+        label: "Customized Sectionals",
+        icon: <Sliders size={20} strokeWidth={2} />,
         path: "/customized-mocks",
         description: "Tailored Tests",
     }
 ];
 
 // ----------------------------------------------------------------------------
-// DESKTOP DOCK ITEM (Fluid + Expandable)
+// DESKTOP NAV ITEM (Static Text)
 // ----------------------------------------------------------------------------
-const DockItem = ({
+const DesktopNavItem = ({
     item,
-    mouseX,
     isActive,
     isDark,
     onClick
 }: {
     item: NavigationItem;
-    mouseX: MotionValue<number>;
     isActive: boolean;
     isDark: boolean;
     onClick: () => void;
 }) => {
-    const ref = useRef<HTMLButtonElement>(null);
-    const [isHovered, setIsHovered] = useState(false);
-
-    // Distance from mouse to center of this icon
-    const distance = useTransform(mouseX, (val) => {
-        const bounds = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
-        return val - bounds.x - bounds.width / 2;
-    });
-
-    // MacBook Dock Effect logic for SIZE/SCALE
-    // Consistent spring for all transformations to avoid "stepping"
-    const sizeRaw = useTransform(distance, [-150, 0, 150], [40, 56, 40]);
-    const size = useSpring(sizeRaw, { mass: 0.1, stiffness: 200, damping: 20 });
-
-    // Scale for icon
-    const iconScale = useTransform(size, [40, 56], [1, 1.2]);
 
     return (
         <motion.button
-            ref={ref}
             onClick={onClick}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            layout
             className={`
-                relative flex items-center justify-center rounded-full
-                transition-colors duration-200
+                relative flex items-center justify-center gap-2 px-4 py-2.5 rounded-full
+                transition-all duration-200 hover:cursor-pointer
                 ${isActive
-                    ? (isDark ? "bg-white/15 text-white" : "bg-black/10 text-black shadow-sm")
-                    : (isDark ? "text-gray-400 hover:text-white" : "text-gray-500 hover:text-black")
+                    ? (isDark ? "bg-white/10 text-white" : "bg-black/5 text-black")
+                    : (isDark ? "text-gray-400 hover:text-white hover:bg-white/5" : "text-gray-500 hover:text-black hover:bg-black/5")
                 }
             `}
-            style={{
-                height: size,
-                minWidth: size,
-                width: isHovered ? "auto" : size,
-            }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
         >
-            {/* Active Indicator Background */}
+            {/* Active Indicator Background (Subtle border for active state) */}
             {isActive && (
                 <motion.div
-                    layoutId="dockActive"
-                    className={`absolute inset-0 rounded-full ${isDark ? "bg-white/5 border border-white/5" : "bg-black/5 border border-black/5"}`}
+                    layoutId="desktopNavActive"
+                    className={`absolute inset-0 rounded-full border ${isDark ? "border-white/10" : "border-black/5"}`}
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
             )}
 
-            {/* Icon Container */}
-            <motion.div
-                style={{ scale: iconScale }}
-                className="flex items-center justify-center z-10 shrink-0"
-            >
+            {/* Icon */}
+            <div className="flex items-center justify-center shrink-0">
                 {item.icon}
-            </motion.div>
+            </div>
 
-            {/* Label (Revealed on Hover) */}
-            <AnimatePresence initial={false}>
-                {isHovered && (
-                    <motion.span
-                        initial={{ opacity: 0, width: 0, marginLeft: 0 }}
-                        animate={{ opacity: 1, width: "auto", marginLeft: 8 }}
-                        exit={{ opacity: 0, width: 0, marginLeft: 0 }}
-                        className="whitespace-nowrap font-semibold text-sm mr-4 overflow-hidden z-10 pointer-events-none"
-                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                    >
-                        {item.label}
-                    </motion.span>
-                )}
-            </AnimatePresence>
+            {/* Label (Always Visible) */}
+            <span className="whitespace-nowrap font-medium text-sm">
+                {item.label}
+            </span>
         </motion.button>
     );
 };
 
 // ----------------------------------------------------------------------------
-// MOBILE NAV ITEM (Simple Touch Target)
+// MOBILE NAV ITEM (Icon + Text Below)
 // ----------------------------------------------------------------------------
 const MobileNavItem = ({
     item,
@@ -199,10 +149,10 @@ const MobileNavItem = ({
     <button
         onClick={onClick}
         className={`
-            flex flex-col items-center justify-center w-14 h-14 rounded-2xl
-            transition-all duration-200 active:scale-95
+            flex flex-col items-center justify-center w-auto h-auto py-2 px-1 rounded-xl gap-1
+            transition-all duration-200 active:scale-95 flex-1 min-w-[60px]
             ${isActive
-                ? (isDark ? "text-white bg-white/10" : "text-black bg-black/5")
+                ? (isDark ? "text-white bg-white/5" : "text-black bg-black/5")
                 : (isDark ? "text-gray-400" : "text-gray-500")
             }
         `}
@@ -210,6 +160,9 @@ const MobileNavItem = ({
         <div className={isActive ? "scale-110 transition-transform" : ""}>
             {item.icon}
         </div>
+        <span className="text-[10px] font-sm leading-none text-center">
+            {item.label}
+        </span>
     </button>
 );
 
@@ -221,9 +174,6 @@ export const FloatingNavigation: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const dispatch = useDispatch();
-
-    // Mouse Tracking for Desktop Dock
-    const mouseX = useMotionValue(Infinity);
 
     // Auth State
     const { data: authState } = useFetchUserQuery();
@@ -261,23 +211,18 @@ export const FloatingNavigation: React.FC = () => {
     // Perform actual logout
     const handleLogout = useCallback(async () => {
         try {
-            // Wait for logout request to complete
             await logout().unwrap();
-
-            // Clear token and Redux state specifically
             clearStoredToken();
             dispatch(resetAuth());
-            dispatch(authApi.util.resetApiState()); // Force clear RTK Query cache
-
+            dispatch(authApi.util.resetApiState());
             toast.success("Logged out successfully");
             setShowLogoutConfirm(false);
             navigate('/');
         } catch (error) {
             console.error("Logout failed", error);
-            // Even on error, force logout for the user
             clearStoredToken();
             dispatch(resetAuth());
-            dispatch(authApi.util.resetApiState()); // Force clear RTK Query cache
+            dispatch(authApi.util.resetApiState());
             setShowLogoutConfirm(false);
             navigate('/');
             toast.error("Logged out (session expired)");
@@ -286,7 +231,10 @@ export const FloatingNavigation: React.FC = () => {
 
     // Determine active tab
     const getActiveId = () => {
-        if (location.pathname === '/') return 'home';
+        // Home no longer has a dedicated nav item, but we highlight nothing or maybe Features if on home?
+        // Actually, if on root and not focused on features, maybe no highlight is correct for this list.
+        if (location.pathname === '/' && location.hash === '#features') return 'features';
+        // Logic for other paths
         if (location.pathname.startsWith('/daily')) return 'daily';
         if (location.pathname.startsWith('/dashboard')) return 'about';
         if (location.pathname.startsWith('/customized-mocks')) return 'customized-mocks';
@@ -295,9 +243,14 @@ export const FloatingNavigation: React.FC = () => {
     const activeId = getActiveId();
 
     // Mobile Logic: Filter items
-    // First 4 items + Menu Button
-    const mobileVisibleItems = navigationItems.slice(0, 4);
-    const mobileOverflowItems = navigationItems.slice(4);
+    // First 4 items (which is all of them now roughly) + Menu Button if needed
+    // We have 4 items. Let's see if we fit them all. 
+    // If screen is very small, we might need overflow. But 4 items is standard for mobile nav.
+    const mobileVisibleItems = navigationItems;
+    // If we add more later, we can re-introduce the hamburger logic for overflow. 
+    // For now, let's keep the Hamburger mainly for Profile/Logout if logged in, or just always show it for Profile stuff.
+    // The previous code had "First 4 items + Menu Button".
+    // Let's stick to showing the 4 items we have, and put the "Menu" button as the 5th item for "More/Profile".
 
     return (
         <React.Fragment>
@@ -309,15 +262,13 @@ export const FloatingNavigation: React.FC = () => {
                     initial={{ y: -100, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                    onMouseMove={(e) => mouseX.set(e.pageX)}
-                    onMouseLeave={() => mouseX.set(Infinity)}
                     className={`
                         pointer-events-auto
-                        flex items-center gap-1 sm:gap-2 px-2 py-2 rounded-full
-                        backdrop-blur-2xl border shadow-2xl transition-all duration-300
+                        flex items-center gap-2 px-3 py-2 rounded-full
+                        backdrop-blur-2xl border shadow-2xl
                         ${isDark
-                            ? "bg-gray-900/60 border-white/10 ring-1 ring-white/10 shadow-black/50"
-                            : "bg-white/70 border-white/40 ring-1 ring-black/5 shadow-black/10"
+                            ? "bg-gray-900/80 border-white/10 ring-1 ring-white/5 shadow-black/50"
+                            : "bg-white/90 border-white/40 ring-1 ring-black/5 shadow-black/10"
                         }
                     `}
                 >
@@ -327,100 +278,46 @@ export const FloatingNavigation: React.FC = () => {
                       -------------------------- 
                     */}
                     <div className="hidden lg:flex items-center gap-1">
-                        {/* Logo / Brand - EdTech Enhanced with SVG */}
+                        {/* Logo / Brand - Clickable to Home */}
                         <div
-                            className="flex items-center px-4 cursor-pointer select-none"
+                            className="flex items-center pr-4 cursor-pointer select-none"
                             onClick={() => navigate('/')}
                         >
-                            <div className="flex items-center gap-3 group">
+                            {/* Logo Image with Subtle Background */}
+                            <div className={`
+                                flex items-center justify-center
+                                w-11 h-11 rounded-xl p-0.5 transition-all duration-300
+                                ${isDark ? "bg-white/10 hover:bg-white/15" : "bg-black/5 hover:bg-black/10"}
+                            `}>
+                                <img
+                                    src={logo}
+                                    alt="PrepToDo Logo"
+                                    className="w-full h-full object-contain"
+                                />
+                            </div>
 
-                                {/* Icon Container */}
-                                <div className="relative">
-                                    {/* Main Badge with SVG P */}
-                                    <div
-                                        className={`
-                    relative flex items-center justify-center
-                    w-10 h-10 rounded-xl
-                    transition-all duration-300
-                    group-hover:scale-105 group-hover:rotate-3
-                    ${isDark
-                                                ? "bg-gradient-to-br from-emerald-400 to-teal-500"
-                                                : "bg-gradient-to-br from-emerald-500 to-teal-600"
-                                            }
-                `}
-                                    >
-                                        {/* SVG P Letter */}
-                                        <svg
-                                            className="w-6 h-6 text-white"
-                                            viewBox="0 0 24 24"
-                                            fill="currentColor"
-                                        >
-                                            <path d="M7 3h8a5 5 0 0 1 0 10H9v8H7V3zm2 2v6h6a3 3 0 0 0 0-6H9z" />
-                                        </svg>
-                                    </div>
-
-                                    {/* Growth/Analytics Accent Icon */}
-                                    <div
-                                        className={`
-                    absolute -bottom-1 -right-1
-                    w-5 h-5 rounded-full
-                    flex items-center justify-center
-                    transition-all duration-300
-                    group-hover:scale-110
-                    ${isDark
-                                                ? "bg-blue-500 shadow-lg shadow-blue-500/30"
-                                                : "bg-blue-600 shadow-md shadow-blue-600/20"
-                                            }
-                `}
-                                    >
-                                        <svg
-                                            className="w-3 h-3 text-white"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2.5}
-                                                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                                            />
-                                        </svg>
-                                    </div>
-                                </div>
-
-                                {/* Brand Text with Tagline */}
-                                <div className="flex flex-col">
-                                    <span
-                                        className={`
-                    text-2xl font-bold tracking-tight
-                    transition-colors duration-200
-                    ${isDark
-                                                ? "text-white group-hover:text-emerald-300"
-                                                : "text-gray-900 group-hover:text-emerald-700"
-                                            }
-                `}
-                                    >
-                                        reptodo
-                                    </span>
-                                    <span
-                                        className={`
-                    text-[10px] font-medium tracking-wide uppercase
-                    -mt-1
-                    ${isDark ? "text-emerald-400/80" : "text-emerald-600/80"}
-                `}
-                                    >
-                                        Learn & Grow
-                                    </span>
-                                </div>
+                            {/* Brand Text */}
+                            <div className="flex flex-col ml-3 leading-none justify-center">
+                                <span className={`
+                                    text-lg font-bold tracking-tight
+                                    ${isDark ? "text-white" : "text-gray-900"}
+                                `}>
+                                    PrepToDo
+                                </span>
+                                <span className={`
+                                    text-[10px] font-bold tracking-wide uppercase mt-0.5
+                                    ${isDark ? "text-brand-primary-light" : "text-brand-primary-dark"}
+                                `}>
+                                    Beta Version
+                                </span>
                             </div>
                         </div>
 
+                        {/* Navigation Items */}
                         {navigationItems.map(item => (
-                            <DockItem
+                            <DesktopNavItem
                                 key={item.id}
                                 item={item}
-                                mouseX={mouseX}
                                 isActive={activeId === item.id}
                                 isDark={isDark}
                                 onClick={() => handleNavigate(item.path)}
@@ -428,18 +325,16 @@ export const FloatingNavigation: React.FC = () => {
                         ))}
 
                         {/* Divider */}
-                        <div className={`w-[1px] h-6 mx-2 ${isDark ? "bg-white/10" : "bg-black/10"}`} />
+                        <div className={`w-[1px] h-6 mx-3 ${isDark ? "bg-white/10" : "bg-black/10"}`} />
 
                         {/* User / CTA */}
                         {isAuthenticated ? (
-                            <div className="flex items-center gap-2">
-                                <DropdownProfile user={user} isDark={isDark} onLogout={promptLogout} />
-                            </div>
+                            <DropdownProfile user={user} isDark={isDark} onLogout={promptLogout} />
                         ) : (
                             <button
                                 onClick={() => navigate('/auth?mode=signup')}
                                 className={`
-                                    h-11 px-6 rounded-full font-bold text-sm transition-all duration-300
+                                    h-10 px-6 rounded-full font-bold text-sm transition-all duration-300
                                     hover:-translate-y-0.5 active:scale-95 shadow-lg
                                     ${isDark
                                         ? "bg-gradient-to-r from-brand-primary-dark to-brand-secondary-dark text-white shadow-brand-primary-dark/20 hover:shadow-brand-primary-dark/40"
@@ -457,35 +352,45 @@ export const FloatingNavigation: React.FC = () => {
                       MOBILE LAYOUT (< 1024px)
                       -------------------------- 
                     */}
-                    <div className="lg:hidden flex items-center gap-1 sm:gap-2">
-                        {/* Logo (Icon only on mobile) */}
+                    <div className="lg:hidden flex items-center justify-between w-full gap-1">
+                        {/* Logo on Left */}
                         <div
-                            className="bg-transparent p-1 sm:p-2 cursor-pointer"
+                            className="p-1 cursor-pointer mr-2"
                             onClick={() => navigate('/')}
                         >
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? "bg-white text-black" : "bg-black text-white"}`}>
-                                <span className="font-bold text-xs">P</span>
+                            <div className={`
+                                w-9 h-9 rounded-lg p-1.5 flex items-center justify-center
+                                ${isDark ? "bg-white/10" : "bg-black/5"}
+                            `}>
+                                <img
+                                    src={logo}
+                                    alt="Logo"
+                                    className="w-full h-full object-contain"
+                                />
                             </div>
                         </div>
 
-                        {mobileVisibleItems.map(item => (
-                            <MobileNavItem
-                                key={item.id}
-                                item={item}
-                                isActive={activeId === item.id}
-                                isDark={isDark}
-                                onClick={() => handleNavigate(item.path)}
-                            />
-                        ))}
+                        {/* Navigation Items (Middle) */}
+                        <div className="flex items-center gap-1 flex-1 justify-center">
+                            {mobileVisibleItems.map(item => (
+                                <MobileNavItem
+                                    key={item.id}
+                                    item={item}
+                                    isActive={activeId === item.id}
+                                    isDark={isDark}
+                                    onClick={() => handleNavigate(item.path)}
+                                />
+                            ))}
+                        </div>
 
-                        {/* Hamburger for Overflow */}
+                        {/* Profile / Menu on Right */}
                         <MobileNavItem
                             item={{
                                 id: 'menu',
-                                label: 'Menu',
+                                label: isAuthenticated ? 'Profile' : 'Menu',
                                 path: '#',
                                 description: 'More',
-                                icon: isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />
+                                icon: isAuthenticated ? <User size={20} /> : <Menu size={20} />
                             }}
                             isActive={isMobileMenuOpen}
                             isDark={isDark}
@@ -514,6 +419,19 @@ export const FloatingNavigation: React.FC = () => {
                         `}
                     >
                         <div className="flex flex-col gap-4">
+                            {/* Header */}
+                            <div className="flex items-center justify-between pb-4 border-b border-gray-500/10">
+                                <span className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+                                    Menu
+                                </span>
+                                <button
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className={`p-2 rounded-full ${isDark ? "bg-white/10 text-white" : "bg-black/5 text-black"}`}
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+
                             {/* User User Info Row */}
                             {isAuthenticated && (
                                 <div className={`p-4 rounded-2xl flex items-center gap-4 ${isDark ? "bg-white/5" : "bg-black/5"}`}>
@@ -531,30 +449,6 @@ export const FloatingNavigation: React.FC = () => {
                                 </div>
                             )}
 
-                            {/* Overflow Items */}
-                            <div className="grid grid-cols-2 gap-3">
-                                {mobileOverflowItems.map(item => (
-                                    <button
-                                        key={item.id}
-                                        onClick={() => handleNavigate(item.path)}
-                                        className={`
-                                            p-4 rounded-2xl text-left transition-colors
-                                            ${isDark
-                                                ? "bg-white/5 hover:bg-white/10 active:bg-white/15"
-                                                : "bg-gray-50 hover:bg-gray-100 active:bg-gray-200"
-                                            }
-                                        `}
-                                    >
-                                        <div className={`mb-2 ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}`}>
-                                            {item.icon}
-                                        </div>
-                                        <div className={`font-medium ${isDark ? "text-white" : "text-gray-900"}`}>
-                                            {item.label}
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-
                             {/* Mobile Auth Actions */}
                             {isAuthenticated ? (
                                 <button
@@ -568,16 +462,18 @@ export const FloatingNavigation: React.FC = () => {
                                     Sign Out
                                 </button>
                             ) : (
-                                <button
-                                    onClick={() => navigate('/auth?mode=signup')}
-                                    className={`
-                                        w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2
-                                        ${isDark ? "bg-brand-primary-dark text-black" : "bg-brand-primary-light text-white"}
-                                    `}
-                                >
-                                    Get Started
-                                    <ArrowRight size={18} />
-                                </button>
+                                <div className="flex flex-col gap-3">
+                                    <button
+                                        onClick={() => navigate('/auth?mode=signup')}
+                                        className={`
+                                            w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2
+                                            ${isDark ? "bg-brand-primary-dark text-black" : "bg-brand-primary-light text-white"}
+                                        `}
+                                    >
+                                        Get Started
+                                        <ArrowRight size={18} />
+                                    </button>
+                                </div>
                             )}
                         </div>
                     </motion.div>
