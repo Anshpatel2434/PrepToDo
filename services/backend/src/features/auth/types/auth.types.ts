@@ -57,3 +57,9 @@ export interface AppMetaData {
     google_id?: string;
     providers?: string[];
 }
+
+// Response from refresh token endpoint
+export interface RefreshTokenResponse {
+    accessToken: string;
+    user: UserResponse;
+}

@@ -33,7 +33,7 @@ export function generateAccessToken(
     };
 
     return jwt.sign(payload, config.jwt.secret, {
-        expiresIn: config.jwt.expiresIn,
+        expiresIn: config.jwt.accessExpiresIn,
     } as jwt.SignOptions);
 }
 

@@ -44,7 +44,8 @@ export const config = {
     // JWT
     jwt: {
         secret: process.env.JWT_SECRET!,
-        expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+        accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
+        refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
         cookieName: 'preptodo_token',
         refreshCookieName: 'preptodo_refresh',
     },

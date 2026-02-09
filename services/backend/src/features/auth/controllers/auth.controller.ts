@@ -11,8 +11,9 @@ import { generateAccessToken } from '../services/jwt.service.js';
 import { generateOtp, hashOtp, verifyOtp, getOtpExpiryDate } from '../services/otp.service.js';
 import { sendOtpEmail, sendPasswordResetEmail } from '../services/email.service.js';
 import { validateEmail } from '../services/emailValidator.service.js';
+import { validateReturnTo } from '../services/urlValidator.js';
 import { authLogger } from '../../../common/utils/logger.js';
-import type { UserResponse, CheckEmailResponse, SendOtpResponse, VerifyOtpResponse, LoginResponse, CheckPendingSignupResponse, GoogleUserInfo } from '../types/auth.types.js';
+import type { UserResponse, CheckEmailResponse, SendOtpResponse, VerifyOtpResponse, LoginResponse, CheckPendingSignupResponse, GoogleUserInfo, RefreshTokenResponse } from '../types/auth.types.js';
 
 // =============================================================================
 // Helper Functions
@@ -59,13 +60,32 @@ function setAuthCookie(res: Response, token: string): void {
         httpOnly: true,
         secure: config.isProduction,
         sameSite: config.isProduction ? 'strict' : 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        maxAge: 15 * 60 * 1000, // 15 minutes (matches access token expiry)
         path: '/',
     });
 }
 
 function clearAuthCookie(res: Response): void {
     res.clearCookie(config.jwt.cookieName, {
+        httpOnly: true,
+        secure: config.isProduction,
+        sameSite: config.isProduction ? 'strict' : 'lax',
+        path: '/',
+    });
+}
+
+function setRefreshCookie(res: Response, refreshToken: string): void {
+    res.cookie(config.jwt.refreshCookieName, refreshToken, {
+        httpOnly: true,
+        secure: config.isProduction,
+        sameSite: config.isProduction ? 'strict' : 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        path: '/',
+    });
+}
+
+function clearRefreshCookie(res: Response): void {
+    res.clearCookie(config.jwt.refreshCookieName, {
         httpOnly: true,
         secure: config.isProduction,
         sameSite: config.isProduction ? 'strict' : 'lax',
@@ -103,12 +123,13 @@ async function createSession(userId: string, email: string, req: Request, res: R
     });
 
     // Generate JWT
-    const token = generateAccessToken(userId, email, sessionId);
+    const accessToken = generateAccessToken(userId, email, sessionId);
 
-    // Set cookie (for backwards compatibility) AND return token for localStorage
-    setAuthCookie(res, token);
+    // Set cookies
+    setAuthCookie(res, accessToken);
+    setRefreshCookie(res, refreshToken);
 
-    return token;
+    return accessToken;
 }
 
 // =============================================================================
@@ -468,7 +489,7 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
 // =============================================================================
 export async function googleOAuthInit(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-        const returnTo = req.query.returnTo as string || '/';
+        const returnTo = validateReturnTo(req.query.returnTo as string);
         const csrfToken = generateSecureToken(16);
 
         authLogger.info({ csrfTokenPrefix: csrfToken.substring(0, 8) }, 'Google OAuth Init - CSRF token generated');
@@ -647,8 +668,11 @@ export async function googleOAuthCallback(req: Request, res: Response, next: Nex
         // Generate JWT token
         const token = generateAccessToken(user!.id, user!.email!, sessionId);
 
+        // Set refresh cookie (access token is passed via URL for frontend)
+        setRefreshCookie(res, refreshToken);
+
         // Redirect to frontend with token in URL (will be exchanged for cookie)
-        const returnTo = stateData.returnTo || '/dashboard';
+        const returnTo = validateReturnTo(stateData.returnTo);
         authLogger.info({ email: user!.email, userId: user!.id, provider: 'google', action: 'oauth_login' }, 'Google OAuth login successful');
         res.redirect(`${config.frontendUrl}/auth/callback?token=${encodeURIComponent(token)}&returnTo=${encodeURIComponent(returnTo)}`);
     } catch (err) {
@@ -697,6 +721,7 @@ export async function logout(req: Request, res: Response, next: NextFunction): P
         }
 
         clearAuthCookie(res);
+        clearRefreshCookie(res);
 
         authLogger.info({ userId, sessionId, action: 'logout' }, 'User logged out');
         res.json(successResponse({ message: 'Logged out successfully.' }));
@@ -945,6 +970,82 @@ export async function checkPendingSignup(req: Request, res: Response, next: Next
             valid: true,
             email: pendingSignup.email,
             expires_at: pendingSignup.expires_at.toISOString(),
+        };
+
+        res.json(successResponse(response));
+    } catch (error) {
+        next(error);
+    }
+}
+
+// =============================================================================
+// Refresh Token Controller
+// =============================================================================
+export async function refreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        const refreshTokenValue = req.cookies?.[config.jwt.refreshCookieName];
+
+        if (!refreshTokenValue) {
+            throw Errors.unauthorized();
+        }
+
+        // Find all non-expired sessions
+        const sessions = await db
+            .select()
+            .from(authSessions)
+            .where(gt(authSessions.expires_at, new Date()));
+
+        // Find the session with matching refresh token
+        let matchedSession = null;
+        for (const session of sessions) {
+            if (verifyTokenHash(refreshTokenValue, session.refresh_token_hash)) {
+                matchedSession = session;
+                break;
+            }
+        }
+
+        if (!matchedSession) {
+            clearRefreshCookie(res);
+            throw Errors.unauthorized();
+        }
+
+        // Get the user
+        const [user] = await db
+            .select()
+            .from(authUsers)
+            .where(eq(authUsers.id, matchedSession.user_id))
+            .limit(1);
+
+        if (!user) {
+            clearRefreshCookie(res);
+            throw Errors.unauthorized();
+        }
+
+        // ===== TOKEN ROTATION =====
+        // Generate new refresh token and update session
+        const newRefreshToken = generateSecureToken();
+        const newExpiresAt = getSessionExpiryDate();
+
+        await db
+            .update(authSessions)
+            .set({
+                refresh_token_hash: await hashToken(newRefreshToken),
+                expires_at: newExpiresAt,
+            })
+            .where(eq(authSessions.id, matchedSession.id));
+
+        // Generate new access token
+        const newAccessToken = generateAccessToken(user.id, user.email!, matchedSession.id);
+
+        // Set new cookies
+        setAuthCookie(res, newAccessToken);
+        setRefreshCookie(res, newRefreshToken);
+
+        authLogger.info({ userId: user.id, sessionId: matchedSession.id, action: 'token_refresh' }, 'Token refreshed successfully');
+
+        const response: RefreshTokenResponse = {
+            accessToken: newAccessToken,
+            user: formatUserResponse(user),
         };
 
         res.json(successResponse(response));

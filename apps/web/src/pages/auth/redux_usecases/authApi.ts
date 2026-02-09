@@ -174,18 +174,61 @@ const rawBaseQuery = fetchBaseQuery({
     },
 });
 
-// Wrapper to handle token expiration
+// Refresh token state (to prevent concurrent refresh attempts)
+let isRefreshing = false;
+let refreshPromise: Promise<boolean> | null = null;
+
+// Function to attempt token refresh
+async function attemptTokenRefresh(): Promise<boolean> {
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/auth/refresh`, {
+            method: 'POST',
+            credentials: 'include',
+        });
+
+        if (!response.ok) {
+            return false;
+        }
+
+        const data = await response.json() as { success: boolean; data?: { accessToken: string } };
+        if (data.success && data.data?.accessToken) {
+            setStoredToken(data.data.accessToken);
+            return true;
+        }
+        return false;
+    } catch {
+        return false;
+    }
+}
+
+// Wrapper to handle token expiration with automatic refresh
 const baseQueryWithAuth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
     args,
     api,
     extraOptions
 ) => {
-    const result = await rawBaseQuery(args, api, extraOptions);
+    let result = await rawBaseQuery(args, api, extraOptions);
 
-    // If unauthorized, clear token and user state
+    // If unauthorized (401), try to refresh the token
     if (result.error && result.error.status === 401) {
-        clearStoredToken();
-        api.dispatch(clearUser());
+        // Use mutex to prevent concurrent refresh attempts
+        if (!isRefreshing) {
+            isRefreshing = true;
+            refreshPromise = attemptTokenRefresh();
+        }
+
+        const refreshSuccess = await refreshPromise;
+        isRefreshing = false;
+        refreshPromise = null;
+
+        if (refreshSuccess) {
+            // Retry the original request with new token
+            result = await rawBaseQuery(args, api, extraOptions);
+        } else {
+            // Refresh failed - clear everything and let user re-login
+            clearStoredToken();
+            api.dispatch(clearUser());
+        }
     }
 
     return result;
