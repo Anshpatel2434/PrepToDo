@@ -108,7 +108,7 @@ const DockItem = ({
     isDark: boolean;
     onClick: () => void;
 }) => {
-    const ref = useRef<HTMLDivElement>(null);
+    const ref = useRef<HTMLButtonElement>(null);
     const [isHovered, setIsHovered] = useState(false);
 
     // Distance from mouse to center of this icon
@@ -117,15 +117,13 @@ const DockItem = ({
         return val - bounds.x - bounds.width / 2;
     });
 
-    // MacBook Dock Effect logic for SIZE/SCALE of the ICON container
-    // When mouse is close, the icon scales up.
-    // Range [-150, 0, 150] -> Scale [1, 1.3, 1]
-    const widthRaw = useTransform(distance, [-150, 0, 150], [40, 55, 40]);
-    const width = useSpring(widthRaw, { mass: 0.1, stiffness: 150, damping: 12 });
+    // MacBook Dock Effect logic for SIZE/SCALE
+    // Consistent spring for all transformations to avoid "stepping"
+    const sizeRaw = useTransform(distance, [-150, 0, 150], [40, 56, 40]);
+    const size = useSpring(sizeRaw, { mass: 0.1, stiffness: 200, damping: 20 });
 
-    // Text Reveal Logic
-    // When hovered, we want the button to expand width to fit text.
-    // If not hovered, it stays compact (icon only).
+    // Scale for icon
+    const iconScale = useTransform(size, [40, 56], [1, 1.2]);
 
     return (
         <motion.button
@@ -133,70 +131,53 @@ const DockItem = ({
             onClick={onClick}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            // Animate width of the BUTTON container
-            // Base width comes from `width` motion value (icon size), plus extra if hovered (for text)
-            // But we can't easily mix MotionValue with state-based animation in generic `style`.
-            // Instead, we use `layout` prop given we are in a flex container.
             layout
             className={`
                 relative flex items-center justify-center rounded-full
+                transition-colors duration-200
                 ${isActive
-                    ? (isDark ? "bg-white/10 text-white" : "bg-black/5 text-black")
+                    ? (isDark ? "bg-white/15 text-white" : "bg-black/10 text-black shadow-sm")
                     : (isDark ? "text-gray-400 hover:text-white" : "text-gray-500 hover:text-black")
                 }
             `}
             style={{
-                // We apply the fluid width to the height and min-width to keep it roughly square/circular when collapsed
-                height: width,
-                minWidth: width,
-                // If hovered, we override width via standard layout animation properties below, so style might conflict
-                // Actually, let's apply the fluid scale to the ICON, and handle container sizing separately.
+                height: size,
+                minWidth: size,
+                width: isHovered ? "auto" : size,
             }}
-            // Framer Motion handling for width expansion
-            animate={{
-                width: isHovered ? "auto" : undefined, // Let it expand naturally
-                paddingLeft: isHovered ? 16 : 0,
-                paddingRight: isHovered ? 20 : 0
-            }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
         >
             {/* Active Indicator Background */}
             {isActive && (
                 <motion.div
                     layoutId="dockActive"
                     className={`absolute inset-0 rounded-full ${isDark ? "bg-white/5 border border-white/5" : "bg-black/5 border border-black/5"}`}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
             )}
 
-            {/* Icon Container - Applies the fluid scaling */}
+            {/* Icon Container */}
             <motion.div
-                style={{ width, height: width }}
-                className="flex items-center justify-center relative z-10"
+                style={{ scale: iconScale }}
+                className="flex items-center justify-center z-10 shrink-0"
             >
-                {/* We scale the icon inside based on the spring value */}
-                {/* Actually, `width` controls the container size. Let's make the icon fill it reasonably. */}
-                <div className="flex items-center justify-center w-full h-full">
-                    {item.icon}
-                </div>
+                {item.icon}
             </motion.div>
 
             {/* Label (Revealed on Hover) */}
-            <AnimatePresence>
+            <AnimatePresence initial={false}>
                 {isHovered && (
                     <motion.span
-                        initial={{ opacity: 0, width: 0, x: -10 }}
-                        animate={{ opacity: 1, width: "auto", x: 0 }}
-                        exit={{ opacity: 0, width: 0, x: -10 }}
-                        className="whitespace-nowrap font-medium text-sm ml-1 overflow-hidden"
+                        initial={{ opacity: 0, width: 0, marginLeft: 0 }}
+                        animate={{ opacity: 1, width: "auto", marginLeft: 8 }}
+                        exit={{ opacity: 0, width: 0, marginLeft: 0 }}
+                        className="whitespace-nowrap font-semibold text-sm mr-4 overflow-hidden z-10 pointer-events-none"
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     >
                         {item.label}
                     </motion.span>
                 )}
             </AnimatePresence>
-
-            {/* Active Dot (Small indicator at bottom if active but not hovered, maybe?) */}
-            {/* Keeping it simple as per liquid minimalism - the background pill is enough usually, but let's add the dot for extra flair if desired */}
         </motion.button>
     );
 };
@@ -323,7 +304,7 @@ export const FloatingNavigation: React.FC = () => {
             {/* =======================================================================
                UNIFIED TOP NAVIGATION CONTAINER
                ======================================================================= */}
-            <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-4 pointer-events-none">
+            <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-4 px-4 pointer-events-none">
                 <motion.nav
                     initial={{ y: -100, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
@@ -332,11 +313,11 @@ export const FloatingNavigation: React.FC = () => {
                     onMouseLeave={() => mouseX.set(Infinity)}
                     className={`
                         pointer-events-auto
-                        flex items-center gap-2 px-2 py-2 rounded-full
-                        backdrop-blur-xl border border-white/10 shadow-lg
+                        flex items-center gap-1 sm:gap-2 px-2 py-2 rounded-full
+                        backdrop-blur-2xl border shadow-2xl transition-all duration-300
                         ${isDark
-                            ? "bg-bg-tertiary-dark/80 shadow-black/20"
-                            : "bg-white/80 shadow-black/5"
+                            ? "bg-gray-900/60 border-white/10 ring-1 ring-white/10 shadow-black/50"
+                            : "bg-white/70 border-white/40 ring-1 ring-black/5 shadow-black/10"
                         }
                     `}
                 >
@@ -346,13 +327,92 @@ export const FloatingNavigation: React.FC = () => {
                       -------------------------- 
                     */}
                     <div className="hidden lg:flex items-center gap-1">
-                        {/* Logo / Brand (Optional, can be first item or separate) */}
+                        {/* Logo / Brand - EdTech Enhanced with SVG */}
                         <div
-                            className="flex items-center gap-3 px-4 cursor-pointer group mr-2"
+                            className="flex items-center px-4 cursor-pointer select-none"
                             onClick={() => navigate('/')}
                         >
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? "bg-white text-black" : "bg-black text-white"}`}>
-                                <span className="font-bold text-sm">P</span>
+                            <div className="flex items-center gap-3 group">
+
+                                {/* Icon Container */}
+                                <div className="relative">
+                                    {/* Main Badge with SVG P */}
+                                    <div
+                                        className={`
+                    relative flex items-center justify-center
+                    w-10 h-10 rounded-xl
+                    transition-all duration-300
+                    group-hover:scale-105 group-hover:rotate-3
+                    ${isDark
+                                                ? "bg-gradient-to-br from-emerald-400 to-teal-500"
+                                                : "bg-gradient-to-br from-emerald-500 to-teal-600"
+                                            }
+                `}
+                                    >
+                                        {/* SVG P Letter */}
+                                        <svg
+                                            className="w-6 h-6 text-white"
+                                            viewBox="0 0 24 24"
+                                            fill="currentColor"
+                                        >
+                                            <path d="M7 3h8a5 5 0 0 1 0 10H9v8H7V3zm2 2v6h6a3 3 0 0 0 0-6H9z" />
+                                        </svg>
+                                    </div>
+
+                                    {/* Growth/Analytics Accent Icon */}
+                                    <div
+                                        className={`
+                    absolute -bottom-1 -right-1
+                    w-5 h-5 rounded-full
+                    flex items-center justify-center
+                    transition-all duration-300
+                    group-hover:scale-110
+                    ${isDark
+                                                ? "bg-blue-500 shadow-lg shadow-blue-500/30"
+                                                : "bg-blue-600 shadow-md shadow-blue-600/20"
+                                            }
+                `}
+                                    >
+                                        <svg
+                                            className="w-3 h-3 text-white"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2.5}
+                                                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                                            />
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                {/* Brand Text with Tagline */}
+                                <div className="flex flex-col">
+                                    <span
+                                        className={`
+                    text-2xl font-bold tracking-tight
+                    transition-colors duration-200
+                    ${isDark
+                                                ? "text-white group-hover:text-emerald-300"
+                                                : "text-gray-900 group-hover:text-emerald-700"
+                                            }
+                `}
+                                    >
+                                        reptodo
+                                    </span>
+                                    <span
+                                        className={`
+                    text-[10px] font-medium tracking-wide uppercase
+                    -mt-1
+                    ${isDark ? "text-emerald-400/80" : "text-emerald-600/80"}
+                `}
+                                    >
+                                        Learn & Grow
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -373,18 +433,17 @@ export const FloatingNavigation: React.FC = () => {
                         {/* User / CTA */}
                         {isAuthenticated ? (
                             <div className="flex items-center gap-2">
-                                {/* Profile (Simplified) */}
                                 <DropdownProfile user={user} isDark={isDark} onLogout={promptLogout} />
                             </div>
                         ) : (
                             <button
                                 onClick={() => navigate('/auth?mode=signup')}
                                 className={`
-                                    h-10 px-5 rounded-full font-semibold text-sm transition-all duration-300
-                                    hover:-translate-y-0.5
+                                    h-11 px-6 rounded-full font-bold text-sm transition-all duration-300
+                                    hover:-translate-y-0.5 active:scale-95 shadow-lg
                                     ${isDark
-                                        ? "bg-white text-black hover:bg-gray-200"
-                                        : "bg-black text-white hover:bg-gray-800"
+                                        ? "bg-gradient-to-r from-brand-primary-dark to-brand-secondary-dark text-white shadow-brand-primary-dark/20 hover:shadow-brand-primary-dark/40"
+                                        : "bg-gradient-to-r from-brand-primary-light to-brand-secondary-light text-white shadow-brand-primary-light/20 hover:shadow-brand-primary-light/40"
                                     }
                                 `}
                             >
@@ -398,10 +457,10 @@ export const FloatingNavigation: React.FC = () => {
                       MOBILE LAYOUT (< 1024px)
                       -------------------------- 
                     */}
-                    <div className="lg:hidden flex items-center gap-1">
+                    <div className="lg:hidden flex items-center gap-1 sm:gap-2">
                         {/* Logo (Icon only on mobile) */}
                         <div
-                            className="bg-transparent p-2 mr-1"
+                            className="bg-transparent p-1 sm:p-2 cursor-pointer"
                             onClick={() => navigate('/')}
                         >
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? "bg-white text-black" : "bg-black text-white"}`}>
@@ -426,7 +485,7 @@ export const FloatingNavigation: React.FC = () => {
                                 label: 'Menu',
                                 path: '#',
                                 description: 'More',
-                                icon: isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />
+                                icon: isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />
                             }}
                             isActive={isMobileMenuOpen}
                             isDark={isDark}
@@ -447,10 +506,10 @@ export const FloatingNavigation: React.FC = () => {
                         exit={{ opacity: 0, y: -20, scale: 0.95 }}
                         className={`
                             lg:hidden fixed top-24 left-4 right-4 z-40 rounded-3xl p-6
-                            backdrop-blur-2xl border shadow-2xl
+                            backdrop-blur-2xl border shadow-2xl ring-1
                             ${isDark
-                                ? "bg-bg-secondary-dark/95 border-white/10"
-                                : "bg-white/95 border-white/40"
+                                ? "bg-gray-900/90 border-white/10 ring-white/10"
+                                : "bg-white/90 border-white/40 ring-black/5"
                             }
                         `}
                     >
@@ -623,7 +682,7 @@ const DropdownProfile = ({ user, isDark, onLogout }: { user: UserResponse, isDar
                 w-10 h-10 rounded-full flex items-center justify-center transition-all
                 ${isDark ? "bg-white/10 hover:bg-white/20" : "bg-black/5 hover:bg-black/10"}
             `}>
-                <User size={18} />
+                <User size={18} className={`${isDark ? "text-gray-400 hover:text-white" : "text-gray-500 hover:text-black"}`} />
             </button>
 
             <AnimatePresence>
@@ -633,17 +692,22 @@ const DropdownProfile = ({ user, isDark, onLogout }: { user: UserResponse, isDar
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         className={`
-                            absolute top-full right-0 mt-2 w-48 p-2 rounded-2xl
-                            backdrop-blur-xl border shadow-xl
+                            absolute top-full right-0 mt-2 w-56 p-2 rounded-2xl
+                            backdrop-blur-xl border shadow-2xl ring-1
                             ${isDark
-                                ? "bg-[#1A1A1A]/90 border-white/10"
-                                : "bg-white/90 border-black/5"
+                                ? "bg-[#1A1A1A]/80 border-white/10 ring-white/10"
+                                : "bg-white/80 border-white/40 ring-black/5"
                             }
                         `}
                     >
                         <div className="px-3 py-2 border-b border-gray-500/10 mb-2">
                             <p className="text-sm font-medium truncate opacity-70">
-                                {user.email}
+                                <p className={`font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
+                                    {user?.email}
+                                </p>
+                                <p className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                                    Free Plan
+                                </p>
                             </p>
                         </div>
                         <button

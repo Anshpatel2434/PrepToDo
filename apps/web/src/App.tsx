@@ -40,135 +40,149 @@ const PrivacyPolicy = lazy(() => import("./pages/legal/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/legal/TermsOfService"));
 const RefundPolicy = lazy(() => import("./pages/legal/RefundPolicy"));
 const ResetPasswordPage = lazy(() => import("./pages/auth/ResetPasswordPage").then(m => ({ default: m.ResetPasswordPage })));
+const ErrorPage = lazy(() => import("./pages/error/ErrorPage"));
 
 /* ---------------- ROUTER CONFIG ---------------- */
 
 const router = createBrowserRouter([
     {
-        path: "/",
-        element: <Navigate to="/home" replace />,
-    },
-    {
-        path: "/home",
-        element: (
+        errorElement: (
             <Suspense fallback={<PageLoader />}>
-                <HomePage />
+                <ErrorPage />
             </Suspense>
         ),
-    },
-    {
-        path: "/dashboard",
-        element: (
-            <SafeAuthRoute>
-                <Suspense fallback={<PageLoader />}>
-                    <DashboardPage />
-                </Suspense>
-            </SafeAuthRoute>
-        ),
-    },
-    {
-        path: "/auth",
-        element: (
-            <Suspense fallback={<PageLoader />}>
-                <AuthPage />
-            </Suspense>
-        ),
-    },
-    {
-        path: "/auth/callback",
-        element: (
-            <Suspense fallback={<PageLoader />}>
-                <AuthCallback />
-            </Suspense>
-        ),
-    },
-    {
-        path: "/auth/reset-password",
-        element: (
-            <Suspense fallback={<PageLoader />}>
-                <ResetPasswordPage />
-            </Suspense>
-        ),
-    },
-    {
-        path: "/trialAI/teach_concept",
-        element: (
-            <Suspense fallback={<PageLoader />}>
-                <TeachConceptPage />
-            </Suspense>
-        ),
-    },
-    {
-        path: "/daily",
-        element: (
-            <Suspense fallback={<PageLoader />}>
-                <DailyPage />
-            </Suspense>
-        ),
-    },
-    {
-        path: "/daily/rc",
-        element: (
-            <SafeAuthRoute>
-                <Suspense fallback={<PageLoader />}>
-                    <DailyRCPage />
-                </Suspense>
-            </SafeAuthRoute>
-        ),
-    },
-    {
-        path: "/daily/va",
-        element: (
-            <SafeAuthRoute>
-                <Suspense fallback={<PageLoader />}>
-                    <DailyVAPage />
-                </Suspense>
-            </SafeAuthRoute>
-        ),
-    },
-    {
-        path: "/customized-mocks",
-        element: (
-            <SafeAuthRoute>
-                <Suspense fallback={<PageLoader />}>
-                    <CustomizedMocksPage />
-                </Suspense>
-            </SafeAuthRoute>
-        ),
-    },
-    {
-        path: "/mock",
-        element: (
-            <SafeAuthRoute>
-                <Suspense fallback={<PageLoader />}>
-                    <MockTestPage />
-                </Suspense>
-            </SafeAuthRoute>
-        ),
-    },
-    {
-        path: "/privacy",
-        element: (
-            <Suspense fallback={<PageLoader />}>
-                <PrivacyPolicy />
-            </Suspense>
-        ),
-    },
-    {
-        path: "/terms",
-        element: (
-            <Suspense fallback={<PageLoader />}>
-                <TermsOfService />
-            </Suspense>
-        ),
-    },
-    {
-        path: "/refund",
-        element: (
-            <Suspense fallback={<PageLoader />}>
-                <RefundPolicy />
-            </Suspense>
-        ),
+        children: [
+            {
+                path: "/",
+                element: <Navigate to="/home" replace />,
+            },
+            {
+                path: "/home",
+                element: (
+                    <Suspense fallback={<PageLoader />}>
+                        <HomePage />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/dashboard",
+                element: (
+                    <SafeAuthRoute>
+                        <Suspense fallback={<PageLoader />}>
+                            <DashboardPage />
+                        </Suspense>
+                    </SafeAuthRoute>
+                ),
+            },
+            {
+                path: "/auth",
+                element: (
+                    <Suspense fallback={<PageLoader />}>
+                        <AuthPage />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/auth/callback",
+                element: (
+                    <Suspense fallback={<PageLoader />}>
+                        <AuthCallback />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/auth/reset-password",
+                element: (
+                    <Suspense fallback={<PageLoader />}>
+                        <ResetPasswordPage />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/trialAI/teach_concept",
+                element: (
+                    <Suspense fallback={<PageLoader />}>
+                        <TeachConceptPage />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/daily",
+                element: (
+                    <Suspense fallback={<PageLoader />}>
+                        <DailyPage />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/daily/rc",
+                element: (
+                    <SafeAuthRoute>
+                        <Suspense fallback={<PageLoader />}>
+                            <DailyRCPage />
+                        </Suspense>
+                    </SafeAuthRoute>
+                ),
+            },
+            {
+                path: "/daily/va",
+                element: (
+                    <SafeAuthRoute>
+                        <Suspense fallback={<PageLoader />}>
+                            <DailyVAPage />
+                        </Suspense>
+                    </SafeAuthRoute>
+                ),
+            },
+            {
+                path: "/customized-mocks",
+                element: (
+                    <SafeAuthRoute>
+                        <Suspense fallback={<PageLoader />}>
+                            <CustomizedMocksPage />
+                        </Suspense>
+                    </SafeAuthRoute>
+                ),
+            },
+            {
+                path: "/mock",
+                element: (
+                    <SafeAuthRoute>
+                        <Suspense fallback={<PageLoader />}>
+                            <MockTestPage />
+                        </Suspense>
+                    </SafeAuthRoute>
+                ),
+            },
+            {
+                path: "/privacy",
+                element: (
+                    <Suspense fallback={<PageLoader />}>
+                        <PrivacyPolicy />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/terms",
+                element: (
+                    <Suspense fallback={<PageLoader />}>
+                        <TermsOfService />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/refund",
+                element: (
+                    <Suspense fallback={<PageLoader />}>
+                        <RefundPolicy />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "*",
+                loader: () => { throw new Response("Not Found", { status: 404 }); },
+            },
+        ],
     },
 ]);
 

@@ -115,11 +115,6 @@ interface VerifyOtpResponse {
     email: string;
 }
 
-interface AuthResponse {
-    user: UserResponse;
-    message: string;
-}
-
 interface MessageResponse {
     message: string;
 }

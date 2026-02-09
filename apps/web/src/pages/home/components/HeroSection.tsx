@@ -1,25 +1,13 @@
-import React from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { ArrowRight, PlayCircle } from "lucide-react";
 import lightHeroImg from "../../../assets/light_hero.jpg";
 import darkHeroImg from "../../../assets/dark_hero.jpg";
-
-// Widget Imports
-import widgetUL_light from "../../../assets/dashboard_upper_left_light.jpg";
-import widgetUL_dark from "../../../assets/dashboard_upper_left_dark.jpg";
-import widgetUR_light from "../../../assets/dashboard_upper_right_light.png";
-import widgetUR_dark from "../../../assets/dashboard_upper_right_dark.png";
-import widgetLL_light from "../../../assets/dashboard_lower_left_light.png";
-import widgetLL_dark from "../../../assets/dashboard_lower_left_dark.png";
-import widgetLR_light from "../../../assets/dashboard_lower_right_light.png";
-import widgetLR_dark from "../../../assets/dashboard_lower_right_dark.png";
 
 // New 3D Hero Assets
 import leaderboard_light from "../../../assets/daily_leaderboard_light.png";
 import leaderboard_dark from "../../../assets/daily_leaderboard_dark.png";
 import insights_light from "../../../assets/ai_insights_light.jpg";
 import insights_dark from "../../../assets/ai_insights_dark.jpg";
-
 import { useNavigate } from "react-router-dom";
 
 interface HeroSectionProps {
@@ -77,7 +65,6 @@ const SmoothThemeImage = ({
         </div>
     );
 }
-
 // 3D Floating Card Component
 const Floating3DCard = ({
     lightSrc,
@@ -144,7 +131,6 @@ const Floating3DCard = ({
     );
 };
 
-
 export const HeroSection: React.FC<HeroSectionProps> = ({
     isDark,
     isAuthenticated = false,
@@ -155,45 +141,28 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     // Add spring physics for "soothing" (smooth) feel
     // Low stiffness caused "lag", increasing to make it snappy but smooth
     const smoothScrollY = useSpring(scrollY, {
-        stiffness: 150,
+        stiffness: 80,
         damping: 30,
         restDelta: 0.001
     });
 
-    const heroY = useTransform(smoothScrollY, [0, 500], [0, 150]);
     const navigate = useNavigate();
-
     const animationRange = [0, 400];
 
-    const mainImgScale = useTransform(smoothScrollY, animationRange, [1, 0.4]);
-    const mainImgOpacity = useTransform(smoothScrollY, animationRange, [1, 0.4]);
-    const mainImgBlur = useTransform(smoothScrollY, animationRange, ["0px", "10px"]);
+    // Subtler main image effects for the single static hero
+    const mainImgScale = useTransform(smoothScrollY, animationRange, [1, 0.98]);
+    const mainImgOpacity = useTransform(smoothScrollY, animationRange, [1, 0.9]);
 
-    // Precise user-defined locations preserved
-    const ulX = useTransform(smoothScrollY, animationRange, [100, -15]);
-    const ulY = useTransform(smoothScrollY, animationRange, [100, -30]);
-
-    const urX = useTransform(smoothScrollY, animationRange, [-150, -70]);
-    const urY = useTransform(smoothScrollY, animationRange, [100, 30]);
-
-    const llX = useTransform(smoothScrollY, animationRange, [50, 70]);
-    const llY = useTransform(smoothScrollY, animationRange, [-20, 120]);
-
-    const lrX = useTransform(smoothScrollY, animationRange, [-50, 15]);
-    const lrY = useTransform(smoothScrollY, animationRange, [-20, 20]);
-
-    // Common widget transforms
-    const widgetScale = useTransform(smoothScrollY, animationRange, [0.4, 1]);
-    const widgetOpacity = useTransform(smoothScrollY, animationRange, [0, 1]);
-    const widgetBlur = useTransform(smoothScrollY, animationRange, ["10px", "0px"]);
-
+    // Adjusted Parallax: Subtle movement to avoid "floating away" on mobile
+    const heroY = useTransform(smoothScrollY, [0, 500], [0, 50]);
 
     return (
-        <section className={`relative min-h-[90vh] md:min-h-screen flex flex-col items-center pt-[100px] pb-32 md:pb-52 overflow-hidden ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
+        <section className={`relative min-h-[80vh] flex flex-col items-center pt-[100px] pb-20 md:pb-40 overflow-hidden ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"
             }`}>
 
+
             <motion.div
-                className="container mx-auto pl-18 sm:pl-20 md:pl-24 pr-4 lg:pr-8 max-w-screen-2xl z-10 flex flex-col items-center text-center relative"
+                className="container mx-auto px-4 sm:px-6 md:px-8 max-w-screen-2xl z-10 flex flex-col items-center text-center relative gap-5"
                 variants={staggerContainer}
                 initial="hidden"
                 animate="visible"
@@ -202,11 +171,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 {/* Left Floating Card: AI Insights - Tilted inward from left */}
                 {/* 2xl breakpoint pushes it further out to use extra space */}
                 <Floating3DCard
-                    lightSrc={insights_light}
-                    darkSrc={insights_dark}
+                    lightSrc={leaderboard_light}
+                    darkSrc={leaderboard_dark}
                     alt="AI Insights"
                     isDark={isDark}
-                    className="top-42 -left-8 lg:-left-20 2xl:left-20 opacity-90"
+                    className="top-42 -left-8 lg:-left-20 2xl:left-20 opacity-90 blur-[1px]"
                     rotateY={10}
                     rotateX={2}
                     rotateZ={-5}
@@ -215,11 +184,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
                 {/* Right Floating Card: Leaderboard - Tilted inward from right */}
                 <Floating3DCard
-                    lightSrc={leaderboard_light}
-                    darkSrc={leaderboard_dark}
+                    lightSrc={insights_light}
+                    darkSrc={insights_dark}
                     alt="Daily Leaderboard"
                     isDark={isDark}
-                    className="-top-8 -right-8 lg:-right-20 2xl:right-10 opacity-90"
+                    className="-top-8 -right-8 lg:-right-20 2xl:right-10 opacity-90 blur-[1px]"
                     rotateY={-10}
                     rotateX={2}
                     rotateZ={5}
@@ -229,7 +198,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 {/* Hero Headline */}
                 <motion.h1
                     variants={fadeInUp}
-                    className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight leading-[1.1]"
+                    className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight leading-[1.1] "
                 >
                     <span className="relative inline-block">
                         <span className={`bg-clip-text text-transparent bg-linear-to-r ${isDark
@@ -239,8 +208,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                             An AI Tutor That Studies
                         </span>
                         {/* Underline decoration */}
-                        <svg className="absolute w-full h-3 -bottom-2 left-0 text-brand-primary-light opacity-60" viewBox="0 0 200 9" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M2.00028 6.99997C2.00028 6.99997 91.0003 1.00002 198.001 2.99999" stroke={`url(#gradient-${isDark ? 'dark' : 'light'})`} strokeWidth="3" strokeLinecap="round" />
+                        <svg className="absolute w-full h-2 md:h-3 -bottom-1.5 md:-bottom-2 left-0 text-brand-primary-light opacity-60" viewBox="0 0 200 9" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                            <path d="M2.00028 6.99997C2.00028 6.99997 91.0003 1.00002 198.001 2.99999" stroke={`url(#gradient-${isDark ? 'dark' : 'light'})`} strokeWidth="3" vectorEffect="non-scaling-stroke" strokeLinecap="round" />
                             <defs>
                                 <linearGradient id={`gradient-${isDark ? 'dark' : 'light'}`} x1="2" y1="6.99997" x2="198" y2="2.99999" gradientUnits="userSpaceOnUse">
                                     <stop stopColor={isDark ? "#34D399" : "#0F5F53"} />
@@ -259,7 +228,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 {/* Subtext */}
                 <motion.p
                     variants={fadeInUp}
-                    className={`text-base md:text-xl max-w-2xl mb-10 leading-relaxed ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                    className={`text-base md:text-xl max-w-2xl mb-8 leading-relaxed ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
                         }`}
                 >
                     Daily drills, mistake analysis, and adaptive tests built from your performance data.
@@ -268,7 +237,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 {/* CTAs */}
                 <motion.div
                     variants={fadeInUp}
-                    className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mb-20"
+                    className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mb-12"
                 >
                     <button
                         onClick={() => !isAuthenticated ? onQuickAuth?.('signup') : navigate('/dashboard')}
@@ -299,41 +268,39 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     </button>
                 </motion.div>
 
-                {/* Floating Hero Visual Container */}
+                {/* Single Simple Hero Image Container - Visible on ALL screens */}
                 <motion.div
-                    style={{ y: heroY }}
-                    className="relative w-full max-w-4xl lg:max-w-5xl 2xl:max-w-6xl px-4 pt-3 mb-20 md:mb-0"
+                    style={{ y: heroY, willChange: "transform" }}
+                    className="relative w-full max-w-5xl lg:max-w-6xl px-4 pt-10"
                 >
-                    {/* <style>{`
-                        @keyframes float-ul { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-                        @keyframes float-ur { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-                        @keyframes float-ll { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
-                        @keyframes float-lr { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-                    `}</style> */}
-
                     {/* Glow behind image */}
-                    <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-linear-to-b from-brand-primary-light/20 to-transparent blur-[60px] rounded-full pointer-events-none ${isDark ? "opacity-30" : "opacity-20"
+                    <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-[90%] bg-linear-to-b from-brand-primary-light/20 to-transparent blur-[60px] rounded-full pointer-events-none ${isDark ? "opacity-30" : "opacity-20"
                         }`} />
 
-                    {/* Main Image Wrapper */}
+                    {/* Main Image Wrapper using MASK for perfect dissolve */}
                     <motion.div
-                        style={{ scale: mainImgScale, opacity: mainImgOpacity, filter: mainImgBlur }}
-                        className={`relative rounded-2xl overflow-hidden shadow-2xl border ${isDark ? "border-white/10 bg-gray-900/50" : "border-black/5 bg-white/50"
-                            } backdrop-blur-xl ring-1 ring-white/20 z-10`}
+                        style={{
+                            scale: mainImgScale,
+                            opacity: mainImgOpacity,
+                            // This mask creates the "dissolve into next component" effect including borders
+                            maskImage: "linear-gradient(to bottom, black 85%, transparent 100%)",
+                            WebkitMaskImage: "linear-gradient(to bottom, black 85%, transparent 100%)"
+                        }}
+                        className={`relative rounded-xl md:rounded-2xl shadow-2xl backdrop-blur-xl ring-1 ring-white/20 z-10 overflow-hidden`}
                     >
                         {/* Browser chrome/header */}
-                        <div className={`h-8 w-full flex items-center px-4 gap-2 border-b relative z-20 ${isDark ? "bg-white/5 border-white/5" : "bg-white/40 border-black/5"
+                        <div className={`h-6 md:h-8 w-full flex items-center px-4 gap-2 border-b relative z-20 ${isDark ? "bg-white/5 border-white/5" : "bg-white/40 border-black/5"
                             }`}>
-                            <div className="w-3 h-3 rounded-full bg-red-400/80" />
-                            <div className="w-3 h-3 rounded-full bg-amber-400/80" />
-                            <div className="w-3 h-3 rounded-full bg-green-400/80" />
-                            <div className={`ml-4 h-4 w-60 rounded-full text-[10px] flex items-center px-2 opacity-40 select-none ${isDark ? "bg-white/10 text-white" : "bg-black/5 text-black"
+                            <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-red-400/80" />
+                            <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-amber-400/80" />
+                            <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-green-400/80" />
+                            <div className={`ml-4 h-3 md:h-4 w-40 md:w-60 rounded-full text-[8px] md:text-[10px] flex items-center px-2 opacity-40 select-none ${isDark ? "bg-white/10 text-white" : "bg-black/5 text-black"
                                 }`}>
                                 preptodo.com/dashboard
                             </div>
                         </div>
 
-                        {/* Main Dashboard Image with Smooth Theme Transition */}
+                        {/* Main Dashboard Image */}
                         <SmoothThemeImage
                             lightSrc={lightHeroImg}
                             darkSrc={darkHeroImg}
@@ -342,94 +309,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                             className="w-full h-auto object-top"
                         />
 
-                        {/* Overlay Gradient */}
-                        <div className={`absolute bottom-0 left-0 right-0 h-32 bg-linear-to-t pointer-events-none z-20 ${isDark ? "from-bg-primary-dark" : "from-bg-primary-light"
-                            } to-transparent`} />
+                        {/* Note: Inner Gradient removed to avoid "white blur" - mask handles it now */}
                     </motion.div>
-
-                    {/* ---- EXPLODED WIDGETS ---- */}
-
-                    {/* Upper Left Widget */}
-                    <motion.div
-                        style={{ x: ulX, y: ulY, scale: widgetScale, opacity: widgetOpacity, filter: WidgetBlurFilter(widgetBlur), backfaceVisibility: "hidden" }}
-                        className="absolute top-10 sm:top-0 left-0 md:left-0 w-[42%] md:w-[44%] z-20 origin-center"
-                    >
-                        <div
-                            style={{ animation: "float-ul 4s ease-in-out infinite" }}
-                            className="w-full drop-shadow-2xl rounded-xl border border-white/10 backdrop-blur-sm overflow-hidden"
-                        >
-                            <SmoothThemeImage
-                                lightSrc={widgetUL_light}
-                                darkSrc={widgetUL_dark}
-                                alt="User Stats Widget"
-                                isDark={isDark}
-                                className="w-full h-auto"
-                            />
-                        </div>
-                    </motion.div>
-
-                    {/* Upper Right Widget */}
-                    <motion.div
-                        style={{ x: urX, y: urY, scale: widgetScale, opacity: widgetOpacity, filter: WidgetBlurFilter(widgetBlur), backfaceVisibility: "hidden" }}
-                        className="absolute top-[30px] sm:top-[20px] right-0 md:right-0 w-[42%] md:w-[44%] z-20 origin-center"
-                    >
-                        <div
-                            style={{ animation: "float-ur 5s ease-in-out infinite", animationDelay: "1s" }}
-                            className="w-full drop-shadow-2xl rounded-xl border border-white/10 backdrop-blur-sm overflow-hidden"
-                        >
-                            <SmoothThemeImage
-                                lightSrc={widgetUR_light}
-                                darkSrc={widgetUR_dark}
-                                alt="Proficiency Widget"
-                                isDark={isDark}
-                                className="w-full h-auto"
-                            />
-                        </div>
-                    </motion.div>
-
-                    {/* Lower Left Widget */}
-                    <motion.div
-                        style={{ x: llX, y: llY, scale: widgetScale, opacity: widgetOpacity, filter: WidgetBlurFilter(widgetBlur), backfaceVisibility: "hidden" }}
-                        className="absolute bottom-[60px] sm:bottom-[40px] left-0 md:left-0 w-[39%] md:w-[40%] z-20 origin-center"
-                    >
-                        <div
-                            style={{ animation: "float-ll 4.5s ease-in-out infinite", animationDelay: "0.5s" }}
-                            className="w-full drop-shadow-2xl rounded-xl border border-white/10 backdrop-blur-sm overflow-hidden"
-                        >
-                            <SmoothThemeImage
-                                lightSrc={widgetLL_light}
-                                darkSrc={widgetLL_dark}
-                                alt="Heatmap Widget"
-                                isDark={isDark}
-                                className="w-full h-auto"
-                            />
-                        </div>
-                    </motion.div>
-
-                    {/* Lower Right Widget */}
-                    <motion.div
-                        style={{ x: lrX, y: lrY, scale: widgetScale, opacity: widgetOpacity, filter: WidgetBlurFilter(widgetBlur), backfaceVisibility: "hidden" }}
-                        className="absolute bottom-4 sm:bottom-0 right-0 md:right-0 w-[46%] md:w-[48%] z-20 origin-center"
-                    >
-                        <div
-                            style={{ animation: "float-lr 5.5s ease-in-out infinite", animationDelay: "1.5s" }}
-                            className="w-full drop-shadow-2xl rounded-xl border border-white/10 backdrop-blur-sm overflow-hidden"
-                        >
-                            <SmoothThemeImage
-                                lightSrc={widgetLR_light}
-                                darkSrc={widgetLR_dark}
-                                alt="Speed Accuracy Widget"
-                                isDark={isDark}
-                                className="w-full h-auto"
-                            />
-                        </div>
-                    </motion.div>
-
                 </motion.div>
+
             </motion.div>
+
+            {/* Deep Dissolve Overlay (Section Bottom edge interaction) */}
+            <div className={`absolute bottom-0 left-0 right-0 h-40 pointer-events-none z-20 ${isDark ? "bg-gradient-to-t from-bg-primary-dark" : "bg-gradient-to-t from-bg-primary-light"
+                } to-transparent`} />
         </section>
     );
 };
-
-// Helper for filter transform
-const WidgetBlurFilter = (val: any) => useTransform(val, (v) => `blur(${v})`);

@@ -43,7 +43,7 @@ export const DashboardPage: React.FC = () => {
             <FloatingThemeToggle />
             <FloatingNavigation />
 
-            <div className="min-h-screen overflow-x-hidden pl-18 sm:pl-20 md:pl-24 pr-4 lg:pr-8 py-4 sm:py-6 md:py-10 relative z-10 pb-20 sm:pb-24">
+            <div className="min-h-screen overflow-x-hidden px-4 sm:px-6 md:px-8 pt-24 sm:pt-28 pb-20 sm:pb-24 relative z-10">
 
 
                 {!user?.id && isUserLoading ? (

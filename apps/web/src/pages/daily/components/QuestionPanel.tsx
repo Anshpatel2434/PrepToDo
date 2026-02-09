@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import { motion } from "framer-motion";
-import { Brain, Lightbulb, Target, AlertTriangle, CheckCircle2, TrendingUp, Sparkles } from "lucide-react";
+import { Brain, Lightbulb, Target, CheckCircle2, TrendingUp, Sparkles } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import type { Option, Question } from "../../../types";
 import {
@@ -152,7 +152,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                             Analyzing your response...
                         </p>
                         <p className={`text-xs ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
-                            Identifying reasoning patterns and gaps.
+                            Identifying reasoning patterns and gaps. {`(Generally takes 2-3 minutes)`}
                         </p>
                     </div>
                 </div>
@@ -267,56 +267,6 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                 {/* Divider */}
                 <div className={`border-t ${isDark ? "border-border-dark" : "border-border-light"} opacity-30`} />
 
-                {/* Technical Details (Collapsed) */}
-                <details className="group">
-                    <summary className={`list-none flex items-center gap-2 cursor-pointer text-sm font-medium opacity-60 hover:opacity-100 transition-opacity ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
-                        <div className={`p-1 rounded transition-transform group-open:rotate-90`}>
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                        </div>
-                        View Technical Breakdown
-                    </summary>
-                    <div className="mt-6 space-y-6 pl-6 border-l border-dashed border-opacity-30 border-gray-400">
-                        {diagnostic.trap_analysis && (
-                            <div className="space-y-2">
-                                <h6 className={`text-xs font-bold uppercase tracking-wider opacity-60 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>Trap Analysis</h6>
-                                <p className={`text-sm leading-relaxed ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
-                                    {diagnostic.trap_analysis}
-                                </p>
-                            </div>
-                        )}
-
-                        {diagnostic.dominant_reasoning_failures && diagnostic.dominant_reasoning_failures.length > 0 && (
-                            <div className="space-y-3">
-                                <h6 className={`text-xs font-bold uppercase tracking-wider opacity-60 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>Reasoning Gaps</h6>
-                                <div className="space-y-2">
-                                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                    {diagnostic.dominant_reasoning_failures?.map((f: any, i: number) => (
-                                        <div key={i} className={`flex items-start gap-3 p-3 rounded-md ${isDark ? "bg-bg-tertiary-dark/50" : "bg-bg-tertiary-light/50"}`}>
-                                            <AlertTriangle className={`w-4 h-4 shrink-0 mt-0.5 ${isDark ? "text-warning" : "text-warning"}`} />
-                                            <div>
-                                                <div className={`text-xs font-bold uppercase mb-0.5 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>{f.reasoning_node_label}</div>
-                                                <div className={`text-xs opacity-80 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>{f.failure_description}</div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {diagnostic.error_pattern_keys && diagnostic.error_pattern_keys.length > 0 && (
-                            <div className="space-y-2">
-                                <h6 className={`text-xs font-bold uppercase tracking-wider opacity-60 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>Identified Patterns</h6>
-                                <div className="flex flex-wrap gap-2">
-                                    {diagnostic.error_pattern_keys.map((key: string) => (
-                                        <span key={key} className={`px-2 py-1 rounded-md text-xs font-medium ${isDark ? "bg-error/10 text-error" : "bg-error/10 text-error"}`}>
-                                            {key.replace(/_/g, " ")}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </details>
             </div>
         );
     };

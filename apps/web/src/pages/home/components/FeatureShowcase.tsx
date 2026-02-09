@@ -1,317 +1,306 @@
-// React import removed as not used in new JSX transform
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+
+import {
+	HiDocumentText,
+	HiClock,
+	HiChartBar,
+	HiArrowTrendingUp,
+	HiAdjustmentsHorizontal,
+	HiSquares2X2
+} from "react-icons/hi2";
 import { ArrowRight } from "lucide-react";
+import type { IconType } from "react-icons";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-
-// Images
-import dailyPageDark from "../../../assets/daily_page_dark.jpg";
-import dailyPageLight from "../../../assets/daily_page_light.jpg";
-import customized_sectional_light from "../../../assets/customized_sectional_light.jpg";
-import customized_sectional_dark from "../../../assets/customized_sectional_dark.jpg";
-import dashboard_feature_light from "../../../assets/dashboard_feature_light.jpg";
-import dashboard_feature_dark from "../../../assets/dashboard_feature_dark.jpg";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 // --- Utility ---
 function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
 
+// --- Types ---
+interface FeatureCardProps {
+	title: string;
+	philosophy: string;
+	bullets: string[];
+	ctaText: string;
+	href: string;
+	primaryIcon: IconType;
+	secondaryIcon: IconType;
+	delay?: number;
+	isDark: boolean;
+	colorTheme: "blue" | "violet" | "emerald";
+	// Custom positioning props for that "pinned" random look
+	primaryIconPosition?: string; // e.g. "-top-8 -right-8"
+	secondaryIconPosition?: string; // e.g. "-bottom-6 -left-6"
+	primaryIconSize?: string; // e.g. "w-20 h-20"
+	secondaryIconSize?: string; // e.g. "w-12 h-12"
+}
+
 // --- Components ---
 
-interface BrowserProps {
-	imgLight: string;
-	imgDark: string;
-	isDark: boolean;
-	className?: string;
-	blobColor: string;
-}
-
-const BrowserWindow = ({
-	imgLight,
-	imgDark,
-	isDark,
-	className,
-	blobColor
-}: BrowserProps) => {
-	return (
-		<div className={cn("group relative", className)}>
-			{/* BLOB - Restrained Abstraction */}
-			{/* Absolute positioning: 30px offsets, 108% size */}
-			<div
-				className="absolute top-[30px] left-[30px] w-[108%] h-[108%] rounded-full -z-10 transition-all duration-600 ease-out will-change-transform"
-				style={{
-					backgroundColor: blobColor,
-					opacity: 0.18,
-					filter: "blur(90px)"
-				}}
-			>
-				{/* Hover state for blob handles via CSS for performance/simplicity or generic group-hover */}
-				<div className="w-full h-full rounded-full transition-all duration-600 ease-out group-hover:scale-112 group-hover:opacity-100 group-hover:blur-[110px]" />
-			</div>
-
-			{/* BROWSER CONTAINER */}
-			<div
-				className={cn(
-					"w-full rounded transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-transform",
-					"group-hover:-translate-y-1.5",
-					isDark ? "shadow-[0_20px_40px_rgba(0,0,0,0.5)]" : "shadow-[0_20px_40px_rgba(0,0,0,0.15)]"
-				)}
-			>
-				{/* CHROME BAR - 40px */}
-				<div className={cn(
-					"h-10 w-full flex items-center px-4 gap-4 border-b rounded-t relative z-20",
-					isDark ? "bg-[#1C1C1E] border-white/10" : "bg-[#F3F4F6] border-black/5"
-				)}>
-					{/* Traffic Lights */}
-					<div className="flex gap-[6px]">
-						<div className="w-[10px] h-[10px] rounded-full bg-[#FF5F57]" />
-						<div className="w-[10px] h-[10px] rounded-full bg-[#FFBD2E]" />
-						<div className="w-[10px] h-[10px] rounded-full bg-[#28CA42]" />
-					</div>
-
-					{/* Address Bar */}
-					<div className={cn(
-						"h-[22px] w-[55%] rounded flex items-center px-2 gap-2",
-						isDark ? "bg-white/10 text-gray-400" : "bg-white border border-black/5 text-gray-500"
-					)}>
-						{/* Lock Icon */}
-						<div className="w-3 h-3 rounded-sm border border-current opacity-50" />
-						{/* Fake URL */}
-						<div className="text-[11px] tracking-wide opacity-45 select-none font-medium">preptodo.com</div>
-					</div>
-				</div>
-
-				{/* CONTENT AREA */}
-				<div className={cn(
-					"relative w-full aspect-[16/10] p-1 rounded-b",
-					isDark ? "bg-[#1C1C1E]" : "bg-[#F3F4F6]"
-				)}>
-					<img
-						src={isDark ? imgDark : imgLight}
-						alt="Feature Interface"
-						className="w-full h-full object-cover rounded-sm"
-					/>
-				</div>
-			</div>
-		</div>
-	)
-}
-
-const FeatureText = ({
-	number,
+const FeatureCard = ({
 	title,
-	description,
+	philosophy,
+	bullets,
+	ctaText,
 	href,
+	primaryIcon: PrimaryIcon,
+	secondaryIcon: SecondaryIcon,
+	delay = 0,
 	isDark,
-	hasUnderline = false
-}: {
-	number: string;
-	title: string;
-	description: string;
-	href: string;
-	isDark: boolean;
-	hasUnderline?: boolean;
-}) => {
+	colorTheme,
+	primaryIconPosition = "-top-12 -right-10",
+	secondaryIconPosition = "bottom-8 -right-8", // Changed default to avoid clustering
+	primaryIconSize = "w-16 h-16",
+	secondaryIconSize = "w-10 h-10"
+}: FeatureCardProps) => {
 	const navigate = useNavigate();
 
+	// Theme map for pure glyph colors
+	const themeStyles = {
+		blue: {
+			primary: isDark ? "text-blue-500" : "text-blue-600",
+			secondary: isDark ? "text-blue-400" : "text-blue-400",
+			bgHover: isDark ? "hover:bg-blue-500/5 hover:border-blue-500/20" : "hover:bg-blue-50 hover:border-blue-200",
+			pill: isDark ? "bg-blue-500/10 text-blue-300" : "bg-blue-100 text-blue-700"
+		},
+		violet: {
+			primary: isDark ? "text-violet-500" : "text-violet-600",
+			secondary: isDark ? "text-violet-400" : "text-violet-400",
+			bgHover: isDark ? "hover:bg-violet-500/5 hover:border-violet-500/20" : "hover:bg-violet-50 hover:border-violet-200",
+			pill: isDark ? "bg-violet-500/10 text-violet-300" : "bg-violet-100 text-violet-700"
+		},
+		emerald: {
+			primary: isDark ? "text-emerald-500" : "text-emerald-600",
+			secondary: isDark ? "text-emerald-400" : "text-emerald-400",
+			bgHover: isDark ? "hover:bg-emerald-500/5 hover:border-emerald-500/20" : "hover:bg-emerald-50 hover:border-emerald-200",
+			pill: isDark ? "bg-emerald-500/10 text-emerald-300" : "bg-emerald-100 text-emerald-700"
+		}
+	};
+
+	const currentTheme = themeStyles[colorTheme];
+
+	// Ambient Float Animation
+	const floatAnim = {
+		y: [0, -8, 0],
+		transition: {
+			duration: 6,
+			repeat: Infinity,
+			ease: "easeInOut" as const
+		}
+	};
+
+	const floatAnimDelayed = {
+		y: [0, -6, 0],
+		transition: {
+			duration: 7,
+			delay: 1,
+			repeat: Infinity,
+			ease: "easeInOut" as const
+		}
+	};
+
 	return (
-		<div className="flex flex-col items-start">
-			{/* Number Badge */}
-			<div className={cn(
-				"mb-6 px-3 py-1 rounded-[6px] text-[15px] font-semibold tracking-tight border",
-				isDark
-					? "bg-brand-primary-dark/10 text-brand-primary-dark border-brand-primary-dark/20"
-					: "bg-brand-primary-light/10 text-brand-primary-light border-brand-primary-light/20"
-			)}>
-				{number}
+		<motion.div
+			initial={{ opacity: 0, y: 30 }}
+			whileInView={{ opacity: 1, y: 0 }}
+			viewport={{ once: true, margin: "-10%" }}
+			transition={{ duration: 0.6, delay, ease: "easeOut" }}
+			className="relative group h-full"
+		>
+			{/* 
+        PINNED ARTIFACTS (Pure Glyphs)
+        No background containers. Just the icons.
+        Z-index high to overlap the card.
+        Pointer events none to avoid blocking clicks.
+      */}
+			<div className="absolute inset-0 z-20 pointer-events-none select-none overflow-visible">
+
+				{/* Primary Icon - Anchored to a corner */}
+				<motion.div
+					animate={floatAnim}
+					className={cn(
+						"absolute transition-colors duration-500",
+						primaryIconPosition,
+						currentTheme.primary
+					)}
+				>
+					{/* Drop shadow on the icon itself for depth without container */}
+					<PrimaryIcon
+						className={cn(
+							primaryIconSize,
+							"drop-shadow-lg opacity-100"
+						)}
+					/>
+				</motion.div>
+
+				{/* Secondary Icon - Anchored elsewhere */}
+				<motion.div
+					animate={floatAnimDelayed}
+					className={cn(
+						"absolute transition-colors duration-500",
+						secondaryIconPosition,
+						currentTheme.secondary
+					)}
+				>
+					<SecondaryIcon
+						className={cn(
+							secondaryIconSize,
+							"drop-shadow-md opacity-80"
+						)}
+					/>
+				</motion.div>
 			</div>
 
-			{/* Title */}
-			<h3 className={cn(
-				"text-[28px] lg:text-[36px] font-bold leading-[1.15] mb-[18px] relative",
-				isDark ? "text-white" : "text-gray-900"
-			)}>
-				{title}
-				{hasUnderline && (
-					<span className={cn(
-						"absolute -bottom-[6px] left-0 h-[2px] w-[40%]",
-						isDark ? "bg-brand-primary-dark" : "bg-brand-primary-light"
-					)} />
-				)}
-			</h3>
-
-			{/* Description */}
-			<p className={cn(
-				"text-[16px] lg:text-[17px] leading-[1.65] mb-6 max-w-[480px]",
-				isDark ? "text-gray-400" : "text-gray-600"
-			)} style={{ letterSpacing: '0.002em' }}>
-				{description}
-			</p>
-
-			{/* Link */}
-			<button
+			{/* 
+        CARD SURFACE 
+        Clean, minimal, focusing on content.
+      */}
+			<div
 				onClick={() => navigate(href)}
 				className={cn(
-					"group inline-flex items-center text-[15px] font-medium transition-colors duration-250",
-					isDark ? "text-brand-primary-dark" : "text-brand-primary-light"
+					"h-full flex flex-col p-8 rounded-[2rem] border transition-all duration-300 cursor-pointer overflow-hidden relative z-10",
+					isDark
+						? "bg-card/40 border-white/5"
+						: "bg-white border-black/5 hover:shadow-xl hover:shadow-black/5",
+					currentTheme.bgHover
 				)}
 			>
-				<span className="relative pb-[1px]">
-					Learn more
-					<span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-current transition-all duration-250 ease-out group-hover:w-full" />
-				</span>
-				<ArrowRight className="w-[14px] h-[14px] ml-1 transition-transform duration-250 group-hover:translate-x-[3px]" />
-			</button>
-		</div>
-	)
-}
+				{/* Header */}
+				<div className="mb-8 relative z-10">
+					{/* Philosophy Tag - Top aligned */}
+					<div className={cn(
+						"inline-block px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+						currentTheme.pill
+					)}>
+						{philosophy}
+					</div>
 
-// --- Main Component ---
+					<h3 className={cn(
+						"text-3xl font-bold mb-2 tracking-tight leading-tight",
+						isDark ? "text-white" : "text-gray-900"
+					)}>
+						{title}
+					</h3>
+				</div>
+
+				{/* Structured Bullets */}
+				<ul className="space-y-4 mb-10 flex-grow relative z-10">
+					{bullets.map((bullet, idx) => (
+						<li key={idx} className="flex items-start gap-3">
+							<span className={cn(
+								"mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors duration-300",
+								isDark ? "bg-white/20 group-hover:bg-white/40" : "bg-black/20 group-hover:bg-black/40"
+							)} />
+							<span className={cn(
+								"text-[16px] leading-relaxed font-medium",
+								isDark ? "text-gray-400 group-hover:text-gray-300" : "text-gray-600 group-hover:text-gray-800"
+							)}>
+								{bullet}
+							</span>
+						</li>
+					))}
+				</ul>
+
+				{/* CTA - Text Link Style */}
+				<div className={cn(
+					"flex items-center gap-2 text-[15px] font-semibold transition-all duration-300 relative z-10 mt-auto",
+					currentTheme.primary,
+					"group-hover:translate-x-1"
+				)}>
+					{ctaText}
+					<ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+				</div>
+			</div>
+		</motion.div>
+	);
+};
+
+
+// --- Main Section ---
 
 export const FeatureShowcase = ({ isDark }: { isDark: boolean }) => {
-
 	return (
-		<section className="relative w-full pb-32 overflow-hidden" data-section="features">
+		<section className="relative w-full py-24 lg:py-40 overflow-visible">
 			<div className="container mx-auto px-6 max-w-[1320px]">
+				{/* 
+            Grid Layout 
+            overflow-visible is crucial here to let icons escape the cards 
+         */}
+				<div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 relative">
 
-				{/* --- FEATURE 1: MAGAZINE LAYOUT --- 
-                    Text Left (45%), Image Right (48%), Gap 7%
-                    Vertical Align: Top
-                */}
-				<div className="flex flex-col lg:flex-row gap-[7%] mb-[280px]">
+					{/* Card 1: Daily Practice */}
+					<FeatureCard
+						title="Daily Practice"
+						philosophy="Consistent Habit"
+						bullets={[
+							"One common article used daily for RC and VA questions.",
+							"Read the article, solve questions, and track your daily performance.",
+							"Daily leaderboard and streaks to stay consistent."
+						]}
+						ctaText="View today's practice"
+						href="/daily"
+						primaryIcon={HiDocumentText}
+						secondaryIcon={HiClock}
+						isDark={isDark}
+						colorTheme="emerald"
+						delay={0}
+						// Custom Positions: Top-Right & Bottom-Right
+						primaryIconPosition="-top-12 -left-3"
+						secondaryIconPosition="bottom-7 -right-4"
+						primaryIconSize="w-20 h-20"
+						secondaryIconSize="w-12 h-12"
+					/>
 
-					{/* Text Column - 45% */}
-					<motion.div
-						initial={{ opacity: 0, y: 40 }}
-						whileInView={{ opacity: 1, y: 0 }}
-						viewport={{ once: true, margin: "-15%" }}
-						transition={{ duration: 0.7 }}
-						className="lg:w-[45%] flex pt-8"
-					>
-						<FeatureText
-							number="01"
-							title="Daily Practice"
-							description="Build a strong daily habit with focused VARC practice designed to improve comprehension, consistency, and exam readiness through structured repetition."
-							href="/daily"
-							isDark={isDark}
-						/>
-					</motion.div>
+					{/* Card 2: Analytics */}
+					<FeatureCard
+						title="Analytics"
+						philosophy="Data Driven"
+						bullets={[
+							"See accuracy, streaks, and time spent.",
+							"Identify weak areas like genre or different core metrics.",
+							"Track improvement trends over time."
+						]}
+						ctaText="Explore your data"
+						href="/dashboard"
+						primaryIcon={HiChartBar}
+						secondaryIcon={HiArrowTrendingUp}
+						isDark={isDark}
+						colorTheme="blue"
+						delay={0.15}
+						// Custom Positions: Top-Right & Top-Left (Offset)
+						primaryIconPosition="bottom-4 -right-6"
+						secondaryIconPosition="-top-3 -left-3"
+						primaryIconSize="w-24 h-24"
+						secondaryIconSize="w-12 h-12"
+					/>
 
-					{/* Image Column - 48% */}
-					<motion.div
-						initial={{ opacity: 0, y: 40 }}
-						whileInView={{ opacity: 1, y: 0 }}
-						viewport={{ once: true, margin: "-15%" }}
-						transition={{ duration: 0.7, delay: 0.2 }}
-						className="lg:w-[48%]"
-					>
-						<BrowserWindow
-							imgLight={dailyPageLight}
-							imgDark={dailyPageDark}
-							isDark={isDark}
-							blobColor={isDark ? "#10B981" : "#059669"} // Emerald
-						/>
-					</motion.div>
+					{/* Card 3: Custom Sectionals */}
+					<FeatureCard
+						title="Customized Sectionals"
+						philosophy="Targeted Growth"
+						bullets={[
+							"Create sectionals based on your weak topics and genres",
+							"Filter by difficulty & topic",
+							"Practice RC and VA in an exam-like format"
+						]}
+						ctaText="Create a sectional"
+						href="/customized-mocks"
+						primaryIcon={HiAdjustmentsHorizontal}
+						secondaryIcon={HiSquares2X2}
+						isDark={isDark}
+						colorTheme="violet"
+						delay={0.3}
+						// Custom Positions: Top-Right & Bottom-Right (Lower)
+						primaryIconPosition="-top-10 -left-6"
+						secondaryIconPosition="bottom-20 -right-3"
+						primaryIconSize="w-20 h-20"
+						secondaryIconSize="w-14 h-14"
+					/>
+
 				</div>
-
-
-				{/* --- FEATURE 2: INTERRUPTED LAYOUT --- 
-                    Image Left (52%), Text Right (40%), Gap 8%
-                    Vertical Align: Text starts 15% down from image top
-                */}
-				<div className="flex flex-col-reverse lg:flex-row gap-[8%] mb-[240px]">
-
-					{/* Image Column - 52% */}
-					<motion.div
-						initial={{ opacity: 0, y: 40 }}
-						whileInView={{ opacity: 1, y: 0 }}
-						viewport={{ once: true, margin: "-15%" }}
-						transition={{ duration: 0.7 }}
-						className="lg:w-[52%]"
-					>
-						<BrowserWindow
-							imgLight={customized_sectional_light}
-							imgDark={customized_sectional_dark}
-							isDark={isDark}
-							blobColor={isDark ? "#8B5CF6" : "#7C3AED"} // Violet
-						/>
-					</motion.div>
-
-					{/* Text Column - 40% (Top Offset) */}
-					<motion.div
-						initial={{ opacity: 0, y: 40 }}
-						whileInView={{ opacity: 1, y: 0 }}
-						viewport={{ once: true, margin: "-15%" }}
-						transition={{ duration: 0.7, delay: 0.2 }}
-						className="lg:w-[40%] flex pt-[15%]"
-					>
-						<FeatureText
-							number="02"
-							title="Adaptive Sectionals"
-							description="Turn weak areas into strengths with sectional tests that focus your effort where it matters most, helping you improve accuracy and confidence."
-							href="/customized-mocks"
-							isDark={isDark}
-							hasUnderline={true}
-						/>
-					</motion.div>
-				</div>
-
-
-				{/* --- FEATURE 3: OVERLAP LAYOUT --- 
-                    Text Left (42%), Image Right (55%), Gap 3%
-                    Visual: Image overlaps text space by 4% (negative margin logic or absolute positioning)
-                    Actually, spec says "Image overlaps text column".
-                    We can achieve this by making the container narrow so they naturally squeeze, or using -marginLeft on image.
-                    Let's use -ml on image column to pull it left.
-                */}
-				<div className="flex flex-col lg:flex-row items-center lg:gap-[3%]">
-
-					{/* Text Column - 42% */}
-					<motion.div
-						initial={{ opacity: 0, y: 40 }}
-						whileInView={{ opacity: 1, y: 0 }}
-						viewport={{ once: true, margin: "-15%" }}
-						transition={{ duration: 0.7 }}
-						className="lg:w-[42%] relative z-10 pointer-events-none lg:pointer-events-auto"
-					>
-						<FeatureText
-							number="03"
-							title="Deep Analytics"
-							description="Understand not just what you got wrong, but why. Detailed insights help you correct thinking patterns and make lasting improvements."
-							href="/dashboard"
-							isDark={isDark}
-						/>
-					</motion.div>
-
-					{/* Image Column - 55% with Fade
-                        Pull left by 4% relative to container width to create overlap.
-                    */}
-					<motion.div
-						initial={{ opacity: 0, y: 40 }}
-						whileInView={{ opacity: 1, y: 0 }}
-						viewport={{ once: true, margin: "-15%" }}
-						transition={{ duration: 0.7, delay: 0.2 }}
-						className="lg:w-[55%] lg:-ml-[4%] relative z-0"
-					>
-						{/* Gradient Fade Overlay on Left Edge */}
-						<div className={cn(
-							"absolute top-0 bottom-0 left-0 w-[20%] z-20 pointer-events-none lg:block hidden",
-							isDark
-								? "bg-gradient-to-r from-bg-primary-dark to-transparent"
-								: "bg-gradient-to-r from-bg-primary-light to-transparent"
-						)} />
-
-						<BrowserWindow
-							imgLight={dashboard_feature_light}
-							imgDark={dashboard_feature_dark}
-							isDark={isDark}
-							blobColor={isDark ? "#3B82F6" : "#2563EB"} // Blue
-						/>
-					</motion.div>
-				</div>
-
 			</div>
 		</section>
 	);

@@ -10,7 +10,9 @@ import { useTheme } from "../../../context/ThemeContext";
 import { motion, useScroll, useSpring } from "framer-motion";
 
 export const HomePage: React.FC = () => {
-	const { data: authState } = useFetchUserQuery();
+	const { data: userData } = useFetchUserQuery();
+	const isAuthenticated = !!userData;
+	const onQuickAuth = (action: 'signin' | 'signup') => navigate(action === 'signup' ? '/auth' : '/auth');
 	const location = useLocation();
 	const navigate = useNavigate();
 	const hasScrolled = useRef(false);
@@ -38,7 +40,7 @@ export const HomePage: React.FC = () => {
 	}, [location, navigate]);
 
 	return (
-		<div className={`min-h-screen transition-colors duration-500 ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"}`}>
+		<div className={`min-h-screen pt-16 transition-colors duration-500 ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"}`}>
 
 			{/* Scroll Progress Bar (Fixed Top, z-99) */}
 			<motion.div
@@ -48,11 +50,10 @@ export const HomePage: React.FC = () => {
 
 			<FloatingNavigation />
 			<FloatingThemeToggle />
-
 			<HeroSection
 				isDark={isDark}
-				isAuthenticated={!!authState}
-				onQuickAuth={(action) => navigate(action === 'signup' ? '/signup' : '/login')}
+				isAuthenticated={isAuthenticated}
+				onQuickAuth={onQuickAuth}
 			/>
 
 			<FeatureShowcase isDark={isDark} />

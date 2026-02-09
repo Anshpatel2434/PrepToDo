@@ -19,7 +19,7 @@ export const FloatingThemeToggle: React.FC<FloatingThemeToggleProps> = ({
         <motion.button
             onClick={toggleTheme}
             className={`
-                fixed top-6 right-6 z-[100]
+                fixed bottom-6 right-6 lg:bottom-auto lg:top-6 lg:right-6 z-[100]
                 w-12 h-12 lg:w-14 lg:h-14 rounded-full
                 flex items-center justify-center
                 backdrop-blur-xl border
