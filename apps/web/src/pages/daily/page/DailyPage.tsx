@@ -8,7 +8,7 @@ import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
 import { PageLoader } from "../../../ui_components/PageLoader";
 import { CalendarCheck } from "lucide-react";
 import type { Exam } from "../../../types";
-import { useFetchDailyTestDataQuery, useFetchDailyTestByIdQuery, useFetchArticlesByIdsQuery } from "../redux_usecase/dailyPracticeApi";
+import { useFetchDailyTestDataQuery, useFetchArticlesByIdsQuery, useFetchDailyTestDetailsQuery } from "../redux_usecase/dailyPracticeApi";
 import PreviousTestsContainer from "../components/PreviousTestsContainer";
 import DailyLeaderboard from "../components/DailyLeaderboard";
 import { DailyFeatureWidget } from "../components/DailyFeatureWidget";
@@ -45,14 +45,17 @@ const DailyPage: React.FC = () => {
     // Check if the selected exam is today's exam
     const isSelectedToday = !!(todayData?.examInfo && selectedExamId === todayData.examInfo.id);
 
-    // Fetch specific exam details if it's not today's exam
-    const { data: selectedTestData } = useFetchDailyTestByIdQuery(
-        { exam_id: selectedExamId! },
+    // Fetch details for past exams (public endpoint)
+    // Only skip if it's today's exam or no ID is selected
+    const { data: pastExamDetails, isLoading: isLoadingPastDetails } = useFetchDailyTestDetailsQuery(
+        selectedExamId!,
         { skip: !selectedExamId || isSelectedToday }
     );
 
     // Derive the selected exam object
-    const selectedExam = isSelectedToday ? todayData?.examInfo : selectedTestData?.examInfo;
+    // If today: use todayData.examInfo
+    // If past: use pastExamDetails.examInfo
+    const selectedExam = isSelectedToday ? todayData?.examInfo : pastExamDetails?.examInfo;
 
     const handleStartPractice = async (type: "rc" | "va") => {
         if (!selectedExamId) {
@@ -99,14 +102,14 @@ const DailyPage: React.FC = () => {
 
 
 
-    // Fetch articles using used_articles_id from the selected exam
+    // Fetch articles for the selected exam (works for both today and past exams)
     const articleIds = selectedExam?.used_articles_id || [];
     const { data: articles = [], isLoading: isLoadingArticles } = useFetchArticlesByIdsQuery(
         { article_ids: articleIds },
         { skip: articleIds.length === 0 }
     );
 
-    if (isLoadingToday) {
+    if (isLoadingToday || isLoadingPastDetails) {
         return <PageLoader variant="fullscreen" message="Loading daily practice..." />;
     }
 

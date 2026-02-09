@@ -29,7 +29,7 @@ export const AuthCallback = () => {
         const handleExchange = async () => {
             try {
                 await exchangeToken({ token }).unwrap();
-                toast.success('Successfully signed in!');
+                toast.success('Successfully signed in!', { id: 'auth-success' });
 
                 // Check if we have a stored redirect
                 const storedRedirect = localStorage.getItem('post_auth_redirect');

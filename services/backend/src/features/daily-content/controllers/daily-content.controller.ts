@@ -130,82 +130,10 @@ export async function fetchDailyTestData(req: Request, res: Response, next: Next
 
         logger.info({ examId: examInfo.id }, 'Fetched exam info');
 
-        // Fetch passages linked to this exam
-        const passageDataRaw = await db.query.passages.findMany({
-            where: eq(passages.paper_id, examInfo.id),
-        });
-
-        // Mapping passages
-        const passageData = passageDataRaw.map(p => ({
-            id: p.id,
-            title: p.title,
-            content: p.content,
-            word_count: p.word_count,
-            genre: p.genre,
-            difficulty: p.difficulty,
-            source: p.source,
-            paper_id: p.paper_id,
-            is_daily_pick: p.is_daily_pick ?? false,
-            is_featured: p.is_featured ?? false,
-            is_archived: p.is_archived ?? false,
-            created_at: p.created_at,
-            updated_at: p.updated_at,
-        }));
-
-        logger.info({ count: passageData.length }, 'Fetched passages');
-
-        // Fetch questions linked to this exam
-        const questionDataRaw = await db.query.questions.findMany({
-            where: eq(questions.paper_id, examInfo.id),
-        });
-
-        // Mapping questions
-        const include_solutions = req.query.include_solutions === 'true';
-
-        // Mapping questions
-        const questionData = questionDataRaw.map(q => {
-            let parsedOptions = q.options;
-            // Parse JSON fields if they are strings (Drizzle text type)
-            if (typeof q.options === 'string') { try { parsedOptions = JSON.parse(q.options); } catch { } }
-
-            let parsedJumbled = q.jumbled_sentences;
-            if (typeof q.jumbled_sentences === 'string') { try { parsedJumbled = JSON.parse(q.jumbled_sentences); } catch { } }
-
-            let parsedCorrectAnswer = { answer: "" };
-            if (include_solutions) {
-                if (typeof q.correct_answer === 'string') {
-                    try {
-                        if (q.correct_answer.trim().startsWith('{')) parsedCorrectAnswer = JSON.parse(q.correct_answer);
-                        else parsedCorrectAnswer = { answer: q.correct_answer };
-                    } catch { parsedCorrectAnswer = { answer: q.correct_answer }; }
-                }
-            } else {
-                parsedCorrectAnswer = { answer: "" }; // Hide answer
-            }
-
-            return {
-                id: q.id,
-                passage_id: q.passage_id,
-                paper_id: q.paper_id,
-                question_text: q.question_text,
-                question_type: q.question_type,
-                options: parsedOptions,
-                jumbled_sentences: parsedJumbled,
-                correct_answer: include_solutions ? parsedCorrectAnswer : null,
-                rationale: q.rationale,
-                difficulty: q.difficulty,
-                tags: q.tags,
-                created_at: q.created_at,
-                updated_at: q.updated_at,
-            };
-        });
-
-        logger.info({ count: questionData.length, include_solutions }, 'Fetched questions');
-
+        // For /today endpoint, only return exam info (not passages/questions)
+        // Child pages (RC/VA) will fetch full content via /:exam_id when needed
         const response = {
-            examInfo: examInfo, // Already in snake_case
-            passages: passageData as any,
-            questions: questionData as any,
+            examInfo: examInfo, // Contains id, used_articles_id, etc.
         };
 
         res.json(successResponse(response));
@@ -334,6 +262,37 @@ export async function fetchDailyTestById(req: Request, res: Response, next: Next
         res.json(successResponse(response));
     } catch (error) {
         logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in fetchDailyTestById');
+        if (error instanceof ApiError) return next(error);
+        next(Errors.internalError());
+    }
+}
+
+// =============================================================================
+// Fetch Daily Test Details By ID (Public - No Content)
+// =============================================================================
+export async function fetchDailyTestDetailsById(req: Request, res: Response, next: NextFunction): Promise<void> {
+    const exam_id = req.params.exam_id as string;
+
+    logger.info({ exam_id }, 'fetchDailyTestDetailsById called');
+
+    try {
+        // Fetch the specific exam
+        const examInfo = await db.select().from(examPapers).where(eq(examPapers.id, exam_id)).limit(1);
+
+        if (!examInfo || examInfo.length === 0) {
+            throw Errors.notFound('Exam not found');
+        }
+
+        const exam = examInfo[0];
+        logger.info({ examId: exam.id }, 'Fetched exam info');
+
+        const response = {
+            examInfo: exam, // already snake_case
+        };
+
+        res.json(successResponse(response));
+    } catch (error) {
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in fetchDailyTestDetailsById');
         if (error instanceof ApiError) return next(error);
         next(Errors.internalError());
     }

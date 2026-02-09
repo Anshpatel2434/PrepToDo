@@ -137,7 +137,7 @@ const DailyLeaderboard: React.FC<DailyLeaderboardProps> = ({ examId, isDark }) =
                                 Daily Leaderboard
                             </h2>
                             <p className={`text-sm font-medium ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
-                                <span className={isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}>{totalParticipants}</span> participants today
+                                <span className={isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}>{totalParticipants}</span> participants
                             </p>
                         </div>
                     </div>

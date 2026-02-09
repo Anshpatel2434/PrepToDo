@@ -66,7 +66,7 @@ export default function DailyRCPage() {
     const paletteWidth = isMobile ? 288 : 256;
 
     // Get exam_id from URL params
-    const examId = searchParams.get('exam_id');
+    const urlExamId = searchParams.get('exam_id');
 
     // --- 1. Data Fetching & Initialization ---
 
@@ -76,25 +76,24 @@ export default function DailyRCPage() {
     // Redux Selectors
     const viewMode = useSelector(selectViewMode);
 
-    // Fetch test data - use specific exam if provided, otherwise fetch today's test
-    // We fetch solutions only if viewMode is 'solution'
-    const shouldFetchSolutions = viewMode === 'solution';
-
-    const { data: testData, isLoading: isTestDataLoading } = useFetchDailyTestDataQuery(
-        { include_solutions: shouldFetchSolutions },
-        { skip: !!examId }
+    // If no exam_id in URL, fetch today's exam info to get the ID
+    const { data: todayData, isLoading: isTodayLoading } = useFetchDailyTestDataQuery(
+        undefined,
+        { skip: !!urlExamId }
     );
 
-    const { data: specificTestData, isLoading: isSpecificTestDataLoading } = useFetchDailyTestByIdQuery(
+    // Determine which exam to use
+    const examId = urlExamId || todayData?.examInfo?.id || null;
+
+    // Fetch full exam content (requires auth) - this gets questions/passages
+    const shouldFetchSolutions = viewMode === 'solution';
+    const { data: currentTestData, isLoading: isTestDataLoading } = useFetchDailyTestByIdQuery(
         {
-            exam_id: examId ? examId : "",
+            exam_id: examId || "",
             include_solutions: shouldFetchSolutions
         },
         { skip: !examId }
     );
-
-    // Use the appropriate test data based on whether we have an exam_id
-    const currentTestData = examId ? specificTestData : testData;
 
     // Mutations and Lazy Queries
     const [fetchExistingSession, { isFetching: isSessionLoading }] =
@@ -144,7 +143,7 @@ export default function DailyRCPage() {
     const [showPalette, setShowPalette] = React.useState(true);
     const [initError, setInitError] = React.useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const isLoading = isTestDataLoading || isSpecificTestDataLoading || isSessionLoading || isCreatingSession || isUserLoading || isSubmitting;
+    const isLoading = isTestDataLoading || isTodayLoading || isSessionLoading || isCreatingSession || isUserLoading || isSubmitting;
 
     // Polling for session updates in solution mode (to detect when AI analysis is done)
     const { data: polledSessionData } = useFetchExistingSessionDetailsQuery(

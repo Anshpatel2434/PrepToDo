@@ -15,6 +15,7 @@ import {
     fetchDailyTestData,
     fetchPreviousDailyTests,
     fetchDailyTestById,
+    fetchDailyTestDetailsById,
     startDailyRCSession,
     startDailyVASession,
     fetchExistingSessionDetails,
@@ -45,9 +46,22 @@ router.get(
     fetchPreviousDailyTests
 );
 
-// Get specific daily test by ID
+
+
+// Get specific daily test details by ID (Public - No Content)
+router.get(
+    '/details/:exam_id',
+    [
+        param('exam_id').isUUID(),
+        validate,
+    ],
+    fetchDailyTestDetailsById
+);
+
+// Get specific daily test by ID (requires auth - fetches full content)
 router.get(
     '/:exam_id',
+    requireAuth,
     [
         param('exam_id').isUUID(),
         validate,

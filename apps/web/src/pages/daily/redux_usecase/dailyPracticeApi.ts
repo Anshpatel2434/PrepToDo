@@ -27,6 +27,11 @@ interface TestDataState {
     questions: Question[];
 }
 
+// For /today endpoint - only returns exam info
+interface TodayTestDataState {
+    examInfo: Exam | null;
+}
+
 interface StartDailySessionQuery {
     user_id: UUID;
     paper_id: UUID;
@@ -78,19 +83,27 @@ export const dailyPracticeApi = createApi({
     }),
     tagTypes: ["DailyPractice", "Session", "Attempts"],
     endpoints: (builder) => ({
-        // Get today's daily practice data
-        fetchDailyTestData: builder.query<TestDataState, { include_solutions?: boolean } | void>({
-            query: (args) => ({
-                url: "/today",
-                params: args ? { include_solutions: args.include_solutions } : undefined,
-            }),
-            transformResponse: (response: ApiResponse<TestDataState>) => {
+        // Get today's exam info (no questions/passages)
+        fetchDailyTestData: builder.query<TodayTestDataState, void>({
+            query: () => "/today",
+            transformResponse: (response: ApiResponse<TodayTestDataState>) => {
                 if (!response.success) {
                     throw new Error(response.error?.message || 'Failed to fetch daily test data');
                 }
                 return response.data;
             },
             providesTags: ["DailyPractice"],
+        }),
+
+        // Get specific exam details (public - no content)
+        fetchDailyTestDetails: builder.query<TodayTestDataState, string>({
+            query: (exam_id) => `/details/${exam_id}`,
+            transformResponse: (response: ApiResponse<TodayTestDataState>) => {
+                if (!response.success) {
+                    throw new Error(response.error?.message || 'Failed to fetch exam details');
+                }
+                return response.data;
+            },
         }),
 
         // Get previous daily practice tests with pagination
@@ -239,6 +252,7 @@ export const dailyPracticeApi = createApi({
 export const {
     useFetchDailyTestDataQuery,
     useFetchPreviousDailyTestsQuery,
+    useFetchDailyTestDetailsQuery,
     useFetchDailyTestByIdQuery,
     useStartDailyRCSessionMutation,
     useStartDailyVASessionMutation,

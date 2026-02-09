@@ -212,7 +212,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
 
         try {
             await login({ email, password }).unwrap();
-            toast.success("Logged in successfully!");
+            toast.success("Logged in successfully!", { id: 'auth-success' });
             onClose("success");
         } catch (error) {
             const err = error as { data?: { error?: { message?: string } }; message?: string };
