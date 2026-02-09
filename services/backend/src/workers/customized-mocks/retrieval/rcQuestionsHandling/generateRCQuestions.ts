@@ -5,7 +5,9 @@ import { Passage, Question, QuestionSchema } from "../../schemas/types";
 import { v4 as uuidv4 } from 'uuid';
 import { CostTracker } from "../utils/CostTracker";
 import { user_core_metrics_definition_v1 } from "../../../../config/user_core_metrics_definition_v1";
+import { createChildLogger } from "../../../../common/utils/logger.js";
 
+const logger = createChildLogger('rc-questions-gen');
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
@@ -76,7 +78,7 @@ export async function generateRCQuestions(
 ) {
     const { passageData, referenceData, questionCount, personalization } = params;
 
-    console.log(`🧩 [RC Questions] Starting generation (${questionCount} questions)`);
+    logger.info(`🧩 [RC Questions] Starting generation (${questionCount} questions)`);
 
     const difficultyTargets = getDefaultDifficultyTargets(questionCount);
 
@@ -370,8 +372,8 @@ IMPORTANT:
 - The question should be able to assess the metrics from ${JSON.stringify(user_core_metrics_definition_v1)} file and try to divide all the metrics across 4 questions. file and try to divide all the metrics across all questions.
 `;
 
-    console.log("⏳ [RC Questions] Waiting for LLM to generate questions");
-    console.log("📝 [RC Questions] Ref Data (First Item):", JSON.stringify(referenceData[0] || {}).substring(0, 500) + "...");
+    logger.info("⏳ [RC Questions] Waiting for LLM to generate questions");
+    // logger.debug("Ref Data (First Item):", JSON.stringify(referenceData[0] || {}).substring(0, 500) + "...");
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
@@ -390,7 +392,7 @@ IMPORTANT:
         response_format: zodResponseFormat(ResponseSchema, "rc_questions"),
     });
 
-    console.log("✅ [RC Questions] LLM response received");
+    logger.info("✅ [RC Questions] LLM response received");
 
     const parsed = completion.choices[0].message.parsed;
 
@@ -407,7 +409,7 @@ IMPORTANT:
         );
     }
 
-    console.log(`✅ [RC Questions] Generated ${parsed.questions.length} questions`);
+    logger.info(`✅ [RC Questions] Generated ${parsed.questions.length} questions`);
 
     const now = new Date().toISOString();
     return parsed.questions.map(q => ({

@@ -3,6 +3,9 @@ import { graphEdges } from "../../../db/schema";
 import { inArray } from "drizzle-orm";
 import { metricMappingJson } from "../../../config/core_metric_reasoning_map_v1_0";
 import { Node, QuestionMetricTag, ReasoningGraphContext } from "../schemas/types";
+import { createChildLogger } from "../../../common/utils/logger.js";
+
+const logger = createChildLogger('graph-context-builder');
 
 /**
  * Assembles reasoning graph context for each question using metric_keys and their mapped reasoning nodes.
@@ -19,9 +22,7 @@ export async function getQuestionGraphContext(
     nodes: Node[]
 ): Promise<Record<string, ReasoningGraphContext>> {
 
-    console.log(
-        `🧩 [Graph] Building reasoning context (questions=${questionTags.length}, nodes=${nodes.length})`
-    );
+    logger.info({ questions: questionTags.length, nodes: nodes.length }, "Building reasoning context");
 
     // Load core metric reasoning map
     const metricMapData = metricMappingJson as any;
@@ -46,12 +47,12 @@ export async function getQuestionGraphContext(
         });
 
         if (sourceNodeIds.length === 0) {
-            console.warn(`⚠️ [Graph] No nodes found for metrics: ${metricKeys.join(", ")}`);
+            logger.warn({ metricKeys }, `No nodes found for metrics`);
 
             // Debugging: Check if keys exist in map
             metricKeys.forEach(key => {
                 const stepCount = metricMap[key]?.reasoning_steps?.length || 0;
-                console.log(`   🔍 Debug: Metric '${key}' has ${stepCount} steps in map. Exists? ${!!metricMap[key]}`);
+                logger.info({ metricKey: key, stepCount, exists: !!metricMap[key] }, "Metric debug info");
             });
 
             result[tag.question_id] = {
@@ -76,7 +77,7 @@ export async function getQuestionGraphContext(
             const sourceNode = nodeLookup.get(edge.source_node_id);
             const targetNode = nodeLookup.get(edge.target_node_id);
             if (!targetNode) {
-                console.warn(`⚠️ [Graph] Edge target node ${edge.target_node_id} not found`);
+                logger.warn({ targetNodeId: edge.target_node_id }, `Edge target node not found`);
             }
             return targetNode ? {
                 relationship: edge.relationship,
@@ -92,6 +93,6 @@ export async function getQuestionGraphContext(
         };
     }
 
-    console.log(`✅ [Graph] Context assembled for ${Object.keys(result).length} questions`);
+    logger.info({ count: Object.keys(result).length }, "Context assembled");
     return result;
 }

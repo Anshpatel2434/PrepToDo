@@ -6,7 +6,9 @@ import { Question, QuestionSchema, Passage, SemanticIdeas, AuthorialPersona } fr
 import { user_core_metrics_definition_v1 } from "../../../../config/user_core_metrics_definition_v1";
 import { CostTracker } from "../utils/CostTracker";
 import { v4 as uuidv4 } from 'uuid';
+import { createChildLogger } from "../../../../common/utils/logger.js";
 
+const logger = createChildLogger('va-questions-gen');
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
@@ -54,8 +56,8 @@ export async function generateVAQuestions(
             odd_one_out: 0,
         };
 
-        console.log(`🧩 [VA Questions] Starting generation`);
-        console.log(`   Distribution:`, distribution);
+        logger.info(`🧩 [VA Questions] Starting generation`);
+        logger.info({ distribution }, "Distribution");
 
         // Combine standard reference data with specific reference questions if provided
         let allReferences = [];
@@ -113,9 +115,9 @@ export async function generateVAQuestions(
                     personalization
                 }, costTracker);
                 allQuestions.push(...summaryQuestions);
-                console.log(`✅ [VA Questions] Generated ${summaryQuestions.length} para_summary questions`);
+                logger.info(`✅ [VA Questions] Generated ${summaryQuestions.length} para_summary questions`);
             } catch (error) {
-                console.error("❌ [VA Questions] Failed to generate para_summary:", error);
+                logger.error({ error: error instanceof Error ? error.message : String(error) }, "❌ [VA Questions] Failed to generate para_summary");
             }
         }
 
@@ -131,9 +133,9 @@ export async function generateVAQuestions(
                     personalization
                 }, costTracker);
                 allQuestions.push(...completionQuestions);
-                console.log(`✅ [VA Questions] Generated ${completionQuestions.length} para_completion questions`);
+                logger.info(`✅ [VA Questions] Generated ${completionQuestions.length} para_completion questions`);
             } catch (error) {
-                console.error("❌ [VA Questions] Failed to generate para_completion:", error);
+                logger.error({ error: error instanceof Error ? error.message : String(error) }, "❌ [VA Questions] Failed to generate para_completion");
             }
         }
 
@@ -149,9 +151,9 @@ export async function generateVAQuestions(
                     personalization
                 }, costTracker);
                 allQuestions.push(...jumbleQuestions);
-                console.log(`✅ [VA Questions] Generated ${jumbleQuestions.length} para_jumble questions`);
+                logger.info(`✅ [VA Questions] Generated ${jumbleQuestions.length} para_jumble questions`);
             } catch (error) {
-                console.error("❌ [VA Questions] Failed to generate para_jumble:", error);
+                logger.error({ error: error instanceof Error ? error.message : String(error) }, "❌ [VA Questions] Failed to generate para_jumble");
             }
         }
 
@@ -167,13 +169,13 @@ export async function generateVAQuestions(
                     personalization
                 }, costTracker);
                 allQuestions.push(...oddOneOutQuestions);
-                console.log(`✅ [VA Questions] Generated ${oddOneOutQuestions.length} odd_one_out questions`);
+                logger.info(`✅ [VA Questions] Generated ${oddOneOutQuestions.length} odd_one_out questions`);
             } catch (error) {
-                console.error("❌ [VA Questions] Failed to generate odd_one_out:", error);
+                logger.error({ error: error instanceof Error ? error.message : String(error) }, "❌ [VA Questions] Failed to generate odd_one_out");
             }
         }
 
-        console.log(`✅ [VA Questions] Total VA questions generated: ${allQuestions.length}`);
+        logger.info(`✅ [VA Questions] Total VA questions generated: ${allQuestions.length}`);
 
         // Final pass to ensure all questions have fresh UUIDs and proper field initialization
         const finalQuestions = allQuestions.map(q => ({
@@ -186,10 +188,10 @@ export async function generateVAQuestions(
             updated_at: now
         }));
 
-        console.log("✅ [VA Questions] Finalized VA questions with fresh IDs");
+        logger.info("✅ [VA Questions] Finalized VA questions with fresh IDs");
         return finalQuestions;
     } catch (error) {
-        console.error("❌ [VA Questions] Error in generateVAQuestions:", error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, "❌ [VA Questions] Error in generateVAQuestions");
         throw error;
     }
 }
@@ -211,7 +213,8 @@ async function generateParaSummaryQuestions(
     const { semanticIdeas, authorialPersona, referenceData, passageText, count, personalization } = params;
     const now = new Date().toISOString();
 
-    console.log(`🧩 [Para Summary] Starting generation (${count} questions)`);
+    const summaryLogger = createChildLogger('para-summary');
+    logger.info({ count }, `Starting para-summary generation`);
 
     let personalizationInstructions = "";
     if (personalization) {
@@ -414,8 +417,8 @@ IMPORTANT:
 - The question should be able to assess the metrics from "user_core_metrics_definition_v1.json" file.
 `;
 
-    console.log("⏳ [Para Summary] Waiting for LLM to generate questions");
-    console.log("📝 [Para Summary] Ref Data (First Item):", JSON.stringify(referenceData[0] || {}).substring(0, 500) + "...");
+    summaryLogger.info(`🧩 [Para Summary] Starting generation (${count} questions)`);
+    // logger.debug("Ref Data (First Item):", JSON.stringify(referenceData[0] || {}).substring(0, 500) + "...");
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
@@ -448,7 +451,7 @@ IMPORTANT:
         );
     }
 
-    console.log(`✅ [Para Summary] Generated ${parsed.questions.length} questions`);
+    summaryLogger.info(`✅ [Para Summary] Generated ${parsed.questions.length} questions`);
 
     return parsed.questions.map(q => ({
         ...q,
@@ -474,7 +477,8 @@ async function generateParaCompletionQuestions(
     const { semanticIdeas, authorialPersona, referenceData, passageText, count, personalization } = params;
     const now = new Date().toISOString();
 
-    console.log(`🧩 [Para Completion] Starting generation (${count} questions)`);
+    const completionLogger = createChildLogger('para-completion');
+    completionLogger.info(`🧩 [Para Completion] Starting generation (${count} questions)`);
 
     let personalizationInstructions = "";
     if (personalization) {
@@ -693,8 +697,8 @@ IMPORTANT:
 - No additional text or commentary
 `;
 
-    console.log("⏳ [Para Completion] Waiting for LLM to generate questions");
-    console.log("📝 [Para Completion] Ref Data (First Item):", JSON.stringify(referenceData[0] || {}).substring(0, 500) + "...");
+    completionLogger.info("⏳ [Para Completion] Waiting for LLM to generate questions");
+    // completionLogger.debug("Ref Data (First Item):", JSON.stringify(referenceData[0] || {}).substring(0, 500) + "...");
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
@@ -747,7 +751,8 @@ async function generateParaJumbleQuestions(
     const { semanticIdeas, authorialPersona, referenceData, count, personalization } = params;
     const now = new Date().toISOString();
 
-    console.log(`🧩 [Para Jumble] Starting generation (${count} questions)`);
+    const jumbleLogger = createChildLogger('para-jumble');
+    jumbleLogger.info(`🧩 [Para Jumble] Starting generation (${count} questions)`);
 
     let personalizationInstructions = "";
     if (personalization) {
@@ -998,8 +1003,8 @@ IMPORTANT:
 - The question should be able to assess the metrics from ${user_core_metrics_definition_v1} file.
 `;
 
-    console.log("⏳ [Para Jumble] Waiting for LLM to generate questions");
-    console.log("📝 [Para Jumble] Ref Data (First Item):", JSON.stringify(referenceData[0] || {}).substring(0, 500) + "...");
+    jumbleLogger.info("⏳ [Para Jumble] Waiting for LLM to generate questions");
+    // jumbleLogger.debug("Ref Data (First Item):", JSON.stringify(referenceData[0] || {}).substring(0, 500) + "...");
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
@@ -1058,7 +1063,8 @@ async function generateOddOneOutQuestions(
     const { semanticIdeas, authorialPersona, referenceData, count, personalization } = params;
     const now = new Date().toISOString();
 
-    console.log(`🧩 [Odd One Out] Starting generation (${count} questions)`);
+    const oddOneOutLogger = createChildLogger('odd-one-out');
+    oddOneOutLogger.info(`🧩 [Odd One Out] Starting generation (${count} questions)`);
 
     let personalizationInstructions = "";
     if (personalization) {
@@ -1330,8 +1336,8 @@ IMPORTANT:
 - The question should be able to assess the metrics from ${user_core_metrics_definition_v1} file.
 `;
 
-    console.log("⏳ [Odd One Out] Waiting for LLM to generate questions");
-    console.log("📝 [Odd One Out] Ref Data (First Item):", JSON.stringify(referenceData[0] || {}).substring(0, 500) + "...");
+    oddOneOutLogger.info("⏳ [Odd One Out] Waiting for LLM to generate questions");
+    // oddOneOutLogger.debug("Ref Data (First Item):", JSON.stringify(referenceData[0] || {}).substring(0, 500) + "...");
 
     const completion = await client.chat.completions.parse({
         model: MODEL,

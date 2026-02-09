@@ -7,13 +7,16 @@ import { db } from "../../../db";
 import { userMetricProficiency } from "../../../db/schema";
 import { and, eq } from "drizzle-orm";
 import { v4 as uuidv4 } from 'uuid';
+import { createChildLogger } from "../../../common/utils/logger.js";
+
+const logger = createChildLogger('analytics-phase-d');
 
 export async function phaseD_updateProficiency(
     user_id: string,
     session_id: string,
     sessionMetrics: UserMetricProficiency[] // Data from Phase B
 ) {
-    console.log('🧮 [Phase D] Updating user_metric_proficiency');
+    logger.info('Updating user_metric_proficiency');
 
     let updateCount = 0;
 
@@ -31,7 +34,7 @@ export async function phaseD_updateProficiency(
 
         // 2. Idempotence check: skip if already updated for this session
         if (existing && existing.last_session_id === session_id) {
-            console.log(`⚠️ [Phase D] ${dimension_type}:${dimension_key} already updated for session ${session_id}, skipping`);
+            logger.info({ dimensionType: dimension_type, dimensionKey: dimension_key, sessionId: session_id }, 'Metric already updated for session, skipping');
             continue;
         }
 
@@ -87,12 +90,12 @@ export async function phaseD_updateProficiency(
 
             updateCount++;
         } catch (upsertError) {
-            console.error(`❌ [Phase D] Upsert failed for ${dimension_type}:${dimension_key}:`, upsertError);
+            logger.error({ error: upsertError instanceof Error ? upsertError.message : String(upsertError), dimensionType: dimension_type, dimensionKey: dimension_key }, 'Upsert failed for metric');
             continue;
         }
     }
 
-    console.log(`✅ [Phase D] Successfully processed ${updateCount} proficiency dimensions`);
+    logger.info({ updateCount }, "Successfully processed proficiency dimensions");
 
     return {
         success: true,

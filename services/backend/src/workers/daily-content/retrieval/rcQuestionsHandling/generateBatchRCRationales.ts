@@ -6,7 +6,9 @@
 import OpenAI from "openai";
 import { Passage, Question, ReasoningGraphContext } from "../../types";
 import { CostTracker } from "../utils/CostTracker";
+import { createChildLogger } from "../../../../common/utils/logger.js";
 
+const logger = createChildLogger('batch-rc-rationales');
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
@@ -66,8 +68,8 @@ export async function generateBatchRCRationales(
 ) {
     const { passageText, questions, reasoningContexts, referenceData } = params;
 
-    console.log(`🧾 [Batch RC Rationales] Generating rationales for ${questions.length} questions in single API call`);
-    console.log("Input Reference Data:", JSON.stringify(referenceData, null, 2));
+    logger.info(`🧾 [Batch RC Rationales] Generating rationales for ${questions.length} questions in single API call`);
+    // logger.debug("Input Reference Data:", JSON.stringify(referenceData, null, 2));
 
     // Reduce reference data to 2 passages (from 3)
     const reducedReferences = referenceData.slice(0, 2);
@@ -75,14 +77,14 @@ export async function generateBatchRCRationales(
     // Filter out questions without reasoning context
     const validQuestions = questions.filter(q => {
         if (!reasoningContexts[q.id]) {
-            console.warn(`⚠️ [Batch RC Rationales] Skipping question ${q.id} - missing reasoning context`);
+            logger.warn(`⚠️ [Batch RC Rationales] Skipping question ${q.id} - missing reasoning context`);
             return false;
         }
         return true;
     });
 
     if (validQuestions.length === 0) {
-        console.warn(`⚠️ [Batch RC Rationales] No valid questions with reasoning context`);
+        logger.warn(`⚠️ [Batch RC Rationales] No valid questions with reasoning context`);
         return questions.map(q => ({
             ...q,
             rationale: "Rationale generation skipped - missing reasoning context.",
@@ -225,7 +227,7 @@ Return STRICT JSON in this format:
 
 Generate exactly ${questions.length} rationale objects, one for each question IN THE SAME ORDER.`;
 
-    console.log(`⏳ [Batch RC Rationales] Waiting for LLM response for ${questions.length} questions`);
+    logger.info(`⏳ [Batch RC Rationales] Waiting for LLM response for ${questions.length} questions`);
 
     const completion = await client.chat.completions.create({
         model: MODEL,
@@ -264,12 +266,12 @@ Generate exactly ${questions.length} rationale objects, one for each question IN
     }
 
     if (parsed.rationales.length !== validQuestions.length) {
-        console.warn(
+        logger.warn(
             `⚠️ [Batch RC Rationales] Expected ${validQuestions.length} rationales, got ${parsed.rationales.length}`
         );
     }
 
-    console.log(`✅ [Batch RC Rationales] Generated ${parsed.rationales.length} rationales`);
+    logger.info(`✅ [Batch RC Rationales] Generated ${parsed.rationales.length} rationales`);
 
     // Map rationales back to valid questions
     const rationaleMap = new Map(
@@ -283,7 +285,7 @@ Generate exactly ${questions.length} rationale objects, one for each question IN
         // Get the rationale data for this question
         const rationaleData = rationaleMap.get(q.id) as { question_id: string; rationale: string; metric_keys?: string[] } | undefined;
         if (!rationaleData || !context) {
-            console.warn(`⚠️ [Batch RC Rationales] Fallback for question ${q.id}`);
+            logger.warn(`⚠️ [Batch RC Rationales] Fallback for question ${q.id}`);
             return {
                 ...q,
                 rationale: rationaleData?.rationale || "Rationale generation incomplete.",

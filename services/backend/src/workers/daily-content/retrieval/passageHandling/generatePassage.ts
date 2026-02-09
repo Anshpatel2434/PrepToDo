@@ -1,7 +1,9 @@
 import OpenAI from "openai";
 import { CostTracker } from "../utils/CostTracker";
 import { AuthorialPersona, SemanticIdeas } from "../../types";
+import { createChildLogger } from "../../../../common/utils/logger.js";
 
+const logger = createChildLogger('passage-gen');
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
@@ -36,7 +38,7 @@ export async function generatePassage(
 ) {
     const { semanticIdeas, authorialPersona, referencePassages } = params;
 
-    console.log(`✍️ [Passage Gen] Starting passage generation (referencePassages=${referencePassages.length})`);
+    logger.info(`✍️ [Passage Gen] Starting passage generation (referencePassages=${referencePassages.length})`);
 
     if (referencePassages.length !== 3) {
         throw new Error(
@@ -44,7 +46,7 @@ export async function generatePassage(
         );
     }
 
-    console.log("Input Reference Data:", JSON.stringify(referencePassages, null, 2));
+    // logger.debug("Input Reference Data:", JSON.stringify(referencePassages, null, 2));
 
     const prompt = `SYSTEM:
 You are a senior CAT VARC paper setter with over 15 years of experience.
@@ -290,7 +292,7 @@ If not, expand the analysis until it is.
     //     .replace("{{PASSAGE_4_TEXT}}", referencePassages[3])
     //     .replace("{{PASSAGE_5_TEXT}}", referencePassages[4]);
 
-    console.log("⏳ [Passage Gen] Waiting for LLM response (draft passage)");
+    logger.info("⏳ [Passage Gen] Waiting for LLM response (draft passage)");
 
     const completion = await client.chat.completions.create({
         model: MODEL,
@@ -322,7 +324,7 @@ If not, expand the analysis until it is.
         );
     }
 
-    console.log(`✅ [Passage Gen] Passage generated (length=${passage.length} chars)`);
+    logger.info(`✅ [Passage Gen] Passage generated (length=${passage.length} chars)`);
 
     return passage;
 }

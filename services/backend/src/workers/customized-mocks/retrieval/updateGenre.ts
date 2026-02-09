@@ -1,6 +1,9 @@
 import { db } from "../../../db";
 import { genres } from "../../../db/schema";
 import { eq, sql } from "drizzle-orm";
+import { createChildLogger } from "../../../common/utils/logger.js";
+
+const logger = createChildLogger('custom-mock-genre-update');
 
 /**
  * Updates genre usage stats for custom exams.
@@ -23,11 +26,11 @@ export async function updateGenres(genreNames: string[]) {
                 .returning();
 
             if (!updated) {
-                console.warn(`Genre not found for update: ${name}`);
+                logger.warn(`Genre not found for update: ${name}`);
             }
             results.push(updated);
         } catch (e) {
-            console.error(`Failed to update genre ${name}`, e);
+            logger.error({ error: e instanceof Error ? e.message : String(e), genre: name }, `Failed to update genre`);
         }
     }
     return results;

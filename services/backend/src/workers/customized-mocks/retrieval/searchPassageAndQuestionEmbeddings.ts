@@ -1,6 +1,9 @@
 import { db } from "../../../db";
 import { sql, inArray } from "drizzle-orm";
 import * as schema from "../../../db/schema";
+import { createChildLogger } from "../../../common/utils/logger.js";
+
+const logger = createChildLogger('custom-mock-vector-search');
 
 /**
  * Searches for similar passages and questions using vector embeddings.
@@ -10,7 +13,7 @@ export async function searchPassageAndQuestionEmbeddings(
     queryEmbedding: number[],
     topK = 5
 ) {
-    console.log(`🔎 [Vector Search] Searching similar passages/questions (topK=${topK})`);
+    logger.info(`🔎 [Vector Search] Searching similar passages/questions (topK=${topK})`);
 
     // Convert embedding array to postgres vector format
     const embeddingStr = `[${queryEmbedding.join(',')}]`;
@@ -23,7 +26,7 @@ export async function searchPassageAndQuestionEmbeddings(
         )
     `);
 
-    console.log(`🔎 [Vector Search] Searching similar questions by type (perType=${topK})`);
+    logger.info(`🔎 [Vector Search] Searching similar questions by type (perType=${topK})`);
 
     // Search questions using custom function
     const questionsData = await db.execute(sql`
@@ -64,10 +67,10 @@ export async function searchPassageAndQuestionEmbeddings(
         }).filter((q: any) => q.question_text);
     }
 
-    console.log(`✅ [Vector Search] Retrieved ${enrichedPassages.length} full passages, ${enrichedQuestions.length} full questions`);
-    if (enrichedPassages.length > 0) {
-        console.log(`🔍 [Vector Search] First Enriched Passage Sample: ${JSON.stringify(enrichedPassages[0]).substring(0, 200)}...`);
-    }
+    logger.info(`✅ [Vector Search] Retrieved ${enrichedPassages.length} full passages, ${enrichedQuestions.length} full questions`);
+    // if (enrichedPassages.length > 0) {
+    //     logger.debug({ sample: enrichedPassages[0] }, `🔍 [Vector Search] First Enriched Passage Sample`);
+    // }
 
     return {
         passages: enrichedPassages,

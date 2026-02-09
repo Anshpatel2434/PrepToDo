@@ -5,6 +5,9 @@
 
 import { DataManager } from "./dataManager";
 import { Exam, Passage, Question } from "../types";
+import { createChildLogger } from "../../../common/utils/logger.js";
+
+const logger = createChildLogger('output-formatter');
 
 /**
  * Simplified formatter that works with DataManager
@@ -27,10 +30,10 @@ export function formatOutputForDB(
 
         const stats = dataManager.getStats();
 
-        console.log(`✅ [Output Formatter] Formatted data for DB upload`);
-        console.log(`   - Exam: ${exam.name} (${exam.year})`);
-        console.log(`   - Passage: ${passage.word_count} words, ${passage.genre}`);
-        console.log(`   - Questions: ${stats.totalQuestions} total (RC: ${stats.rcQuestions}, VA: ${stats.vaQuestions})`);
+        logger.info(`✅ [Output Formatter] Formatted data for DB upload`);
+        logger.info(`   - Exam: ${exam.name} (${exam.year})`);
+        logger.info(`   - Passage: ${passage.word_count} words, ${passage.genre}`);
+        logger.info(`   - Questions: ${stats.totalQuestions} total (RC: ${stats.rcQuestions}, VA: ${stats.vaQuestions})`);
 
         return {
             exam,
@@ -39,7 +42,7 @@ export function formatOutputForDB(
             genreData,
         };
     } catch (error) {
-        console.error("❌ [Output Formatter] Error formatting output:", error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, "❌ [Output Formatter] Error formatting output");
         throw error;
     }
 }
@@ -57,17 +60,17 @@ export function validateOutputForDB(data: {
 
         // Basic validation
         if (!exam.id || !exam.name) {
-            console.error("❌ [Output Formatter] Invalid exam data");
+            logger.error("❌ [Output Formatter] Invalid exam data");
             return false;
         }
 
         if (!passage.id || !passage.content || passage.word_count < 100) {
-            console.error("❌ [Output Formatter] Invalid passage data");
+            logger.error("❌ [Output Formatter] Invalid passage data");
             return false;
         }
 
         if (questions.length === 0) {
-            console.error("❌ [Output Formatter] No questions to upload");
+            logger.error("❌ [Output Formatter] No questions to upload");
             return false;
         }
 
@@ -89,19 +92,19 @@ export function validateOutputForDB(data: {
 
         for (const q of questions) {
             if (!q.id || !q.question_text || !q.question_type) {
-                console.error(`❌ [Output Formatter] Invalid question data for ${q.id}`);
+                logger.error(`❌ [Output Formatter] Invalid question data for ${q.id}`);
                 return false;
             }
 
             if (!validQuestionTypes.includes(q.question_type)) {
-                console.error(`❌ [Output Formatter] Invalid question type: ${q.question_type}`);
+                logger.error(`❌ [Output Formatter] Invalid question type: ${q.question_type}`);
                 return false;
             }
 
             // For para_jumble and odd_one_out, jumbled_sentences should be populated
             if (q.question_type === "para_jumble" || q.question_type === "odd_one_out") {
                 if (!q.jumbled_sentences || Object.keys(q.jumbled_sentences).length === 0) {
-                    console.error(`❌ [Output Formatter] Missing jumbled_sentences for ${q.question_type}`);
+                    logger.error(`❌ [Output Formatter] Missing jumbled_sentences for ${q.question_type}`);
                     return false;
                 }
             }
@@ -109,16 +112,16 @@ export function validateOutputForDB(data: {
             // For other question types, options should be populated
             if (q.question_type !== "para_jumble" && q.question_type !== "odd_one_out") {
                 if (!q.options || Object.keys(q.options).length === 0) {
-                    console.error(`❌ [Output Formatter] Missing options for ${q.question_type}`);
+                    logger.error(`❌ [Output Formatter] Missing options for ${q.question_type}`);
                     return false;
                 }
             }
         }
 
-        console.log("✅ [Output Formatter] All data validated successfully");
+        logger.info("✅ [Output Formatter] All data validated successfully");
         return true;
     } catch (error) {
-        console.error("❌ [Output Formatter] Error validating output:", error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, "❌ [Output Formatter] Error validating output");
         return false;
     }
 }

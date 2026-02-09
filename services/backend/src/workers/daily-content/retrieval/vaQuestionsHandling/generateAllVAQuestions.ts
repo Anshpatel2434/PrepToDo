@@ -9,7 +9,9 @@ import { z } from "zod";
 import { Question, SemanticIdeas, AuthorialPersona } from "../../types";
 import { CostTracker } from "../utils/CostTracker";
 import { user_core_metrics_definition_v1 } from "../../../../config/user_core_metrics_definition_v1";
+import { createChildLogger } from "../../../../common/utils/logger.js";
 
+const logger = createChildLogger('all-va-questions');
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
@@ -67,12 +69,12 @@ export async function generateAllVAQuestions(
     params: GenerateAllVAQuestionsParams,
     costTracker?: CostTracker
 ): Promise<any[]> {
-    console.log(`🧩 [All VA Questions] Starting consolidated generation`);
+    logger.info(`🧩 [All VA Questions] Starting consolidated generation`);
 
     const { semanticIdeas, authorialPersona, referenceData, referenceQuestions, passageText } = params;
 
-    console.log("Input Reference Data:", JSON.stringify(referenceData, null, 2));
-    console.log("Input Reference Questions:", JSON.stringify(referenceQuestions, null, 2));
+    // logger.debug("Input Reference Data:", JSON.stringify(referenceData, null, 2));
+    // logger.debug("Input Reference Questions:", JSON.stringify(referenceQuestions, null, 2));
     // Force valid standard text to avoid hallucinated sentences in question
     const ODD_ONE_OUT_TEXT = "Five jumbled up sentences, related to a topic, are given below. Four of them can be put together to form a coherent paragraph. Identify the odd one out and key in the number of the sentence as your answer: ";
     const PARA_JUMBLE_TEXT = "The four sentences (labelled 1, 2, 3 and 4) below, when properly sequenced would yield a coherent paragraph. Decide on the proper sequencing of the order of the sentences and key in the sequence of the four numbers as your answer: ";
@@ -601,7 +603,7 @@ IMPORTANT:
 - The metrics should assess skills from ${JSON.stringify(user_core_metrics_definition_v1)}
 `;
 
-    console.log("⏳ [All VA Questions] Waiting for LLM response");
+    logger.info("⏳ [All VA Questions] Waiting for LLM response");
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
@@ -629,11 +631,11 @@ IMPORTANT:
     const hasAllTypes = expectedTypes.every(type => types.includes(type as any));
 
     if (!hasAllTypes) {
-        console.warn("⚠️ [All VA Questions] Missing some question types, retrying...");
+        logger.warn({ types }, "Missing some question types, retrying...");
         throw new Error("Not all question types generated");
     }
 
-    console.log(`✅ [All VA Questions] Generated 4 questions (${types.join(", ")})`);
+    logger.info(`✅ [All VA Questions] Generated 4 questions (${types.join(", ")})`);
 
     const now = new Date().toISOString();
     const finalQuestions = parsed.questions.map(q => ({

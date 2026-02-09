@@ -2,7 +2,9 @@ import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import { Question } from "../../schemas/types";
+import { createChildLogger } from "../../../../common/utils/logger.js";
 
+const logger = createChildLogger('va-answers-selector');
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
@@ -29,7 +31,7 @@ export async function selectVAAnswers(params: SelectVAAnswersParams) {
 
         if (questions.length === 0) return [];
 
-        console.log(`✅ [VA Answers] Selecting correct answers for ${questions.length} questions`);
+        logger.info(`✅ [VA Answers] Selecting correct answers for ${questions.length} questions`);
 
         // 2. Updated Prompt: Added explicit instruction to return the EXACT ID provided
         const prompt = `SYSTEM:
@@ -85,7 +87,7 @@ Return STRICT JSON only.
 3. odd_one_out: Return the single digit (e.g., "5").
 `;
 
-        console.log("⏳ [VA Answers] Waiting for LLM to select answers");
+        logger.info("⏳ [VA Answers] Waiting for LLM to select answers");
 
         const completion = await client.chat.completions.parse({
             model: MODEL,
@@ -109,8 +111,7 @@ Return STRICT JSON only.
             const answerData = parsed.questions.find(a => a.id.trim() === originalQ.id.trim());
 
             if (!answerData) {
-                console.error(`Missing ID in LLM response: ${originalQ.id}`);
-                console.log("IDs received from LLM:", parsed.questions.map(pq => pq.id));
+                logger.error({ questionId: originalQ.id, receivedIds: parsed.questions.map(pq => pq.id) }, `Missing ID in LLM response`);
                 throw new Error(`Missing answer data for question ${originalQ.id}`);
             }
 
@@ -122,11 +123,11 @@ Return STRICT JSON only.
             };
         });
 
-        console.log(`✅ [VA Answers] Successfully matched ${questionsWithAnswers.length} questions`);
+        logger.info(`✅ [VA Answers] Successfully matched ${questionsWithAnswers.length} questions`);
         return questionsWithAnswers;
 
     } catch (error) {
-        console.error("❌ [VA Questions] Error in selectVAAnswers:", error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, "❌ [VA Questions] Error in selectVAAnswers");
         throw error;
     }
 }

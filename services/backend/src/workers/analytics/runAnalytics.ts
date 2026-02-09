@@ -13,6 +13,9 @@ import { loadMetricMapping } from "./utils/mapping";
 import { db } from "../../db";
 import { practiceSessions } from "../../db/schema";
 import { and, eq } from "drizzle-orm";
+import { createChildLogger } from "../../common/utils/logger.js";
+
+const logger = createChildLogger('analytics-worker');
 
 export async function runAnalytics(params: {
     user_id: string;
@@ -20,12 +23,11 @@ export async function runAnalytics(params: {
 
     const { user_id } = params;
 
-    console.log("🚀 [START] VARC Analytics - Processing user sessions");
-    console.log(`   User ID: ${user_id}`);
+    logger.info({ user_id }, "VARC Analytics Processing started");
 
     try {
         // Fetch all unanalyzed sessions for this user
-        console.log("\n📥 Fetching unanalyzed sessions for user");
+        logger.info("Fetching unanalyzed sessions");
 
         const unanalyzedSessions = await db.query.practiceSessions.findMany({
             where: and(
@@ -41,7 +43,7 @@ export async function runAnalytics(params: {
         });
 
         if (!unanalyzedSessions || unanalyzedSessions.length === 0) {
-            console.log("✅ No unanalyzed sessions found");
+            logger.info("No unanalyzed sessions found");
             // Still update streaks even if no sessions (day change scenario)
             await phaseF_updateUserAnalytics(user_id, null, [], {
                 time_spent_seconds: 0,
@@ -65,11 +67,11 @@ export async function runAnalytics(params: {
             };
         }
 
-        console.log(`📊 Found ${unanalyzedSessions.length} unanalyzed session(s) to process`);
+        logger.info({ count: unanalyzedSessions.length }, "Found unanalyzed sessions");
 
         // Load metric mapping once for all sessions
         const metricMapping = loadMetricMapping(metricMappingJson);
-        console.log(`   - Loaded mapping: ${metricMapping.metricToNodes.size} metrics`);
+        logger.info({ mappingSize: metricMapping.metricToNodes.size }, "Loaded metric mapping");
 
         // Track overall stats
         let totalAttempts = 0;
@@ -83,14 +85,15 @@ export async function runAnalytics(params: {
             const sessionRecord = unanalyzedSessions[i];
             const session_id = sessionRecord.id;
 
-            console.log(`\n${'='.repeat(60)}`);
-            console.log(`📝 Processing session ${i + 1}/${unanalyzedSessions.length}`);
-            console.log(`   Session ID: ${session_id}`);
-            console.log(`${'='.repeat(60)}`);
+            logger.info({
+                index: i + 1,
+                total: unanalyzedSessions.length,
+                sessionId: session_id
+            }, "Processing session");
 
             try {
                 // --- PHASE A: DATA COLLECTION ---
-                console.log("\n📥 [Phase A/6] Fetching session data");
+                logger.info(`[Phase ${String.fromCharCode(65 + i)}/6] Processing`);
                 const phaseAResult = await phaseA_fetchSessionData(session_id, user_id);
 
                 // Check if already analysed (race condition guard)
@@ -100,10 +103,10 @@ export async function runAnalytics(params: {
                 }
 
                 const { dataset, session } = phaseAResult;
-                console.log(`   - Dataset size: ${dataset.length} attempts`);
+                logger.info({ datasetSize: dataset.length }, "Fetched session data");
 
                 if (dataset.length === 0) {
-                    console.log("⚠️ No attempts to process, marking as analysed");
+                    logger.info("No attempts to process, marking as analysed");
                     await db.update(practiceSessions)
                         .set({ is_analysed: true, updated_at: new Date() })
                         .where(eq(practiceSessions.id, session_id));
@@ -116,9 +119,8 @@ export async function runAnalytics(params: {
                 const sessionMetrics = phaseB_computeProficiencyMetrics(user_id, session_id, dataset, metricMapping);
 
                 // --- PHASE C: LLM DIAGNOSTICS ---
-                console.log("\n🧠 [Phase C/6] Running LLM diagnostics on incorrect attempts");
                 const incorrectAttempts = dataset.filter(a => (!a.correct && a.user_answer?.user_answer));
-                console.log(`   - Incorrect attempts: ${incorrectAttempts.length}`);
+                logger.info({ incorrectCount: incorrectAttempts.length }, "Running LLM diagnostics");
 
                 const diagnostics = await phaseC_llmDiagnostics(user_id, incorrectAttempts);
 
@@ -145,7 +147,7 @@ export async function runAnalytics(params: {
                         .set({ analytics: JSON.stringify(newAnalytics) })
                         .where(eq(practiceSessions.id, session_id));
 
-                    console.log('   - Diagnostics stored in session analytics');
+                    logger.info('Diagnostics stored in session analytics');
                 }
 
                 // --- PHASE D: PROFICIENCY ENGINE ---
@@ -170,14 +172,14 @@ export async function runAnalytics(params: {
                     .set({ is_analysed: true, updated_at: new Date() })
                     .where(eq(practiceSessions.id, session_id));
 
-                // Helper to count updated unique dimensions for the log
                 const getCount = (type: string) => sessionMetrics.filter(m => m.dimension_type === type).length;
 
-                console.log("\n✅ Session analysis complete");
-                console.log(`   - Total attempts processed: ${dataset.length}`);
-                console.log(`   - Core metrics updated: ${getCount('core_metric')}`);
-                console.log(`   - Genres updated: ${getCount('genre')}`);
-                console.log(`   - Question types updated: ${getCount('question_type')}`);
+                logger.info({
+                    attempts: dataset.length,
+                    coreMetrics: getCount('core_metric'),
+                    genres: getCount('genre'),
+                    questionTypes: getCount('question_type')
+                }, "Session analysis complete");
 
                 // Accumulate stats
                 totalAttempts += dataset.length;
@@ -187,21 +189,20 @@ export async function runAnalytics(params: {
                 totalQuestionTypes += getCount('question_type');
 
             } catch (sessionError) {
-                console.error(`\n❌ [ERROR] Failed to process session ${session_id}:`, sessionError);
+                logger.error({ error: sessionError instanceof Error ? sessionError.message : String(sessionError), sessionId: session_id }, "Failed to process session");
                 // Continue processing other sessions
                 continue;
             }
         }
 
-        console.log(`\n${'='.repeat(60)}`);
-        console.log("✅ [COMPLETE] VARC Analytics finished for all sessions");
-        console.log(`   - Sessions processed: ${unanalyzedSessions.length}`);
-        console.log(`   - Total attempts: ${totalAttempts}`);
-        console.log(`   - Correct attempts: ${totalCorrect}`);
-        console.log(`   - Core metrics updated: ${totalCoreMetrics}`);
-        console.log(`   - Genres updated: ${totalGenres}`);
-        console.log(`   - Question types updated: ${totalQuestionTypes}`);
-        console.log(`${'='.repeat(60)}`);
+        logger.info({
+            sessionsProcessed: unanalyzedSessions.length,
+            totalAttempts,
+            totalCorrect,
+            totalCoreMetrics,
+            totalGenres,
+            totalQuestionTypes
+        }, "VARC Analytics finished for all sessions");
 
         return {
             success: true,
@@ -218,8 +219,7 @@ export async function runAnalytics(params: {
         };
 
     } catch (error: any) {
-        console.error("\n❌ [ERROR] VARC Analytics failed:");
-        console.error(error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, "VARC Analytics failed");
         throw error;
     }
 }

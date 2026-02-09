@@ -14,6 +14,9 @@ import {
     questionAttempts
 } from '../../../db/schema';
 import { ApiError, Errors, successResponse } from '../../../common/utils/errors';
+import { createChildLogger } from '../../../common/utils/logger.js';
+
+const logger = createChildLogger('customized-mocks-controller');
 import { runCustomizedMocks } from '../../../workers/customized-mocks/runCustomizedMocks';
 import {
     CreateCustomizedMockRequest,
@@ -44,7 +47,7 @@ const isValidUUID = (id: string) => {
 export async function fetchUserMetricProficiency(req: Request, res: Response, next: NextFunction): Promise<void> {
     const { user_id } = req.query;
 
-    console.log("📈 [CustomizedMocks] fetchUserMetricProficiency", { user_id });
+    logger.info({ user_id }, "fetchUserMetricProficiency called");
 
     try {
         if (!user_id || typeof user_id !== 'string') {
@@ -58,7 +61,7 @@ export async function fetchUserMetricProficiency(req: Request, res: Response, ne
 
         res.json(successResponse(data));
     } catch (error) {
-        console.error('[CustomizedMocks] Error in fetchUserMetricProficiency:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in fetchUserMetricProficiency');
         next(error instanceof ApiError ? error : Errors.internalError());
     }
 }
@@ -67,7 +70,7 @@ export async function fetchUserMetricProficiency(req: Request, res: Response, ne
  * Fetch all available genres from the database
  */
 export async function fetchAvailableGenres(req: Request, res: Response, next: NextFunction): Promise<void> {
-    console.log("🎭 [CustomizedMocks] fetchAvailableGenres");
+    logger.info("fetchAvailableGenres called");
 
     try {
         const data = await db.query.genres.findMany({
@@ -77,7 +80,7 @@ export async function fetchAvailableGenres(req: Request, res: Response, next: Ne
 
         res.json(successResponse(data));
     } catch (error) {
-        console.error('[CustomizedMocks] Error in fetchAvailableGenres:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in fetchAvailableGenres');
         next(error instanceof ApiError ? error : Errors.internalError());
     }
 }
@@ -91,7 +94,7 @@ export async function fetchAvailableGenres(req: Request, res: Response, next: Ne
 export async function fetchCustomizedMocks(req: Request, res: Response, next: NextFunction): Promise<void> {
     const user_id = req.user?.userId;
 
-    console.log("[CustomizedMocks] fetchCustomizedMocks called for user:", user_id);
+    logger.info({ user_id }, "fetchCustomizedMocks called");
 
     try {
         if (!user_id) throw Errors.unauthorized();
@@ -161,7 +164,7 @@ export async function fetchCustomizedMocks(req: Request, res: Response, next: Ne
 
         res.json(successResponse(examsWithStatus));
     } catch (error) {
-        console.error('[CustomizedMocks] Error in fetchCustomizedMocks:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in fetchCustomizedMocks');
         next(error instanceof ApiError ? error : Errors.internalError());
     }
 }
@@ -173,7 +176,7 @@ export async function createCustomizedMock(req: Request, res: Response, next: Ne
     const params = req.body as CreateCustomizedMockRequest;
     const user_id = req.user?.userId;
 
-    console.log("[CustomizedMocks] createCustomizedMock called", params);
+    logger.info({ params }, "createCustomizedMock called");
 
     try {
         if (!user_id || user_id !== params.user_id) throw Errors.unauthorized();
@@ -245,17 +248,17 @@ export async function createCustomizedMock(req: Request, res: Response, next: Ne
             } as any,
             exam_id: examId
         }).catch(err => {
-            console.error(`[CustomizedMocks] Background worker failed for exam ${examId}:`, err);
+            logger.error({ error: err instanceof Error ? err.message : String(err), examId }, `Background worker failed`);
             // Verify failure state is recorded
             db.update(examGenerationState)
                 .set({ status: 'failed', error_message: err.message || 'Unknown error' })
                 .where(eq(examGenerationState.exam_id, examId))
-                .catch(dbErr => console.error("Failed to update failure state", dbErr));
+                .catch(dbErr => logger.error({ error: dbErr instanceof Error ? dbErr.message : String(dbErr) }, "Failed to update failure state"));
 
             db.update(examPapers)
                 .set({ generation_status: 'failed' })
                 .where(eq(examPapers.id, examId))
-                .catch(dbErr => console.error("Failed to update exam status on failure", dbErr));
+                .catch(dbErr => logger.error({ error: dbErr instanceof Error ? dbErr.message : String(dbErr) }, "Failed to update exam status on failure"));
         });
 
         // Return immediately with the ID
@@ -267,7 +270,7 @@ export async function createCustomizedMock(req: Request, res: Response, next: Ne
         }));
 
     } catch (error) {
-        console.error('[CustomizedMocks] Error in createCustomizedMock:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in createCustomizedMock');
         next(error instanceof ApiError ? error : Errors.internalError());
     }
 }
@@ -279,7 +282,7 @@ export async function checkExistingSession(req: Request, res: Response, next: Ne
     const { paper_id } = req.query;
     const user_id = req.user?.userId;
 
-    console.log("[CustomizedMocks] checkExistingSession called for paper:", paper_id);
+    logger.info({ paper_id }, "checkExistingSession called");
 
     try {
         if (!user_id) throw Errors.unauthorized();
@@ -310,7 +313,7 @@ export async function checkExistingSession(req: Request, res: Response, next: Ne
             status
         }));
     } catch (error) {
-        console.error('[CustomizedMocks] Error in checkExistingSession:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in checkExistingSession');
         next(error instanceof ApiError ? error : Errors.internalError());
     }
 }
@@ -322,7 +325,7 @@ export async function fetchMockTestById(req: Request, res: Response, next: NextF
     const { exam_id } = req.params;
     const include_solutions = req.query.include_solutions === 'true';
 
-    console.log("[CustomizedMocks] fetchMockTestById called for exam_id:", exam_id, "include_solutions:", include_solutions);
+    logger.info({ exam_id, include_solutions }, "fetchMockTestById called");
 
     try {
         const exam = await db.query.examPapers.findFirst({
@@ -376,7 +379,7 @@ export async function fetchMockTestById(req: Request, res: Response, next: NextF
             questions: questionsMapped
         }));
     } catch (error) {
-        console.error('[CustomizedMocks] Error in fetchMockTestById:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in fetchMockTestById');
         next(error instanceof ApiError ? error : Errors.internalError());
     }
 }
@@ -388,7 +391,7 @@ export async function startMockSession(req: Request, res: Response, next: NextFu
     const { user_id, paper_id, passage_ids, question_ids, time_limit_seconds } = req.body;
     const authUserId = req.user?.userId;
 
-    console.log("[CustomizedMocks] startMockSession called for user:", user_id);
+    logger.info({ user_id }, "startMockSession called");
 
     try {
         if (!authUserId || authUserId !== user_id) throw Errors.unauthorized();
@@ -417,7 +420,7 @@ export async function startMockSession(req: Request, res: Response, next: NextFu
 
         res.json(successResponse(session));
     } catch (error) {
-        console.error('[CustomizedMocks] Error in startMockSession:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in startMockSession');
         next(error instanceof ApiError ? error : Errors.internalError());
     }
 }
@@ -455,7 +458,7 @@ export async function fetchExistingMockSession(req: Request, res: Response, next
             attempts
         }));
     } catch (error) {
-        console.error('[CustomizedMocks] Error in fetchExistingMockSession:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in fetchExistingMockSession');
         next(error instanceof ApiError ? error : Errors.internalError());
     }
 }
@@ -497,7 +500,7 @@ export async function saveSessionDetails(req: Request, res: Response, next: Next
 
         res.json(successResponse(updated));
     } catch (error) {
-        console.error('[CustomizedMocks] Error in saveSessionDetails:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in saveSessionDetails');
         next(error instanceof ApiError ? error : Errors.internalError());
     }
 }
@@ -538,7 +541,7 @@ export async function saveQuestionAttempts(req: Request, res: Response, next: Ne
                         realCorrectAnswer = question.correct_answer as any;
                     }
                 } catch (e) {
-                    console.error("Error parsing correct answer for verification:", e);
+                    logger.error({ error: e instanceof Error ? e.message : String(e) }, "Error parsing correct answer for verification");
                 }
 
                 realCorrectAnswerStr = realCorrectAnswer?.answer || "";
@@ -561,7 +564,7 @@ export async function saveQuestionAttempts(req: Request, res: Response, next: Ne
                 }
 
                 isCorrect = String(userAnswerStr).trim() === String(realCorrectAnswerStr).trim();
-                console.log(`[CustomizedMocks] Verification [Q:${question.id}]: User: "${userAnswerStr}" | Real: "${realCorrectAnswerStr}" | Correct: ${isCorrect}`);
+                logger.info({ questionId: question.id, isCorrect }, `Verification Result`);
             }
 
             return {
@@ -599,7 +602,7 @@ export async function saveQuestionAttempts(req: Request, res: Response, next: Ne
 
         res.json(successResponse(attemptsToInsert));
     } catch (error) {
-        console.error('[CustomizedMocks] Error in saveQuestionAttempts:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in saveQuestionAttempts');
         next(error instanceof ApiError ? error : Errors.internalError());
     }
 }
@@ -610,7 +613,7 @@ export async function saveQuestionAttempts(req: Request, res: Response, next: Ne
 export async function fetchGenerationStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
     const { exam_id } = req.params;
 
-    console.log("[CustomizedMocks] fetchGenerationStatus called for:", exam_id);
+    logger.info({ exam_id }, "fetchGenerationStatus called");
 
     try {
         const state = await db.query.examGenerationState.findFirst({
@@ -633,7 +636,7 @@ export async function fetchGenerationStatus(req: Request, res: Response, next: N
             isGenerating
         }));
     } catch (error) {
-        console.error('[CustomizedMocks] Error in fetchGenerationStatus:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in fetchGenerationStatus');
         next(error instanceof ApiError ? error : Errors.internalError());
     }
 }

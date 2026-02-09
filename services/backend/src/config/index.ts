@@ -15,7 +15,10 @@ const requiredEnvVars = [
     'TURNSTILE_SECRET_KEY',
     'SMTP_USER',
     'SMTP_PASSWORD',
-    'FRONTEND_URL',
+    'DEV_FRONTEND_URL',
+    'PROD_FRONTEND_URL',
+    'DEV_BACKEND_URL',
+    'PROD_BACKEND_URL',
 ] as const;
 
 // Validate required environment variables
@@ -70,8 +73,8 @@ export const config = {
     },
 
     // URLs
-    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
-    backendUrl: process.env.BACKEND_URL || 'http://localhost:3001',
+    frontendUrl: process.env.NODE_ENV === 'production' ? process.env.PROD_FRONTEND_URL : process.env.DEV_FRONTEND_URL,
+    backendUrl: process.env.NODE_ENV === 'production' ? process.env.PROD_BACKEND_URL : process.env.DEV_BACKEND_URL,
 
     // Rate Limiting
     rateLimit: {

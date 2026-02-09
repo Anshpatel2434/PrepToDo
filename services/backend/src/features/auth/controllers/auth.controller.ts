@@ -38,7 +38,7 @@ async function ensureUserProfile(userId: string, email: string): Promise<void> {
             });
         }
     } catch (err) {
-        console.error('[Profile] Error ensuring profile:', err);
+        authLogger.error({ error: err instanceof Error ? err.message : String(err), userId, email }, 'Error ensuring profile');
     }
 }
 function formatUserResponse(user: typeof authUsers.$inferSelect): UserResponse {
@@ -471,7 +471,7 @@ export async function googleOAuthInit(req: Request, res: Response, next: NextFun
         const returnTo = req.query.returnTo as string || '/';
         const csrfToken = generateSecureToken(16);
 
-        console.log('[Google OAuth] Init - CSRF token generated:', csrfToken.substring(0, 8) + '...');
+        authLogger.info({ csrfTokenPrefix: csrfToken.substring(0, 8) }, 'Google OAuth Init - CSRF token generated');
 
         // Store CSRF token in cookie for verification
         // Note: Using path '/' so it's sent back on callback
@@ -507,12 +507,10 @@ export async function googleOAuthCallback(req: Request, res: Response, next: Nex
     try {
         const { code, state, error } = req.query;
 
-        console.log('[Google OAuth] Callback received');
-        console.log('[Google OAuth] Cookies:', req.cookies);
-        console.log('[Google OAuth] State:', state);
+        authLogger.info({ state }, 'Google OAuth Callback received');
 
         if (error) {
-            console.error('[Google OAuth] Error:', error);
+            authLogger.error({ error, action: 'oauth_callback' }, 'Google OAuth error received');
             res.redirect(`${config.frontendUrl}/auth?error=oauth_cancelled`);
             return;
         }
@@ -526,11 +524,13 @@ export async function googleOAuthCallback(req: Request, res: Response, next: Nex
         const stateData = JSON.parse(state as string);
         const storedCsrf = req.cookies?.oauth_csrf;
 
-        console.log('[Google OAuth] CSRF from state:', stateData.csrfToken?.substring(0, 8) + '...');
-        console.log('[Google OAuth] CSRF from cookie:', storedCsrf?.substring(0, 8) + '...');
+        authLogger.info({
+            stateCsrfPrefix: stateData.csrfToken?.substring(0, 8),
+            storedCsrfPrefix: storedCsrf?.substring(0, 8)
+        }, 'Verifying CSRF tokens');
 
         if (!storedCsrf || stateData.csrfToken !== storedCsrf) {
-            console.error('[Google OAuth] CSRF mismatch!');
+            authLogger.error({ action: 'oauth_callback' }, 'Google OAuth CSRF mismatch!');
             res.redirect(`${config.frontendUrl}/auth?error=csrf_mismatch`);
             return;
         }

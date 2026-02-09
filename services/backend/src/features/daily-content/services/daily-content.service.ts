@@ -4,9 +4,13 @@
 // Connects the controller to the worker
 
 import { runDailyContent } from "../../../workers/daily-content/runDailyContent.js";
+import { config } from '../../../config/index.js';
 import { db } from "../../../db/index.js";
 import { examPapers } from "../../../db/schema.js";
 import { eq, and, gte, lte } from "drizzle-orm";
+import { createChildLogger } from "../../../common/utils/logger.js";
+
+const logger = createChildLogger('daily-content-service');
 
 export class DailyContentService {
     /**
@@ -37,7 +41,7 @@ export class DailyContentService {
                 });
 
                 if (existingExam) {
-                    console.log('[DailyContentService] Content already exists for today:', existingExam.id);
+                    logger.info({ examId: existingExam.id }, 'Content already exists for today');
                     return {
                         success: true,
                         exam_id: existingExam.id,
@@ -46,7 +50,7 @@ export class DailyContentService {
                 }
             }
 
-            console.log('[DailyContentService] Starting daily content generation...');
+            logger.info('Starting daily content generation...');
 
             // Run the worker
             const result = await runDailyContent();
@@ -64,7 +68,7 @@ export class DailyContentService {
                 };
             }
         } catch (error) {
-            console.error('[DailyContentService] Error generating daily content:', error);
+            logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error generating daily content');
             return {
                 success: false,
                 message: error instanceof Error ? error.message : 'Unknown error occurred',

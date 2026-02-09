@@ -316,7 +316,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </motion.div>
 
             {/* Deep Dissolve Overlay (Section Bottom edge interaction) */}
-            <div className={`absolute bottom-0 left-0 right-0 h-40 pointer-events-none z-20 ${isDark ? "bg-gradient-to-t from-bg-primary-dark" : "bg-gradient-to-t from-bg-primary-light"
+            <div className={`absolute bottom-0 left-0 right-0 h-96 pointer-events-none z-20 ${isDark ? "bg-gradient-to-t from-bg-primary-dark" : "bg-gradient-to-t from-bg-primary-light"
                 } to-transparent`} />
         </section>
     );

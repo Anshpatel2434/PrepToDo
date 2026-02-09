@@ -7,6 +7,9 @@ import { userAnalytics, practiceSessions, userMetricProficiency, passages, quest
 import { eq, and, gte, lt, inArray } from "drizzle-orm";
 import z from "zod";
 import { v4 as uuidv4 } from "uuid";
+import { createChildLogger } from "../../../common/utils/logger.js";
+
+const logger = createChildLogger('analytics-phase-f');
 
 export interface PhaseFResult {
     user_id: string;
@@ -42,7 +45,7 @@ export async function phaseF_updateUserAnalytics(
         completed_at: string;
     }
 ): Promise<PhaseFResult> {
-    console.log('📊 [Phase F] Updating user_analytics');
+    logger.info('Updating user_analytics');
 
     const today = sessionData.completed_at
         ? new Date(sessionData.completed_at).toISOString().split('T')[0]
@@ -118,7 +121,11 @@ export async function phaseF_updateUserAnalytics(
     const MINIMUM_SECONDS_FOR_STREAK = 300; // 5 minutes
     const hasSessionToday = totalSecondsToday >= MINIMUM_SECONDS_FOR_STREAK;
 
-    console.log(`   - Streak calculation inputs: totalSecondsToday=${totalSecondsToday}, minimumRequired=${MINIMUM_SECONDS_FOR_STREAK}, hasSessionToday=${hasSessionToday}`);
+    logger.info({
+        totalSecondsToday,
+        minimumRequired: MINIMUM_SECONDS_FOR_STREAK,
+        hasSessionToday
+    }, "Streak calculation inputs");
 
     const streakData = await calculateStreaks(user_id, today, hasSessionToday, existingAnalytics);
 
@@ -182,18 +189,20 @@ export async function phaseF_updateUserAnalytics(
                 set: upsertData
             });
     } catch (upsertError: any) {
-        console.error('❌ [Phase F] Failed to upsert user_analytics:', upsertError);
+        logger.error({ error: upsertError instanceof Error ? upsertError.message : String(upsertError), userId: user_id }, 'Failed to upsert user_analytics');
         throw new Error(`Failed to update user_analytics: ${upsertError.message}`);
     }
 
-    console.log('✅ [Phase F] User analytics updated successfully');
-    console.log(`   - Last Active: ${today}`);
-    console.log(`   - Questions: ${questions_attempted}/${questions_correct} (${accuracy_percentage}%)`);
-    console.log(`   - Minutes: ${minutes_practiced}`);
-    console.log(`   - WPM: ${reading_speed_wpm}`);
-    console.log(`   - Points Today: ${points_earned_today} (base: ${basePointsEarned}, streak multiplier: ${streakMultiplier}x)`);
-    console.log(`   - Total Points: ${total_points}`);
-    console.log(`   - Streak: ${streakData.currentStreak} days`);
+    logger.info({
+        lastActive: today,
+        questions: `${questions_attempted}/${questions_correct}`,
+        accuracy: `${accuracy_percentage}%`,
+        minutes: minutes_practiced,
+        wpm: reading_speed_wpm,
+        pointsToday: points_earned_today,
+        totalPoints: total_points,
+        streak: streakData.currentStreak
+    }, "User analytics updated successfully");
 
     // Build the analytics data for return
     const analyticsData: PhaseFResult = {
@@ -224,9 +233,7 @@ async function updateReadingSpeedProficiency(
     accuracy: number,
     completed_at: string
 ): Promise<void> {
-    console.log(`📊 [Phase F] Updating reading_speed_wpm in user_metric_proficiency: ${wpm} WPM, ${accuracy}% accuracy`);
-
-    console.log("completed at : ", completed_at);
+    logger.info({ wpm, accuracy, completedAt: completed_at }, "Updating reading speed proficiency");
 
     // Normalize WPM to 0-100 proficiency score
     // Typical reading speeds: 50-400 WPM
@@ -371,9 +378,9 @@ async function updateReadingSpeedProficiency(
                 target: [userMetricProficiency.user_id, userMetricProficiency.dimension_type, userMetricProficiency.dimension_key],
                 set: upsert
             });
-        console.log(`✅ [Phase F] Reading speed proficiency updated: ${newScore}, days tracked: ${speedVsAccuracyData.length}`);
+        logger.info({ newScore, daysTracked: speedVsAccuracyData.length }, "Reading speed proficiency updated");
     } catch (upsertError) {
-        console.error('❌ [Phase F] Failed to update reading_speed_wpm proficiency:', upsertError);
+        logger.error({ error: upsertError instanceof Error ? upsertError.message : String(upsertError) }, 'Failed to update reading_speed_wpm proficiency');
         // Don't throw - this is not critical
     }
 }
@@ -539,7 +546,7 @@ async function calculateStreaks(
         const previousStreak = existingAnalytics.current_streak || 0;
         const previousLongestStreak = existingAnalytics.longest_streak || 0;
 
-        console.log(`   - Previous analytics: lastActiveDate=${lastActiveDate}, previousStreak=${previousStreak}, previousLongestStreak=${previousLongestStreak}`);
+        logger.info({ lastActiveDate, previousStreak, previousLongestStreak }, "Previous analytics loaded");
 
         let currentStreak = 0;
 
@@ -548,13 +555,13 @@ async function calculateStreaks(
             if (!lastActiveDate) {
                 // First time user is active
                 currentStreak = 1;
-                console.log(`   - First active day: starting streak at ${currentStreak}`);
+                logger.info({ currentStreak }, "First active day: starting streak");
             } else {
                 const lastDate = new Date(lastActiveDate + 'T00:00:00Z');
                 const todayDate = new Date(today + 'T00:00:00Z');
                 const daysDiff = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
 
-                console.log(`   - Date comparison: lastDate=${lastActiveDate}, today=${today}, daysDiff=${daysDiff}`);
+                logger.info({ lastActiveDate, today, daysDiff }, "Date comparison for streak");
 
                 if (daysDiff === 0) {
                     // Same day - maintain current streak (no change)
@@ -564,35 +571,33 @@ async function calculateStreaks(
                     // but now the user has satisfied the criteria, ensure streak is at least 1.
                     if (currentStreak === 0) {
                         currentStreak = 1;
-                        console.log(`   - Same day recovery: initializing streak to ${currentStreak}`);
-                    } else {
-                        console.log(`   - Same day: maintaining streak at ${currentStreak}`);
+                        logger.info({ currentStreak, condition: daysDiff === 0 && previousStreak === 0 ? "recovery" : "maintenance" }, "Handling same day streak");
                     }
                 } else if (daysDiff === 1) {
                     // Consecutive day - increment streak
                     currentStreak = previousStreak + 1;
-                    console.log(`   - Consecutive day: incrementing streak to ${currentStreak}`);
+                    logger.info({ currentStreak }, "Consecutive day: incrementing streak");
                 } else {
                     // Gap detected - streak broken, start new streak
                     currentStreak = 1;
-                    console.log(`   - Streak broken (gap of ${daysDiff} days): starting new streak at ${currentStreak}`);
+                    logger.info({ currentStreak, gap: daysDiff }, "Streak broken: starting new streak");
                 }
             }
         } else {
             // User does NOT have >= 10 minutes today - streak is broken
             currentStreak = 0;
-            console.log(`   - No qualifying session today: streak broken (current=0)`);
+            logger.info("No qualifying session today: streak broken");
         }
 
         // Longest streak is max of current and previous longest
         const longestStreak = Math.max(previousLongestStreak, currentStreak);
 
-        console.log(`   - Streak calculation result: current=${currentStreak}, longest=${longestStreak}, hasSessionToday=${hasSessionToday}`);
+        logger.info({ currentStreak, longestStreak, hasSessionToday }, "Streak calculation result");
 
         return { currentStreak, longestStreak };
 
     } catch (error) {
-        console.error('❌ Error in calculateStreaks:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in calculateStreaks');
         return { currentStreak: hasSessionToday ? 1 : 0, longestStreak: hasSessionToday ? 1 : 0 };
     }
 }

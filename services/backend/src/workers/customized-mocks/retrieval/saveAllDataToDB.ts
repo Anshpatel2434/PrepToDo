@@ -2,6 +2,9 @@ import { db } from "../../../db";
 import { examPapers, passages, questions, genres } from "../../../db/schema";
 import { Exam, Passage, Question } from "../schemas/types";
 import { eq, sql } from "drizzle-orm";
+import { createChildLogger } from "../../../common/utils/logger.js";
+
+const logger = createChildLogger('custom-mock-db-save');
 
 /**
  * Saves custom mock exam data to database.
@@ -16,7 +19,7 @@ export async function saveAllDataToDB(params: {
     questions: any[];
 }> {
     try {
-        console.log("💾 [Database] Starting save operation for custom mock...");
+        logger.info("💾 [Database] Starting save operation for custom mock...");
 
         const { examData, passagesData, questionsData } = params;
 
@@ -53,7 +56,7 @@ export async function saveAllDataToDB(params: {
             })
             .returning();
 
-        console.log("📄 [DB Save] Exam Paper metadata saved");
+        logger.info("📄 [DB Save] Exam Paper metadata saved");
 
         // 2. Save Passages
         let passagesResponse: any[] = [];
@@ -76,7 +79,7 @@ export async function saveAllDataToDB(params: {
                     updated_at: new Date(),
                 })))
                 .returning();
-            console.log(`📄 [DB Save] ${passagesData.length} Passage(s) saved`);
+            logger.info(`📄 [DB Save] ${passagesData.length} Passage(s) saved`);
         }
 
         // 3. Save Questions
@@ -100,13 +103,13 @@ export async function saveAllDataToDB(params: {
                     updated_at: new Date(),
                 })))
                 .returning();
-            console.log(`✅ [DB Save] ${questionsData.length} Questions saved`);
+            logger.info(`✅ [DB Save] ${questionsData.length} Questions saved`);
         }
 
         // 4. Update genre usage counts
         await updateGenreUsageCount(passagesData);
 
-        console.log("✅ [DB Save] All data persisted successfully");
+        logger.info("✅ [DB Save] All data persisted successfully");
 
         return {
             exam: examResponse,
@@ -115,9 +118,9 @@ export async function saveAllDataToDB(params: {
         };
 
     } catch (error) {
-        console.error(
-            `❌ [DB Save Failed]:`,
-            error instanceof Error ? error.message : String(error)
+        logger.error(
+            { error: error instanceof Error ? error.message : String(error) },
+            `❌ [DB Save Failed]`
         );
         throw error;
     }
@@ -146,13 +149,13 @@ async function updateGenreUsageCount(passagesData: Passage[]): Promise<void> {
                         updated_at: new Date()
                     })
                     .where(eq(genres.id, existingGenre.id));
-                console.log(`✅ [Genre Update] Updated usage count for: ${genreName}`);
+                logger.info(`✅ [Genre Update] Updated usage count for: ${genreName}`);
             } else {
-                console.warn(`⚠️ [Genre Update] Could not find genre: ${genreName}`);
+                logger.warn(`⚠️ [Genre Update] Could not find genre: ${genreName}`);
             }
         }
     } catch (error) {
-        console.error("❌ [Genre Update] Error updating genre counts:", error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, "❌ [Genre Update] Error updating genre counts");
         // Non-critical, don't throw
     }
 }

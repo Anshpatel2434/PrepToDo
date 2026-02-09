@@ -1,6 +1,9 @@
 import { db } from "../../../../db/index";
 import { articles } from "../../../../db/schema";
 import { eq, and, lt, isNull, or } from "drizzle-orm";
+import { createChildLogger } from "../../../../common/utils/logger.js";
+
+const logger = createChildLogger('article-fetch-usage');
 
 /**
  * Fetches an article for a given genre and usage type (daily | mock),
@@ -15,7 +18,7 @@ export async function fetchArticleForUsage(params: {
 }) {
     const { genre, usageType } = params;
 
-    console.log(
+    logger.info(
         `🚀 [ARTICLE] Fetching article | genre=${genre}, usage=${usageType}`
     );
 
@@ -35,7 +38,7 @@ export async function fetchArticleForUsage(params: {
     });
 
     if (!allArticles || allArticles.length === 0) {
-        console.error(`[ARTICLE] No articles found | genre=${genre}`);
+        logger.error(`[ARTICLE] No articles found | genre=${genre}`);
         throw new Error(`No articles found for genre=${genre}`);
     }
 
@@ -65,8 +68,9 @@ export async function fetchArticleForUsage(params: {
     });
 
     if (eligibleArticles.length === 0) {
-        console.error(
-            `[ARTICLE] No eligible articles after filtering | genre=${genre}, usage=${usageType}`
+        logger.error(
+            { genre, usageType },
+            `[ARTICLE] No eligible articles after filtering`
         );
         throw new Error(
             `No eligible articles found for genre=${genre}, usage=${usageType}`
@@ -103,11 +107,9 @@ export async function fetchArticleForUsage(params: {
 
     const selectedArticle = eligibleArticles[0];
 
-    console.log(
-        "📘 [ARTICLE] Article selected:",
-        selectedArticle.title,
-        "|",
-        selectedArticle.url
+    logger.info(
+        { title: selectedArticle.title, url: selectedArticle.url },
+        "📘 [ARTICLE] Article selected"
     );
 
     // STEP 2: Update usage metadata
@@ -141,7 +143,7 @@ export async function fetchArticleForUsage(params: {
             try {
                 semanticData = JSON.parse(selectedArticle.semantic_ideas_and_persona);
             } catch (e) {
-                console.error("Failed to parse semantic_ideas", e);
+                logger.error({ error: e instanceof Error ? e.message : String(e) }, "Failed to parse semantic_ideas");
             }
         } else {
             semanticData = selectedArticle.semantic_ideas_and_persona as any;

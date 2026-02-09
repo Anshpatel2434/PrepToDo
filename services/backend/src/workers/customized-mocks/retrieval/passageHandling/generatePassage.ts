@@ -1,6 +1,9 @@
 import OpenAI from "openai";
 import { AuthorialPersona, SemanticIdeas } from "../../schemas/types";
 import { CostTracker } from "../utils/CostTracker";
+import { createChildLogger } from "../../../../common/utils/logger.js";
+
+const logger = createChildLogger('rc-passage-gen');
 
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
@@ -26,7 +29,7 @@ export async function generatePassage(
 ) {
     const { semanticIdeas, authorialPersona, referencePassages, personalization } = params;
 
-    console.log(`✍️ [Passage Gen] Starting passage generation (referencePassages=${referencePassages.length})`);
+    logger.info(`✍️ [Passage Gen] Starting passage generation (referencePassages=${referencePassages.length})`);
 
     if (referencePassages.length !== 3) {
         throw new Error(
@@ -301,10 +304,9 @@ Before responding, verify that the passage length is between 400 and 500 words.
 If not, expand the analysis until it is.
 `
 
-    console.log("⏳ [Passage Gen] Waiting for LLM response (draft passage)");
-    console.log("📝 [Passage Gen] Ref Data (Ideas):", JSON.stringify(semanticIdeas).substring(0, 500) + "...");
-    console.log("📝 [Passage Gen] Ref Data (Passages):", JSON.stringify(referencePassages).substring(0, 500) + "...");
-
+    logger.info("⏳ [Passage Gen] Waiting for LLM response (draft passage)");
+    // logger.debug("Ref Data (Ideas):", JSON.stringify(semanticIdeas).substring(0, 500) + "...");
+    // logger.debug("Ref Data (Passages):", JSON.stringify(referencePassages).substring(0, 500) + "...");
 
     const completion = await client.chat.completions.create({
         model: MODEL,
@@ -336,7 +338,7 @@ If not, expand the analysis until it is.
         );
     }
 
-    console.log(`✅ [Passage Gen] Passage generated (length=${passage.length} chars)`);
+    logger.info(`✅ [Passage Gen] Passage generated (length=${passage.length} chars)`);
 
     return passage;
 }

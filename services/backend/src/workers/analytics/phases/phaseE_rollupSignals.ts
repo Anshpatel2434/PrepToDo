@@ -2,21 +2,25 @@
 // Refactored for Drizzle
 
 import type { UserProficiencySignals } from "../types";
+import { v4 as uuidv4 } from "uuid";
 import { db } from "../../../db";
 import { userMetricProficiency, userProficiencySignals } from "../../../db/schema";
 import { eq } from "drizzle-orm";
+import { createChildLogger } from "../../../common/utils/logger.js";
+
+const logger = createChildLogger('analytics-phase-e');
 
 export async function phaseE_rollupSignals(
     user_id: string
 ) {
-    console.log('📦 [Phase E] Rolling up user_proficiency_signals');
+    logger.info('Rolling up user_proficiency_signals');
 
     // 1. Fetch all proficiency records for this user
     const proficiencies = await db.query.userMetricProficiency.findMany({
         where: eq(userMetricProficiency.user_id, user_id)
     });
 
-    console.log(`📊 [Phase E] Processing ${proficiencies.length} proficiency records`);
+    logger.info({ count: proficiencies.length }, "Processing proficiency records");
 
     // 2. Group by dimension_type
     const byType = {
@@ -80,10 +84,12 @@ export async function phaseE_rollupSignals(
                 set: signalData
             });
     } catch (upsertError: any) {
+        logger.error({ error: upsertError instanceof Error ? upsertError.message : String(upsertError), userId: user_id }, 'Failed to upsert user_proficiency_signals');
         throw new Error(`Error upserting proficiency signals: ${upsertError.message}`);
     }
 
-    console.log('✅ [Phase E] Proficiency signals updated successfully');
-    console.log(`   - Data Points: ${proficiencies.length}`);
-    console.log(`   - Recommended Difficulty: ${recommended_difficulty}`);
+    logger.info({
+        dataPoints: proficiencies.length,
+        recommendedDifficulty: recommended_difficulty
+    }, 'Proficiency signals updated successfully');
 }

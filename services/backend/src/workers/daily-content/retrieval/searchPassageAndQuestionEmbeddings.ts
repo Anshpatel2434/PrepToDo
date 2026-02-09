@@ -5,6 +5,9 @@
 
 import { db } from "../../../db/index";
 import { sql } from "drizzle-orm";
+import { createChildLogger } from "../../../common/utils/logger.js";
+
+const logger = createChildLogger('vector-search');
 
 /**
  * Searches for similar passages and questions using vector embeddings.
@@ -14,7 +17,7 @@ export async function searchPassageAndQuestionEmbeddings(
     queryEmbedding: number[],
     topK = 5
 ) {
-    console.log(`🔎 [Vector Search] Searching similar passages/questions (topK=${topK})`);
+    logger.info(`🔎 [Vector Search] Searching similar passages/questions (topK=${topK})`);
 
     // Convert embedding array to postgres vector format
     const embeddingStr = `[${queryEmbedding.join(',')}]`;
@@ -27,7 +30,7 @@ export async function searchPassageAndQuestionEmbeddings(
         )
     `);
 
-    console.log(`🔎 [Vector Search] Searching similar questions by type (perType=${topK})`);
+    logger.info(`🔎 [Vector Search] Searching similar questions by type (perType=${topK})`);
 
     // Search questions using custom function
     const questionsData = await db.execute(sql`
@@ -40,7 +43,7 @@ export async function searchPassageAndQuestionEmbeddings(
     const passages = passageData.rows || [];
     const questions = questionsData.rows || [];
 
-    console.log(`✅ [Vector Search] Retrieved ${passages.length} passages, ${questions.length} questions`);
+    logger.info(`✅ [Vector Search] Retrieved ${passages.length} passages, ${questions.length} questions`);
 
     return {
         passages,

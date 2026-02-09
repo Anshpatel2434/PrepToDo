@@ -5,6 +5,9 @@
 
 import { db } from "../../../db/index";
 import { examPapers, passages, questions } from "../../../db/schema";
+import { createChildLogger } from "../../../common/utils/logger.js";
+
+const logger = createChildLogger('db-save');
 
 /**
  * Saves exam, passage, and questions data into the database
@@ -15,7 +18,7 @@ export async function saveAllDataToDB({ examData, passageData, questionsData }: 
     questionsData: any[];
 }) {
     try {
-        console.log("💾 [Database] Starting save operation...");
+        logger.info("💾 [Database] Starting save operation...");
 
         // 1. Save Exam Paper
         const [examResponse] = await db.insert(examPapers).values({
@@ -32,7 +35,7 @@ export async function saveAllDataToDB({ examData, passageData, questionsData }: 
             updated_at: new Date(),
         }).returning();
 
-        console.log("📄 [DB Save] Exam Paper metadata saved");
+        logger.info("📄 [DB Save] Exam Paper metadata saved");
 
         // 2. Save Passage
         const [passageResponse] = await db.insert(passages).values({
@@ -51,7 +54,7 @@ export async function saveAllDataToDB({ examData, passageData, questionsData }: 
             updated_at: new Date(),
         }).returning();
 
-        console.log("📄 [DB Save] Passage content saved");
+        logger.info("📄 [DB Save] Passage content saved");
 
         // 3. Save Questions
         const questionsToInsert = questionsData.map(q => ({
@@ -72,7 +75,7 @@ export async function saveAllDataToDB({ examData, passageData, questionsData }: 
 
         const questionsResponse = await db.insert(questions).values(questionsToInsert).returning();
 
-        console.log("✅ [DB Save] All data persisted successfully");
+        logger.info("✅ [DB Save] All data persisted successfully");
 
         return {
             exam: examResponse,
@@ -81,9 +84,9 @@ export async function saveAllDataToDB({ examData, passageData, questionsData }: 
         };
 
     } catch (error) {
-        console.error(
-            `❌ [DB Save Failed]:`,
-            error instanceof Error ? error.message : String(error)
+        logger.error(
+            { error: error instanceof Error ? error.message : String(error) },
+            `❌ [DB Save Failed]`
         );
         throw error;
     }

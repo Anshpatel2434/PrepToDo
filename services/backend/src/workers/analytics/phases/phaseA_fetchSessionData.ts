@@ -8,9 +8,13 @@ import {
     type AttemptDatum,
     type PhaseAResult
 } from "../types";
+import { v4 as uuidv4 } from 'uuid';
 import { db } from "../../../db";
 import { practiceSessions, questionAttempts, questions, passages } from "../../../db/schema";
 import { eq, inArray, and } from "drizzle-orm";
+import { createChildLogger } from "../../../common/utils/logger.js";
+
+const logger = createChildLogger('analytics-phase-a');
 
 // Helper to safely parse JSON if it's a string
 const safeParseJson = (val: any): any => {
@@ -26,7 +30,7 @@ export async function phaseA_fetchSessionData(
     user_id: string
 ): Promise<PhaseAResult> {
 
-    console.log('📥 [Phase A] Fetching session data');
+    logger.info('Fetching session data');
 
     // Fetch and lock session row (idempotence check)
     const session = await db.query.practiceSessions.findFirst({
@@ -63,15 +67,15 @@ export async function phaseA_fetchSessionData(
     // Validate session with Zod schema
     const sessionParsed = PracticeSessionSchema.safeParse(sessionMapped);
     if (!sessionParsed.success) {
-        console.error("Validation failed for session:", sessionParsed.error.issues[0]);
+        logger.error({ error: sessionParsed.error.issues[0], sessionId: session_id }, "Validation failed for session");
         throw new Error(`Invalid practice_session payload for session_id=${session_id}`);
     }
-    console.log("Validation passed for session");
+    logger.info("Validation passed for session");
     const sessionVerified = sessionParsed.data;
 
     // Critical idempotence check
     if (sessionVerified.is_analysed) {
-        console.log('⚠️ [Phase A] Session already analysed, skipping');
+        logger.warn({ sessionId: session_id }, 'Session already analysed, skipping');
         return { alreadyAnalysed: true, session: sessionVerified, dataset: [] };
     }
 
@@ -98,16 +102,16 @@ export async function phaseA_fetchSessionData(
     // Validate attempts with Zod schema
     const attemptsParsed = QuestionAttemptArraySchema.safeParse(attemptsMapped);
     if (!attemptsParsed.success) {
-        console.error("Validation failed for attempts:", attemptsParsed.error.issues[0]);
+        logger.error({ error: attemptsParsed.error.issues[0], sessionId: session_id }, "Validation failed for attempts");
         throw new Error(`Invalid question_attempts payload for session_id=${session_id}`);
     }
-    console.log("Validation passed for attempts");
+    logger.info("Validation passed for attempts");
     const attemptsVerified = attemptsParsed.data;
 
-    console.log(`📊 [Phase A] Fetched ${attemptsVerified.length} attempts`);
+    logger.info({ attemptsCount: attemptsVerified.length }, "Fetched attempts");
 
     if (attemptsVerified.length === 0) {
-        console.log('⚠️ [Phase A] No attempts found for this session');
+        logger.warn({ sessionId: session_id }, 'No attempts found for this session');
         return { alreadyAnalysed: false, session: sessionVerified, dataset: [] };
     }
 
@@ -133,10 +137,10 @@ export async function phaseA_fetchSessionData(
     // Validate questions with Zod schema
     const questionsParsed = QuestionArraySchema.safeParse(questionsMapped);
     if (!questionsParsed.success) {
-        console.error("Validation failed for questions:", questionsParsed.error.issues[0]);
+        logger.error({ error: questionsParsed.error.issues[0], sessionId: session_id }, "Validation failed for questions");
         throw new Error(`Invalid questions payload for session_id=${session_id}`);
     }
-    console.log("Validation passed for questions");
+    logger.info("Validation passed for questions");
     const questionsVerified = questionsParsed.data;
 
     // Build question lookup map
@@ -161,10 +165,10 @@ export async function phaseA_fetchSessionData(
         // Validate passages with Zod schema
         const passagesParsed = PassageArraySchema.safeParse(passagesMapped);
         if (!passagesParsed.success) {
-            console.error("Validation failed for passages:", passagesParsed.error.issues[0]);
+            logger.error({ error: passagesParsed.error.issues[0], sessionId: session_id }, "Validation failed for passages");
             throw new Error(`Invalid passages payload for session_id=${session_id}`);
         }
-        console.log("Validation passed for passages");
+        logger.info("Validation passed for passages");
         const passagesVerified = passagesParsed.data;
 
         // Build passage lookup map
@@ -179,8 +183,6 @@ export async function phaseA_fetchSessionData(
         if (!question) {
             throw new Error(`Question ${attempt.question_id} not found`);
         }
-
-        console.log("---------------------------------------- Question dataset is generated here and we are checking if the metric keys are perfectly set or not: ", question.tags);
 
         return {
             attempt_id: attempt.id,
@@ -207,7 +209,7 @@ export async function phaseA_fetchSessionData(
         };
     });
 
-    console.log(`✅ [Phase A] Constructed dataset with ${dataset.length} attempts`);
+    logger.info({ datasetSize: dataset.length }, "Constructed dataset");
 
     return {
         alreadyAnalysed: false,

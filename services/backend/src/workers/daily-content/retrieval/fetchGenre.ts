@@ -6,6 +6,9 @@
 import { db } from "../../../db/index";
 import { genres } from "../../../db/schema";
 import { eq, lt, isNull, or, asc, and } from "drizzle-orm";
+import { createChildLogger } from "../../../common/utils/logger.js";
+
+const logger = createChildLogger('fetch-genre-today');
 
 /**
  * Fetches a genre for today's daily content,
@@ -13,7 +16,7 @@ import { eq, lt, isNull, or, asc, and } from "drizzle-orm";
  * and returns the selected genre.
  */
 export async function fetchGenreForToday() {
-    console.log("🚀 [GENRE] Fetching genre start");
+    logger.info("Fetching genre start");
     const now = new Date();
 
     // Calculate the cooldown date (24 hours ago)
@@ -39,12 +42,12 @@ export async function fetchGenreForToday() {
     });
 
     if (!eligibleGenres || eligibleGenres.length === 0) {
-        console.log("[GENRE] No eligible genre found for today");
+        logger.info("No eligible genre found for today");
         throw new Error("No eligible genre found for today");
     }
 
     const selectedGenre = eligibleGenres[0];
-    console.log("🚀 [GENRE] Genre selected:", selectedGenre.name);
+    logger.info({ genreName: selectedGenre.name }, "Genre selected");
 
     /**
      * STEP 2: Update usage metadata

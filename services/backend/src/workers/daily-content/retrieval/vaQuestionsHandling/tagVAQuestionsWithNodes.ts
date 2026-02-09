@@ -8,7 +8,9 @@ import { zodResponseFormat } from "openai/helpers/zod";
 import { QuestionMetricTagArraySchema } from "../../types";
 import z from "zod";
 import { user_core_metrics_definition_v1 } from "../../../../config/user_core_metrics_definition_v1";
+import { createChildLogger } from "../../../../common/utils/logger.js";
 
+const logger = createChildLogger('va-metric-tagging');
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
@@ -31,7 +33,7 @@ export async function tagVAQuestionsWithNodes(params: {
 }) {
     const { questions } = params;
 
-    console.log(
+    logger.info(
         `🏷️ [VA Metric Tagging] Tagging ${questions.length} questions`
     );
 
@@ -71,7 +73,7 @@ ${JSON.stringify(
 Return STRICT JSON only.
 `;
 
-    console.log("⏳ [VA Metric Tagging] Waiting for LLM response (metric tags)");
+    logger.info("⏳ [VA Metric Tagging] Waiting for LLM response (metric tags)");
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
@@ -97,8 +99,8 @@ Return STRICT JSON only.
         throw new Error("VA Metric tagging failed");
     }
 
-    console.log(`✅ [VA Metric Tagging] Tags generated for ${parsed.questionsTagged.length} questions`);
-    console.log("---------------------------------------- VA Tags Generated: ", JSON.stringify(parsed.questionsTagged, null, 2));
+    logger.info(`✅ [VA Metric Tagging] Tags generated for ${parsed.questionsTagged.length} questions`);
+    // logger.debug("---------------------------------------- VA Tags Generated: ", JSON.stringify(parsed.questionsTagged, null, 2));
 
     // Returns raw array matching QuestionMetricTagArraySchema, exactly like the RC function
     return parsed.questionsTagged;

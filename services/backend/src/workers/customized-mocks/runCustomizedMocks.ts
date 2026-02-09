@@ -1,4 +1,5 @@
 import { CustomizedMockRequest, CustomizedMockResult, QuestionMetricTag, SemanticIdeas, AuthorialPersona } from "./schemas/types";
+import { createChildLogger } from "../../common/utils/logger.js";
 import { DataManager } from "./retrieval/dataManager";
 import { CostTracker } from "./retrieval/utils/CostTracker";
 import { StateManager } from "./shared/StateManager";
@@ -26,11 +27,13 @@ import { db } from "../../db";
 import { examPapers, examGenerationState } from "../../db/schema";
 import { v4 as uuidv4 } from 'uuid';
 
+const logger = createChildLogger('customized-mocks');
+
 export async function runCustomizedMocks(params: CustomizedMockRequest): Promise<CustomizedMockResult> {
-    console.log("🚀 [Worker] Starting customized mock generation");
-    console.log("   - User:", params.user_id);
-    console.log("   - Type:", params.difficulty_target);
-    console.log("   - Passages:", params.num_passages);
+    logger.info("🚀 [Worker] Starting customized mock generation");
+    logger.info(`   - User: ${params.user_id}`);
+    logger.info(`   - Type: ${params.difficulty_target}`);
+    logger.info(`   - Passages: ${params.num_passages}`);
 
     const costTracker = new CostTracker();
     const dataManager = new DataManager(params.exam_id);
@@ -50,7 +53,7 @@ export async function runCustomizedMocks(params: CustomizedMockRequest): Promise
         // 1. Initial Exam Paper and State records are now created by the controller
         // This prevents race conditions where the UI tries to fetch the exam before the worker starts.
 
-        console.log(`✅ [Init] Using existing initialized exam ${examId}`);
+        logger.info(`✅ [Init] Using existing initialized exam ${examId}`);
 
         // Update target genres usage (if provided)
         if (params.target_genres && params.target_genres.length > 0) {
@@ -62,14 +65,14 @@ export async function runCustomizedMocks(params: CustomizedMockRequest): Promise
         // =========================================================================
         await StateManager.update(examId, { status: 'generating_passages', current_step: 2 });
 
-        console.log("📝 [Step 2] Generating Passages...");
+        logger.info("📝 [Step 2] Generating Passages...");
 
         const numPassages = params.num_passages || 1;
         const genres = params.target_genres || ["Technology"]; // Default fallback
 
         for (let i = 0; i < numPassages; i++) {
             const genre = genres[i % genres.length];
-            console.log(`   - Generating passage ${i + 1}/${numPassages} (Genre: ${genre})`);
+            logger.info(`   - Generating passage ${i + 1}/${numPassages} (Genre: ${genre})`);
 
             // 1. Fetch Article
             const { articleMeta, semantic_ideas, authorial_persona } = await fetchArticleForUsage({
@@ -125,7 +128,7 @@ export async function runCustomizedMocks(params: CustomizedMockRequest): Promise
                 articleSource: articleMeta.source_name || "Unknown"
             });
 
-            console.log(`     -> Passage created: ${passageId}`);
+            logger.info(`     -> Passage created: ${passageId}`);
         }
 
         // =========================================================================
@@ -137,7 +140,7 @@ export async function runCustomizedMocks(params: CustomizedMockRequest): Promise
             reference_passages_content: allReferencePassages // Store some context
         });
 
-        console.log("📝 [Step 3] Generating RC Questions...");
+        logger.info("📝 [Step 3] Generating RC Questions...");
 
         const passages = dataManager.getPassagesForDB(params.mock_name || "Custom Mock");
 
@@ -162,7 +165,7 @@ export async function runCustomizedMocks(params: CustomizedMockRequest): Promise
         }
 
         for (const passage of passages) {
-            console.log(`   - Generating questions for passage: ${passage.id}`);
+            logger.info(`   - Generating questions for passage: ${passage.id}`);
 
             // 1. Get embedding for context (for specific references if needed, else global)
             // Using globalReferenceData derived above for now to save tokens/calls
@@ -189,14 +192,14 @@ export async function runCustomizedMocks(params: CustomizedMockRequest): Promise
         // =========================================================================
         await StateManager.update(examId, { status: 'generating_va_questions', current_step: 4 });
 
-        console.log("📝 [Step 4] Generating VA Questions...");
+        logger.info("📝 [Step 4] Generating VA Questions...");
 
         // Calculate needed VA questions
         const currentStats = dataManager.getStats();
         const neededVA = Math.max(0, (params.total_questions || 24) - currentStats.rcQuestions);
 
         if (neededVA > 0 && primarySemanticIdeas && primaryAuthorialPersona) {
-            console.log(`   - Need ${neededVA} VA questions`);
+            logger.info(`   - Need ${neededVA} VA questions`);
 
             const vaQuestions = await generateVAQuestions({
                 semanticIdeas: primarySemanticIdeas,
@@ -219,7 +222,7 @@ export async function runCustomizedMocks(params: CustomizedMockRequest): Promise
         // =========================================================================
         await StateManager.update(examId, { status: 'selecting_answers', current_step: 5 });
 
-        console.log("📝 [Step 5] Selecting Answers...");
+        logger.info("📝 [Step 5] Selecting Answers...");
 
         // RC Answers
         const rcQuestions = getQuestionsForProcessing(dataManager, { questionType: 'rc_question' });
@@ -250,7 +253,7 @@ export async function runCustomizedMocks(params: CustomizedMockRequest): Promise
         // =========================================================================
         await StateManager.update(examId, { status: 'generating_rc_rationales', current_step: 6 });
 
-        console.log("📝 [Step 6] Generating RC Rationales & Tagging...");
+        logger.info("📝 [Step 6] Generating RC Rationales & Tagging...");
 
         // Fetch and strict filter nodes
         const rawNodes = await fetchNodes();
@@ -292,7 +295,7 @@ export async function runCustomizedMocks(params: CustomizedMockRequest): Promise
         // =========================================================================
         await StateManager.update(examId, { status: 'generating_va_rationales', current_step: 7 });
 
-        console.log("📝 [Step 7] Generating VA Rationales...");
+        logger.info("📝 [Step 7] Generating VA Rationales...");
 
         if (vaQuestionsDB.length > 0) {
             // 1. Tag
@@ -314,7 +317,7 @@ export async function runCustomizedMocks(params: CustomizedMockRequest): Promise
         // =========================================================================
         // COMPLETION: Save to DB
         // =========================================================================
-        console.log("💾 Saving to Database...");
+        logger.info("💾 Saving to Database...");
 
         const finalOutput = formatOutputForDB(dataManager, {
             userId: params.user_id,
@@ -334,9 +337,9 @@ export async function runCustomizedMocks(params: CustomizedMockRequest): Promise
 
         await StateManager.markCompleted(examId);
 
-        console.log(generateOutputReport(finalOutput));
-        console.log(`✅ [Worker] customized-mocks completed successfully for ${examId}`);
-        console.log(`💰 Total Cost: $${costTracker.getReport().totalCost.toFixed(4)}`);
+        logger.info(generateOutputReport(finalOutput));
+        logger.info(`✅ [Worker] customized-mocks completed successfully for ${examId}`);
+        logger.info(`💰 Total Cost: $${costTracker.getReport().totalCost.toFixed(4)}`);
 
         return {
             success: true,
@@ -349,7 +352,7 @@ export async function runCustomizedMocks(params: CustomizedMockRequest): Promise
         };
 
     } catch (error) {
-        console.error("❌ [Worker] Error in customized-mocks:", error);
+        logger.error({ error }, "❌ [Worker] Error in customized-mocks");
         await StateManager.markFailed(examId, error instanceof Error ? error.message : String(error));
         return {
             success: false,

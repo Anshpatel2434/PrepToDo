@@ -4,6 +4,7 @@
 import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import { config } from '../../../config/index.js';
+import { authLogger as logger } from '../../../common/utils/logger.js';
 
 // =============================================================================
 // Email Transporter
@@ -31,10 +32,10 @@ function getTransporter(): Transporter {
 export async function verifyEmailConnection(): Promise<boolean> {
   try {
     await getTransporter().verify();
-    console.log('[EMAIL] SMTP connection verified');
+    logger.info('SMTP connection verified');
     return true;
   } catch (error) {
-    console.error('[EMAIL] SMTP connection failed:', error);
+    logger.error({ error: error instanceof Error ? error.message : String(error) }, 'SMTP connection failed');
     return false;
   }
 }

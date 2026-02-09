@@ -32,7 +32,7 @@ import toast from "react-hot-toast";
 import { useTheme } from "../context/ThemeContext";
 // Import UserResponse type
 import type { UserResponse } from "../services/apiClient";
-import logo from "../../public/logo_new.png";
+import logo from "/logo_new.png";
 
 // ----------------------------------------------------------------------------
 // TYPES
@@ -352,7 +352,7 @@ export const FloatingNavigation: React.FC = () => {
                       MOBILE LAYOUT (< 1024px)
                       -------------------------- 
                     */}
-                    <div className="lg:hidden flex items-center justify-between w-full gap-1">
+                    <div className="lg:hidden flex items-center justify-between w-full">
                         {/* Logo on Left */}
                         <div
                             className="p-1 cursor-pointer mr-2"
@@ -371,7 +371,7 @@ export const FloatingNavigation: React.FC = () => {
                         </div>
 
                         {/* Navigation Items (Middle) */}
-                        <div className="flex items-center gap-1 flex-1 justify-center">
+                        <div className="flex items-center flex-1 justify-center">
                             {mobileVisibleItems.map(item => (
                                 <MobileNavItem
                                     key={item.id}

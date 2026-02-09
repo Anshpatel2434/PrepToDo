@@ -2,13 +2,16 @@ import { db } from "../../../db";
 import { examGenerationState, examPapers } from "../../../db/schema";
 import { eq } from "drizzle-orm";
 import { ExamGenerationState } from "../../../db/schema";
+import { createChildLogger } from "../../../common/utils/logger.js";
+
+const logger = createChildLogger('state-manager');
 
 export class StateManager {
     /**
      * Load generation state for an exam
      */
     static async load(examId: string): Promise<ExamGenerationState> {
-        console.log(`📖 [StateManager] Loading state for exam: ${examId}`);
+        logger.info(`📖 [StateManager] Loading state for exam: ${examId}`);
 
         const [state] = await db
             .select()
@@ -19,7 +22,7 @@ export class StateManager {
             throw new Error(`Failed to load state: State not found for exam ${examId}`);
         }
 
-        console.log(`✅ [StateManager] State loaded: ${state.status} (step ${state.current_step}/${state.total_steps})`);
+        logger.info(`✅ [StateManager] State loaded: ${state.status} (step ${state.current_step}/${state.total_steps}`);
         return state;
     }
 
@@ -30,22 +33,22 @@ export class StateManager {
         examId: string,
         updates: Partial<ExamGenerationState>
     ): Promise<void> {
-        console.log(`💾 [StateManager] Updating state for exam: ${examId}`);
+        logger.info(`💾 [StateManager] Updating state for exam: ${examId}`);
 
         await db
             .update(examGenerationState)
             .set(updates)
             .where(eq(examGenerationState.exam_id, examId));
 
-        console.log(`✅ [StateManager] State updated successfully`);
+        logger.info(`✅ [StateManager] State updated successfully`);
     }
 
     /**
      * Mark as failed with error message
      */
     static async markFailed(examId: string, errorMessage: string): Promise<void> {
-        console.error(`❌ [StateManager] Marking exam as failed: ${examId}`);
-        console.error(`   Error: ${errorMessage}`);
+        logger.error(`❌ [StateManager] Marking exam as failed: ${examId}`);
+        logger.error(`   Error: ${errorMessage}`);
 
         await db
             .update(examGenerationState)
@@ -65,7 +68,7 @@ export class StateManager {
      * Mark as completed and cleanup
      */
     static async markCompleted(examId: string): Promise<void> {
-        console.log(`🎉 [StateManager] Marking exam as completed: ${examId}`);
+        logger.info(`🎉 [StateManager] Marking exam as completed: ${examId}`);
 
         await db
             .update(examPapers)
@@ -77,6 +80,6 @@ export class StateManager {
             .delete(examGenerationState)
             .where(eq(examGenerationState.exam_id, examId));
 
-        console.log(`✅ [StateManager] Exam marked as completed and state cleaned up`);
+        logger.info(`✅ [StateManager] Exam marked as completed and state cleaned up`);
     }
 }

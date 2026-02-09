@@ -4,6 +4,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { config } from '../../../config/index.js';
 import { Errors } from '../../../common/utils/errors.js';
+import { authLogger } from '../../../common/utils/logger.js';
 
 // Turnstile verification response type
 interface TurnstileResponse {
@@ -24,7 +25,7 @@ export const verifyCaptcha = async (
     try {
         // Skip CAPTCHA in development if not configured
         if (!config.turnstile.secretKey) {
-            console.warn('[CAPTCHA] Secret key not configured, skipping verification');
+            authLogger.warn('[CAPTCHA] Secret key not configured, skipping verification');
             return next();
         }
 
@@ -50,7 +51,7 @@ export const verifyCaptcha = async (
         const data = await response.json() as TurnstileResponse;
 
         if (!data.success) {
-            console.error('[CAPTCHA] Verification failed:', data['error-codes']);
+            authLogger.error({ errorCodes: data['error-codes'] }, '[CAPTCHA] Verification failed');
             throw Errors.captchaFailed();
         }
 

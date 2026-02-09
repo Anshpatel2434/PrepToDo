@@ -1,6 +1,9 @@
 import { db } from "../../../db";
 import { questions } from "../../../db/schema";
 import { inArray, or } from "drizzle-orm";
+import { createChildLogger } from "../../../common/utils/logger.js";
+
+const logger = createChildLogger('custom-mock-questions-fetch');
 
 /**
  * Fetches questions by their IDs or by passage IDs.
@@ -9,12 +12,12 @@ import { inArray, or } from "drizzle-orm";
  * @param passageIds - Array of passage IDs to fetch all associated questions
  */
 export async function fetchQuestionsData(questionsIds: string[], passageIds: string[]) {
-    console.log(
+    logger.info(
         `❓ [Questions] Fetching questions from DB (questionIds=${questionsIds.length}, passageIds=${passageIds.length})`
     );
 
     if (questionsIds.length === 0 && passageIds.length === 0) {
-        console.log("✅ [Questions] No IDs provided, returning empty array");
+        logger.info("✅ [Questions] No IDs provided, returning empty array");
         return [];
     }
 
@@ -31,18 +34,18 @@ export async function fetchQuestionsData(questionsIds: string[], passageIds: str
         where: conditions.length > 1 ? or(...conditions) : conditions[0],
     });
 
-    console.log(`✅ [Questions] Loaded ${data?.length || 0} records`);
+    logger.info(`✅ [Questions] Loaded ${data?.length || 0} records`);
 
     // Map to Domain Type (snake_case)
     return data.map((q) => {
         let parsedOptions = q.options;
         if (typeof q.options === 'string') {
-            try { parsedOptions = JSON.parse(q.options); } catch (e) { console.error("Failed to parse options", e); }
+            try { parsedOptions = JSON.parse(q.options); } catch (e) { logger.error({ error: e instanceof Error ? e.message : String(e) }, "Failed to parse options"); }
         }
 
         let parsedJumbled = q.jumbled_sentences;
         if (typeof q.jumbled_sentences === 'string') {
-            try { parsedJumbled = JSON.parse(q.jumbled_sentences); } catch (e) { console.error("Failed to parse jumbledSentences", e); }
+            try { parsedJumbled = JSON.parse(q.jumbled_sentences); } catch (e) { logger.error({ error: e instanceof Error ? e.message : String(e) }, "Failed to parse jumbledSentences"); }
         }
 
         let parsedCorrectAnswer = { answer: "" };
@@ -55,7 +58,7 @@ export async function fetchQuestionsData(questionsIds: string[], passageIds: str
                     parsedCorrectAnswer = { answer: q.correct_answer };
                 }
             } catch (e) {
-                console.error("Failed to parse correctAnswer", e);
+                logger.error({ error: e instanceof Error ? e.message : String(e) }, "Failed to parse correctAnswer");
                 parsedCorrectAnswer = { answer: q.correct_answer };
             }
         }

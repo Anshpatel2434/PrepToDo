@@ -6,16 +6,19 @@
 import { db } from "../../../../db/index";
 import { passages } from "../../../../db/schema";
 import { inArray } from "drizzle-orm";
+import { createChildLogger } from "../../../../common/utils/logger.js";
+
+const logger = createChildLogger('passages-fetcher');
 
 /**
  * Fetches multiple passages from the 'passages' table based on an array of IDs.
  * @param passageIds - An array of strings (IDs)
  */
 export async function fetchPassagesData(passageIds: string[]) {
-    console.log(`📄 [Passages] Fetching ${passageIds.length} passages from DB`);
+    logger.info(`📄 [Passages] Fetching ${passageIds.length} passages from DB`);
 
     if (passageIds.length === 0) {
-        console.log("✅ [Passages] No passage IDs provided, returning empty array");
+        logger.info("✅ [Passages] No passage IDs provided, returning empty array");
         return [];
     }
 
@@ -23,7 +26,7 @@ export async function fetchPassagesData(passageIds: string[]) {
         where: inArray(passages.id, passageIds),
     });
 
-    console.log(`✅ [Passages] Loaded ${data?.length || 0} records`);
+    logger.info(`✅ [Passages] Loaded ${data?.length || 0} records`);
 
     // Map to Domain Type (snake_case)
     return data.map((p) => ({

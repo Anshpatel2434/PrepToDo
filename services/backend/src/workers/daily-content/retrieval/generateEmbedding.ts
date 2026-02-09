@@ -1,21 +1,19 @@
-// =============================================================================
-// Daily Content Worker - Generate Embedding
-// =============================================================================
-// OpenAI embedding generation - no DB changes needed
-
 import { openai } from "../../../config/openai";
+import { createChildLogger } from "../../../common/utils/logger.js";
+
+const logger = createChildLogger('embedding-gen');
 
 export async function generateEmbedding(text: string) {
-    console.log("🧠 [Embedding] Generating query embedding");
+    logger.info("🧠 [Embedding] Generating query embedding");
 
-    console.log("⏳ [Embedding] Waiting for OpenAI embeddings response");
+    logger.info("⏳ [Embedding] Waiting for OpenAI embeddings response");
 
     const response = await openai.embeddings.create({
         model: "text-embedding-3-small",
         input: text,
     });
 
-    console.log("✅ [Embedding] Vector generated");
+    logger.info("✅ [Embedding] Vector generated");
 
     return response.data[0].embedding;
 }

@@ -8,7 +8,9 @@ import { zodResponseFormat } from "openai/helpers/zod";
 import { QuestionMetricTagArraySchema } from "../../types";
 import z from "zod";
 import { user_core_metrics_definition_v1 } from "../../../../config/user_core_metrics_definition_v1";
+import { createChildLogger } from "../../../../common/utils/logger.js";
 
+const logger = createChildLogger('rc-metric-tagging');
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
@@ -33,7 +35,7 @@ export async function tagQuestionsWithNodes(params: {
 }) {
     const { passageText, questions } = params;
 
-    console.log(
+    logger.info(
         `🏷️ [Metric Tagging] Tagging ${questions.length} questions`
     );
 
@@ -74,7 +76,7 @@ ${JSON.stringify(
 Return STRICT JSON only.
 `;
 
-    console.log("⏳ [Metric Tagging] Waiting for LLM response (metric tags)");
+    logger.info("⏳ [Metric Tagging] Waiting for LLM response (metric tags)");
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
@@ -101,19 +103,21 @@ Return STRICT JSON only.
         throw new Error("Metric tagging failed");
     }
 
-    console.log(`✅ [Metric Tagging] Tags generated for ${parsed.questionsTagged.length} questions`);
-    console.log("---------------------------------------- RC Tags Generated: ", JSON.stringify(parsed.questionsTagged, null, 2));
+    logger.info(`✅ [Metric Tagging] Tags generated for ${parsed.questionsTagged.length} questions`);
+    // logger.debug("---------------------------------------- RC Tags Generated: ", JSON.stringify(parsed.questionsTagged, null, 2));
 
     // Validate that we got tags for ALL questions
     if (parsed.questionsTagged.length !== questions.length) {
-        console.warn(`⚠️ [Metric Tagging] Expected ${questions.length} tagged questions, got ${parsed.questionsTagged.length}`);
+        logger.warn(`⚠️ [Metric Tagging] Expected ${questions.length} tagged questions, got ${parsed.questionsTagged.length}`);
 
         // Find which questions are missing tags
         const taggedIds = new Set(parsed.questionsTagged.map(q => q.question_id));
         const missingQuestions = questions.filter(q => !taggedIds.has(q.id));
 
-        console.warn(`⚠️ [Metric Tagging] Missing tags for ${missingQuestions.length} questions:`,
-            missingQuestions.map(q => q.id));
+        logger.warn(
+            { missingQuestionIds: missingQuestions.map(q => q.id) },
+            `⚠️ [Metric Tagging] Missing tags for ${missingQuestions.length} questions`
+        );
 
         // Add default tags for missing questions
         const defaultTags = missingQuestions.map(q => ({

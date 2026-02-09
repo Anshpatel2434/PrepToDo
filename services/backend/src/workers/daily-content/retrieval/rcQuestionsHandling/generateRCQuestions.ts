@@ -9,7 +9,9 @@ import { z } from "zod";
 import { Passage, Question, QuestionSchema } from "../../types";
 import { CostTracker } from "../utils/CostTracker";
 import { user_core_metrics_definition_v1 } from "../../../../config/user_core_metrics_definition_v1";
+import { createChildLogger } from "../../../../common/utils/logger.js";
 
+const logger = createChildLogger('rc-questions');
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
@@ -80,11 +82,11 @@ export async function generateRCQuestions(
 ) {
     const { passageText, referenceData, questionCount } = params;
 
-    console.log(`🧩 [RC Questions] Starting generation (${questionCount} questions)`);
+    logger.info(`🧩 [RC Questions] Starting generation (${questionCount} questions)`);
 
     const difficultyTargets = getDefaultDifficultyTargets(questionCount);
 
-    console.log("Input Reference Data:", JSON.stringify(referenceData, null, 2));
+    // logger.debug("Input Reference Data:", JSON.stringify(referenceData, null, 2));
 
     const prompt = `SYSTEM:
 You are a CAT VARC examiner with 15+ years of experience.
@@ -347,7 +349,7 @@ IMPORTANT:
 - The question should be able to assess the metrics from ${JSON.stringify(user_core_metrics_definition_v1)} file and try to divide all the metrics across 4 questions.
 `;
 
-    console.log("⏳ [RC Questions] Waiting for LLM to generate questions");
+    logger.info("⏳ [RC Questions] Waiting for LLM to generate questions");
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
@@ -365,7 +367,7 @@ IMPORTANT:
         response_format: zodResponseFormat(ResponseSchema, "rc_questions"),
     });
 
-    console.log("✅ [RC Questions] LLM response received");
+    logger.info("✅ [RC Questions] LLM response received");
 
     const parsed = completion.choices[0].message.parsed;
 
@@ -381,7 +383,7 @@ IMPORTANT:
         );
     }
 
-    console.log(`✅ [RC Questions] Generated ${parsed.questions.length} questions`);
+    logger.info(`✅ [RC Questions] Generated ${parsed.questions.length} questions`);
 
     const now = new Date().toISOString();
     return parsed.questions.map((q: any) => ({

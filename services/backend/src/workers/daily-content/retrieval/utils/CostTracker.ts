@@ -3,6 +3,8 @@
 // =============================================================================
 // Cost tracking utility for monitoring AI API usage and costs
 
+import { createChildLogger } from "../../../../common/utils/logger.js";
+
 interface APICall {
     functionName: string;
     inputTokens: number;
@@ -11,6 +13,7 @@ interface APICall {
 }
 
 export class CostTracker {
+    private logger = createChildLogger('cost-tracker');
     private calls: APICall[] = [];
 
     // OpenAI gpt-4o-mini pricing (per 1M tokens)
@@ -31,11 +34,11 @@ export class CostTracker {
         this.calls.push(call);
 
         const callCost = this.calculateCallCost(inputTokens, outputTokens);
-        console.log(`💰 [Cost] ${functionName}: ${inputTokens} in, ${outputTokens} out (~$${callCost.toFixed(4)})`);
+        this.logger.info(`💰[Cost] ${functionName}: ${inputTokens} in, ${outputTokens} out(~$${callCost.toFixed(4)})`);
 
         // Alert on high token usage
         if (inputTokens > 10000) {
-            console.warn(`⚠️ [Cost] High input token usage in ${functionName}: ${inputTokens} tokens`);
+            this.logger.warn(`⚠️[Cost] High input token usage in ${functionName}: ${inputTokens} tokens`);
         }
     }
 
@@ -107,18 +110,18 @@ export class CostTracker {
     printReport(): void {
         const report = this.getReport();
 
-        console.log("\n" + "=".repeat(70));
-        console.log("💰 COST TRACKER REPORT");
-        console.log("=".repeat(70));
-        console.log(`Total API Calls: ${report.callCount}`);
-        console.log(`Total Input Tokens: ${report.totalInputTokens.toLocaleString()}`);
-        console.log(`Total Output Tokens: ${report.totalOutputTokens.toLocaleString()}`);
-        console.log(`Estimated Cost: $${report.totalCost.toFixed(4)}`);
-        console.log("\nBreakdown by Function:");
-        console.log("-".repeat(70));
+        this.logger.info("\n" + "=".repeat(70));
+        this.logger.info("💰 COST TRACKER REPORT");
+        this.logger.info("=".repeat(70));
+        this.logger.info(`Total API Calls: ${report.callCount} `);
+        this.logger.info(`Total Input Tokens: ${report.totalInputTokens.toLocaleString()} `);
+        this.logger.info(`Total Output Tokens: ${report.totalOutputTokens.toLocaleString()} `);
+        this.logger.info(`Estimated Cost: $${report.totalCost.toFixed(4)} `);
+        this.logger.info("\nBreakdown by Function:");
+        this.logger.info("-".repeat(70));
 
         for (const item of report.breakdown) {
-            console.log(
+            this.logger.info(
                 `${item.function.padEnd(35)} | ` +
                 `In: ${String(item.inputTokens).padStart(6)} | ` +
                 `Out: ${String(item.outputTokens).padStart(5)} | ` +
@@ -126,6 +129,6 @@ export class CostTracker {
             );
         }
 
-        console.log("=".repeat(70) + "\n");
+        this.logger.info("=".repeat(70) + "\n");
     }
 }

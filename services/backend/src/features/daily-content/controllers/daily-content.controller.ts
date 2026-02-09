@@ -16,6 +16,9 @@ import {
     userProfiles
 } from '../../../db/schema.js';
 import { ApiError, Errors, successResponse } from '../../../common/utils/errors.js';
+import { createChildLogger } from '../../../common/utils/logger.js';
+
+const logger = createChildLogger('daily-content-controller');
 import type {
     TestDataResponse,
     LeaderboardResponse,
@@ -92,7 +95,7 @@ function calculateLeaderboard(
 // Fetch Today's Daily Test Data
 // =============================================================================
 export async function fetchDailyTestData(req: Request, res: Response, next: NextFunction): Promise<void> {
-    console.log('[DailyContent] fetchDailyTestData called');
+    logger.info('fetchDailyTestData called');
 
     try {
         // Get today's date range
@@ -100,7 +103,7 @@ export async function fetchDailyTestData(req: Request, res: Response, next: Next
         const startOfToday = new Date(`${today}T00:00:00.000Z`);
         const endOfToday = new Date(`${today}T23:59:59.999Z`);
 
-        console.log('[DailyContent] Fetching exam for date:', today);
+        logger.info({ today }, 'Fetching exam for date');
 
         // Fetch today's daily practice exam
         const examInfo = await db.query.examPapers.findFirst({
@@ -116,7 +119,7 @@ export async function fetchDailyTestData(req: Request, res: Response, next: Next
 
         // Check if there's an exam for today
         if (!examInfo) {
-            console.log('[DailyContent] No exam found for today');
+            logger.info('No exam found for today');
             res.json(successResponse({
                 examInfo: null,
                 passages: [],
@@ -125,7 +128,7 @@ export async function fetchDailyTestData(req: Request, res: Response, next: Next
             return;
         }
 
-        console.log('[DailyContent] Fetched exam info:', examInfo.id);
+        logger.info({ examId: examInfo.id }, 'Fetched exam info');
 
         // Fetch passages linked to this exam
         const passageDataRaw = await db.query.passages.findMany({
@@ -149,7 +152,7 @@ export async function fetchDailyTestData(req: Request, res: Response, next: Next
             updated_at: p.updated_at,
         }));
 
-        console.log('[DailyContent] Fetched', passageData.length, 'passages');
+        logger.info({ count: passageData.length }, 'Fetched passages');
 
         // Fetch questions linked to this exam
         const questionDataRaw = await db.query.questions.findMany({
@@ -197,7 +200,7 @@ export async function fetchDailyTestData(req: Request, res: Response, next: Next
             };
         });
 
-        console.log('[DailyContent] Fetched', questionData.length, 'questions. Include solutions:', include_solutions);
+        logger.info({ count: questionData.length, include_solutions }, 'Fetched questions');
 
         const response = {
             examInfo: examInfo, // Already in snake_case
@@ -207,7 +210,7 @@ export async function fetchDailyTestData(req: Request, res: Response, next: Next
 
         res.json(successResponse(response));
     } catch (error) {
-        console.error('[DailyContent] Error in fetchDailyTestData:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in fetchDailyTestData');
         if (error instanceof ApiError) return next(error);
         next(Errors.internalError());
     }
@@ -220,7 +223,7 @@ export async function fetchPreviousDailyTests(req: Request, res: Response, next:
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
 
-    console.log('[DailyContent] fetchPreviousDailyTests called with page:', page, 'limit:', limit);
+    logger.info({ page, limit }, 'fetchPreviousDailyTests called');
 
     try {
         // Calculate offset for pagination
@@ -241,11 +244,11 @@ export async function fetchPreviousDailyTests(req: Request, res: Response, next:
         // Already in snake_case
         const examInfoMapped = examInfo;
 
-        console.log('[DailyContent] Fetched', examInfo.length, 'previous exams for page', page);
+        logger.info({ count: examInfo.length, page }, 'Fetched previous exams');
 
         res.json(successResponse(examInfoMapped));
     } catch (error) {
-        console.error('[DailyContent] Error in fetchPreviousDailyTests:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in fetchPreviousDailyTests');
         if (error instanceof ApiError) return next(error);
         next(Errors.internalError());
     }
@@ -257,7 +260,7 @@ export async function fetchPreviousDailyTests(req: Request, res: Response, next:
 export async function fetchDailyTestById(req: Request, res: Response, next: NextFunction): Promise<void> {
     const exam_id = req.params.exam_id as string;
 
-    console.log('[DailyContent] fetchDailyTestById called for exam_id:', exam_id);
+    logger.info({ exam_id }, 'fetchDailyTestById called');
 
     try {
         // Fetch the specific exam
@@ -268,7 +271,7 @@ export async function fetchDailyTestById(req: Request, res: Response, next: Next
         }
 
         const exam = examInfo[0];
-        console.log('[DailyContent] Fetched exam info:', exam.id);
+        logger.info({ examId: exam.id }, 'Fetched exam info');
 
 
         // Mapping passages
@@ -291,7 +294,7 @@ export async function fetchDailyTestById(req: Request, res: Response, next: Next
             updated_at: p.updated_at,
         }));
 
-        console.log('[DailyContent] Fetched', passageData.length, 'passages');
+        logger.info({ count: passageData.length }, 'Fetched passages');
 
         // Fetch questions
         const questionData = await db.query.questions.findMany({
@@ -320,7 +323,7 @@ export async function fetchDailyTestById(req: Request, res: Response, next: Next
             };
         });
 
-        console.log('[DailyContent] Fetched', questionData.length, 'questions. Include solutions:', include_solutions);
+        logger.info({ count: questionData.length, include_solutions }, 'Fetched questions');
 
         const response = {
             examInfo: exam, // already snake_case
@@ -330,7 +333,7 @@ export async function fetchDailyTestById(req: Request, res: Response, next: Next
 
         res.json(successResponse(response));
     } catch (error) {
-        console.error('[DailyContent] Error in fetchDailyTestById:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in fetchDailyTestById');
         if (error instanceof ApiError) return next(error);
         next(Errors.internalError());
     }
@@ -342,7 +345,7 @@ export async function fetchDailyTestById(req: Request, res: Response, next: Next
 export async function startDailyRCSession(req: Request, res: Response, next: NextFunction): Promise<void> {
     const { user_id, paper_id, passage_ids, question_ids } = req.body;
 
-    console.log('[DailyContent] startDailyRCSession called for user:', user_id);
+    logger.info({ user_id }, 'startDailyRCSession called');
 
     try {
         // Verify user is authenticated
@@ -372,10 +375,10 @@ export async function startDailyRCSession(req: Request, res: Response, next: Nex
             updated_at: new Date(),
         }).returning();
 
-        console.log('[DailyContent] RC session created:', session.id);
+        logger.info({ sessionId: session.id }, 'RC session created');
         res.json(successResponse(session));
     } catch (error) {
-        console.error('[DailyContent] Error in startDailyRCSession:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in startDailyRCSession');
         if (error instanceof ApiError) return next(error);
         next(Errors.internalError());
     }
@@ -387,7 +390,7 @@ export async function startDailyRCSession(req: Request, res: Response, next: Nex
 export async function startDailyVASession(req: Request, res: Response, next: NextFunction): Promise<void> {
     const { user_id, paper_id, passage_ids, question_ids } = req.body;
 
-    console.log('[DailyContent] startDailyVASession called for user:', user_id);
+    logger.info({ user_id }, 'startDailyVASession called');
 
     try {
         // Verify user is authenticated
@@ -417,10 +420,10 @@ export async function startDailyVASession(req: Request, res: Response, next: Nex
             updated_at: new Date(),
         }).returning();
 
-        console.log('[DailyContent] VA session created:', session.id);
+        logger.info({ sessionId: session.id }, 'VA session created');
         res.json(successResponse(session));
     } catch (error) {
-        console.error('[DailyContent] Error in startDailyVASession:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in startDailyVASession');
         if (error instanceof ApiError) return next(error);
         next(Errors.internalError());
     }
@@ -432,7 +435,7 @@ export async function startDailyVASession(req: Request, res: Response, next: Nex
 export async function fetchExistingSessionDetails(req: Request, res: Response, next: NextFunction): Promise<void> {
     const { user_id, paper_id, session_type } = req.query;
 
-    console.log('[DailyContent] fetchExistingSessionDetails called for session type:', session_type);
+    logger.info({ session_type }, 'fetchExistingSessionDetails called');
 
     try {
         // Verify user is authenticated
@@ -451,7 +454,7 @@ export async function fetchExistingSessionDetails(req: Request, res: Response, n
         });
 
         if (!session) {
-            console.log('[DailyContent] No existing session found, returning null');
+            logger.info('No existing session found, returning null');
             res.json(successResponse({
                 session: null,
                 attempts: [],
@@ -459,14 +462,14 @@ export async function fetchExistingSessionDetails(req: Request, res: Response, n
             return;
         }
 
-        console.log('[DailyContent] Found existing session:', session.id);
+        logger.info({ sessionId: session.id }, 'Found existing session');
 
         // Fetch all attempts for this session
         const attemptsData = await db.query.questionAttempts.findMany({
             where: eq(questionAttempts.session_id, session.id),
         });
 
-        console.log('[DailyContent] Fetched', attemptsData.length, 'existing attempts');
+        logger.info({ count: attemptsData.length }, 'Fetched existing attempts');
 
         const response: SessionWithAttemptsResponse = {
             session: session as any,
@@ -475,7 +478,7 @@ export async function fetchExistingSessionDetails(req: Request, res: Response, n
 
         res.json(successResponse(response));
     } catch (error) {
-        console.error('[DailyContent] Error in fetchExistingSessionDetails:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in fetchExistingSessionDetails');
         if (error instanceof ApiError) return next(error);
         next(Errors.internalError());
     }
@@ -497,7 +500,7 @@ export async function saveSessionDetails(req: Request, res: Response, next: Next
         current_question_index,
     } = req.body;
 
-    console.log('[DailyContent] saveSessionDetails called for session:', session_id);
+    logger.info({ session_id }, 'saveSessionDetails called');
 
     try {
         // Verify user is authenticated
@@ -516,7 +519,7 @@ export async function saveSessionDetails(req: Request, res: Response, next: Next
         // Calculate score
         const backendScorePercentage = (backendCorrectCount / totalQs) * 100;
 
-        console.log(`[DailyContent] Server-Side Score: ${backendCorrectCount}/${totalQs} (${backendScorePercentage}%)`);
+        logger.info({ backendCorrectCount, totalQs, backendScorePercentage }, `Server-Side Score Result`);
 
         // Update session
         const updateData: any = {
@@ -541,17 +544,17 @@ export async function saveSessionDetails(req: Request, res: Response, next: Next
 
         // If session is completed, trigger analytics update asynchronously
         if (status === 'completed' && req.user.userId) {
-            console.log(`[DailyContent] Triggering analytics for user ${req.user.userId}`);
+            logger.info({ userId: req.user.userId }, `Triggering analytics for user`);
             // Fire-and-forget: don't await this to avoid blocking the response
             analyticsService.triggerAnalytics(req.user.userId).catch(err => {
-                console.error('[DailyContent] Failed to trigger analytics:', err);
+                logger.error({ error: err instanceof Error ? err.message : String(err) }, 'Failed to trigger analytics');
             });
         }
 
-        console.log('[DailyContent] Session details saved successfully');
+        logger.info('Session details saved successfully');
         res.json(successResponse(updatedSession));
     } catch (error) {
-        console.error('[DailyContent] Error in saveSessionDetails:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in saveSessionDetails');
         if (error instanceof ApiError) return next(error);
         next(Errors.internalError());
     }
@@ -563,7 +566,7 @@ export async function saveSessionDetails(req: Request, res: Response, next: Next
 export async function saveQuestionAttempts(req: Request, res: Response, next: NextFunction): Promise<void> {
     const { attempts } = req.body;
 
-    console.log('[DailyContent] saveQuestionAttempts called with', attempts.length, 'attempts');
+    logger.info({ count: attempts.length }, 'saveQuestionAttempts called');
 
     try {
         // Verify user is authenticated
@@ -583,7 +586,7 @@ export async function saveQuestionAttempts(req: Request, res: Response, next: Ne
         const attemptsToInsert = attempts.map((attempt: any) => {
             const question = questionsMap.get(attempt.question_id);
             if (!question) {
-                console.warn(`[DailyContent] Question not found for verification: ${attempt.question_id}`);
+                logger.warn({ questionId: attempt.question_id }, `Question not found for verification`);
                 // Fallback to what client sent or false if question missing (shouldn't happen)
                 // In a stricter system, we might throw an error.
             }
@@ -604,7 +607,7 @@ export async function saveQuestionAttempts(req: Request, res: Response, next: Ne
                         realCorrectAnswer = question.correct_answer;
                     }
                 } catch (e) {
-                    console.error("Error parsing correct answer for verification:", e);
+                    logger.error({ error: e instanceof Error ? e.message : String(e) }, "Error parsing correct answer for verification");
                 }
 
                 // Get the string value of correct answer
@@ -640,7 +643,7 @@ export async function saveQuestionAttempts(req: Request, res: Response, next: Ne
                 // Assuming Option IDs like "A", "B", "C" or values.
                 isCorrect = String(userAnswerStr).trim() === String(realCorrectAnswerStr).trim();
 
-                console.log(`[DailyContent] Verification [Q:${question.id}]: User: "${userAnswerStr}" | Real: "${realCorrectAnswerStr}" | Correct: ${isCorrect}`);
+                logger.info({ questionId: question.id, isCorrect }, `Verification Result`);
             }
 
 
@@ -677,10 +680,10 @@ export async function saveQuestionAttempts(req: Request, res: Response, next: Ne
             })
             .returning();
 
-        console.log('[DailyContent] Question attempts saved successfully with server-side verification.');
+        logger.info('Question attempts saved successfully with server-side verification.');
         res.json(successResponse(insertedAttempts));
     } catch (error) {
-        console.error('[DailyContent] Error in saveQuestionAttempts:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in saveQuestionAttempts');
         if (error instanceof ApiError) return next(error);
         next(Errors.internalError());
     }
@@ -693,7 +696,7 @@ export async function fetchLeaderboard(req: Request, res: Response, next: NextFu
     const exam_id = req.params.exam_id as string;
     const user_id = req.user?.userId;
 
-    console.log('[DailyContent] fetchLeaderboard called for exam:', exam_id);
+    logger.info({ exam_id }, 'fetchLeaderboard called');
 
     try {
         // Fetch all completed sessions for this exam
@@ -745,10 +748,10 @@ export async function fetchLeaderboard(req: Request, res: Response, next: NextFu
             // current_user_session: // Optional: find session
         };
 
-        console.log('[DailyContent] Leaderboard calculated with', leaderboard.length, 'participants');
+        logger.info({ count: leaderboard.length }, 'Leaderboard calculated');
         res.json(successResponse(response));
     } catch (error) {
-        console.error('[DailyContent] Error in fetchLeaderboard:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in fetchLeaderboard');
         if (error instanceof ApiError) return next(error);
         next(Errors.internalError());
     }
@@ -760,7 +763,7 @@ export async function fetchLeaderboard(req: Request, res: Response, next: NextFu
 export async function fetchArticlesByIds(req: Request, res: Response, next: NextFunction): Promise<void> {
     const { article_ids } = req.body;
 
-    console.log('[DailyContent] fetchArticlesByIds called with', article_ids?.length, 'ids');
+    logger.info({ count: article_ids?.length }, 'fetchArticlesByIds called');
 
     try {
         if (!article_ids || !Array.isArray(article_ids) || article_ids.length === 0) {
@@ -799,10 +802,10 @@ export async function fetchArticlesByIds(req: Request, res: Response, next: Next
             semantic_ideas_and_persona: a.semantic_ideas_and_persona,
         }));
 
-        console.log('[DailyContent] Fetched', articlesMapped.length, 'articles');
+        logger.info({ count: articlesMapped.length }, 'Fetched articles');
         res.json(successResponse(articlesMapped));
     } catch (error) {
-        console.error('[DailyContent] Error in fetchArticlesByIds:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in fetchArticlesByIds');
         if (error instanceof ApiError) return next(error);
         next(Errors.internalError());
     }
@@ -814,7 +817,7 @@ export async function fetchArticlesByIds(req: Request, res: Response, next: Next
 export async function generateDailyContent(req: Request, res: Response, next: NextFunction): Promise<void> {
     const { force } = req.body;
 
-    console.log('[DailyContent] generateDailyContent called, force:', force);
+    logger.info({ force }, 'generateDailyContent called');
 
     try {
         // Import the service
@@ -831,7 +834,7 @@ export async function generateDailyContent(req: Request, res: Response, next: Ne
 
         res.json(successResponse(response));
     } catch (error) {
-        console.error('[DailyContent] Error in generateDailyContent:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error in generateDailyContent');
         if (error instanceof ApiError) return next(error);
         next(Errors.internalError());
     }

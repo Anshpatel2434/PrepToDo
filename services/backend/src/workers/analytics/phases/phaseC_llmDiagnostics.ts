@@ -7,6 +7,9 @@ import type { AttemptDatum, DiagnosticsOutput } from "../types";
 import { db } from "../../../db";
 import { userMetricProficiency, userProficiencySignals } from "../../../db/schema";
 import { eq } from "drizzle-orm";
+import { createChildLogger } from "../../../common/utils/logger.js";
+
+const logger = createChildLogger('analytics-phase-c');
 
 const MODEL = "gpt-4o-mini";
 
@@ -63,14 +66,14 @@ export async function phaseC_llmDiagnostics(
 ): Promise<z.infer<typeof DiagnosticsOutputSchema>> {
 
     if (incorrectAttempts.length === 0) {
-        console.log('ℹ️ [Phase C] No incorrect attempts to diagnose');
+        logger.info('No incorrect attempts to diagnose');
         return { diagnostics: [] };
     }
 
-    console.log(`🧠 [Phase C] Diagnosing ${incorrectAttempts.length} incorrect attempts with user context`);
+    logger.info({ count: incorrectAttempts.length }, 'Diagnosing incorrect attempts');
 
     // Fetch user proficiency metrics
-    console.log('📊 [Phase C] Fetching user proficiency context...');
+    logger.info('Fetching user proficiency context');
     const proficiencies = await db.query.userMetricProficiency.findMany({
         where: eq(userMetricProficiency.user_id, userId)
     });
@@ -81,7 +84,6 @@ export async function phaseC_llmDiagnostics(
     });
 
     // Build user context for LLM
-    // Ensure jsonb fields are parsed if they come as strings
     const parseJsonArray = (val: any) => {
         if (!val) return [];
         if (typeof val === 'string') {
@@ -98,8 +100,10 @@ export async function phaseC_llmDiagnostics(
         recommended_difficulty: signals?.recommended_difficulty || 'medium',
     };
 
-    console.log(`   - User proficiencies loaded: ${userContext.proficiencies.length} metrics`);
-    console.log(`   - Weak topics: ${userContext.weak_topics.join(', ') || 'None identified'}`);
+    logger.info({
+        proficienciesCount: userContext.proficiencies.length,
+        weakTopics: userContext.weak_topics
+    }, "User context loaded");
 
     // Build enhanced prompt with user context
     const systemPrompt = `You are an expert CAT VARC faculty diagnostician embedded inside PrepToDo's analytics pipeline.
@@ -203,7 +207,7 @@ ${JSON.stringify(incorrectAttempts.map(a => ({
 
 For each incorrect attempt, provide personalized diagnostics that help THIS SPECIFIC STUDENT understand their mistake and improve.`;
 
-    console.log('⏳ [Phase C] Waiting for LLM response (personalized diagnostics)...');
+    logger.info('Waiting for LLM response');
 
     try {
         const completion = await openai.chat.completions.parse({
@@ -242,12 +246,12 @@ For each incorrect attempt, provide personalized diagnostics that help THIS SPEC
             }
         }
 
-        console.log(`✅ [Phase C] Generated personalized diagnostics for ${parsed.diagnostics.length} attempts`);
+        logger.info({ diagnosticsCount: parsed.diagnostics.length }, "Generated personalized diagnostics");
 
         return parsed;
 
     } catch (error) {
-        console.error('❌ [Phase C] LLM diagnostics failed:', error);
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'LLM diagnostics failed');
         // Return empty diagnostics on failure (don't block pipeline)
         return { diagnostics: [] };
     }

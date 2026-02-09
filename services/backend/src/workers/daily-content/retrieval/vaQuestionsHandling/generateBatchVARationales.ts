@@ -6,7 +6,9 @@
 import OpenAI from "openai";
 import { Passage, Question, ReasoningGraphContext } from "../../types";
 import { CostTracker } from "../utils/CostTracker";
+import { createChildLogger } from "../../../../common/utils/logger.js";
 
+const logger = createChildLogger('batch-va-rationales');
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
@@ -60,8 +62,8 @@ export async function generateBatchVARationales(
     try {
         const { questions, reasoningContexts, referenceQuestions } = params;
 
-        console.log(`🧾 [Batch VA Rationales] Generating rationales for ${questions.length} questions in single API call`);
-        console.log("Input Reference Questions:", JSON.stringify(referenceQuestions, null, 2));
+        logger.info(`🧾 [Batch VA Rationales] Generating rationales for ${questions.length} questions in single API call`);
+        // logger.debug("Input Reference Questions:", JSON.stringify(referenceQuestions, null, 2));
 
         // Group questions by type for better reference matching
 
@@ -76,7 +78,7 @@ export async function generateBatchVARationales(
         const questionBlocks = questions.map((q, index) => {
             const context = reasoningContexts[q.id];
             if (!context) {
-                console.warn(`⚠️ [Batch VA Rationales] Missing context for ${q.id}`);
+                logger.warn({ questionId: q.id }, `Missing context for question`);
                 return null;
             }
 
@@ -198,7 +200,7 @@ Return STRICT JSON:
 
 Generate exactly ${questions.length} rationales IN THE SAME ORDER.`;
 
-        console.log(`⏳ [Batch VA Rationales] Waiting for LLM response for ${questions.length} questions`);
+        logger.info(`⏳ [Batch VA Rationales] Waiting for LLM response for ${questions.length} questions`);
 
         const completion = await client.chat.completions.create({
             model: MODEL,
@@ -235,7 +237,7 @@ Generate exactly ${questions.length} rationales IN THE SAME ORDER.`;
             throw new Error("Invalid batch rationale response structure");
         }
 
-        console.log(`✅ [Batch VA Rationales] Generated ${parsed.rationales.length} rationales`);
+        logger.info(`✅ [Batch VA Rationales] Generated ${parsed.rationales.length} rationales`);
 
         // Map rationales back to questions
         const rationaleMap = new Map(
@@ -247,7 +249,7 @@ Generate exactly ${questions.length} rationales IN THE SAME ORDER.`;
             const context = reasoningContexts[q.id];
 
             if (!rationaleData || !context) {
-                console.warn(`⚠️ [Batch VA Rationales] Fallback for question ${q.id}`);
+                logger.warn(`⚠️ [Batch VA Rationales] Fallback for question ${q.id}`);
                 return {
                     ...q,
                     rationale: rationaleData?.rationale || "Rationale generation incomplete.",
@@ -266,11 +268,11 @@ Generate exactly ${questions.length} rationales IN THE SAME ORDER.`;
             };
         });
 
-        console.log("✅ [Batch VA Rationales] All rationales mapped to questions");
+        logger.info("✅ [Batch VA Rationales] All rationales mapped to questions");
         return updatedQuestions;
 
     } catch (error) {
-        console.error("❌ [Batch VA Rationales] Error in generateBatchVARationales:", error);
+        logger.error({ error }, "❌ [Batch VA Rationales] Error in generateBatchVARationales");
         throw error;
     }
 }

@@ -1,7 +1,6 @@
-/**
- * Cost tracking utility for monitoring AI API usage and costs.
- * Tracks token consumption per function to identify optimization opportunities.
- */
+import { createChildLogger } from "../../../../common/utils/logger.js";
+
+const logger = createChildLogger('custom-mock-cost-tracker');
 
 interface APICall {
     functionName: string;
@@ -31,11 +30,11 @@ export class CostTracker {
         this.calls.push(call);
 
         const callCost = this.calculateCallCost(inputTokens, outputTokens);
-        console.log(`💰 [Cost] ${functionName}: ${inputTokens} in, ${outputTokens} out (~$${callCost.toFixed(4)})`);
+        logger.info({ functionName, inputTokens, outputTokens, cost: callCost }, `💰 [Cost] API call tracked`);
 
         // Alert on high token usage
         if (inputTokens > 10000) {
-            console.warn(`⚠️ [Cost] High input token usage in ${functionName}: ${inputTokens} tokens`);
+            logger.warn({ functionName, inputTokens }, `⚠️ [Cost] High input token usage`);
         }
     }
 
@@ -107,25 +106,12 @@ export class CostTracker {
     printReport(): void {
         const report = this.getReport();
 
-        console.log("\n" + "=".repeat(70));
-        console.log("💰 COST TRACKER REPORT");
-        console.log("=".repeat(70));
-        console.log(`Total API Calls: ${report.callCount}`);
-        console.log(`Total Input Tokens: ${report.totalInputTokens.toLocaleString()}`);
-        console.log(`Total Output Tokens: ${report.totalOutputTokens.toLocaleString()}`);
-        console.log(`Estimated Cost: $${report.totalCost.toFixed(4)}`);
-        console.log("\nBreakdown by Function:");
-        console.log("-".repeat(70));
-
-        for (const item of report.breakdown) {
-            console.log(
-                `${item.function.padEnd(35)} | ` +
-                `In: ${String(item.inputTokens).padStart(6)} | ` +
-                `Out: ${String(item.outputTokens).padStart(5)} | ` +
-                `$${item.cost.toFixed(4)} (${item.percentage.toFixed(1)}%)`
-            );
-        }
-
-        console.log("=".repeat(70) + "\n");
+        logger.info({
+            callCount: report.callCount,
+            totalInputTokens: report.totalInputTokens,
+            totalOutputTokens: report.totalOutputTokens,
+            totalCost: report.totalCost,
+            breakdown: report.breakdown
+        }, "💰 COST TRACKER REPORT");
     }
 }

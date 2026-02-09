@@ -6,7 +6,9 @@
 import OpenAI from "openai";
 import { z } from "zod";
 import { zodResponseFormat } from "openai/helpers/zod";
+import { createChildLogger } from "../../../../common/utils/logger.js";
 
+const logger = createChildLogger('rc-answers');
 const client = new OpenAI();
 const MODEL = "gpt-4o-mini";
 
@@ -27,7 +29,7 @@ export async function selectCorrectAnswers(params: {
 }) {
     const { passageText, questions } = params;
 
-    console.log(`🧠 [Answer Key] Selecting correct answers for ${questions.length} questions`);
+    logger.info(`🧠 [Answer Key] Selecting correct answers for ${questions.length} questions`);
 
     const prompt = `SYSTEM:
 You are a strict CAT answer key verifier.
@@ -77,7 +79,7 @@ Return STRICT JSON:
 }
 `;
 
-    console.log("⏳ [Answer Key] Waiting for LLM response (answer key)");
+    logger.info("⏳ [Answer Key] Waiting for LLM response (answer key)");
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
@@ -101,7 +103,7 @@ Return STRICT JSON:
         throw new Error("Answer key generation failed or incomplete");
     }
 
-    console.log("✅ [Answer Key] Answer key received");
+    logger.info("✅ [Answer Key] Answer key received");
 
     const answerMap = new Map(
         parsed.questionsWithAnswer.map(a => [a.id, a.correct_answer])
@@ -113,7 +115,7 @@ Return STRICT JSON:
         updated_at: new Date().toISOString(),
     }));
 
-    console.log("✅ [Answer Key] Answers merged into question objects");
+    logger.info("✅ [Answer Key] Answers merged into question objects");
 
     return updatedQuestions;
 }
