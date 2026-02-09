@@ -223,7 +223,7 @@ const FeatureCard = ({
 
 export const FeatureShowcase = ({ isDark }: { isDark: boolean }) => {
 	return (
-		<section className="relative w-full py-24 lg:py-40 overflow-visible">
+		<section className="relative w-full py-24 lg:py-40 overflow-visible" data-section="features">
 			<div className="container mx-auto px-6 max-w-[1320px]">
 				{/* 
             Grid Layout 

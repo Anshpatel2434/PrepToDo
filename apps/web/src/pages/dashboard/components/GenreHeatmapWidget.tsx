@@ -61,7 +61,7 @@ function LiquidCell({
         <motion.div
             variants={itemVariants}
             whileHover={{ scale: 1.05, y: -2 }}
-            className={`liquid-cell group relative h-32 cursor-pointer rounded-2xl overflow-hidden transition-all duration-300 ${isDark
+            className={`liquid-cell group relative h-32 cursor-pointer rounded-2xl overflow-hidden ${isDark
                 ? "bg-white/5 hover:bg-white/10"
                 : "bg-black/5 hover:bg-black/10"
                 } shadow-sm hover:shadow-md`}

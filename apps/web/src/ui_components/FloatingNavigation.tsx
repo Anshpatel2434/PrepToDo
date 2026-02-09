@@ -293,7 +293,7 @@ export const FloatingNavigation: React.FC = () => {
                             {/* Logo Image with Subtle Background */}
                             <div className={`
                                 flex items-center justify-center
-                                w-11 h-11 rounded-xl p-0.5 transition-all duration-300
+                                w-11 h-11 transition-all duration-300
                             `}>
                                 <img
                                     src={logo}
@@ -365,7 +365,7 @@ export const FloatingNavigation: React.FC = () => {
                             onClick={() => navigate('/')}
                         >
                             <div className={`
-                                w-9 h-9 rounded-lg p-1.5 flex items-center justify-center
+                                w-9 h-9 flex items-center justify-center
                             `}>
                                 <img
                                     src={logo}

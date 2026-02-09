@@ -472,6 +472,17 @@ export const authApi = createApi({
                 body,
             }),
             invalidatesTags: ["User"],
+            onQueryStarted: async ({ token }, { queryFulfilled }) => {
+                // Store the OAuth token in localStorage immediately
+                // This ensures fetchUser query has a valid token on subsequent calls
+                setStoredToken(token);
+                try {
+                    await queryFulfilled;
+                } catch {
+                    // If the exchange fails, clear the token
+                    clearStoredToken();
+                }
+            },
         }),
     }),
 });

@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Brain, Lightbulb, Target, CheckCircle2, TrendingUp, Sparkles } from "lucide-react";
+import { Brain, Lightbulb, Target, CheckCircle2, TrendingUp, Sparkles, Check, X } from "lucide-react";
 import type { Option, Question } from "../../../types";
 import { ConfidenceSelector } from "./ConfidenceSelector";
 import type { SolutionViewType } from "./SolutionToggle";
@@ -81,36 +81,49 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 
     const getOptionClass = (option: Option) => {
         const isSelected = displayUserAnswer === option.id;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const correctAnswerRaw = question.correct_answer as any;
+
+        if (isExamMode) {
+            return `w-full py-3 px-2 text-left transition-all duration-200 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                }`;
+        }
+        // Solution Mode - no background, just text color
+        return `w-full py-3 px-2 text-left ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+            } ${!isSelected ? "opacity-70" : ""}`;
+    };
+
+    const getOptionIndicator = (option: Option) => {
+        const isSelected = displayUserAnswer === option.id;
+        const correctAnswerRaw = question.correct_answer as Record<string, unknown>;
         const correctAnswerId = typeof correctAnswerRaw === 'object' ? correctAnswerRaw?.answer : correctAnswerRaw;
         const isCorrectOption = correctAnswerId === option.id;
 
         if (isExamMode) {
-            return `w-full p-4 rounded-xl border-2 text-left transition-all duration-200 ${isSelected
-                ? isDark
-                    ? "bg-brand-primary-dark/20 border-brand-primary-dark text-text-primary-dark ring-2 ring-brand-accent-light"
-                    : "bg-brand-primary-light/10 border-brand-primary-light text-text-primary-light ring-2 ring-brand-accent-light"
-                : isDark
-                    ? "bg-bg-tertiary-dark text-text-primary-dark border-border-dark hover:border-brand-primary-dark"
-                    : "bg-bg-tertiary-light text-text-primary-light border-border-light hover:border-brand-primary-light"
-                }`;
+            // Show radio button in exam mode
+            return (
+                <div className={`w-5 h-5 rounded-full border-2 flex items-start justify-center flex-shrink-0 ${isSelected
+                    ? isDark
+                        ? "border-brand-primary-dark bg-brand-primary-dark"
+                        : "border-brand-primary-light bg-brand-primary-light"
+                    : isDark
+                        ? "border-border-dark"
+                        : "border-border-light"
+                    }`}>
+                </div>
+            );
         }
-        if (isCorrectOption)
-            return `w-full p-4 rounded-xl border-2 text-left ${isDark
-                ? "bg-success/20 border-success text-success"
-                : "bg-success/10 border-success text-success"
-                }`;
-        if (isSelected && !isCorrectOption)
-            return `w-full p-4 rounded-xl border-2 text-left ${isDark
-                ? "bg-error/20 border-error text-error"
-                : "bg-error/10 border-error text-error"
-                }`;
 
-        return `w-full p-4 rounded-xl border-2 text-left opacity-50 ${isDark
-            ? "bg-bg-tertiary-dark text-text-primary-dark border-border-dark"
-            : "bg-bg-tertiary-light text-text-primary-light border-border-light"
-            }`;
+        // Solution mode - show tick for correct, cross for incorrect selected
+        if (isCorrectOption) {
+            return <Check className="w-5 h-5 text-success flex-shrink-0" />;
+        }
+        if (isSelected && !isCorrectOption) {
+            return <X className="w-5 h-5 text-error flex-shrink-0" />;
+        }
+        // Unselected wrong options - show empty radio
+        return (
+            <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 ${isDark ? "border-border-dark" : "border-border-light"
+                }`} />
+        );
     };
 
     const renderAIInsights = () => {
@@ -266,7 +279,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
         <div className={`h-full flex flex-col ${isDark ? "scrollbar-dark" : "scrollbar-light"}`}>
             <div className="flex-1 overflow-y-auto">
                 <div className="p-4 md:p-6 space-y-6">
-                    {!isExamMode && 
+                    {!isExamMode &&
                         (<div className="flex items-center gap-2">
                             <span className={`px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wide ${isDark ? "bg-brand-primary-dark/30 text-brand-primary-dark" : "bg-brand-primary-light/20 text-brand-primary-light"}`}>
                                 {question.question_type.replace(/_/g, " ")}
@@ -282,25 +295,68 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 
                     {question.question_type === "para_jumble" || question.question_type === "odd_one_out" ? (
                         <div className="space-y-4">
-                            <div className={`p-4 rounded-xl border ${isDark ? "bg-bg-tertiary-dark border-border-dark" : "bg-bg-tertiary-light border-border-light"}`}>
+                            {/* Jumbled sentences without background */}
+                            <div className="space-y-2">
                                 {getSentences(question).map((s) => (
-                                    <div key={s.id} className={`p-3 mb-2 rounded-lg border flex gap-3 ${isDark ? "bg-bg-secondary-dark text-text-primary-dark border-border-dark" : "bg-bg-secondary-light text-text-primary-light border-border-light"}`}>
+                                    <div key={s.id} className={`py-2 flex gap-3 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
                                         <span className="font-mono font-bold opacity-50">{s.id}</span>
                                         <span className="whitespace-pre-line">{s.text}</span>
                                     </div>
                                 ))}
                             </div>
                             {isExamMode ? (
-                                <input
-                                    type="text"
-                                    value={displayUserAnswer}
-                                    onChange={(e) => {
-                                        const val = e.target.value.toUpperCase().slice(0, 4);
-                                        onAnswerUpdate(val);
-                                    }}
-                                    placeholder="Enter Sequence (e.g. 2143)"
-                                    className={`w-full p-4 rounded-xl border-2 text-center text-xl tracking-widest font-mono focus:outline-none focus:ring-2 focus:ring-brand-primary-light ${isDark ? "bg-bg-tertiary-dark text-text-primary-dark border-border-dark" : "bg-bg-tertiary-light text-text-primary-light border-border-light"}`}
-                                />
+                                <div className="flex flex-col items-center gap-4">
+                                    {/* Small input field - read only, 4 digits width */}
+                                    <input
+                                        type="text"
+                                        value={displayUserAnswer}
+                                        readOnly
+                                        placeholder="----"
+                                        className={`w-24 p-3 rounded-lg border-2 text-center text-xl tracking-widest font-mono focus:outline-none ${isDark ? "bg-bg-tertiary-dark text-text-primary-dark border-border-dark" : "bg-bg-tertiary-light text-text-primary-light border-border-light"}`}
+                                    />
+                                    {/* On-screen numeric keypad */}
+                                    <div className="flex flex-wrap justify-center gap-2 max-w-xs">
+                                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((num) => (
+                                            <button
+                                                key={num}
+                                                type="button"
+                                                onClick={() => {
+                                                    if (displayUserAnswer.length < 4) {
+                                                        onAnswerUpdate(displayUserAnswer + String(num));
+                                                    }
+                                                }}
+                                                className={`w-12 h-12 rounded-lg font-mono text-lg font-bold transition-all duration-150 hover:scale-105 active:scale-95 ${isDark
+                                                    ? "bg-bg-tertiary-dark text-text-primary-dark border border-border-dark hover:bg-brand-primary-dark/30"
+                                                    : "bg-bg-tertiary-light text-text-primary-light border border-border-light hover:bg-brand-primary-light/20"
+                                                    }`}
+                                            >
+                                                {num}
+                                            </button>
+                                        ))}
+                                        {/* Clear button */}
+                                        <button
+                                            type="button"
+                                            onClick={() => onAnswerUpdate("")}
+                                            className={`w-12 h-12 rounded-lg font-mono text-sm font-bold transition-all duration-150 hover:scale-105 active:scale-95 ${isDark
+                                                ? "bg-error/20 text-error border border-error/50 hover:bg-error/30"
+                                                : "bg-error/10 text-error border border-error/30 hover:bg-error/20"
+                                                }`}
+                                        >
+                                            CLR
+                                        </button>
+                                        {/* Backspace button */}
+                                        <button
+                                            type="button"
+                                            onClick={() => onAnswerUpdate(displayUserAnswer.slice(0, -1))}
+                                            className={`w-12 h-12 rounded-lg font-mono text-sm font-bold transition-all duration-150 hover:scale-105 active:scale-95 ${isDark
+                                                ? "bg-bg-secondary-dark text-text-secondary-dark border border-border-dark hover:bg-bg-tertiary-dark"
+                                                : "bg-bg-secondary-light text-text-secondary-light border border-border-light hover:bg-bg-tertiary-light"
+                                                }`}
+                                        >
+                                            ⌫
+                                        </button>
+                                    </div>
+                                </div>
                             ) : (
                                 <div className={`p-4 rounded-xl border text-center font-mono text-lg ${isDark ? " text-text-primary-dark " : " text-text-primary-light "} `}>
                                     Your Answer: <span className={getCorrectAnswerText() === displayUserAnswer ? "text-success" : "text-error"}>{displayUserAnswer || "-"}</span><br />
@@ -309,7 +365,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                             )}
                         </div>
                     ) : (
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                             {transformOptions(question.options).map((opt, i) => (
                                 <motion.button
                                     key={opt.id}
@@ -320,9 +376,10 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: i * 0.1 }}
                                 >
-                                    <div className="flex items-start gap-3">
+                                    <div className="flex items-center justify-start gap-3">
+                                        {getOptionIndicator(opt)}
                                         <span className="font-mono font-bold opacity-70">{opt.id}</span>
-                                        <span className="flex-1 whitespace-pre-line">{opt.text}</span>
+                                        <span className="flex-1 whitespace-pre-line text-left">{opt.text}</span>
                                     </div>
                                 </motion.button>
                             ))}
