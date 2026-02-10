@@ -175,7 +175,7 @@ export const RecommendationWidget: React.FC<RecommendationWidgetProps> = ({
         >
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
                 <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-end gap-2">
                         <h3 className={`font-bold text-2xl sm:text-3xl flex items-center gap-3 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
                             <Target className={isDark ? "text-brand-primary-dark" : "text-brand-primary-light"} />
                             Focus Areas
@@ -186,14 +186,6 @@ export const RecommendationWidget: React.FC<RecommendationWidgetProps> = ({
                         Your personalized path to improvement today.
                     </p>
                 </div>
-
-                {/* Difficulty Badge */}
-                {signals?.recommended_difficulty && (
-                    <div className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border ${isDark ? "bg-brand-primary-dark/10 border-brand-primary-dark/20 text-brand-primary-dark" : "bg-brand-primary-light/10 border-brand-primary-light/20 text-brand-primary-light"
-                        }`}>
-                        {signals.recommended_difficulty} Mode
-                    </div>
-                )}
             </div>
 
             <div>
