@@ -214,12 +214,14 @@ const baseQueryWithAuth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQuery
         // Use mutex to prevent concurrent refresh attempts
         if (!isRefreshing) {
             isRefreshing = true;
-            refreshPromise = attemptTokenRefresh();
+            refreshPromise = attemptTokenRefresh().finally(() => {
+                isRefreshing = false;
+                refreshPromise = null;
+            });
         }
 
+        // All concurrent requests wait for the same refresh promise
         const refreshSuccess = await refreshPromise;
-        isRefreshing = false;
-        refreshPromise = null;
 
         if (refreshSuccess) {
             // Retry the original request with new token

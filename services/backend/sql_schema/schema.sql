@@ -10,7 +10,7 @@ CREATE TYPE "auth"."oauth_registration_type" AS ENUM('dynamic', 'manual');
 CREATE TYPE "auth"."oauth_response_type" AS ENUM('code');
 CREATE TYPE "auth"."one_time_token_type" AS ENUM('confirmation_token', 'reauthentication_token', 'recovery_token', 'email_change_token_new', 'email_change_token_current', 'phone_change_token');
 CREATE TABLE "articles" (
-	"id" uuid PRIMARY KEY,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	"title" text,
 	"url" text NOT NULL CONSTRAINT "articles_url_key" UNIQUE,
 	"source_name" text,
@@ -33,6 +33,33 @@ CREATE TABLE "articles" (
 	"updated_at" timestamp with time zone DEFAULT now(),
 	"semantic_ideas_and_persona" jsonb
 );
+CREATE TABLE "auth_password_reset_tokens" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+	"user_id" uuid NOT NULL,
+	"token_hash" varchar(255) NOT NULL,
+	"expires_at" timestamp with time zone NOT NULL,
+	"used_at" timestamp with time zone,
+	"created_at" timestamp with time zone DEFAULT now()
+);
+CREATE TABLE "auth_pending_signups" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+	"email" varchar(255) NOT NULL,
+	"otp_hash" varchar(255) NOT NULL,
+	"attempts" varchar(10) DEFAULT '0',
+	"expires_at" timestamp with time zone NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now(),
+	"otp_send_count" integer DEFAULT 1,
+	"banned_until" timestamp with time zone
+);
+CREATE TABLE "auth_sessions" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+	"user_id" uuid NOT NULL,
+	"refresh_token_hash" varchar(255) NOT NULL,
+	"user_agent" text,
+	"ip" varchar(45),
+	"expires_at" timestamp with time zone NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now()
+);
 CREATE TABLE "core_metrics" (
 	"key" text PRIMARY KEY,
 	"description" text NOT NULL,
@@ -42,7 +69,7 @@ CREATE TABLE "core_metrics" (
 	"mapping_logic" text NOT NULL
 );
 CREATE TABLE "embeddings" (
-	"id" uuid PRIMARY KEY,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	"embedding" vector(1536) NOT NULL,
 	"embedding_model" text DEFAULT 'text-embedding-3-small',
 	"theory_id" uuid,
@@ -54,7 +81,7 @@ CREATE TABLE "embeddings" (
 	CONSTRAINT "one_target_only" CHECK (CHECK ((((((theory_id IS NOT NULL))::integer + ((passage_id IS NOT NULL))::integer) + ((question_id IS NOT NULL))::integer) = 1)))
 );
 CREATE TABLE "exam_generation_state" (
-	"exam_id" uuid PRIMARY KEY,
+	"exam_id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	"status" text NOT NULL,
 	"current_step" integer DEFAULT 1,
 	"total_steps" integer DEFAULT 7,
@@ -74,7 +101,7 @@ CREATE TABLE "exam_generation_state" (
 	CONSTRAINT "exam_generation_state_status_check" CHECK (CHECK ((status = ANY (ARRAY['initializing'::text, 'generating_passages'::text, 'generating_rc_questions'::text, 'generating_va_questions'::text, 'selecting_answers'::text, 'generating_rc_rationales'::text, 'generating_va_rationales'::text, 'completed'::text, 'failed'::text]))))
 );
 CREATE TABLE "exam_papers" (
-	"id" uuid PRIMARY KEY,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	"name" text NOT NULL,
 	"year" integer,
 	"exam_type" text DEFAULT 'CAT',
@@ -89,7 +116,7 @@ CREATE TABLE "exam_papers" (
 	CONSTRAINT "exam_papers_generation_status_check" CHECK (CHECK ((generation_status = ANY (ARRAY['initializing'::text, 'generating'::text, 'completed'::text, 'failed'::text]))))
 );
 CREATE TABLE "genres" (
-	"id" uuid PRIMARY KEY,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	"name" text NOT NULL CONSTRAINT "genres_name_key" UNIQUE,
 	"description" text,
 	"daily_usage_count" integer DEFAULT 0,
@@ -106,18 +133,18 @@ CREATE TABLE "genres" (
 	"updated_at" timestamp with time zone DEFAULT now()
 );
 CREATE TABLE "graph_edges" (
-	"id" uuid PRIMARY KEY,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	"source_node_id" uuid,
 	"target_node_id" uuid,
 	"relationship" text
 );
 CREATE TABLE "graph_nodes" (
-	"id" uuid PRIMARY KEY,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	"label" text CONSTRAINT "graph_nodes_label_key" UNIQUE,
 	"type" text
 );
 CREATE TABLE "passages" (
-	"id" uuid PRIMARY KEY,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	"title" varchar(200),
 	"content" text NOT NULL,
 	"word_count" integer NOT NULL,
@@ -141,7 +168,7 @@ CREATE TABLE "passages" (
 	CONSTRAINT "passages_difficulty_check" CHECK (CHECK (((difficulty)::text = ANY (ARRAY[('easy'::character varying)::text, ('medium'::character varying)::text, ('hard'::character varying)::text]))))
 );
 CREATE TABLE "practice_sessions" (
-	"id" uuid PRIMARY KEY,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	"user_id" uuid NOT NULL,
 	"session_type" varchar(30) NOT NULL,
 	"mode" varchar(20),
@@ -176,7 +203,7 @@ CREATE TABLE "practice_sessions" (
 );
 ALTER TABLE "practice_sessions" ENABLE ROW LEVEL SECURITY;
 CREATE TABLE "question_attempts" (
-	"id" uuid PRIMARY KEY,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	"user_id" uuid NOT NULL UNIQUE,
 	"session_id" uuid NOT NULL UNIQUE,
 	"question_id" uuid NOT NULL UNIQUE,
@@ -195,6 +222,7 @@ CREATE TABLE "question_attempts" (
 	"ai_grading_score" numeric(5, 2),
 	"ai_feedback" text,
 	"created_at" timestamp with time zone DEFAULT now(),
+	"updated_at" timestamp with time zone DEFAULT now(),
 	CONSTRAINT "unique_user_session_question" UNIQUE("user_id","session_id","question_id"),
 	CONSTRAINT "question_attempts_confidence_level_check" CHECK (CHECK (((confidence_level >= 1) AND (confidence_level <= 5))))
 );
@@ -206,7 +234,7 @@ CREATE TABLE "question_types" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 CREATE TABLE "questions" (
-	"id" uuid PRIMARY KEY,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	"passage_id" uuid,
 	"question_text" text NOT NULL,
 	"question_type" varchar(30) NOT NULL,
@@ -229,7 +257,7 @@ CREATE TABLE "questions" (
 	CONSTRAINT "questions_question_type_check" CHECK (CHECK (((question_type)::text = ANY (ARRAY[('rc_question'::character varying)::text, ('true_false'::character varying)::text, ('inference'::character varying)::text, ('tone'::character varying)::text, ('purpose'::character varying)::text, ('detail'::character varying)::text, ('para_jumble'::character varying)::text, ('para_summary'::character varying)::text, ('para_completion'::character varying)::text, ('critical_reasoning'::character varying)::text, ('vocab_in_context'::character varying)::text, ('odd_one_out'::character varying)::text]))))
 );
 CREATE TABLE "theory_chunks" (
-	"id" uuid PRIMARY KEY,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	"topic" text NOT NULL,
 	"sub_topic" text NOT NULL,
 	"concept_title" text NOT NULL,
@@ -240,7 +268,7 @@ CREATE TABLE "theory_chunks" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 CREATE TABLE "user_analytics" (
-	"id" uuid PRIMARY KEY,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	"user_id" uuid NOT NULL CONSTRAINT "user_analytics_user_id_key" UNIQUE,
 	"minutes_practiced" integer DEFAULT 0,
 	"questions_attempted" integer DEFAULT 0,
@@ -262,7 +290,7 @@ CREATE TABLE "user_analytics" (
 );
 ALTER TABLE "user_analytics" ENABLE ROW LEVEL SECURITY;
 CREATE TABLE "user_metric_proficiency" (
-	"id" uuid PRIMARY KEY,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	"user_id" uuid NOT NULL UNIQUE,
 	"dimension_type" text NOT NULL UNIQUE,
 	"dimension_key" text NOT NULL UNIQUE,
@@ -277,12 +305,12 @@ CREATE TABLE "user_metric_proficiency" (
 	"speed_vs_accuracy_data" jsonb,
 	CONSTRAINT "user_metric_proficiency_unique" UNIQUE("user_id","dimension_type","dimension_key"),
 	CONSTRAINT "user_metric_proficiency_confidence_score_check" CHECK (CHECK (((confidence_score >= (0)::numeric) AND (confidence_score <= (1)::numeric)))),
-	CONSTRAINT "user_metric_proficiency_dimension_type_check" CHECK (CHECK ((dimension_type = ANY (ARRAY['core_metric'::text, 'genre'::text, 'question_type'::text, 'reasoning_step'::text, 'error_pattern'::text])))),
+	CONSTRAINT "user_metric_proficiency_dimension_type_check" CHECK (CHECK ((dimension_type = ANY (ARRAY['core_metric'::text, 'genre'::text, 'question_type'::text, 'reasoning_step'::text, 'error_pattern'::text, 'difficulty'::text])))),
 	CONSTRAINT "user_metric_proficiency_proficiency_score_check" CHECK (CHECK (((proficiency_score >= 0) AND (proficiency_score <= 100)))),
 	CONSTRAINT "user_metric_proficiency_trend_check" CHECK (CHECK ((trend = ANY (ARRAY['improving'::text, 'declining'::text, 'stagnant'::text]))))
 );
 CREATE TABLE "user_proficiency_signals" (
-	"id" uuid PRIMARY KEY,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	"user_id" uuid NOT NULL CONSTRAINT "user_proficiency_signals_user_id_key" UNIQUE,
 	"overall_percentile" integer,
 	"estimated_cat_percentile" integer,
@@ -327,91 +355,55 @@ CREATE TABLE "user_profiles" (
 	CONSTRAINT "user_profiles_theme_check" CHECK (CHECK (((theme)::text = ANY (ARRAY[('light'::character varying)::text, ('dark'::character varying)::text, ('auto'::character varying)::text]))))
 );
 ALTER TABLE "user_profiles" ENABLE ROW LEVEL SECURITY;
-CREATE TABLE "auth"."sessions" (
-	"id" uuid PRIMARY KEY,
-	"user_id" uuid NOT NULL,
-	"created_at" timestamp with time zone,
-	"updated_at" timestamp with time zone,
-	"factor_id" uuid,
-	"aal" "auth"."aal_level",
-	"not_after" timestamp with time zone,
-	"refreshed_at" timestamp,
-	"user_agent" text,
-	"ip" inet,
-	"tag" text,
-	"oauth_client_id" uuid,
-	"refresh_token_hmac_key" text,
-	"refresh_token_counter" bigint,
-	"scopes" text,
-	CONSTRAINT "sessions_scopes_length" CHECK (CHECK ((char_length(scopes) <= 4096)))
-);
-ALTER TABLE "auth"."sessions" ENABLE ROW LEVEL SECURITY;
-CREATE TABLE "auth"."users" (
-	"instance_id" uuid,
-	"id" uuid PRIMARY KEY,
-	"aud" varchar(255),
-	"role" varchar(255),
-	"email" varchar(255),
+CREATE TABLE "users" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+	"email" varchar(255) NOT NULL CONSTRAINT "users_email_key" UNIQUE,
 	"encrypted_password" varchar(255),
 	"email_confirmed_at" timestamp with time zone,
-	"invited_at" timestamp with time zone,
-	"confirmation_token" varchar(255),
-	"confirmation_sent_at" timestamp with time zone,
-	"recovery_token" varchar(255),
-	"recovery_sent_at" timestamp with time zone,
-	"email_change_token_new" varchar(255),
-	"email_change" varchar(255),
-	"email_change_sent_at" timestamp with time zone,
 	"last_sign_in_at" timestamp with time zone,
-	"raw_app_meta_data" jsonb,
-	"raw_user_meta_data" jsonb,
-	"is_super_admin" boolean,
-	"created_at" timestamp with time zone,
-	"updated_at" timestamp with time zone,
-	"phone" text DEFAULT NULL CONSTRAINT "users_phone_key" UNIQUE,
-	"phone_confirmed_at" timestamp with time zone,
-	"phone_change" text DEFAULT '',
-	"phone_change_token" varchar(255) DEFAULT '',
-	"phone_change_sent_at" timestamp with time zone,
-	"confirmed_at" timestamp with time zone GENERATED ALWAYS AS (LEAST(email_confirmed_at, phone_confirmed_at)) STORED,
-	"email_change_token_current" varchar(255) DEFAULT '',
-	"email_change_confirm_status" smallint DEFAULT 0,
-	"banned_until" timestamp with time zone,
-	"reauthentication_token" varchar(255) DEFAULT '',
-	"reauthentication_sent_at" timestamp with time zone,
-	"is_sso_user" boolean DEFAULT false NOT NULL,
-	"deleted_at" timestamp with time zone,
-	"is_anonymous" boolean DEFAULT false NOT NULL,
-	CONSTRAINT "users_email_change_confirm_status_check" CHECK (CHECK (((email_change_confirm_status >= 0) AND (email_change_confirm_status <= 2))))
+	"provider" varchar(50) DEFAULT 'email',
+	"google_id" varchar(255),
+	"raw_app_meta_data" text,
+	"raw_user_meta_data" text,
+	"is_sso_user" boolean DEFAULT false,
+	"created_at" timestamp with time zone DEFAULT now(),
+	"updated_at" timestamp with time zone DEFAULT now()
 );
-ALTER TABLE "auth"."users" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "auth_password_reset_tokens" ADD CONSTRAINT "auth_password_reset_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
+ALTER TABLE "auth_sessions" ADD CONSTRAINT "auth_sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
 ALTER TABLE "embeddings" ADD CONSTRAINT "embeddings_passage_id_fkey" FOREIGN KEY ("passage_id") REFERENCES "passages"("id") ON DELETE CASCADE;
 ALTER TABLE "embeddings" ADD CONSTRAINT "embeddings_question_id_fkey" FOREIGN KEY ("question_id") REFERENCES "questions"("id") ON DELETE CASCADE;
 ALTER TABLE "embeddings" ADD CONSTRAINT "embeddings_theory_id_fkey" FOREIGN KEY ("theory_id") REFERENCES "theory_chunks"("id") ON DELETE CASCADE;
 ALTER TABLE "exam_generation_state" ADD CONSTRAINT "exam_generation_state_exam_id_fkey" FOREIGN KEY ("exam_id") REFERENCES "exam_papers"("id") ON DELETE CASCADE;
-ALTER TABLE "exam_papers" ADD CONSTRAINT "exam_papers_generated_by_user_id_fkey" FOREIGN KEY ("generated_by_user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+ALTER TABLE "exam_generation_state" ADD CONSTRAINT "exam_generation_state_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL;
+ALTER TABLE "exam_papers" ADD CONSTRAINT "exam_papers_generated_by_user_id_fkey" FOREIGN KEY ("generated_by_user_id") REFERENCES "users"("id") ON DELETE SET NULL;
 ALTER TABLE "graph_edges" ADD CONSTRAINT "graph_edges_source_node_id_fkey" FOREIGN KEY ("source_node_id") REFERENCES "graph_nodes"("id");
 ALTER TABLE "graph_edges" ADD CONSTRAINT "graph_edges_target_node_id_fkey" FOREIGN KEY ("target_node_id") REFERENCES "graph_nodes"("id");
 ALTER TABLE "passages" ADD CONSTRAINT "passages_article_id_fkey" FOREIGN KEY ("article_id") REFERENCES "articles"("id");
 ALTER TABLE "passages" ADD CONSTRAINT "passages_paper_id_fkey" FOREIGN KEY ("paper_id") REFERENCES "exam_papers"("id") ON DELETE CASCADE;
 ALTER TABLE "practice_sessions" ADD CONSTRAINT "practice_sessions_paper_id_fkey" FOREIGN KEY ("paper_id") REFERENCES "exam_papers"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "practice_sessions" ADD CONSTRAINT "practice_sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user_profiles"("id") ON DELETE CASCADE;
+ALTER TABLE "practice_sessions" ADD CONSTRAINT "practice_sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
 ALTER TABLE "question_attempts" ADD CONSTRAINT "question_attempts_passage_id_fkey" FOREIGN KEY ("passage_id") REFERENCES "passages"("id") ON DELETE CASCADE;
 ALTER TABLE "question_attempts" ADD CONSTRAINT "question_attempts_question_id_fkey" FOREIGN KEY ("question_id") REFERENCES "questions"("id") ON DELETE CASCADE;
 ALTER TABLE "question_attempts" ADD CONSTRAINT "question_attempts_session_id_fkey" FOREIGN KEY ("session_id") REFERENCES "practice_sessions"("id") ON DELETE CASCADE;
-ALTER TABLE "question_attempts" ADD CONSTRAINT "question_attempts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user_profiles"("id") ON DELETE CASCADE;
+ALTER TABLE "question_attempts" ADD CONSTRAINT "question_attempts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
 ALTER TABLE "questions" ADD CONSTRAINT "questions_paper_id_fkey" FOREIGN KEY ("paper_id") REFERENCES "exam_papers"("id") ON DELETE CASCADE;
 ALTER TABLE "questions" ADD CONSTRAINT "questions_passage_id_fkey" FOREIGN KEY ("passage_id") REFERENCES "passages"("id") ON DELETE CASCADE;
-ALTER TABLE "user_analytics" ADD CONSTRAINT "user_analytics_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user_profiles"("id") ON DELETE CASCADE;
+ALTER TABLE "user_analytics" ADD CONSTRAINT "user_analytics_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
 ALTER TABLE "user_metric_proficiency" ADD CONSTRAINT "user_metric_proficiency_user_fkey" FOREIGN KEY ("user_id") REFERENCES "user_profiles"("id") ON DELETE CASCADE;
-ALTER TABLE "user_proficiency_signals" ADD CONSTRAINT "user_proficiency_signals_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user_profiles"("id") ON DELETE CASCADE;
-ALTER TABLE "user_profiles" ADD CONSTRAINT "user_profiles_id_fkey" FOREIGN KEY ("id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
-ALTER TABLE "auth"."sessions" ADD CONSTRAINT "sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+ALTER TABLE "user_metric_proficiency" ADD CONSTRAINT "user_metric_proficiency_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
+ALTER TABLE "user_proficiency_signals" ADD CONSTRAINT "user_proficiency_signals_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
+ALTER TABLE "user_profiles" ADD CONSTRAINT "user_profiles_id_fkey" FOREIGN KEY ("id") REFERENCES "users"("id") ON DELETE CASCADE;
 CREATE UNIQUE INDEX "articles_pkey" ON "articles" ("id");
 CREATE UNIQUE INDEX "articles_url_key" ON "articles" ("url");
 CREATE INDEX "idx_articles_genre" ON "articles" ("genre");
 CREATE INDEX "idx_articles_used_custom" ON "articles" ("used_in_custom_exam");
 CREATE INDEX "idx_articles_used_daily" ON "articles" ("used_in_daily");
+CREATE UNIQUE INDEX "auth_password_reset_tokens_pkey" ON "auth_password_reset_tokens" ("id");
+CREATE UNIQUE INDEX "auth_pending_signups_pkey" ON "auth_pending_signups" ("id");
+CREATE INDEX "idx_auth_pending_signups_banned_until" ON "auth_pending_signups" ("banned_until");
+CREATE INDEX "idx_auth_pending_signups_email" ON "auth_pending_signups" ("email");
+CREATE UNIQUE INDEX "auth_sessions_pkey" ON "auth_sessions" ("id");
 CREATE UNIQUE INDEX "core_metrics_pkey" ON "core_metrics" ("key");
 CREATE INDEX "embeddings_embedding_idx" ON "embeddings" USING hnsw ("embedding");
 CREATE INDEX "embeddings_passage_id_idx" ON "embeddings" ("passage_id");
@@ -476,19 +468,5 @@ CREATE INDEX "idx_user_profiles_username" ON "user_profiles" ("username");
 CREATE UNIQUE INDEX "user_profiles_email_key" ON "user_profiles" ("email");
 CREATE UNIQUE INDEX "user_profiles_pkey" ON "user_profiles" ("id");
 CREATE UNIQUE INDEX "user_profiles_username_key" ON "user_profiles" ("username");
-CREATE INDEX "sessions_not_after_idx" ON "auth"."sessions" ("not_after");
-CREATE INDEX "sessions_oauth_client_id_idx" ON "auth"."sessions" ("oauth_client_id");
-CREATE UNIQUE INDEX "sessions_pkey" ON "auth"."sessions" ("id");
-CREATE INDEX "sessions_user_id_idx" ON "auth"."sessions" ("user_id");
-CREATE INDEX "user_id_created_at_idx" ON "auth"."sessions" ("user_id","created_at");
-CREATE UNIQUE INDEX "confirmation_token_idx" ON "auth"."users" ("confirmation_token");
-CREATE UNIQUE INDEX "email_change_token_current_idx" ON "auth"."users" ("email_change_token_current");
-CREATE UNIQUE INDEX "email_change_token_new_idx" ON "auth"."users" ("email_change_token_new");
-CREATE UNIQUE INDEX "reauthentication_token_idx" ON "auth"."users" ("reauthentication_token");
-CREATE UNIQUE INDEX "recovery_token_idx" ON "auth"."users" ("recovery_token");
-CREATE UNIQUE INDEX "users_email_partial_key" ON "auth"."users" ("email");
-CREATE INDEX "users_instance_id_email_idx" ON "auth"."users" ("instance_id","lower((email)::text)");
-CREATE INDEX "users_instance_id_idx" ON "auth"."users" ("instance_id");
-CREATE INDEX "users_is_anonymous_idx" ON "auth"."users" ("is_anonymous");
-CREATE UNIQUE INDEX "users_phone_key" ON "auth"."users" ("phone");
-CREATE UNIQUE INDEX "users_pkey" ON "auth"."users" ("id");
+CREATE UNIQUE INDEX "users_email_key" ON "users" ("email");
+CREATE UNIQUE INDEX "users_pkey" ON "users" ("id");

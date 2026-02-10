@@ -135,7 +135,7 @@ const DailyVAPage: React.FC = () => {
 
     const [showPalette, setShowPalette] = React.useState(true);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const isLoading = isTestDataLoading || isTodayLoading || isSessionLoading || isCreatingSession || isUserLoading || isSubmitting;
+    const isLoading = isTestDataLoading || isTodayLoading || isUserLoading || (!session.id && (isSessionLoading || isCreatingSession)) || isSubmitting;
 
     // Polling for session updates in solution mode
     const { data: polledSessionData } = useFetchExistingSessionDetailsQuery(

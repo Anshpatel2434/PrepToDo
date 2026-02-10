@@ -169,7 +169,7 @@ const MockTestPage: React.FC = () => {
         : null;
 
     const [showPalette, setShowPalette] = React.useState(true);
-    const isLoading = isTestDataLoading || isSessionLoading || isCreatingSession;
+    const isLoading = isTestDataLoading || (!session.id && (isSessionLoading || isCreatingSession));
 
     // --- 2. Session Setup Logic ---
     const isInitializingRef = useRef(false);

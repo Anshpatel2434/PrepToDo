@@ -42,24 +42,38 @@ const SmoothThemeImage = ({
     darkSrc,
     alt,
     className,
-    isDark
+    isDark,
+    loading = "lazy",
+    decoding = "async",
+    fetchPriority = "auto"
 }: {
     lightSrc: string;
     darkSrc: string;
     alt: string;
     className?: string;
     isDark: boolean;
+    loading?: "lazy" | "eager";
+    decoding?: "async" | "auto" | "sync";
+    fetchPriority?: "high" | "low" | "auto";
 }) => {
     return (
         <div className={`relative ${className}`}>
             <img
                 src={lightSrc}
                 alt={alt}
+                loading={loading}
+                decoding={decoding}
+                // @ts-ignore - React types might only support lowercase fetchpriority or not at all yet
+                fetchpriority={fetchPriority}
                 className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-500 ease-in-out ${isDark ? "opacity-0" : "opacity-100"}`}
             />
             <img
                 src={darkSrc}
                 alt={alt}
+                loading={loading}
+                decoding={decoding}
+                // @ts-ignore
+                fetchpriority={fetchPriority}
                 className={`relative w-full h-full object-contain transition-opacity duration-500 ease-in-out ${isDark ? "opacity-100" : "opacity-0"}`}
             />
         </div>
@@ -124,6 +138,8 @@ const Floating3DCard = ({
                     darkSrc={darkSrc}
                     alt={alt}
                     isDark={isDark}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-auto drop-shadow-2xl"
                 />
             </motion.div>
@@ -306,6 +322,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                             darkSrc={darkHeroImg}
                             alt="PrepToDo Dashboard Preview"
                             isDark={isDark}
+                            loading="eager"
+                            decoding="async"
+                            fetchPriority="high"
                             className="w-full h-auto object-top"
                         />
 

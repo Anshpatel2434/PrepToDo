@@ -143,7 +143,7 @@ export default function DailyRCPage() {
     const [showPalette, setShowPalette] = React.useState(true);
     const [initError, setInitError] = React.useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const isLoading = isTestDataLoading || isTodayLoading || isSessionLoading || isCreatingSession || isUserLoading || isSubmitting;
+    const isLoading = isTestDataLoading || isTodayLoading || isUserLoading || (!session.id && (isSessionLoading || isCreatingSession)) || isSubmitting;
 
     // Polling for session updates in solution mode (to detect when AI analysis is done)
     const { data: polledSessionData } = useFetchExistingSessionDetailsQuery(

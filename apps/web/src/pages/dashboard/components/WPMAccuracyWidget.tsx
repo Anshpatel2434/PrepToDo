@@ -112,7 +112,7 @@ export const WPMAccuracyWidget: React.FC<WPMAccuracyWidgetProps> = ({
                 ? "bg-bg-secondary-dark/5"
                 : "bg-white/20"
                 } backdrop-blur-xl ${className}`}
-        >   
+        >
             <div className="p-4 sm:p-6">
                 {/* Header with current values */}
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 mb-5">
@@ -162,7 +162,7 @@ export const WPMAccuracyWidget: React.FC<WPMAccuracyWidgetProps> = ({
                     ) : (
                         <div className="h-56 w-full">
                             <ResponsiveContainer width="100%" height="100%">
-                                <ComposedChart data={series} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                <ComposedChart data={series} margin={{ top: 20, right: 30, left: 10, bottom: 0 }}>
                                     {/* Gradient definitions */}
                                     <defs>
                                         <linearGradient id="wpmGradient" x1="0" y1="0" x2="0" y2="1">
@@ -183,13 +183,10 @@ export const WPMAccuracyWidget: React.FC<WPMAccuracyWidgetProps> = ({
 
                                     <XAxis
                                         dataKey="label"
-                                        tick={{
-                                            fill: chartColors.textFill,
-                                            fontSize: 11,
-                                        }}
+                                        tick={false}
                                         axisLine={false}
                                         tickLine={false}
-                                        dy={8}
+                                        height={10}
                                     />
 
                                     <YAxis
@@ -202,6 +199,13 @@ export const WPMAccuracyWidget: React.FC<WPMAccuracyWidgetProps> = ({
                                         tickLine={false}
                                         width={40}
                                         domain={[0, "auto"]}
+                                        label={{
+                                            value: "WPM",
+                                            angle: 0,
+                                            position: "top",
+                                            style: { fill: chartColors.textFill, fontSize: 10, fontWeight: 500, textAnchor: 'middle' },
+                                            offset: 10
+                                        }}
                                     />
 
                                     <YAxis
@@ -215,6 +219,13 @@ export const WPMAccuracyWidget: React.FC<WPMAccuracyWidgetProps> = ({
                                         tickLine={false}
                                         width={40}
                                         domain={[0, 100]}
+                                        label={{
+                                            value: "Accuracy %",
+                                            angle: 0,
+                                            position: "top",
+                                            style: { fill: chartColors.textFill, fontSize: 10, fontWeight: 500, textAnchor: 'middle' },
+                                            offset: 10
+                                        }}
                                     />
 
                                     <Tooltip

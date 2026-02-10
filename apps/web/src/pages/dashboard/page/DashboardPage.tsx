@@ -112,6 +112,7 @@ export const DashboardPage: React.FC = () => {
                         {/* Row 3: Recommendations (full width) */}
                         <RecommendationWidget
                             signals={dashboardQuery.data?.proficiencySignals}
+                            metricProficiency={metricProficiency}
                             isLoading={isLoading}
                             isDark={isDark}
                             index={3}

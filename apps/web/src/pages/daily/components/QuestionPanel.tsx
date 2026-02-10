@@ -338,21 +338,23 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                                 ))}
                             </div>
                             {isExamMode ? (
-                                <div className="flex flex-col items-center gap-4">
-                                    {/* Small input field - read only, 4 digits width */}
+                                <div className="flex flex-col items-center gap-6">
+                                    {/* Styled Underline Input Field */}
                                     <input
                                         type="text"
                                         value={jumbleSequence}
                                         readOnly
-                                        placeholder="----"
-                                        className={`w-24 p-3 rounded-lg border-2 text-center text-xl tracking-widest font-mono focus:outline-none ${isDark
-                                            ? "bg-bg-tertiary-dark text-text-primary-dark border-border-dark"
-                                            : "bg-bg-tertiary-light text-text-primary-light border-border-light"
+                                        placeholder=""
+                                        className={`w-40 py-2 text-center text-3xl font-mono tracking-[0.5em] bg-transparent border-b-2 focus:outline-none transition-colors ${isDark
+                                            ? "text-text-primary-dark border-border-dark focus:border-brand-primary-dark"
+                                            : "text-text-primary-light border-border-light focus:border-brand-primary-light"
                                             }`}
                                     />
-                                    {/* On-screen numeric keypad */}
-                                    <div className="flex flex-wrap justify-center gap-2 max-w-xs">
-                                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((num) => (
+
+                                    {/* Grid Logic Keypad */}
+                                    <div className={`grid grid-cols-3 gap-3 p-4 rounded-2xl ${isDark ? "bg-bg-secondary-dark/50" : "bg-bg-secondary-light/50"
+                                        }`}>
+                                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                                             <button
                                                 key={num}
                                                 type="button"
@@ -361,35 +363,53 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                                                         handleAnswerUpdate(jumbleSequence + String(num));
                                                     }
                                                 }}
-                                                className={`w-12 h-12 rounded-lg font-mono text-lg font-bold transition-all duration-150 hover:scale-105 active:scale-95 ${isDark
-                                                    ? "bg-bg-tertiary-dark text-text-primary-dark border border-border-dark hover:bg-brand-primary-dark/30"
-                                                    : "bg-bg-tertiary-light text-text-primary-light border border-border-light hover:bg-brand-primary-light/20"
+                                                className={`w-16 h-14 rounded-xl font-mono text-xl font-bold transition-all duration-150 hover:scale-105 active:scale-95 shadow-sm ${isDark
+                                                    ? "bg-bg-tertiary-dark text-text-primary-dark hover:bg-bg-secondary-dark ring-1 ring-white/5"
+                                                    : "bg-white text-text-primary-light hover:bg-gray-50 ring-1 ring-black/5"
                                                     }`}
                                             >
                                                 {num}
                                             </button>
                                         ))}
+
                                         {/* Clear button */}
                                         <button
                                             type="button"
                                             onClick={() => handleAnswerUpdate("")}
-                                            className={`w-12 h-12 rounded-lg font-mono text-sm font-bold transition-all duration-150 hover:scale-105 active:scale-95 ${isDark
-                                                ? "bg-error/20 text-error border border-error/50 hover:bg-error/30"
-                                                : "bg-error/10 text-error border border-error/30 hover:bg-error/20"
+                                            className={`w-16 h-14 rounded-xl font-mono text-sm font-bold transition-all duration-150 hover:scale-105 active:scale-95 ${isDark
+                                                ? "bg-rose-500/10 text-rose-400 hover:bg-rose-500/20"
+                                                : "bg-rose-50 text-rose-600 hover:bg-rose-100"
                                                 }`}
                                         >
                                             CLR
                                         </button>
+
+                                        {/* 0 Button */}
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (jumbleSequence.length < 4) {
+                                                    handleAnswerUpdate(jumbleSequence + "0");
+                                                }
+                                            }}
+                                            className={`w-16 h-14 rounded-xl font-mono text-xl font-bold transition-all duration-150 hover:scale-105 active:scale-95 shadow-sm ${isDark
+                                                ? "bg-bg-tertiary-dark text-text-primary-dark hover:bg-bg-secondary-dark ring-1 ring-white/5"
+                                                : "bg-white text-text-primary-light hover:bg-gray-50 ring-1 ring-black/5"
+                                                }`}
+                                        >
+                                            0
+                                        </button>
+
                                         {/* Backspace button */}
                                         <button
                                             type="button"
                                             onClick={() => handleAnswerUpdate(jumbleSequence.slice(0, -1))}
-                                            className={`w-12 h-12 rounded-lg font-mono text-sm font-bold transition-all duration-150 hover:scale-105 active:scale-95 ${isDark
-                                                ? "bg-bg-secondary-dark text-text-secondary-dark border border-border-dark hover:bg-bg-tertiary-dark"
-                                                : "bg-bg-secondary-light text-text-secondary-light border border-border-light hover:bg-bg-tertiary-light"
+                                            className={`w-16 h-14 rounded-xl font-mono text-lg font-bold transition-all duration-150 hover:scale-105 active:scale-95 flex items-center justify-center ${isDark
+                                                ? "bg-bg-tertiary-dark text-text-secondary-dark hover:bg-bg-secondary-dark ring-1 ring-white/5"
+                                                : "bg-white text-text-secondary-light hover:bg-gray-50 ring-1 ring-black/5"
                                                 }`}
                                         >
-                                            ⌫
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
                                         </button>
                                     </div>
                                 </div>
