@@ -1,16 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { adminApiClient } from '../services/adminApiClient';
 import { DollarSign, TrendingUp, RefreshCw } from 'lucide-react';
-
-// Basic chart placeholder until Recharts is fully integrated in Phase 7
-const ChartPlaceholder = ({ title }: { title: string }) => (
-    <div className="flex h-64 w-full items-center justify-center rounded-xl border border-[#2a2d3a] bg-[#1a1d27] p-4 text-[#64748b]">
-        <div className="text-center">
-            <div className="mb-2 text-lg font-medium">{title}</div>
-            <div className="text-sm">Chart visualization coming in Phase 7</div>
-        </div>
-    </div>
-);
+import { RevenueCostChart } from '../components/charts/RevenueCostChart';
+import { CostBreakdownChart } from '../components/charts/CostBreakdownChart';
 
 interface FinancialSummary {
     revenue: {
@@ -37,6 +29,18 @@ export default function FinancialsPage() {
     const [data, setData] = useState<FinancialSummary | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
+    // Mock trend data with predictions
+    const mockTrendData = [
+        { date: 'Jan', revenue: 120000, cost: 45000 },
+        { date: 'Feb', revenue: 135000, cost: 48000 },
+        { date: 'Mar', revenue: 128000, cost: 52000 },
+        { date: 'Apr', revenue: 145000, cost: 49000 },
+        { date: 'May', revenue: 162000, cost: 55000 },
+        { date: 'Jun', revenue: 185000, cost: 58000 },
+        { date: 'Jul', revenue: 210000, cost: 62000, prediction: true },
+        { date: 'Aug', revenue: 235000, cost: 65000, prediction: true },
+    ];
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -44,7 +48,7 @@ export default function FinancialsPage() {
                 setData(response);
             } catch (error) {
                 console.error('Failed to fetch financials', error);
-                // Fallback mock data for development if API fails or backend not ready
+                // Fallback mock data
                 setData({
                     revenue: { total: 1250000, thisMonth: 150000, growth: 12.5 },
                     costs: { totalAi: 45000, thisMonthAi: 12000, breakdown: { dailyContent: 5000, mocks: 4000, analytics: 2000, teaching: 1000 } },
@@ -59,6 +63,13 @@ export default function FinancialsPage() {
     }, []);
 
     if (isLoading) return <div className="p-8 text-[#94a3b8]">Loading financials...</div>;
+
+    const breakdownData = data ? [
+        { name: 'Daily Content', value: data.costs.breakdown.dailyContent },
+        { name: 'Mocks', value: data.costs.breakdown.mocks },
+        { name: 'Analytics', value: data.costs.breakdown.analytics },
+        { name: 'Teaching', value: data.costs.breakdown.teaching },
+    ] : [];
 
     const cards = [
         {
@@ -111,31 +122,16 @@ export default function FinancialsPage() {
             </div>
 
             <div className="grid gap-8 lg:grid-cols-2">
-                {/* Cost Breakdown */}
                 <div className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27] p-6">
-                    <h2 className="mb-6 text-lg font-semibold text-white">AI Cost Breakdown</h2>
-                    <div className="space-y-4">
-                        {Object.entries(data?.costs.breakdown || {}).map(([key, value]) => (
-                            <div key={key}>
-                                <div className="mb-1 flex justify-between text-sm">
-                                    <span className="capitalize text-[#e2e8f0]">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
-                                    <span className="text-[#94a3b8]">${(value / 100).toFixed(2)}</span>
-                                </div>
-                                <div className="h-2 w-full rounded-full bg-[#0f1117]">
-                                    <div
-                                        className="h-2 rounded-full bg-[#6366f1]"
-                                        style={{ width: `${(value / (data?.costs.thisMonthAi || 1)) * 100}%` }}
-                                    />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    <h2 className="mb-6 text-lg font-semibold text-white">Revenue vs Costs (YTD)</h2>
+                    <RevenueCostChart data={mockTrendData} />
                 </div>
 
-                {/* Charts Placeholders */}
-                <div className="space-y-6">
-                    <ChartPlaceholder title="Revenue vs Costs (YTD)" />
-                    {/* <ChartPlaceholder title="Cost Trends" /> */}
+                <div className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27] p-6">
+                    <h2 className="mb-6 text-lg font-semibold text-white">AI Cost Breakdown</h2>
+                    <div className="flex h-[300px] items-center justify-center">
+                        <CostBreakdownChart data={breakdownData} />
+                    </div>
                 </div>
             </div>
         </div>

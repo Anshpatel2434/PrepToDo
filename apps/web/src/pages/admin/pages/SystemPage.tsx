@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { adminApiClient } from '../services/adminApiClient';
-import { Database, Terminal, AlertTriangle, Play } from 'lucide-react';
+import { Terminal, AlertTriangle, Play } from 'lucide-react';
 
 export default function SystemPage() {
     const [query, setQuery] = useState('');
@@ -8,8 +8,7 @@ export default function SystemPage() {
     const [error, setError] = useState<string | null>(null);
     const [isRunning, setIsRunning] = useState(false);
 
-    // Separate state for logs to keep independent
-    const [logs, setLogs] = useState<any[]>([]);
+
 
     const handleRunQuery = async () => {
         if (!query.trim()) return;

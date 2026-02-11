@@ -58,14 +58,16 @@
 - [x] Build AI Usage page (model costs, token tracking)
 
 ## Phase 7: Frontend - Charts & Visualizations
-- [ ] Integrate charting library (Recharts)
-- [ ] Build revenue vs cost over time chart
-- [ ] Build user growth chart
-- [ ] Build AI cost breakdown pie/bar chart
-- [ ] Build per-user usage heatmap
-- [ ] Build session activity timeline
-- [ ] Build content generation metrics charts
-- [ ] Add future prediction/trend lines
+- [x] Integrate charting library (Recharts)
+- [x] Build revenue vs cost over time chart
+- [x] Build user growth chart
+- [x] Build AI cost breakdown pie/bar chart
+- [x] Build per-user usage heatmap
+- [x] Build session activity timeline
+- [x] Build content generation metrics charts
+- [x] Add future prediction/trend lines
+- [x] Implement deeper drill-down on charts (e.g., click pie slice to filter)
+- [x] Add CSV/PDF export for dashboard summaries
 
 ## Phase 8: Testing & Polish
 - [ ] End-to-end admin login flow test

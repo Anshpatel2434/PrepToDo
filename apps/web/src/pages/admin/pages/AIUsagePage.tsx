@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { adminApiClient } from '../services/adminApiClient';
 import { Cpu, DollarSign } from 'lucide-react';
+import { CostBreakdownChart } from '../components/charts/CostBreakdownChart';
 
 interface AiCostSummary {
     totalCost: number;
@@ -36,6 +37,9 @@ export default function AIUsagePage() {
 
     if (isLoading) return <div className="p-8 text-[#94a3b8]">Loading AI usage...</div>;
 
+    const modelData = data ? Object.entries(data.byModel).map(([name, value]) => ({ name, value })) : [];
+    const workerData = data ? Object.entries(data.byWorker).map(([name, value]) => ({ name: name.replace('_', ' '), value })) : [];
+
     return (
         <div className="space-y-8">
             <h1 className="text-2xl font-bold text-white">AI Usage & Costs</h1>
@@ -66,36 +70,16 @@ export default function AIUsagePage() {
                 {/* Model Breakdown */}
                 <div className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27] p-6">
                     <h2 className="mb-6 text-lg font-semibold text-white">Cost by Model</h2>
-                    <div className="space-y-4">
-                        {Object.entries(data?.byModel || {}).map(([model, cost]) => (
-                            <div key={model}>
-                                <div className="mb-1 flex justify-between text-sm">
-                                    <span className="font-mono text-[#e2e8f0]">{model}</span>
-                                    <span className="text-[#94a3b8]">${(cost / 100).toFixed(2)}</span>
-                                </div>
-                                <div className="h-2 w-full rounded-full bg-[#0f1117]">
-                                    <div className="h-2 rounded-full bg-[#38bdf8]" style={{ width: `${(cost / (data?.totalCost || 1)) * 100}%` }} />
-                                </div>
-                            </div>
-                        ))}
+                    <div className="flex h-[300px] items-center justify-center">
+                        <CostBreakdownChart data={modelData} />
                     </div>
                 </div>
 
                 {/* Worker Breakdown */}
                 <div className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27] p-6">
                     <h2 className="mb-6 text-lg font-semibold text-white">Cost by Worker</h2>
-                    <div className="space-y-4">
-                        {Object.entries(data?.byWorker || {}).map(([worker, cost]) => (
-                            <div key={worker}>
-                                <div className="mb-1 flex justify-between text-sm">
-                                    <span className="capitalize text-[#e2e8f0]">{worker.replace('_', ' ')}</span>
-                                    <span className="text-[#94a3b8]">${(cost / 100).toFixed(2)}</span>
-                                </div>
-                                <div className="h-2 w-full rounded-full bg-[#0f1117]">
-                                    <div className="h-2 rounded-full bg-[#a855f7]" style={{ width: `${(cost / (data?.totalCost || 1)) * 100}%` }} />
-                                </div>
-                            </div>
-                        ))}
+                    <div className="flex h-[300px] items-center justify-center">
+                        <CostBreakdownChart data={workerData} />
                     </div>
                 </div>
             </div>

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '../hooks/useAdminAuth';
-import { motion } from 'framer-motion';
+
 
 // Icons (using basic SVGs for now to avoid dependency issues, or Lucide if available)
 // Use Lucide React if project has it, otherwise simple SVGs
@@ -67,8 +67,8 @@ export default function AdminLayout() {
                                 to={item.path}
                                 onClick={() => setIsMobileMenuOpen(false)}
                                 className={`group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${active
-                                        ? 'bg-[#6366f1]/10 text-[#6366f1]'
-                                        : 'text-[#94a3b8] hover:bg-[#2a2d3a] hover:text-white'
+                                    ? 'bg-[#6366f1]/10 text-[#6366f1]'
+                                    : 'text-[#94a3b8] hover:bg-[#2a2d3a] hover:text-white'
                                     }`}
                             >
                                 <Icon className={`mr-3 h-5 w-5 flex-shrink-0 ${active ? 'text-[#6366f1]' : 'text-[#64748b] group-hover:text-white'}`} />

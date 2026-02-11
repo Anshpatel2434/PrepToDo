@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { adminApiClient } from '../services/adminApiClient';
-import { FileText, HelpCircle, BookOpen, Layers } from 'lucide-react';
-import { DataTable, type Column } from '../components/DataTable';
+import { FileText, HelpCircle, BookOpen, Layers, TrendingUp } from 'lucide-react';
+import { RevenueCostChart } from '../components/charts/RevenueCostChart';
+
 
 interface ContentStats {
     passages: { total: number; today: number };
@@ -12,6 +13,17 @@ interface ContentStats {
 export default function ContentPage() {
     const [stats, setStats] = useState<ContentStats | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+
+    // Mock trend data
+    const mockTrendData = [
+        { date: 'Mon', revenue: 45, cost: 120 }, // Reusing RevenueCostChart for Content Trends (Revenue=Passages, Cost=Questions/10)
+        { date: 'Tue', revenue: 52, cost: 145 },
+        { date: 'Wed', revenue: 48, cost: 130 },
+        { date: 'Thu', revenue: 61, cost: 180 },
+        { date: 'Fri', revenue: 55, cost: 165 },
+        { date: 'Sat', revenue: 42, cost: 110 },
+        { date: 'Sun', revenue: 38, cost: 95 },
+    ];
 
     if (isLoading) return <div className="p-8 text-[#94a3b8]">Loading content stats...</div>;
 
@@ -76,11 +88,33 @@ export default function ContentPage() {
                 ))}
             </div>
 
-            {/* Placeholder for Content Lists (Phase 7 or later expansion) */}
-            <div className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27] p-8 text-center">
-                <FileText className="mx-auto h-12 w-12 text-[#2a2d3a]" />
-                <h3 className="mt-4 text-lg font-medium text-white">Content Browsers</h3>
-                <p className="mt-2 text-[#94a3b8]">Detailed content browsers for Passages, Questions, and Exams will be implemented here.</p>
+            {/* Trends Section */}
+            <div className="grid gap-8 lg:grid-cols-2">
+                <div className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27] p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-lg font-semibold text-white">Generation Trends (7d)</h2>
+                        <TrendingUp className="h-4 w-4 text-indigo-400" />
+                    </div>
+                    <div className="h-[300px]">
+                        <RevenueCostChart data={mockTrendData} />
+                    </div>
+                    <div className="mt-4 flex items-center justify-center space-x-6 text-xs">
+                        <div className="flex items-center">
+                            <div className="h-3 w-3 rounded-full bg-[#4ade80] mr-2" />
+                            <span className="text-[#94a3b8]">Passages</span>
+                        </div>
+                        <div className="flex items-center">
+                            <div className="h-3 w-3 rounded-full bg-[#f87171] mr-2" />
+                            <span className="text-[#94a3b8]">Questions</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27] p-8 text-center flex flex-col justify-center">
+                    <FileText className="mx-auto h-12 w-12 text-[#2a2d3a]" />
+                    <h3 className="mt-4 text-lg font-medium text-white">Content Browsers</h3>
+                    <p className="mt-2 text-[#94a3b8]">Detailed content browsers for Passages, Questions, and Exams will be implemented here.</p>
+                </div>
             </div>
         </div>
     );

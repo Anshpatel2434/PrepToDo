@@ -124,6 +124,8 @@ export default function UsersPage() {
                 data={data?.users || []}
                 columns={columns}
                 isLoading={isLoading}
+                title="User Directory"
+                showExport={true}
                 pagination={data ? {
                     page: data.pagination.page,
                     limit: data.pagination.limit,

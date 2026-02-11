@@ -1,10 +1,11 @@
-import React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { exportToCsv } from '../utils/exportUtils';
 
 export interface Column<T> {
     header: string;
     accessorKey?: keyof T;
-    cell?: (item: T) => React.ReactNode;
+    cell?: (item: T) => ReactNode;
 }
 
 interface PaginationProps {
@@ -18,95 +19,119 @@ interface PaginationProps {
 interface DataTableProps<T> {
     data: T[];
     columns: Column<T>[];
-    isLoading?: boolean;
     pagination?: PaginationProps;
-    onRowClick?: (item: T) => void;
+    isLoading?: boolean;
+    title?: string;
+    showExport?: boolean;
 }
 
 export function DataTable<T>({
     data,
     columns,
-    isLoading,
     pagination,
-    onRowClick
+    isLoading,
+    title,
+    showExport = false
 }: DataTableProps<T>) {
-    if (isLoading) {
-        return (
-            <div className="w-full rounded-xl border border-[#2a2d3a] bg-[#1a1d27] p-8 text-center text-[#94a3b8]">
-                Loading data...
-            </div>
-        );
-    }
+
+    const handleExport = () => {
+        const filename = `${title || 'export'}_${new Date().toISOString().split('T')[0]}.csv`;
+        // Map columns to format expected by exportToCsv
+        const exportCols = columns.map(c => ({
+            header: c.header,
+            accessorKey: c.accessorKey as string
+        }));
+        exportToCsv(filename, data, exportCols);
+    };
 
     return (
-        <div className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27] overflow-hidden">
-            <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                    <thead className="border-b border-[#2a2d3a] bg-[#0f1117]/50 text-[#94a3b8]">
-                        <tr>
-                            {columns.map((col, i) => (
-                                <th key={i} className="px-6 py-4 font-medium">
-                                    {col.header}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#2a2d3a]">
-                        {data.length === 0 ? (
-                            <tr>
-                                <td colSpan={columns.length} className="px-6 py-8 text-center text-[#94a3b8]">
-                                    No records found
-                                </td>
-                            </tr>
-                        ) : (
-                            data.map((item, rowIndex) => (
-                                <tr
-                                    key={rowIndex}
-                                    onClick={() => onRowClick && onRowClick(item)}
-                                    className={`transition-colors ${onRowClick ? 'cursor-pointer hover:bg-[#2a2d3a]/50' : ''}`}
-                                >
-                                    {columns.map((col, colIndex) => (
-                                        <td key={colIndex} className="px-6 py-4 text-[#e2e8f0]">
-                                            {col.cell
-                                                ? col.cell(item)
-                                                : (item as any)[col.accessorKey!]
-                                            }
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Pagination Footer */}
-            {pagination && pagination.totalPages > 1 && (
-                <div className="flex items-center justify-between border-t border-[#2a2d3a] px-6 py-4">
-                    <div className="text-sm text-[#94a3b8]">
-                        Showing <span className="font-medium text-white">{((pagination.page - 1) * pagination.limit) + 1}</span> to <span className="font-medium text-white">{Math.min(pagination.page * pagination.limit, pagination.total)}</span> of <span className="font-medium text-white">{pagination.total}</span> results
-                    </div>
-                    <div className="flex items-center space-x-2">
+        <div className="flex flex-col space-y-4">
+            {(title || showExport) && (
+                <div className="flex items-center justify-between mb-2">
+                    {title && <h3 className="text-lg font-semibold text-white">{title}</h3>}
+                    {showExport && (
                         <button
-                            onClick={() => pagination.onPageChange(pagination.page - 1)}
-                            disabled={pagination.page <= 1}
-                            className="rounded-lg border border-[#2a2d3a] p-2 text-[#94a3b8] hover:bg-[#2a2d3a] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={handleExport}
+                            className="flex items-center rounded-lg border border-[#2a2d3a] bg-[#1a1d27] px-3 py-1.5 text-xs font-medium text-[#94a3b8] transition-colors hover:bg-[#2a2d3a] hover:text-white"
                         >
-                            <ChevronLeft className="h-4 w-4" />
+                            <Download className="mr-2 h-3.5 w-3.5" />
+                            Export CSV
                         </button>
-                        <span className="text-sm text-[#94a3b8]">
-                            Page {pagination.page} of {pagination.totalPages}
-                        </span>
-                        <button
-                            onClick={() => pagination.onPageChange(pagination.page + 1)}
-                            disabled={pagination.page >= pagination.totalPages}
-                            className="rounded-lg border border-[#2a2d3a] p-2 text-[#94a3b8] hover:bg-[#2a2d3a] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <ChevronRight className="h-4 w-4" />
-                        </button>
-                    </div>
+                    )}
                 </div>
             )}
+
+            <div className="overflow-hidden rounded-xl border border-[#2a2d3a] bg-[#1a1d27]">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                        <thead className="border-b border-[#2a2d3a] bg-[#1a1d27] text-[#94a3b8]">
+                            <tr>
+                                {columns.map((column, idx) => (
+                                    <th key={idx} className="px-6 py-4 font-medium uppercase tracking-wider">
+                                        {column.header}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#2a2d3a]">
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan={columns.length} className="px-6 py-10 text-center text-[#64748b]">
+                                        Loading data...
+                                    </td>
+                                </tr>
+                            ) : data.length === 0 ? (
+                                <tr>
+                                    <td colSpan={columns.length} className="px-6 py-10 text-center text-[#64748b]">
+                                        No results found.
+                                    </td>
+                                </tr>
+                            ) : (
+                                data.map((item, rowIdx) => (
+                                    <tr key={rowIdx} className="transition-colors hover:bg-[#2a2d3a]/30">
+                                        {columns.map((column, colIdx) => (
+                                            <td key={colIdx} className="whitespace-nowrap px-6 py-4 text-[#e2e8f0]">
+                                                {column.cell
+                                                    ? column.cell(item)
+                                                    : column.accessorKey
+                                                        ? String(item[column.accessorKey] ?? '-')
+                                                        : '-'}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {pagination && data.length > 0 && (
+                    <div className="flex items-center justify-between border-t border-[#2a2d3a] bg-[#1a1d27]/50 px-6 py-3">
+                        <div className="text-xs text-[#64748b]">
+                            Showing <span className="font-medium text-[#94a3b8]">{(pagination.page - 1) * pagination.limit + 1}</span> to <span className="font-medium text-[#94a3b8]">{Math.min(pagination.page * pagination.limit, pagination.total)}</span> of <span className="font-medium text-[#94a3b8]">{pagination.total}</span> entries
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <button
+                                onClick={() => pagination.onPageChange(pagination.page - 1)}
+                                disabled={pagination.page <= 1}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#2a2d3a] text-[#94a3b8] transition-colors hover:bg-[#2a2d3a] disabled:opacity-50"
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </button>
+                            <span className="text-xs font-medium text-[#94a3b8]">
+                                Page {pagination.page} of {pagination.totalPages}
+                            </span>
+                            <button
+                                onClick={() => pagination.onPageChange(pagination.page + 1)}
+                                disabled={pagination.page >= pagination.totalPages}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#2a2d3a] text-[#94a3b8] transition-colors hover:bg-[#2a2d3a] disabled:opacity-50"
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
