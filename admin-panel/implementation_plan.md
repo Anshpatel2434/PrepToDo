@@ -493,3 +493,451 @@ For any future AI agent — here's where everything lives:
 | Logger utility | `services/backend/src/common/utils/logger.ts` |
 | Rate limiter | `services/backend/src/common/middleware/rateLimiter.ts` |
 | Progress tracker | `admin-panel/progress.md` |
+
+---
+
+## 14. Coding Standards & Conventions
+
+> **CRITICAL**: Every file you write MUST match these patterns exactly. These are extracted from the actual codebase — not suggestions, but enforced standards.
+
+---
+
+### 14.1 General Code Organization
+
+**Section banners** — Use `=` separator blocks to divide logical sections in every file:
+```typescript
+// =============================================================================
+// Section Title Here
+// =============================================================================
+```
+
+**Ordering within files** — Follow this exact order:
+1. Imports (grouped: external → internal → types)
+2. Constants / Logger initialization
+3. Type/Interface definitions
+4. Exported functions/classes
+5. Type exports (at bottom of schema files)
+
+**Import style** — Use `type` keyword for type-only imports:
+```typescript
+import type { Request, Response, NextFunction } from 'express';  // ← type-only
+import { eq, and, ne } from 'drizzle-orm';                       // ← value imports
+import { db } from '../../../db/index.js';                        // ← internal (use .js extension)
+```
+
+**File extensions** — Always use `.js` in import paths (TypeScript compiles to JS):
+```typescript
+import { db } from '../../../db/index.js';           // ✅ Correct
+import { db } from '../../../db/index';              // ❌ Wrong
+import { db } from '../../../db/index.ts';           // ❌ Wrong
+```
+
+---
+
+### 14.2 Backend Controllers
+
+Every controller function MUST follow this exact pattern:
+
+```typescript
+export async function functionName(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        // 1. Extract & validate input
+        const userId = req.user?.userId;
+        if (!userId) {
+            throw Errors.unauthorized();
+        }
+
+        // 2. Log the action
+        adminLogger.info({ userId, action: 'action_name' }, 'Description of action');
+
+        // 3. Perform DB operations (use Promise.all for parallel queries)
+        const [data1, data2] = await Promise.all([
+            db.select().from(table1).where(eq(table1.id, id)).limit(1),
+            db.select().from(table2).where(eq(table2.user_id, id)),
+        ]);
+
+        // 4. Handle not-found cases
+        if (!data1[0]) {
+            throw Errors.notFound('Resource name');
+        }
+
+        // 5. Return success response
+        adminLogger.info({ userId, action: 'action_name' }, 'Action completed successfully');
+        res.json(successResponse({ key: value }));
+    } catch (error) {
+        next(error);  // ALWAYS delegate to error handler middleware
+    }
+}
+```
+
+**DO**:
+- Use `Errors.*` factory functions from `common/utils/errors.ts` for all error throwing
+- Use `successResponse()` wrapper for all successful responses
+- Use `Promise.all()` when fetching multiple independent queries
+- Destructure first result with `const [item] = await db...` for single-row queries
+- Add `.limit(1)` for single-row lookups
+- Log entry and exit of significant operations
+
+**DON'T**:
+- Don't use `res.status(200).json(...)` — use `successResponse()`
+- Don't catch errors and return manually — always `next(error)`
+- Don't use `console.log` — use the logger
+- Don't throw raw `Error()` — use `Errors.*` or `new ApiError()`
+- Don't inline SQL strings — use Drizzle ORM query builder
+
+---
+
+### 14.3 Error Handling
+
+**Creating new error codes** for admin panel — add to `ErrorCodes` object in `errors.ts`:
+```typescript
+// In the ErrorCodes object, add:
+ADMIN_UNAUTHORIZED: 'ADMIN_UNAUTHORIZED',
+ADMIN_FORBIDDEN: 'ADMIN_FORBIDDEN',
+ADMIN_INVALID_QUERY: 'ADMIN_INVALID_QUERY',
+```
+
+**Add corresponding messages** to `ErrorMessages`:
+```typescript
+ADMIN_UNAUTHORIZED: 'Admin authentication required.',
+ADMIN_FORBIDDEN: 'You do not have admin access.',
+ADMIN_INVALID_QUERY: 'The SQL query is invalid or contains unsafe operations.',
+```
+
+**Add factory functions** to `Errors` object:
+```typescript
+adminUnauthorized: () => new ApiError(ErrorCodes.ADMIN_UNAUTHORIZED, 401),
+adminForbidden: () => new ApiError(ErrorCodes.ADMIN_FORBIDDEN, 403),
+adminInvalidQuery: (details?: string) =>
+    new ApiError(ErrorCodes.ADMIN_INVALID_QUERY, 400, details),
+```
+
+**Error response shape** (consistent across entire API):
+```json
+{ "success": false, "error": { "code": "ERROR_CODE", "message": "User-friendly message" } }
+```
+
+**Success response shape**:
+```json
+{ "success": true, "data": { ... } }
+```
+
+---
+
+### 14.4 Logging
+
+**Initialize a child logger** at the top of every controller file:
+```typescript
+import { createChildLogger } from '../../../common/utils/logger.js';
+const adminLogger = createChildLogger('admin');
+```
+
+**Log format** — always include structured context object first, then message string:
+```typescript
+adminLogger.info({ userId, action: 'get_users', page: 1 }, 'Fetching user list');
+adminLogger.warn({ userId, action: 'update_user' }, 'User profile not found');
+adminLogger.error({ error: err.message, stack: err.stack }, 'Admin query failed');
+```
+
+**DO NOT**:
+- Use `console.log`, `console.error`, or `console.warn` anywhere
+- Log sensitive data (passwords, tokens, OTPs) — they are auto-redacted by pino config
+- Log full request bodies (may contain sensitive data)
+
+---
+
+### 14.5 Drizzle ORM Schema
+
+**Table definitions** — Follow existing pattern with `pgTable()`:
+```typescript
+export const adminAiCostLog = pgTable('admin_ai_cost_log', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    worker_type: text('worker_type').notNull(),
+    function_name: text('function_name').notNull(),
+    model_name: text('model_name').notNull().default('gpt-4o-mini'),
+    input_tokens: integer('input_tokens').notNull().default(0),
+    output_tokens: integer('output_tokens').notNull().default(0),
+    cost_cents: ps.numeric('cost_cents', { precision: 10, scale: 4 }).notNull().default('0'),
+    user_id: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+    exam_id: uuid('exam_id').references(() => examPapers.id, { onDelete: 'set null' }),
+    session_id: uuid('session_id').references(() => practiceSessions.id, { onDelete: 'set null' }),
+    metadata: ps.jsonb('metadata'),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+```
+
+**Type exports** — Always export `$inferSelect` and `$inferInsert` types at bottom of file:
+```typescript
+export type AdminAiCostLog = typeof adminAiCostLog.$inferSelect;
+export type NewAdminAiCostLog = typeof adminAiCostLog.$inferInsert;
+```
+
+**Relations** — Define if tables have foreign key relationships:
+```typescript
+export const adminAiCostLogRelations = relations(adminAiCostLog, ({ one }) => ({
+    user: one(users, {
+        fields: [adminAiCostLog.user_id],
+        references: [users.id],
+    }),
+}));
+```
+
+**Querying patterns used in the codebase**:
+```typescript
+// Single row lookup
+const [item] = await db.select().from(table).where(eq(table.id, id)).limit(1);
+
+// Multi-row with conditions
+const items = await db.select().from(table).where(and(
+    eq(table.user_id, userId),
+    ne(table.status, 'deleted')
+));
+
+// Insert
+await db.insert(table).values({ field1: val1, field2: val2 });
+
+// Update
+await db.update(table).set({ field: newValue }).where(eq(table.id, id));
+
+// Aggregations (use raw SQL when needed)
+const result = await db.execute(sql`SELECT COUNT(*) as count FROM ${table}`);
+```
+
+---
+
+### 14.6 Routes
+
+**Follow this exact structure** for route files:
+```typescript
+import { Router } from 'express';
+import { requireAdmin } from './middleware/admin.middleware.js';
+import { query, param, body } from 'express-validator';
+import { validate } from '../../common/middleware/validate.js';
+import { controllerFunction } from './controllers/controller-file.js';
+
+const router = Router();
+
+// =============================================================================
+// Section Name
+// =============================================================================
+
+router.get(
+    '/endpoint',
+    requireAdmin,          // Middleware first
+    [                      // Validators in array
+        query('page').optional().isInt({ min: 1 }).toInt(),
+        query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
+        validate,          // validate middleware always last in array
+    ],
+    controllerFunction     // Controller handler last
+);
+
+export const adminRouter = router;
+```
+
+---
+
+### 14.7 Rate Limiting
+
+**Use the factory pattern** from `rateLimiter.ts`:
+```typescript
+import { createRateLimiter } from '../../common/middleware/rateLimiter.js';
+
+export const adminLoginRateLimiter = createRateLimiter({
+    windowMs: 30 * 60 * 1000,  // 30 minutes
+    max: 3,                     // 3 attempts
+    message: 'Too many admin login attempts. Please try again in {minutes} minutes.',
+    skipSuccessfulRequests: true,
+});
+```
+
+---
+
+### 14.8 Config / Environment Variables
+
+**Add to the `config` object** in `config/index.ts` following the existing pattern:
+```typescript
+export const config = {
+    // ... existing config ...
+    admin: {
+        email: process.env.ADMIN_EMAIL!,
+        passwordHash: process.env.ADMIN_PASSWORD_HASH!,
+        jwtSecret: process.env.ADMIN_JWT_SECRET!,
+    },
+} as const;
+```
+
+**Add validation** in the same file to check required vars on startup:
+```typescript
+if (!process.env.ADMIN_EMAIL) throw new Error('ADMIN_EMAIL is required');
+if (!process.env.ADMIN_PASSWORD_HASH) throw new Error('ADMIN_PASSWORD_HASH is required');
+if (!process.env.ADMIN_JWT_SECRET) throw new Error('ADMIN_JWT_SECRET is required');
+```
+
+---
+
+### 14.9 Frontend React Components
+
+**Component structure** — Follow this pattern for every component:
+```tsx
+import React from "react";
+import { motion } from "framer-motion";
+
+// 1. Props interface — always defined explicitly, never inline
+interface ComponentNameProps {
+    data: SomeType | undefined;
+    isLoading: boolean;
+    isDark: boolean;          // Theme always passed as prop
+    index: number;            // For staggered animations
+    className?: string;       // Optional extra classes
+    error?: unknown;          // Optional error state
+}
+
+// 2. Helper functions BEFORE the component (not inside)
+function helperFunction(input: string): string {
+    return input.toUpperCase();
+}
+
+// 3. Component — use React.FC with explicit props type
+export const ComponentName: React.FC<ComponentNameProps> = ({
+    data,
+    isLoading,
+    isDark,
+    index,
+    className = "",
+    error,
+}) => {
+    // 4. Hooks at the top
+    const processedData = React.useMemo(() => {
+        return (data ?? []).filter(d => d.active).sort((a, b) => a.score - b.score);
+    }, [data]);
+
+    // 5. Render with motion wrapper for animations
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1, duration: 0.5 }}
+            className={`rounded-3xl overflow-hidden h-full ${isDark
+                ? "bg-bg-secondary-dark/5"
+                : "bg-white/20"
+            } backdrop-blur-xl ${className}`}
+        >
+            <div className="p-4 sm:p-6">
+                {/* Header */}
+                <h3 className={`font-bold text-2xl ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                    Title
+                </h3>
+
+                {/* Content with loading/error/empty states */}
+                {error ? (
+                    <div className={`text-sm ${isDark ? "text-rose-300" : "text-rose-700"}`}>
+                        Error loading data.
+                    </div>
+                ) : isLoading ? (
+                    <div className="animate-pulse h-4 w-32 rounded bg-bg-tertiary-light dark:bg-bg-tertiary-dark" />
+                ) : processedData.length === 0 ? (
+                    <div className={`text-sm py-8 text-center ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                        No data available yet.
+                    </div>
+                ) : (
+                    <div>{/* Render actual content */}</div>
+                )}
+            </div>
+        </motion.div>
+    );
+};
+```
+
+**Theming** — Always handle both light and dark mode via `isDark` prop:
+```tsx
+className={`${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}
+className={`${isDark ? "bg-bg-secondary-dark/5" : "bg-white/20"}`}
+```
+Use the project's CSS custom properties: `text-primary-dark`, `text-secondary-dark`, `bg-primary-dark`, `bg-secondary-dark`, `border-dark`, etc.
+
+**Animations** — Use `framer-motion` with `motion.div`, staggered entrance:
+```tsx
+<motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: index * 0.1, duration: 0.5 }}
+>
+```
+
+---
+
+### 14.10 Frontend API Client
+
+**Admin API client** — Create a separate client following the existing `apiFetch` pattern:
+```typescript
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+
+export async function adminApiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const url = `${BACKEND_URL}/api/admin${endpoint}`;
+    const response = await fetch(url, {
+        ...options,
+        credentials: 'include',  // Include admin cookie
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers,
+        },
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+        throw new Error(data.error?.message || 'Admin API request failed');
+    }
+    return data.data;
+}
+```
+
+---
+
+### 14.11 CSS / Styling Conventions
+
+**Tailwind utility classes** — The project uses Tailwind CSS. Follow these conventions:
+- Mobile-first: Default styles are mobile, use `sm:`, `md:`, `lg:` for larger screens
+- Responsive padding: `p-4 sm:p-6` (tighter on mobile)
+- Responsive text: `text-lg sm:text-xl` (smaller on mobile)
+- Rounded corners: `rounded-2xl` or `rounded-3xl` for cards
+- Glassmorphism: `backdrop-blur-xl bg-white/20` or `bg-bg-secondary-dark/5`
+- Shadows: `shadow-xl` for elevated cards
+- Border styling: `border border-white/10` (transparent borders for glass effect)
+
+**For admin panel specifically** — Use a dark-only CSS file (`admin.css`):
+```css
+.admin-layout {
+    --admin-bg: #0f1117;
+    --admin-card: #1a1d27;
+    --admin-border: #2a2d3a;
+    --admin-accent: #6366f1;
+    --admin-text: #e2e8f0;
+    --admin-text-secondary: #94a3b8;
+    --admin-success: #22c55e;
+    --admin-warning: #f59e0b;
+    --admin-danger: #ef4444;
+}
+```
+
+---
+
+### 14.12 Summary of Do's and Don'ts
+
+| ✅ DO | ❌ DON'T |
+|-------|----------|
+| Use `Errors.*` factories for errors | Throw raw `new Error()` |
+| Use `successResponse()` for all responses | Use `res.json()` directly |
+| Use `createChildLogger('context')` | Use `console.log/error/warn` |
+| Use `.js` extensions in imports | Omit extensions or use `.ts` |
+| Use `type` imports for type-only imports | Import types as regular imports |
+| Wrap controllers in `try/catch → next(error)` | Handle errors inline in controllers |
+| Use `Promise.all()` for parallel DB queries | Chain sequential queries unnecessarily |
+| Use Drizzle query builder for DB ops | Write raw SQL strings (except aggregations) |
+| Export `$inferSelect`/`$inferInsert` types | Define manual interfaces for DB types |
+| Use `motion.div` for animated components | Use plain `div` for entrance animations |
+| Pass `isDark` as prop for theming | Hardcode dark/light colors |
+| Use CSS custom properties for admin colors | Inline hex values everywhere |
+| Use section banners `// ===...===` | Leave files unorganized |
+| Use factory patterns for rate limiters | Create `rateLimit()` inline |
+| Handle loading/error/empty states in UI | Show broken UI when data is missing |
