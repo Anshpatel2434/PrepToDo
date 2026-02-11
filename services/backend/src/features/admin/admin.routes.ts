@@ -6,10 +6,13 @@ import { body, query } from 'express-validator';
 import { validate } from '../../common/middleware/validate.js';
 import { requireAdmin } from './middleware/admin.middleware.js';
 import { adminLoginRateLimiter } from './middleware/admin-rate-limit.js';
+import { requireAuth } from '../auth/middleware/auth.middleware.js';
 import * as adminAuthController from './controllers/admin-auth.controller.js';
 import * as adminDashboardController from './controllers/admin-dashboard.controller.js';
 import * as adminUsersController from './controllers/admin-users.controller.js';
 import * as adminFinancialsController from './controllers/admin-financials.controller.js';
+import * as adminContentController from './controllers/admin-content.controller.js';
+import * as adminSystemController from './controllers/admin-system.controller.js';
 
 const router = Router();
 
@@ -43,6 +46,13 @@ router.get(
     adminAuthController.verify
 );
 
+// Auto-Login (from existing user session — no separate login page needed)
+router.post(
+    '/auth/auto-login',
+    requireAuth,
+    adminAuthController.autoLogin
+);
+
 // =============================================================================
 // Dashboard Routes
 // =============================================================================
@@ -68,6 +78,8 @@ router.get('/users/:id', requireAdmin, adminUsersController.getUserDetails);
 // =============================================================================
 // Financials Routes
 // =============================================================================
+router.get('/financials/summary', requireAdmin, adminFinancialsController.getFinancialSummary);
+router.get('/financials/ai-costs', requireAdmin, adminFinancialsController.getAiCosts);
 router.get(
     '/financials/cost-breakdown',
     requireAdmin,
@@ -81,9 +93,7 @@ router.get(
 // =============================================================================
 // Content Routes
 // =============================================================================
-import * as adminContentController from './controllers/admin-content.controller.js';
-import * as adminSystemController from './controllers/admin-system.controller.js';
-
+router.get('/content/stats', requireAdmin, adminContentController.getContentStats);
 router.get('/content/passages', requireAdmin, adminContentController.getPassages);
 router.get('/content/questions', requireAdmin, adminContentController.getQuestions);
 router.get('/content/exams', requireAdmin, adminContentController.getExams);
@@ -92,5 +102,17 @@ router.get('/content/exams', requireAdmin, adminContentController.getExams);
 // System Routes
 // =============================================================================
 router.get('/system/logs', requireAdmin, adminSystemController.getActivityLogs);
+router.post(
+    '/system/run-query',
+    requireAdmin,
+    [
+        body('query').notEmpty().withMessage('SQL query is required'),
+        validate,
+    ],
+    adminSystemController.runQuery
+);
+
+// Take Daily Metrics Snapshot
+router.post('/system/snapshot', requireAdmin, adminSystemController.takeDailySnapshot);
 
 export const adminRouter = router;

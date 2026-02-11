@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { adminApiClient } from '../services/adminApiClient';
-import { ArrowLeft, Calendar, Activity, Clock } from 'lucide-react';
+import { ArrowLeft, Calendar, Activity, Clock, DollarSign, Target, Zap, Trophy, Flame } from 'lucide-react';
 import { ActivityHeatmap } from '../components/charts/ActivityHeatmap';
 import { SessionTimeline } from '../components/charts/SessionTimeline';
 
@@ -11,27 +11,68 @@ interface UserDetail {
     role: string;
     created_at: string;
     last_sign_in_at: string | null;
+    profile?: {
+        display_name: string | null;
+        username: string | null;
+        subscription_tier: string | null;
+    };
     practiceSessions: {
         id: string;
-        score: number;
+        correct_answers: number;
         total_questions: number;
+        score_percentage: string | null;
+        session_type: string;
+        status: string;
         created_at: string;
         time_spent_seconds: number;
     }[];
+}
+
+interface AiCostData {
+    totalCostCents: number;
+    callCount: number;
+}
+
+interface QuestionStats {
+    totalAttempted: number;
+    totalCorrect: number;
+    totalTimeSpent: number;
+    accuracy: number;
+}
+
+interface UserAnalyticsData {
+    minutesPracticed: number;
+    questionsAttempted: number;
+    questionsCorrect: number;
+    accuracyPercentage: number;
+    currentStreak: number;
+    longestStreak: number;
+    totalPoints: number;
 }
 
 export default function UserDetailPage() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [user, setUser] = useState<UserDetail | null>(null);
+    const [aiCost, setAiCost] = useState<AiCostData | null>(null);
+    const [questionStats, setQuestionStats] = useState<QuestionStats | null>(null);
+    const [analytics, setAnalytics] = useState<UserAnalyticsData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const response = await adminApiClient<{ user: UserDetail }>(`/users/${id}`);
+                const response = await adminApiClient<{
+                    user: UserDetail;
+                    aiCost: AiCostData;
+                    questionStats: QuestionStats;
+                    analytics: UserAnalyticsData | null;
+                }>(`/users/${id}`);
                 setUser(response.user);
+                setAiCost(response.aiCost);
+                setQuestionStats(response.questionStats);
+                setAnalytics(response.analytics);
             } catch (err: any) {
                 setError(err.message);
             } finally {
@@ -56,6 +97,61 @@ export default function UserDetailPage() {
     if (error) return <div className="p-8 text-red-400">Error: {error}</div>;
     if (!user) return <div className="p-8 text-[#94a3b8]">User not found</div>;
 
+    const formatTime = (seconds: number) => {
+        if (seconds < 60) return `${seconds}s`;
+        if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
+        const hours = Math.floor(seconds / 3600);
+        const mins = Math.round((seconds % 3600) / 60);
+        return `${hours}h ${mins}m`;
+    };
+
+    const statCards = [
+        {
+            title: 'Total Sessions',
+            value: user.practiceSessions.length.toString(),
+            icon: Activity,
+            color: 'text-blue-400',
+            bg: 'bg-blue-400/10',
+        },
+        {
+            title: 'Questions Attempted',
+            value: (questionStats?.totalAttempted || 0).toLocaleString(),
+            subtitle: `${questionStats?.totalCorrect || 0} correct`,
+            icon: Target,
+            color: 'text-green-400',
+            bg: 'bg-green-400/10',
+        },
+        {
+            title: 'Accuracy',
+            value: `${questionStats?.accuracy || 0}%`,
+            icon: Zap,
+            color: 'text-yellow-400',
+            bg: 'bg-yellow-400/10',
+        },
+        {
+            title: 'Time Practiced',
+            value: formatTime(questionStats?.totalTimeSpent || 0),
+            icon: Clock,
+            color: 'text-cyan-400',
+            bg: 'bg-cyan-400/10',
+        },
+        {
+            title: 'AI Cost (User)',
+            value: `$${((aiCost?.totalCostCents || 0) / 100).toFixed(2)}`,
+            subtitle: `${aiCost?.callCount || 0} API calls`,
+            icon: DollarSign,
+            color: 'text-orange-400',
+            bg: 'bg-orange-400/10',
+        },
+        {
+            title: 'Total Points',
+            value: (analytics?.totalPoints || 0).toLocaleString(),
+            icon: Trophy,
+            color: 'text-purple-400',
+            bg: 'bg-purple-400/10',
+        },
+    ];
+
     return (
         <div className="space-y-8">
             <button
@@ -74,7 +170,10 @@ export default function UserDetailPage() {
                             {user.email[0].toUpperCase()}
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-white">{user.email}</h1>
+                            <h1 className="text-xl font-bold text-white">
+                                {user.profile?.display_name || user.email}
+                            </h1>
+                            <p className="text-sm text-[#94a3b8]">{user.email}</p>
                             <div className="flex items-center mt-1 space-x-2">
                                 <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${user.role === 'admin'
                                     ? 'bg-purple-400/10 text-purple-400'
@@ -82,7 +181,14 @@ export default function UserDetailPage() {
                                     }`}>
                                     {user.role}
                                 </span>
-                                <span className="text-xs text-[#64748b]">ID: {user.id}</span>
+                                {user.profile?.subscription_tier && (
+                                    <span className="inline-flex items-center rounded-full bg-amber-400/10 px-2 py-0.5 text-xs font-medium text-amber-400">
+                                        {user.profile.subscription_tier}
+                                    </span>
+                                )}
+                                {user.profile?.username && (
+                                    <span className="text-xs text-[#64748b]">@{user.profile.username}</span>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -108,15 +214,42 @@ export default function UserDetailPage() {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid gap-6 sm:grid-cols-3">
-                <div className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27] p-6">
-                    <div className="flex items-center text-[#94a3b8] mb-2">
-                        <Activity className="h-4 w-4 mr-2" />
-                        Total Sessions
+            <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                {statCards.map((card) => (
+                    <div key={card.title} className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27] p-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <div className={`rounded-lg p-2 ${card.bg}`}>
+                                <card.icon className={`h-4 w-4 ${card.color}`} />
+                            </div>
+                        </div>
+                        <p className="text-xl font-bold text-white">{card.value}</p>
+                        <p className="text-xs text-[#94a3b8] mt-0.5">{card.title}</p>
+                        {card.subtitle && (
+                            <p className="text-[10px] text-[#64748b] mt-0.5">{card.subtitle}</p>
+                        )}
                     </div>
-                    <div className="text-2xl font-bold text-white">{user.practiceSessions.length}</div>
-                </div>
+                ))}
             </div>
+
+            {/* Streaks Row (if analytics available) */}
+            {analytics && (analytics.currentStreak > 0 || analytics.longestStreak > 0) && (
+                <div className="grid gap-6 sm:grid-cols-2">
+                    <div className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27] p-6">
+                        <div className="flex items-center text-[#94a3b8] mb-2">
+                            <Flame className="h-4 w-4 mr-2 text-orange-400" />
+                            Current Streak
+                        </div>
+                        <div className="text-3xl font-bold text-white">{analytics.currentStreak} <span className="text-sm font-normal text-[#64748b]">days</span></div>
+                    </div>
+                    <div className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27] p-6">
+                        <div className="flex items-center text-[#94a3b8] mb-2">
+                            <Trophy className="h-4 w-4 mr-2 text-purple-400" />
+                            Longest Streak
+                        </div>
+                        <div className="text-3xl font-bold text-white">{analytics.longestStreak} <span className="text-sm font-normal text-[#64748b]">days</span></div>
+                    </div>
+                </div>
+            )}
 
             {/* Timeline & History */}
             <div className="grid gap-8 lg:grid-cols-3">
@@ -140,8 +273,8 @@ export default function UserDetailPage() {
                                         <p className="text-xs text-[#94a3b8]">{Math.round(session.time_spent_seconds / 60)} mins</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-bold text-white">{session.score}/{session.total_questions}</p>
-                                        <p className="text-[10px] text-green-400">{Math.round((session.score / (session.total_questions || 1)) * 100)}%</p>
+                                        <p className="font-bold text-white">{session.correct_answers}/{session.total_questions}</p>
+                                        <p className="text-[10px] text-green-400">{session.score_percentage ? `${Math.round(Number(session.score_percentage))}%` : `${Math.round((session.correct_answers / (session.total_questions || 1)) * 100)}%`}</p>
                                     </div>
                                 </div>
                             ))}

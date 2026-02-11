@@ -9,6 +9,49 @@ CREATE TYPE "auth"."oauth_client_type" AS ENUM('public', 'confidential');
 CREATE TYPE "auth"."oauth_registration_type" AS ENUM('dynamic', 'manual');
 CREATE TYPE "auth"."oauth_response_type" AS ENUM('code');
 CREATE TYPE "auth"."one_time_token_type" AS ENUM('confirmation_token', 'reauthentication_token', 'recovery_token', 'email_change_token_new', 'email_change_token_current', 'phone_change_token');
+CREATE TABLE "admin_ai_cost_log" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+	"worker_type" text NOT NULL,
+	"function_name" text NOT NULL,
+	"model_name" text DEFAULT 'gpt-4o-mini' NOT NULL,
+	"input_tokens" integer DEFAULT 0 NOT NULL,
+	"output_tokens" integer DEFAULT 0 NOT NULL,
+	"cost_cents" numeric(10, 4) DEFAULT '0' NOT NULL,
+	"user_id" uuid,
+	"exam_id" uuid,
+	"session_id" uuid,
+	"metadata" jsonb,
+	"created_at" timestamp with time zone DEFAULT now()
+);
+CREATE TABLE "admin_platform_metrics_daily" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+	"date" date NOT NULL CONSTRAINT "admin_platform_metrics_daily_date_key" UNIQUE,
+	"total_users" integer DEFAULT 0,
+	"new_users_today" integer DEFAULT 0,
+	"active_users_today" integer DEFAULT 0,
+	"total_sessions" integer DEFAULT 0,
+	"sessions_today" integer DEFAULT 0,
+	"total_questions_attempted" integer DEFAULT 0,
+	"questions_attempted_today" integer DEFAULT 0,
+	"total_passages_generated" integer DEFAULT 0,
+	"passages_generated_today" integer DEFAULT 0,
+	"total_exams_generated" integer DEFAULT 0,
+	"exams_generated_today" integer DEFAULT 0,
+	"ai_cost_today_cents" numeric(10, 4) DEFAULT '0',
+	"ai_cost_cumulative_cents" numeric(12, 4) DEFAULT '0',
+	"avg_session_duration_seconds" integer DEFAULT 0,
+	"avg_accuracy_percentage" numeric(5, 2),
+	"revenue_today_cents" integer DEFAULT 0,
+	"revenue_cumulative_cents" integer DEFAULT 0,
+	"created_at" timestamp with time zone DEFAULT now()
+);
+CREATE TABLE "admin_user_activity_log" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+	"user_id" uuid NOT NULL,
+	"event_type" text NOT NULL,
+	"metadata" jsonb,
+	"created_at" timestamp with time zone DEFAULT now()
+);
 CREATE TABLE "articles" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	"title" text,
@@ -366,9 +409,14 @@ CREATE TABLE "users" (
 	"raw_app_meta_data" text,
 	"raw_user_meta_data" text,
 	"is_sso_user" boolean DEFAULT false,
+	"role" varchar(20) DEFAULT 'user',
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now()
 );
+ALTER TABLE "admin_ai_cost_log" ADD CONSTRAINT "admin_ai_cost_log_exam_id_fkey" FOREIGN KEY ("exam_id") REFERENCES "exam_papers"("id") ON DELETE SET NULL;
+ALTER TABLE "admin_ai_cost_log" ADD CONSTRAINT "admin_ai_cost_log_session_id_fkey" FOREIGN KEY ("session_id") REFERENCES "practice_sessions"("id") ON DELETE SET NULL;
+ALTER TABLE "admin_ai_cost_log" ADD CONSTRAINT "admin_ai_cost_log_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL;
+ALTER TABLE "admin_user_activity_log" ADD CONSTRAINT "admin_user_activity_log_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
 ALTER TABLE "auth_password_reset_tokens" ADD CONSTRAINT "auth_password_reset_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
 ALTER TABLE "auth_sessions" ADD CONSTRAINT "auth_sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
 ALTER TABLE "embeddings" ADD CONSTRAINT "embeddings_passage_id_fkey" FOREIGN KEY ("passage_id") REFERENCES "passages"("id") ON DELETE CASCADE;
@@ -394,6 +442,18 @@ ALTER TABLE "user_metric_proficiency" ADD CONSTRAINT "user_metric_proficiency_us
 ALTER TABLE "user_metric_proficiency" ADD CONSTRAINT "user_metric_proficiency_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
 ALTER TABLE "user_proficiency_signals" ADD CONSTRAINT "user_proficiency_signals_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
 ALTER TABLE "user_profiles" ADD CONSTRAINT "user_profiles_id_fkey" FOREIGN KEY ("id") REFERENCES "users"("id") ON DELETE CASCADE;
+CREATE UNIQUE INDEX "admin_ai_cost_log_pkey" ON "admin_ai_cost_log" ("id");
+CREATE INDEX "idx_cost_log_created" ON "admin_ai_cost_log" ("created_at");
+CREATE INDEX "idx_cost_log_model" ON "admin_ai_cost_log" ("model_name");
+CREATE INDEX "idx_cost_log_user" ON "admin_ai_cost_log" ("user_id");
+CREATE INDEX "idx_cost_log_worker" ON "admin_ai_cost_log" ("worker_type");
+CREATE UNIQUE INDEX "admin_platform_metrics_daily_date_key" ON "admin_platform_metrics_daily" ("date");
+CREATE UNIQUE INDEX "admin_platform_metrics_daily_pkey" ON "admin_platform_metrics_daily" ("id");
+CREATE INDEX "idx_platform_metrics_date" ON "admin_platform_metrics_daily" ("date");
+CREATE UNIQUE INDEX "admin_user_activity_log_pkey" ON "admin_user_activity_log" ("id");
+CREATE INDEX "idx_activity_created" ON "admin_user_activity_log" ("created_at");
+CREATE INDEX "idx_activity_type" ON "admin_user_activity_log" ("event_type");
+CREATE INDEX "idx_activity_user" ON "admin_user_activity_log" ("user_id");
 CREATE UNIQUE INDEX "articles_pkey" ON "articles" ("id");
 CREATE UNIQUE INDEX "articles_url_key" ON "articles" ("url");
 CREATE INDEX "idx_articles_genre" ON "articles" ("genre");

@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { adminApiClient } from '../services/adminApiClient';
-import { FileText, HelpCircle, BookOpen, Layers, TrendingUp } from 'lucide-react';
-import { RevenueCostChart } from '../components/charts/RevenueCostChart';
-
+import { HelpCircle, BookOpen, Layers } from 'lucide-react';
+import { DataTable, type Column } from '../components/DataTable';
 
 interface ContentStats {
     passages: { total: number; today: number };
@@ -10,30 +9,25 @@ interface ContentStats {
     exams: { total: number; today: number };
 }
 
+type ContentTab = 'passages' | 'questions' | 'exams';
+
 export default function ContentPage() {
     const [stats, setStats] = useState<ContentStats | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<ContentTab>('passages');
+    const [tabData, setTabData] = useState<any[]>([]);
+    const [tabLoading, setTabLoading] = useState(false);
+    const [tabPagination, setTabPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
 
-    // Mock trend data
-    const mockTrendData = [
-        { date: 'Mon', revenue: 45, cost: 120 }, // Reusing RevenueCostChart for Content Trends (Revenue=Passages, Cost=Questions/10)
-        { date: 'Tue', revenue: 52, cost: 145 },
-        { date: 'Wed', revenue: 48, cost: 130 },
-        { date: 'Thu', revenue: 61, cost: 180 },
-        { date: 'Fri', revenue: 55, cost: 165 },
-        { date: 'Sat', revenue: 42, cost: 110 },
-        { date: 'Sun', revenue: 38, cost: 95 },
-    ];
-
-    if (isLoading) return <div className="p-8 text-[#94a3b8]">Loading content stats...</div>;
-
+    // Fetch content stats on mount
     useEffect(() => {
         const fetchStats = async () => {
             try {
                 const response = await adminApiClient<ContentStats>('/content/stats');
                 setStats(response);
-            } catch (error) {
-                console.error('Failed to fetch content stats', error);
+            } catch (err) {
+                setError('Failed to fetch content stats');
             } finally {
                 setIsLoading(false);
             }
@@ -41,6 +35,36 @@ export default function ContentPage() {
 
         fetchStats();
     }, []);
+
+    // Fetch tab data when tab or page changes
+    useEffect(() => {
+        const fetchTabData = async () => {
+            setTabLoading(true);
+            try {
+                const response = await adminApiClient<any>(
+                    `/content/${activeTab}?page=${tabPagination.page}&limit=${tabPagination.limit}`
+                );
+                setTabData(response[activeTab] || []);
+                if (response.pagination) {
+                    setTabPagination(prev => ({
+                        ...prev,
+                        total: response.pagination.total,
+                        totalPages: response.pagination.totalPages,
+                    }));
+                }
+            } catch (err) {
+                setTabData([]);
+            } finally {
+                setTabLoading(false);
+            }
+        };
+
+        fetchTabData();
+    }, [activeTab, tabPagination.page]);
+
+    // --- Loading/error states AFTER all hooks ---
+    if (isLoading) return <div className="p-8 text-[#94a3b8]">Loading content stats...</div>;
+    if (error) return <div className="p-8 text-red-400">{error}</div>;
 
     const statCards = [
         {
@@ -66,6 +90,41 @@ export default function ContentPage() {
         },
     ];
 
+    const tabs: { key: ContentTab; label: string }[] = [
+        { key: 'passages', label: 'Passages' },
+        { key: 'questions', label: 'Questions' },
+        { key: 'exams', label: 'Exams' },
+    ];
+
+    // Define columns per tab
+    const passageColumns: Column<any>[] = [
+        { header: 'Title', accessorKey: 'title' },
+        { header: 'Topic', accessorKey: 'topic' },
+        { header: 'Difficulty', accessorKey: 'difficulty' },
+        { header: 'Questions', cell: (item: any) => item.questionCount ?? '-' },
+        { header: 'Created', cell: (item: any) => new Date(item.created_at).toLocaleDateString() },
+    ];
+
+    const questionColumns: Column<any>[] = [
+        { header: 'Type', accessorKey: 'question_type' },
+        { header: 'Text', cell: (item: any) => (item.question_text || '').substring(0, 80) + '...' },
+        { header: 'Passage', cell: (item: any) => item.passage?.title || '-' },
+        { header: 'Created', cell: (item: any) => new Date(item.created_at).toLocaleDateString() },
+    ];
+
+    const examColumns: Column<any>[] = [
+        { header: 'Name', accessorKey: 'name' },
+        { header: 'Type', accessorKey: 'exam_type' },
+        { header: 'Status', accessorKey: 'status' },
+        { header: 'Created', cell: (item: any) => new Date(item.created_at).toLocaleDateString() },
+    ];
+
+    const columnMap = {
+        passages: passageColumns,
+        questions: questionColumns,
+        exams: examColumns,
+    };
+
     return (
         <div className="space-y-8">
             <h1 className="text-2xl font-bold text-white">Content Management</h1>
@@ -88,32 +147,42 @@ export default function ContentPage() {
                 ))}
             </div>
 
-            {/* Trends Section */}
-            <div className="grid gap-8 lg:grid-cols-2">
-                <div className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27] p-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-lg font-semibold text-white">Generation Trends (7d)</h2>
-                        <TrendingUp className="h-4 w-4 text-indigo-400" />
-                    </div>
-                    <div className="h-[300px]">
-                        <RevenueCostChart data={mockTrendData} />
-                    </div>
-                    <div className="mt-4 flex items-center justify-center space-x-6 text-xs">
-                        <div className="flex items-center">
-                            <div className="h-3 w-3 rounded-full bg-[#4ade80] mr-2" />
-                            <span className="text-[#94a3b8]">Passages</span>
-                        </div>
-                        <div className="flex items-center">
-                            <div className="h-3 w-3 rounded-full bg-[#f87171] mr-2" />
-                            <span className="text-[#94a3b8]">Questions</span>
-                        </div>
-                    </div>
+            {/* Content Browser Tabs */}
+            <div className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27]">
+                {/* Tab Headers */}
+                <div className="flex border-b border-[#2a2d3a]">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.key}
+                            onClick={() => {
+                                setActiveTab(tab.key);
+                                setTabPagination(prev => ({ ...prev, page: 1 }));
+                            }}
+                            className={`px-6 py-3 text-sm font-medium transition-colors ${activeTab === tab.key
+                                    ? 'border-b-2 border-[#6366f1] text-[#6366f1]'
+                                    : 'text-[#94a3b8] hover:text-white'
+                                }`}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
                 </div>
 
-                <div className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27] p-8 text-center flex flex-col justify-center">
-                    <FileText className="mx-auto h-12 w-12 text-[#2a2d3a]" />
-                    <h3 className="mt-4 text-lg font-medium text-white">Content Browsers</h3>
-                    <p className="mt-2 text-[#94a3b8]">Detailed content browsers for Passages, Questions, and Exams will be implemented here.</p>
+                {/* Tab Content */}
+                <div className="p-4">
+                    <DataTable
+                        data={tabData}
+                        columns={columnMap[activeTab]}
+                        isLoading={tabLoading}
+                        pagination={{
+                            page: tabPagination.page,
+                            limit: tabPagination.limit,
+                            total: tabPagination.total,
+                            totalPages: tabPagination.totalPages,
+                            onPageChange: (page) => setTabPagination(prev => ({ ...prev, page })),
+                        }}
+                        showExport
+                    />
                 </div>
             </div>
         </div>

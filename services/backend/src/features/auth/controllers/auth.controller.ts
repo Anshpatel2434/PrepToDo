@@ -49,6 +49,7 @@ function formatUserResponse(user: typeof authUsers.$inferSelect): UserResponse {
         email_confirmed_at: user.email_confirmed_at?.toISOString() || null,
         provider: user.provider || 'email',
         has_password: !!user.encrypted_password,
+        role: (user as any).role || 'user',
         created_at: user.created_at?.toISOString() || null,
         updated_at: user.updated_at?.toISOString() || null,
     };

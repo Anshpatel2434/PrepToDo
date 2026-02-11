@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { adminApiClient } from '../services/adminApiClient';
 import { DataTable, type Column } from '../components/DataTable';
 import { Search } from 'lucide-react';
@@ -26,6 +27,7 @@ interface UsersResponse {
 }
 
 export default function UsersPage() {
+    const navigate = useNavigate();
     const [data, setData] = useState<UsersResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -50,7 +52,7 @@ export default function UsersPage() {
             const response = await adminApiClient<UsersResponse>(`/users?${queryParams}`);
             setData(response);
         } catch (error) {
-            console.error('Failed to fetch users', error);
+            // Fetch error is non-critical — user search simply shows no results
         } finally {
             setIsLoading(false);
         }
@@ -126,6 +128,7 @@ export default function UsersPage() {
                 isLoading={isLoading}
                 title="User Directory"
                 showExport={true}
+                onRowClick={(user) => navigate(`/admin/users/${user.id}`)}
                 pagination={data ? {
                     page: data.pagination.page,
                     limit: data.pagination.limit,

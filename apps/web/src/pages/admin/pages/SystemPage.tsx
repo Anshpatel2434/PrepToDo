@@ -1,14 +1,58 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { adminApiClient } from '../services/adminApiClient';
-import { Terminal, AlertTriangle, Play } from 'lucide-react';
+import { Terminal, AlertTriangle, Play, ScrollText } from 'lucide-react';
+import { DataTable, type Column } from '../components/DataTable';
+
+interface QueryResult {
+    rows: any[];
+    rowCount: number;
+    fields: string[];
+}
+
+interface ActivityLog {
+    id: string;
+    user_id: string;
+    action: string;
+    details: string;
+    created_at: string;
+    user?: { email: string; profile?: { display_name: string } };
+}
 
 export default function SystemPage() {
     const [query, setQuery] = useState('');
-    const [queryResult, setQueryResult] = useState<any>(null);
+    const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isRunning, setIsRunning] = useState(false);
 
+    // Activity logs
+    const [logs, setLogs] = useState<ActivityLog[]>([]);
+    const [logsLoading, setLogsLoading] = useState(true);
+    const [logsPagination, setLogsPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
 
+    useEffect(() => {
+        const fetchLogs = async () => {
+            setLogsLoading(true);
+            try {
+                const response = await adminApiClient<{ logs: ActivityLog[]; pagination: any }>(
+                    `/system/logs?page=${logsPagination.page}&limit=${logsPagination.limit}`
+                );
+                setLogs(response.logs || []);
+                if (response.pagination) {
+                    setLogsPagination(prev => ({
+                        ...prev,
+                        total: response.pagination.total,
+                        totalPages: response.pagination.totalPages,
+                    }));
+                }
+            } catch (err) {
+                // Logs may be empty
+            } finally {
+                setLogsLoading(false);
+            }
+        };
+
+        fetchLogs();
+    }, [logsPagination.page]);
 
     const handleRunQuery = async () => {
         if (!query.trim()) return;
@@ -17,7 +61,7 @@ export default function SystemPage() {
         setQueryResult(null);
 
         try {
-            const result = await adminApiClient('/system/run-query', {
+            const result = await adminApiClient<QueryResult>('/system/run-query', {
                 method: 'POST',
                 body: JSON.stringify({ query }),
             });
@@ -28,6 +72,26 @@ export default function SystemPage() {
             setIsRunning(false);
         }
     };
+
+    const logColumns: Column<ActivityLog>[] = [
+        {
+            header: 'User',
+            cell: (log) => (
+                <span className="font-medium text-white">
+                    {log.user?.email || log.user_id?.substring(0, 8) + '...' || '-'}
+                </span>
+            ),
+        },
+        { header: 'Action', accessorKey: 'action' },
+        {
+            header: 'Details',
+            cell: (log) => <span className="text-[#94a3b8]">{typeof log.details === 'string' ? log.details : JSON.stringify(log.details)}</span>,
+        },
+        {
+            header: 'Time',
+            cell: (log) => <span className="text-[#64748b]">{new Date(log.created_at).toLocaleString()}</span>,
+        },
+    ];
 
     return (
         <div className="space-y-8">
@@ -42,7 +106,7 @@ export default function SystemPage() {
                     </div>
                     <div className="flex items-center text-amber-500 text-xs gap-1">
                         <AlertTriangle className="h-3 w-3" />
-                        <span>Read-only mode recommended</span>
+                        <span>Read-only mode — SELECT only</span>
                     </div>
                 </div>
 
@@ -50,12 +114,18 @@ export default function SystemPage() {
                     <textarea
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        placeholder="SELECT * FROM users LIMIT 5;"
+                        placeholder="SELECT COUNT(*) FROM users;"
                         className="h-32 w-full rounded-lg border border-[#2a2d3a] bg-[#0f1117] p-4 font-mono text-sm text-[#e2e8f0] focus:border-[#6366f1] focus:outline-none"
                         spellCheck={false}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                                handleRunQuery();
+                            }
+                        }}
                     />
 
-                    <div className="mt-4 flex justify-end">
+                    <div className="mt-4 flex items-center justify-between">
+                        <span className="text-xs text-[#64748b]">Ctrl+Enter to execute • Results limited to 100 rows</span>
                         <button
                             onClick={handleRunQuery}
                             disabled={isRunning || !query.trim()}
@@ -76,23 +146,25 @@ export default function SystemPage() {
                     {/* Result Output */}
                     {queryResult && (
                         <div className="mt-6">
-                            <h3 className="mb-2 text-sm font-medium text-[#94a3b8]">Query Result: <span className="text-[#6366f1]">{Array.isArray(queryResult) ? `${queryResult.length} rows` : 'Success'}</span></h3>
+                            <h3 className="mb-2 text-sm font-medium text-[#94a3b8]">
+                                Query Result: <span className="text-[#6366f1]">{queryResult.rowCount} row{queryResult.rowCount !== 1 ? 's' : ''}</span>
+                            </h3>
                             <div className="overflow-x-auto rounded-lg border border-[#2a2d3a] bg-[#0f1117] p-4">
-                                {Array.isArray(queryResult) && queryResult.length > 0 ? (
+                                {queryResult.rows.length > 0 ? (
                                     <table className="w-full text-left text-xs font-mono text-[#e2e8f0]">
                                         <thead>
                                             <tr className="border-b border-[#2a2d3a] text-[#94a3b8]">
-                                                {Object.keys(queryResult[0]).map(key => (
+                                                {queryResult.fields.map(key => (
                                                     <th key={key} className="px-4 py-2">{key}</th>
                                                 ))}
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-[#2a2d3a]">
-                                            {queryResult.map((row, i) => (
+                                            {queryResult.rows.map((row, i) => (
                                                 <tr key={i} className="hover:bg-[#2a2d3a]/30">
-                                                    {Object.values(row).map((val: any, j) => (
+                                                    {queryResult.fields.map((field, j) => (
                                                         <td key={j} className="px-4 py-2 whitespace-nowrap">
-                                                            {typeof val === 'object' ? JSON.stringify(val) : String(val)}
+                                                            {typeof row[field] === 'object' ? JSON.stringify(row[field]) : String(row[field] ?? 'NULL')}
                                                         </td>
                                                     ))}
                                                 </tr>
@@ -100,12 +172,32 @@ export default function SystemPage() {
                                         </tbody>
                                     </table>
                                 ) : (
-                                    <pre className="text-xs text-[#94a3b8]">{JSON.stringify(queryResult, null, 2)}</pre>
+                                    <pre className="text-xs text-[#94a3b8]">Query returned 0 rows.</pre>
                                 )}
                             </div>
                         </div>
                     )}
                 </div>
+            </div>
+
+            {/* Activity Logs */}
+            <div className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27] p-6">
+                <div className="flex items-center mb-4">
+                    <ScrollText className="mr-2 h-5 w-5 text-[#94a3b8]" />
+                    <h2 className="text-lg font-semibold text-white">Activity Logs</h2>
+                </div>
+                <DataTable
+                    data={logs}
+                    columns={logColumns}
+                    isLoading={logsLoading}
+                    pagination={{
+                        page: logsPagination.page,
+                        limit: logsPagination.limit,
+                        total: logsPagination.total,
+                        totalPages: logsPagination.totalPages,
+                        onPageChange: (page) => setLogsPagination(prev => ({ ...prev, page })),
+                    }}
+                />
             </div>
         </div>
     );

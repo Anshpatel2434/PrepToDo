@@ -95,6 +95,7 @@ export interface UserResponse {
 	email_confirmed_at: string | null;
 	provider: string | null;
 	has_password: boolean;
+	role?: string;
 	created_at: string | null;
 	updated_at: string | null;
 }

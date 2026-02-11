@@ -4,8 +4,51 @@
 import type { Request, Response, NextFunction } from 'express';
 import { db } from '../../../db/index.js';
 import { passages, questions, examPapers } from '../../../db/schema.js';
-import { desc, sql, like, or, eq, and } from 'drizzle-orm';
+import { desc, sql, like, or, eq, and, gte } from 'drizzle-orm';
 import { successResponse } from '../../../common/utils/errors.js';
+import { createChildLogger } from '../../../common/utils/logger.js';
+
+const logger = createChildLogger('admin-content');
+
+// =============================================================================
+// Get Content Stats (Aggregated Counts)
+// =============================================================================
+export async function getContentStats(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+
+        const [
+            passagesTotal,
+            passagesToday,
+            questionsTotal,
+            questionsToday,
+            examsTotal,
+            examsToday,
+        ] = await Promise.all([
+            db.select({ count: sql<number>`count(*)` }).from(passages).then(r => Number(r[0].count)),
+            db.select({ count: sql<number>`count(*)` }).from(passages)
+                .where(gte(passages.created_at, todayStart))
+                .then(r => Number(r[0].count)),
+            db.select({ count: sql<number>`count(*)` }).from(questions).then(r => Number(r[0].count)),
+            db.select({ count: sql<number>`count(*)` }).from(questions)
+                .where(gte(questions.created_at, todayStart))
+                .then(r => Number(r[0].count)),
+            db.select({ count: sql<number>`count(*)` }).from(examPapers).then(r => Number(r[0].count)),
+            db.select({ count: sql<number>`count(*)` }).from(examPapers)
+                .where(gte(examPapers.created_at, todayStart))
+                .then(r => Number(r[0].count)),
+        ]);
+
+        res.json(successResponse({
+            passages: { total: passagesTotal, today: passagesToday },
+            questions: { total: questionsTotal, today: questionsToday },
+            exams: { total: examsTotal, today: examsToday },
+        }));
+    } catch (error) {
+        next(error);
+    }
+}
 
 // =============================================================================
 // Get Passages List
@@ -68,7 +111,7 @@ export async function getQuestions(req: Request, res: Response, next: NextFuncti
         const conditions = [];
 
         if (search) conditions.push(like(questions.question_text, `%${search}%`));
-        if (type) conditions.push(eq(questions.question_type, type as any)); // Type cast as enum might be strict
+        if (type) conditions.push(eq(questions.question_type, type as any));
 
         if (conditions.length > 0) {
             whereClause = and(...conditions);
@@ -127,11 +170,6 @@ export async function getExams(req: Request, res: Response, next: NextFunction):
                 limit,
                 offset,
                 orderBy: [desc(examPapers.created_at)],
-                with: {
-                    user: {
-                        columns: { email: true }
-                    }
-                }
             })
         ]);
 
@@ -145,5 +183,3 @@ export async function getExams(req: Request, res: Response, next: NextFunction):
         next(error);
     }
 }
-
-

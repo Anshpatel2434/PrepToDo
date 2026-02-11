@@ -3,7 +3,7 @@ import { Calendar, Clock, Trophy } from 'lucide-react';
 
 interface Session {
     id: string;
-    score: number;
+    correct_answers: number;
     total_questions: number;
     created_at: string;
     time_spent_seconds: number;
@@ -29,7 +29,7 @@ export const SessionTimeline: FC<SessionTimelineProps> = ({ sessions }) => {
                     {/* Content Layer */}
                     <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border border-[#2a2d3a] bg-[#1a1d27] shadow-sm">
                         <div className="flex items-center justify-between mb-2">
-                            <div className="font-bold text-white">Score: {session.score}/{session.total_questions}</div>
+                            <div className="font-bold text-white">Score: {session.correct_answers}/{session.total_questions}</div>
                             <time className="text-xs font-medium text-indigo-400">{new Date(session.created_at).toLocaleDateString()}</time>
                         </div>
                         <div className="flex items-center space-x-4 text-xs text-[#94a3b8]">

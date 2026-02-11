@@ -23,6 +23,7 @@ interface DataTableProps<T> {
     isLoading?: boolean;
     title?: string;
     showExport?: boolean;
+    onRowClick?: (item: T) => void;
 }
 
 export function DataTable<T>({
@@ -31,7 +32,8 @@ export function DataTable<T>({
     pagination,
     isLoading,
     title,
-    showExport = false
+    showExport = false,
+    onRowClick,
 }: DataTableProps<T>) {
 
     const handleExport = () => {
@@ -88,16 +90,19 @@ export function DataTable<T>({
                                 </tr>
                             ) : (
                                 data.map((item, rowIdx) => (
-                                    <tr key={rowIdx} className="transition-colors hover:bg-[#2a2d3a]/30">
-                                        {columns.map((column, colIdx) => (
-                                            <td key={colIdx} className="whitespace-nowrap px-6 py-4 text-[#e2e8f0]">
-                                                {column.cell
-                                                    ? column.cell(item)
-                                                    : column.accessorKey
-                                                        ? String(item[column.accessorKey] ?? '-')
-                                                        : '-'}
-                                            </td>
-                                        ))}
+                                    <tr
+                                        key={rowIdx}
+                                        className={`transition-colors hover:bg-[#2a2d3a]/30 ${onRowClick ? 'cursor-pointer' : ''}`}
+                                        onClick={() => onRowClick?.(item)}
+                                    >                                        {columns.map((column, colIdx) => (
+                                        <td key={colIdx} className="whitespace-nowrap px-6 py-4 text-[#e2e8f0]">
+                                            {column.cell
+                                                ? column.cell(item)
+                                                : column.accessorKey
+                                                    ? String(item[column.accessorKey] ?? '-')
+                                                    : '-'}
+                                        </td>
+                                    ))}
                                     </tr>
                                 ))
                             )}

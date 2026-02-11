@@ -5,6 +5,9 @@ import type { Request, Response, NextFunction } from 'express';
 import { verifyAdminToken, type AdminJwtPayload } from '../services/admin-jwt.service.js';
 import { Errors } from '../../../common/utils/errors.js';
 import { config } from '../../../config/index.js';
+import { db } from '../../../db/index.js';
+import { users } from '../../../db/schema.js';
+import { eq } from 'drizzle-orm';
 
 // Extend Express Request type
 declare global {
@@ -45,15 +48,32 @@ export const requireAdmin = async (
             throw Errors.adminUnauthorized();
         }
 
-        // Verify token signature with admin secret
+        // 1. Verify token signature with admin secret
         const payload = verifyAdminToken(token);
 
         if (!payload) {
             throw Errors.adminUnauthorized();
         }
 
-        // Strict email check - double security
-        if (payload.email !== config.admin.email) {
+        // 2. Fetch user from DB to verify role and status
+        // This prevents access if role is changed or user is banned in real-time
+        const [user] = await db
+            .select({
+                id: users.id,
+                email: users.email,
+                role: users.role
+            })
+            .from(users)
+            .where(eq(users.email, payload.email))
+            .limit(1);
+
+        if (!user) {
+            throw Errors.adminUnauthorized();
+        }
+
+        // 3. Strict Role Check
+        // Only 'admin' role allowed, with .env whitelist as a Super Admin override
+        if (user.role !== 'admin' && user.email !== config.admin.email) {
             throw Errors.adminForbidden();
         }
 

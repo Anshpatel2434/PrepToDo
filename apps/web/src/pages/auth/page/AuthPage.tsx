@@ -2,12 +2,21 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { AuthPopup } from "../components/AuthPopup";
+import { useFetchUserQuery } from "../redux_usecases/authApi";
 
 // This component handles the /auth route with background
 export const AuthPage: React.FC = () => {
 	const location = useLocation();
 	const [authPopupOpen, setAuthPopupOpen] = useState(true);
 	const navigate = useNavigate();
+	const { data: user } = useFetchUserQuery();
+
+	// Redirect admin users to admin dashboard after login
+	useEffect(() => {
+		if (user && user.role === 'admin') {
+			navigate('/admin/dashboard', { replace: true });
+		}
+	}, [user, navigate]);
 
 	// Get initial mode from URL params
 	const searchParams = new URLSearchParams(location.search);

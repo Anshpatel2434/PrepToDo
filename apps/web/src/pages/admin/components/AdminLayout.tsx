@@ -11,6 +11,7 @@ import {
     DollarSign,
     FileText,
     Database,
+    Cpu,
     LogOut,
     Menu,
     X
@@ -26,6 +27,7 @@ export default function AdminLayout() {
         { name: 'Overview', path: '/admin/dashboard', icon: LayoutDashboard },
         { name: 'Users', path: '/admin/users', icon: Users },
         { name: 'Financials', path: '/admin/financials', icon: DollarSign },
+        { name: 'AI Usage', path: '/admin/ai-usage', icon: Cpu },
         { name: 'Content', path: '/admin/content', icon: FileText },
         { name: 'System', path: '/admin/system', icon: Database },
     ];
