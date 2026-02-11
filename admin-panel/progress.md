@@ -50,12 +50,12 @@
 - [x] Implement mobile-first responsive design system (AdminLayout is responsive)
 
 ## Phase 6: Frontend - Dashboard Pages
-- [ ] Build Overview Dashboard (key metrics, graphs)
-- [ ] Build Users page (list, search, details)
-- [ ] Build Financials page (costs, revenue, breakdown)
-- [ ] Build Content page (passages, questions, exams)
-- [ ] Build System page (DB operations, logs)
-- [ ] Build AI Usage page (model costs, token tracking)
+- [x] Build Overview Dashboard (key metrics, graphs)
+- [x] Build Users page (list, search, details)
+- [x] Build Financials page (costs, revenue, breakdown)
+- [x] Build Content page (passages, questions, exams)
+- [x] Build System page (DB operations, logs)
+- [x] Build AI Usage page (model costs, token tracking)
 
 ## Phase 7: Frontend - Charts & Visualizations
 - [ ] Integrate charting library (Recharts)
