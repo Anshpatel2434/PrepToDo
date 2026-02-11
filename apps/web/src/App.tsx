@@ -27,6 +27,7 @@ const lazyNamed = <T extends string, M>(
 const HomePage = lazyNamed(import("./pages/home/page/HomePage"), "HomePage");
 const AuthPage = lazyNamed(import("./pages/auth/page/AuthPage"), "AuthPage");
 const DashboardPage = lazyNamed(import("./pages/dashboard/page/DashboardPage"), "DashboardPage");
+const AdminApp = lazy(() => import("./pages/admin/page/AdminApp"));
 
 // Default exports
 const AuthCallback = lazy(() => import("./pages/auth/components/AuthCallback"));
@@ -175,6 +176,14 @@ const router = createBrowserRouter([
                 element: (
                     <Suspense fallback={<PageLoader />}>
                         <RefundPolicy />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/admin/*",
+                element: (
+                    <Suspense fallback={<PageLoader />}>
+                        <AdminApp />
                     </Suspense>
                 ),
             },
