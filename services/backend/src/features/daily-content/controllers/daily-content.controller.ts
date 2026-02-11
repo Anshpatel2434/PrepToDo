@@ -639,6 +639,37 @@ export async function saveQuestionAttempts(req: Request, res: Response, next: Ne
             })
             .returning();
 
+        // =====================================================================
+        // Progressive avg_time_seconds update (fire-and-forget)
+        // For each attempted question, atomically update times_answered and
+        // avg_time_seconds using running average formula.
+        // =====================================================================
+        const avgTimeUpdates = insertedAttempts.map((attempt: any) =>
+            db.execute(sql`
+                UPDATE questions
+                SET
+                    times_answered = COALESCE(times_answered, 0) + 1,
+                    avg_time_seconds = CASE
+                        WHEN COALESCE(times_answered, 0) = 0 THEN ${attempt.time_spent_seconds}
+                        ELSE ROUND(
+                            (COALESCE(avg_time_seconds, 0) * COALESCE(times_answered, 0) + ${attempt.time_spent_seconds})::numeric
+                            / (COALESCE(times_answered, 0) + 1)
+                        )
+                    END,
+                    times_correct = CASE
+                        WHEN ${attempt.is_correct} THEN COALESCE(times_correct, 0) + 1
+                        ELSE COALESCE(times_correct, 0)
+                    END,
+                    updated_at = NOW()
+                WHERE id = ${attempt.question_id}
+            `)
+        );
+
+        // Fire-and-forget: don't block the response
+        Promise.all(avgTimeUpdates).catch(err => {
+            logger.error({ error: err instanceof Error ? err.message : String(err) }, 'Failed to update question avg_time_seconds');
+        });
+
         logger.info('Question attempts saved successfully with server-side verification.');
         res.json(successResponse(insertedAttempts));
     } catch (error) {

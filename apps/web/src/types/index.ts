@@ -32,6 +32,7 @@ export const UserProfileSchema = z.object({
     show_on_leaderboard: z.boolean(),
     created_at: TimestampSchema,
     updated_at: TimestampSchema,
+    email: z.string().email(),
 });
 
 export type UserItem = z.infer<typeof UserSchema>;

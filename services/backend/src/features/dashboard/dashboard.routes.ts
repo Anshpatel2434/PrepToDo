@@ -14,6 +14,7 @@ import {
     getUserProficiencySignals,
     getUserMetricProficiency,
     updateUserProfile,
+    checkUsernameAvailability,
 } from './controllers/dashboard.controller.js';
 
 const router = Router();
@@ -30,6 +31,9 @@ router.get('/profile', requireAuth, getUserProfile);
 router.get('/analytics', requireAuth, getUserAnalytics);
 router.get('/proficiency-signals', requireAuth, getUserProficiencySignals);
 router.get('/metric-proficiency', requireAuth, getUserMetricProficiency);
+
+// Check username availability
+router.get('/profile/check-username', requireAuth, checkUsernameAvailability);
 
 // Update profile
 router.patch('/profile', requireAuth, updateUserProfile);

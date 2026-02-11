@@ -104,8 +104,8 @@ export const dashboardApi = createApi({
             providesTags: ["UserProfile", "Dashboard"],
         }),
 
-        // Update profile
-        updateUserProfile: builder.mutation<UserProfile, Partial<UserProfile>>({
+        // Update profile (including username)
+        updateUserProfile: builder.mutation<UserProfile, Partial<UserProfile> & { username?: string }>({
             query: (updates) => ({
                 url: '/profile',
                 method: 'PATCH',
@@ -119,6 +119,17 @@ export const dashboardApi = createApi({
             },
             invalidatesTags: ["UserProfile", "Dashboard"],
         }),
+
+        // Check username availability
+        checkUsernameAvailability: builder.query<boolean, string>({
+            query: (username) => `/profile/check-username?username=${encodeURIComponent(username)}`,
+            transformResponse: (response: ApiResponse<{ available: boolean }>) => {
+                if (!response.success) {
+                    return false;
+                }
+                return response.data.available;
+            },
+        }),
     }),
 });
 
@@ -129,4 +140,5 @@ export const {
     useFetchUserMetricProficiencyQuery,
     useFetchUserProfileQuery,
     useUpdateUserProfileMutation,
+    useLazyCheckUsernameAvailabilityQuery,
 } = dashboardApi;

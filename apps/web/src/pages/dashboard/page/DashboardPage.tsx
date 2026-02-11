@@ -63,7 +63,7 @@ export const DashboardPage: React.FC = () => {
                         <div className="font-bold text-3xl mb-4 tracking-tight">Unlock Deep Performance Insights</div>
                         <div className="text-lg leading-relaxed opacity-80">Sign in to access AI-driven diagnostics, track your improved reasoning skills, and visualize your growth across core VARC metrics.</div>
                     </motion.div>
-                ) : isLoading ? (
+                ) : !dashboardQuery.data ? (
                     <DashboardSkeleton />
                 ) : (
                     <div className="space-y-4 sm:space-y-5 max-w-400 mx-auto">

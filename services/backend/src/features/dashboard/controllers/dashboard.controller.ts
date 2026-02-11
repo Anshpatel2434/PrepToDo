@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { eq } from 'drizzle-orm';
+import { eq, and, ne } from 'drizzle-orm';
 
 import { db } from '../../../db/index.js';
 import { userProfiles, userAnalytics, userProficiencySignals, userMetricProficiency } from '../../../db/schema.js';
@@ -163,12 +163,55 @@ export async function updateUserProfile(req: Request, res: Response, next: NextF
             throw Errors.unauthorized();
         }
 
-        const { displayName, preferredDifficulty, theme, dailyGoalMinutes, showOnLeaderboard } = req.body;
+        const { displayName, username, preferredDifficulty, theme, dailyGoalMinutes, showOnLeaderboard } = req.body;
 
         // Only update fields that are provided
         const updateData: Partial<typeof userProfiles.$inferInsert> = {
             updated_at: new Date(),
         };
+
+        // Username validation and uniqueness check
+        if (username !== undefined) {
+            const trimmedUsername = String(username).trim();
+
+            // Length check
+            if (trimmedUsername.length < 3 || trimmedUsername.length > 50) {
+                res.status(400).json({
+                    success: false,
+                    error: { code: 'INVALID_USERNAME', message: 'Username must be between 3 and 50 characters.' },
+                });
+                return;
+            }
+
+            // Format check: alphanumeric + underscores only
+            if (!/^[a-zA-Z0-9_]+$/.test(trimmedUsername)) {
+                res.status(400).json({
+                    success: false,
+                    error: { code: 'INVALID_USERNAME', message: 'Username can only contain letters, numbers, and underscores.' },
+                });
+                return;
+            }
+
+            // Uniqueness check (exclude current user)
+            const [existing] = await db
+                .select({ id: userProfiles.id })
+                .from(userProfiles)
+                .where(and(
+                    eq(userProfiles.username, trimmedUsername),
+                    ne(userProfiles.id, userId)
+                ))
+                .limit(1);
+
+            if (existing) {
+                res.status(409).json({
+                    success: false,
+                    error: { code: 'USERNAME_TAKEN', message: 'This username is already taken. Please choose another.' },
+                });
+                return;
+            }
+
+            updateData.username = trimmedUsername;
+        }
 
         if (displayName !== undefined) updateData.display_name = displayName;
         if (preferredDifficulty !== undefined) updateData.preferred_difficulty = preferredDifficulty;
@@ -189,6 +232,40 @@ export async function updateUserProfile(req: Request, res: Response, next: NextF
 
         dashboardLogger.info({ userId, action: 'update_profile' }, 'User profile updated');
         res.json(successResponse({ profile: updatedProfile, message: 'Profile updated successfully' }));
+    } catch (error) {
+        next(error);
+    }
+}
+
+// =============================================================================
+// Check Username Availability
+// =============================================================================
+export async function checkUsernameAvailability(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        const userId = req.user?.userId;
+
+        if (!userId) {
+            throw Errors.unauthorized();
+        }
+
+        const username = String(req.query.username || '').trim();
+
+        if (!username || username.length < 3) {
+            res.json(successResponse({ available: false }));
+            return;
+        }
+
+        // Check uniqueness (exclude current user)
+        const [existing] = await db
+            .select({ id: userProfiles.id })
+            .from(userProfiles)
+            .where(and(
+                eq(userProfiles.username, username),
+                ne(userProfiles.id, userId)
+            ))
+            .limit(1);
+
+        res.json(successResponse({ available: !existing }));
     } catch (error) {
         next(error);
     }
