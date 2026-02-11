@@ -14,6 +14,7 @@ import dashboardRouter from './features/dashboard/dashboard.routes.js';
 import analyticsRouter from './features/analytics/analytics.routes.js';
 import { customizedMocksRouter } from './features/customized-mocks/customized-mocks.routes.js';
 import { dailyContentRouter } from './features/daily-content/index.js';
+import { adminRouter } from './features/admin/index.js';
 import { logger, httpLogger } from './common/utils/logger.js';
 import pinoHttp from 'pino-http';
 
@@ -97,6 +98,9 @@ app.use('/api/dashboard', dashboardRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/daily-content', dailyContentRouter);
 app.use('/api/customized-mocks', customizedMocksRouter);
+
+// Admin Routes
+app.use('/api/admin', adminRouter);
 
 // Future feature routes will be mounted here:
 // app.use('/api/exams', examsRouter);

@@ -233,17 +233,30 @@ For each incorrect attempt, provide personalized diagnostics that help THIS SPEC
         }
 
         // Enrich related_weak_areas with human-readable descriptions if not provided
-        for (const diagnostic of parsed.diagnostics) {
-            if (diagnostic.related_weak_areas) {
-                for (const weakArea of diagnostic.related_weak_areas) {
-                    if (!weakArea.human_readable_description) {
-                        weakArea.human_readable_description = createHumanReadableDescription(
-                            weakArea.dimension_type,
-                            weakArea.dimension_key
-                        );
-                    }
+        if (parsed.diagnostics.length > 0) {
+            parsed.diagnostics.forEach(diagnostic => {
+                if (diagnostic.related_weak_areas) {
+                    diagnostic.related_weak_areas.forEach(weakArea => {
+                        if (!weakArea.human_readable_description) {
+                            (weakArea as any).human_readable_description = createHumanReadableDescription(
+                                weakArea.dimension_type,
+                                weakArea.dimension_key
+                            );
+                        }
+                    });
                 }
-            }
+            });
+        }
+
+        // Log cost if tracker provided
+        if (completion.usage) {
+            // We can't log here easily without passing tracker down.
+            // For now, let's just log it to standard logger as info
+            logger.info({
+                input_tokens: completion.usage.prompt_tokens,
+                output_tokens: completion.usage.completion_tokens,
+                model: MODEL
+            }, 'LLM Usage Stats');
         }
 
         logger.info({ diagnosticsCount: parsed.diagnostics.length }, "Generated personalized diagnostics");

@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { CostTracker } from "../utils/CostTracker";
+import { CostTracker } from "../../../../common/utils/CostTracker";
 import { AuthorialPersona, SemanticIdeas } from "../../types";
 import { createChildLogger } from "../../../../common/utils/logger.js";
 

@@ -5,7 +5,7 @@
 
 import OpenAI from "openai";
 import { Passage, Question, ReasoningGraphContext } from "../../types";
-import { CostTracker } from "../utils/CostTracker";
+import { CostTracker } from "../../../../common/utils/CostTracker";
 import { createChildLogger } from "../../../../common/utils/logger.js";
 
 const logger = createChildLogger('batch-va-rationales');

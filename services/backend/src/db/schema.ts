@@ -23,11 +23,16 @@ export const users = pgTable('users', {
     raw_app_meta_data: text('raw_app_meta_data'),
     raw_user_meta_data: text('raw_user_meta_data'),
     is_sso_user: boolean('is_sso_user').default(false),
+    role: varchar('role', { length: 20 }).default('user'), // Added for admin access
 
     // Timestamps
     created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
     updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
+
+// ... (skipping to relations)
+
+
 
 // =============================================================================
 // Auth Sessions Table
@@ -65,6 +70,59 @@ export const authPasswordResetTokens = pgTable('auth_password_reset_tokens', {
     token_hash: varchar('token_hash', { length: 255 }).notNull(),
     expires_at: timestamp('expires_at', { withTimezone: true }).notNull(),
     used_at: timestamp('used_at', { withTimezone: true }),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// =============================================================================
+// Admin Panel Tables
+// =============================================================================
+
+// 1. AI Cost Log
+export const adminAiCostLog = pgTable('admin_ai_cost_log', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    worker_type: text('worker_type').notNull(),
+    function_name: text('function_name').notNull(),
+    model_name: text('model_name').default('gpt-4o-mini').notNull(),
+    input_tokens: integer('input_tokens').default(0).notNull(),
+    output_tokens: integer('output_tokens').default(0).notNull(),
+    cost_cents: ps.decimal('cost_cents', { precision: 10, scale: 4 }).default('0').notNull(),
+    user_id: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+    exam_id: uuid('exam_id').references(() => examPapers.id, { onDelete: 'set null' }), // Using examPapers as the table name is exam_papers
+    session_id: uuid('session_id').references(() => practiceSessions.id, { onDelete: 'set null' }),
+    metadata: ps.jsonb('metadata'),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// 2. Platform Metrics Daily
+export const adminPlatformMetricsDaily = pgTable('admin_platform_metrics_daily', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    date: ps.date('date').notNull().unique(),
+    total_users: integer('total_users').default(0),
+    new_users_today: integer('new_users_today').default(0),
+    active_users_today: integer('active_users_today').default(0),
+    total_sessions: integer('total_sessions').default(0),
+    sessions_today: integer('sessions_today').default(0),
+    total_questions_attempted: integer('total_questions_attempted').default(0),
+    questions_attempted_today: integer('questions_attempted_today').default(0),
+    total_passages_generated: integer('total_passages_generated').default(0),
+    passages_generated_today: integer('passages_generated_today').default(0),
+    total_exams_generated: integer('total_exams_generated').default(0),
+    exams_generated_today: integer('exams_generated_today').default(0),
+    ai_cost_today_cents: ps.decimal('ai_cost_today_cents', { precision: 10, scale: 4 }).default('0'),
+    ai_cost_cumulative_cents: ps.decimal('ai_cost_cumulative_cents', { precision: 12, scale: 4 }).default('0'),
+    avg_session_duration_seconds: integer('avg_session_duration_seconds').default(0),
+    avg_accuracy_percentage: ps.decimal('avg_accuracy_percentage', { precision: 5, scale: 2 }),
+    revenue_today_cents: integer('revenue_today_cents').default(0),
+    revenue_cumulative_cents: integer('revenue_cumulative_cents').default(0),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// 3. User Activity Log (Admin View)
+export const adminUserActivityLog = pgTable('admin_user_activity_log', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    event_type: text('event_type').notNull(),
+    metadata: ps.jsonb('metadata'),
     created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
@@ -366,6 +424,7 @@ export const questionAttempts = pgTable('question_attempts', {
 // =============================================================================
 export const usersRelations = relations(users, ({ many, one }) => ({
     sessions: many(authSessions),
+    practiceSessions: many(practiceSessions),
     passwordResetTokens: many(authPasswordResetTokens),
     profile: one(userProfiles, {
         fields: [users.id],
@@ -428,6 +487,13 @@ export const questionsRelations = relations(questions, ({ one, many }) => ({
         references: [passages.id],
     }),
     attempts: many(questionAttempts),
+}));
+
+export const adminUserActivityLogRelations = relations(adminUserActivityLog, ({ one }) => ({
+    user: one(users, {
+        fields: [adminUserActivityLog.user_id],
+        references: [users.id],
+    }),
 }));
 
 export const passagesRelations = relations(passages, ({ one, many }) => ({

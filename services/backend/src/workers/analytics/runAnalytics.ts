@@ -147,8 +147,18 @@ export async function runAnalytics(params: {
                         .set({ analytics: JSON.stringify(newAnalytics) })
                         .where(eq(practiceSessions.id, session_id));
 
+                    await db.update(practiceSessions)
+                        .set({ analytics: JSON.stringify(newAnalytics) })
+                        .where(eq(practiceSessions.id, session_id));
+
                     logger.info('Diagnostics stored in session analytics');
                 }
+
+                // Track cost for this session's diagnostics
+                // Note: phaseC_llmDiagnostics currently doesn't return token usage or accept tracker.
+                // TODO: Update phaseC to return usage stats or accept tracker.
+                // For now, we are skipping granular cost tracking here until phaseC is refactored.
+
 
                 // --- PHASE D: PROFICIENCY ENGINE ---
                 console.log("\n🧮 [Phase D/6] Updating atomic proficiency scores");

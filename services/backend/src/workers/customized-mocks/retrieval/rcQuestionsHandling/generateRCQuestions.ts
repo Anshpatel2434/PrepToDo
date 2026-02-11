@@ -3,7 +3,7 @@ import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import { Passage, Question, QuestionSchema } from "../../schemas/types";
 import { v4 as uuidv4 } from 'uuid';
-import { CostTracker } from "../utils/CostTracker";
+import { CostTracker } from "../../../../common/utils/CostTracker";
 import { user_core_metrics_definition_v1 } from "../../../../config/user_core_metrics_definition_v1";
 import { createChildLogger } from "../../../../common/utils/logger.js";
 

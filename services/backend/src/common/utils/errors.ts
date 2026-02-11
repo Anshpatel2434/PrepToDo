@@ -42,6 +42,11 @@ export const ErrorCodes = {
     PENDING_SIGNUP_NOT_FOUND: 'PENDING_SIGNUP_NOT_FOUND',
     PENDING_SIGNUP_EXPIRED: 'PENDING_SIGNUP_EXPIRED',
 
+    // Admin Panel
+    ADMIN_UNAUTHORIZED: 'ADMIN_UNAUTHORIZED',
+    ADMIN_FORBIDDEN: 'ADMIN_FORBIDDEN',
+    ADMIN_INVALID_QUERY: 'ADMIN_INVALID_QUERY',
+
     // General Errors
     VALIDATION_ERROR: 'VALIDATION_ERROR',
     INTERNAL_ERROR: 'INTERNAL_ERROR',
@@ -92,6 +97,11 @@ export const ErrorMessages: Record<ErrorCode, string> = {
     // Pending Signup
     PENDING_SIGNUP_NOT_FOUND: 'Signup session not found. Please start again.',
     PENDING_SIGNUP_EXPIRED: 'Signup session expired. Please start again.',
+
+    // Admin Panel
+    ADMIN_UNAUTHORIZED: 'Admin authentication required.',
+    ADMIN_FORBIDDEN: 'You do not have admin access.',
+    ADMIN_INVALID_QUERY: 'The SQL query is invalid or contains unsafe operations.',
 
     // General
     VALIDATION_ERROR: 'Please check your input and try again.',
@@ -202,6 +212,12 @@ export const Errors = {
     // Pending Signup
     pendingSignupNotFound: () => new ApiError(ErrorCodes.PENDING_SIGNUP_NOT_FOUND, 404),
     pendingSignupExpired: () => new ApiError(ErrorCodes.PENDING_SIGNUP_EXPIRED, 400),
+
+    // Admin Panel
+    adminUnauthorized: () => new ApiError(ErrorCodes.ADMIN_UNAUTHORIZED, 401),
+    adminForbidden: () => new ApiError(ErrorCodes.ADMIN_FORBIDDEN, 403),
+    adminInvalidQuery: (details?: string) =>
+        new ApiError(ErrorCodes.ADMIN_INVALID_QUERY, 400, details),
 
     // General
     validationError: (details?: Record<string, unknown>) =>

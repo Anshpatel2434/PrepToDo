@@ -20,7 +20,7 @@ import { saveAllDataToDB } from "./retrieval/saveAllDataToDB";
 import { fetchArticleForUsage } from "./retrieval/articleHandling/fetchArticleForUsage";
 
 // Cost tracking
-import { CostTracker } from "./retrieval/utils/CostTracker";
+import { CostTracker } from "../../common/utils/CostTracker";
 
 // Data management
 import { DataManager } from "./retrieval/dataManager";
@@ -231,6 +231,9 @@ export async function runDailyContent(): Promise<DailyContentResult> {
         // Strategy 14: Print cost tracking report
         logger.info("\n✅ [COMPLETE] Daily Content Generation finished successfully");
         costTracker.printReport();
+
+        // New: Persist cost logs to DB
+        await costTracker.persistToDb('daily_content');
 
         return {
             success: true,

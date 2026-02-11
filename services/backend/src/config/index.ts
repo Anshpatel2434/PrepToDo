@@ -19,6 +19,9 @@ const requiredEnvVars = [
     'PROD_FRONTEND_URL',
     'DEV_BACKEND_URL',
     'PROD_BACKEND_URL',
+    'ADMIN_EMAIL',
+    'ADMIN_PASSWORD_HASH',
+    'ADMIN_JWT_SECRET',
 ] as const;
 
 // Validate required environment variables
@@ -107,6 +110,15 @@ export const config = {
     // Pending Signup (for refresh persistence)
     pendingSignup: {
         expiresInMinutes: 30,
+    },
+
+    // Admin Panel
+    admin: {
+        email: process.env.ADMIN_EMAIL!,
+        passwordHash: process.env.ADMIN_PASSWORD_HASH!,
+        jwtSecret: process.env.ADMIN_JWT_SECRET!,
+        jwtExpiresIn: '1h',
+        cookieName: 'preptodo_admin_token',
     },
 } as const;
 

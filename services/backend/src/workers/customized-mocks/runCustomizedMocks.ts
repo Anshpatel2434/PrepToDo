@@ -1,7 +1,7 @@
 import { CustomizedMockRequest, CustomizedMockResult, QuestionMetricTag, SemanticIdeas, AuthorialPersona } from "./schemas/types";
 import { createChildLogger } from "../../common/utils/logger.js";
 import { DataManager } from "./retrieval/dataManager";
-import { CostTracker } from "./retrieval/utils/CostTracker";
+import { CostTracker } from "../../common/utils/CostTracker";
 import { StateManager } from "./shared/StateManager";
 import { updateGenres } from "./retrieval/updateGenre";
 import { fetchPassagesData } from "./retrieval/passageHandling/fetchPassagesData";
@@ -340,6 +340,9 @@ export async function runCustomizedMocks(params: CustomizedMockRequest): Promise
         logger.info(generateOutputReport(finalOutput));
         logger.info(`✅ [Worker] customized-mocks completed successfully for ${examId}`);
         logger.info(`💰 Total Cost: $${costTracker.getReport().totalCost.toFixed(4)}`);
+
+        // New: Persist cost logs to DB
+        await costTracker.persistToDb('customized_mocks', params.user_id, examId);
 
         return {
             success: true,

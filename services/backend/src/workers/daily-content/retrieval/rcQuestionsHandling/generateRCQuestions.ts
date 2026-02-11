@@ -7,7 +7,7 @@ import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import { Passage, Question, QuestionSchema } from "../../types";
-import { CostTracker } from "../utils/CostTracker";
+import { CostTracker } from "../../../../common/utils/CostTracker";
 import { user_core_metrics_definition_v1 } from "../../../../config/user_core_metrics_definition_v1";
 import { createChildLogger } from "../../../../common/utils/logger.js";
 

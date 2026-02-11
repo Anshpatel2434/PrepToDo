@@ -4,7 +4,7 @@ import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import { Question, QuestionSchema, Passage, SemanticIdeas, AuthorialPersona } from "../../schemas/types";
 import { user_core_metrics_definition_v1 } from "../../../../config/user_core_metrics_definition_v1";
-import { CostTracker } from "../utils/CostTracker";
+import { CostTracker } from "../../../../common/utils/CostTracker";
 import { v4 as uuidv4 } from 'uuid';
 import { createChildLogger } from "../../../../common/utils/logger.js";
 
