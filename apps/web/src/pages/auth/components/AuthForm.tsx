@@ -18,7 +18,7 @@ import { EmailService } from "../../../services/email-handling/emailService";
 import type { RootState } from "../../../store";
 
 // Import steps components
-import { EmailStep } from "./EmailStep";
+import { EmailStep, type EmailStepRef } from "./EmailStep";
 import { OtpStep } from "./OtpStep";
 import { PasswordStep } from "./PasswordStep";
 import { LoginStep } from "./LoginStep";
@@ -51,6 +51,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
     const [skipPassword, setSkipPassword] = useState(false);
     const [isGoogleRedirecting, setIsGoogleRedirecting] = useState(false);
     const [showForgotPassword, setShowForgotPassword] = useState(false);
+    const emailStepRef = React.useRef<EmailStepRef>(null);
 
     // API mutations
     const [checkEmail] = useCheckEmailMutation();
@@ -120,6 +121,8 @@ export const AuthForm: React.FC<AuthFormProps> = ({
             await sendOtp({ email: emailValue, captchaToken }).unwrap();
             toast.success("Verification code sent to your email!");
         } catch (error) {
+            // Reset captcha on error so user can try again
+            emailStepRef.current?.resetCaptcha();
             const err = error as { data?: { error?: { message?: string } }; message?: string };
             toast.error(err.data?.error?.message || "Failed to send verification code");
         }
@@ -310,6 +313,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
 
                 {mode === "signup" && isSignupStep1 && (
                     <EmailStep
+                        ref={emailStepRef}
                         key="signup-step1"
                         isDark={isDark}
                         email={email}

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useImperativeHandle, forwardRef } from "react";
 import { motion } from "framer-motion";
 import { FaEnvelope, FaSpinner } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
@@ -6,6 +6,10 @@ import { EmailService } from "../../../services/email-handling/emailService";
 import { TurnstileWidget, type TurnstileWidgetRef } from "../../../ui_components/TurnstileWidget";
 import { useCooldown } from "../../../hooks/useDebounce";
 import toast from "react-hot-toast";
+
+export interface EmailStepRef {
+	resetCaptcha: () => void;
+}
 
 interface EmailStepProps {
 	isDark: boolean;
@@ -18,7 +22,7 @@ interface EmailStepProps {
 	onSwitchMode: () => void;
 }
 
-export const EmailStep: React.FC<EmailStepProps> = ({
+export const EmailStep = forwardRef<EmailStepRef, EmailStepProps>(({
 	isDark,
 	email,
 	onEmailChange,
@@ -27,10 +31,17 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 	onGoogleLogin,
 	onSwitchMode,
 	isGoogleLoading,
-}) => {
+}, ref) => {
 	const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 	const turnstileRef = useRef<TurnstileWidgetRef>(null);
 	const { isOnCooldown, startCooldown, remainingSeconds } = useCooldown(30000); // 30 second cooldown
+
+	useImperativeHandle(ref, () => ({
+		resetCaptcha: () => {
+			turnstileRef.current?.reset();
+			setCaptchaToken(null);
+		}
+	}));
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
@@ -230,4 +241,6 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 			</form>
 		</motion.div>
 	);
-};
+});
+
+EmailStep.displayName = "EmailStep";

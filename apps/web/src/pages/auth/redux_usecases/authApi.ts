@@ -256,7 +256,6 @@ export const authApi = createApi({
                 body,
             }),
             transformResponse: (response: { success: true; data: AuthResponseWithToken }) => response.data,
-            invalidatesTags: ['User'],
             onQueryStarted: async (_args, { dispatch, queryFulfilled }) => {
                 try {
                     dispatch(startLoading());
@@ -284,7 +283,6 @@ export const authApi = createApi({
                 body,
             }),
             transformResponse: (response: { success: true; data: AuthResponseWithToken }) => response.data,
-            invalidatesTags: ['User'],
             onQueryStarted: async (_args, { dispatch, queryFulfilled }) => {
                 try {
                     dispatch(startLoading());
