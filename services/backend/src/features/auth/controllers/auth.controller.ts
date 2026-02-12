@@ -14,7 +14,7 @@ import { validateEmail } from '../services/emailValidator.service.js';
 import { validateReturnTo } from '../services/urlValidator.js';
 import { authLogger } from '../../../common/utils/logger.js';
 import { AdminActivityService } from '../../admin/services/admin-activity.service.js';
-import type { UserResponse, CheckEmailResponse, SendOtpResponse, VerifyOtpResponse, LoginResponse, CheckPendingSignupResponse, GoogleUserInfo, RefreshTokenResponse } from '../types/auth.types.js';
+import type { UserResponse, CheckEmailResponse, SendOtpResponse, VerifyOtpResponse, LoginResponse, CheckPendingSignupResponse, GoogleUserInfo } from '../types/auth.types.js';
 
 // =============================================================================
 // Helper Functions
@@ -76,24 +76,7 @@ function clearAuthCookie(res: Response): void {
     });
 }
 
-function setRefreshCookie(res: Response, refreshToken: string): void {
-    res.cookie(config.jwt.refreshCookieName, refreshToken, {
-        httpOnly: true,
-        secure: config.isProduction,
-        sameSite: config.isProduction ? 'strict' : 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        path: '/',
-    });
-}
 
-function clearRefreshCookie(res: Response): void {
-    res.clearCookie(config.jwt.refreshCookieName, {
-        httpOnly: true,
-        secure: config.isProduction,
-        sameSite: config.isProduction ? 'strict' : 'lax',
-        path: '/',
-    });
-}
 
 function getSessionExpiryDate(): Date {
     return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
@@ -108,7 +91,6 @@ function generateUsername(email: string, userId: string): string {
 
 async function createSession(userId: string, email: string, req: Request, res: Response): Promise<string> {
     const sessionId = uuidv4();
-    const refreshToken = generateSecureToken();
     const expiresAt = getSessionExpiryDate();
 
     // Ensure user profile exists
@@ -118,18 +100,17 @@ async function createSession(userId: string, email: string, req: Request, res: R
     await db.insert(authSessions).values({
         id: sessionId,
         user_id: userId,
-        refresh_token_hash: await hashToken(refreshToken),
+        refresh_token_hash: '',
         user_agent: req.headers['user-agent'] || null,
         ip: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || null,
         expires_at: expiresAt,
     });
 
-    // Generate JWT
+    // Generate JWT (long-lived, matches session duration)
     const accessToken = generateAccessToken(userId, email, sessionId);
 
-    // Set cookies
+    // Set cookie
     setAuthCookie(res, accessToken);
-    setRefreshCookie(res, refreshToken);
 
     return accessToken;
 }
@@ -217,9 +198,9 @@ export async function sendOtp(req: Request, res: Response, next: NextFunction): 
             const secondsSinceCreated = (Date.now() - createdAt.getTime()) / 1000;
             const sendCount = existingPending.otp_send_count || 1;
 
-            // Check cooldown (60 seconds between OTPs)
-            if (secondsSinceCreated < 60) {
-                const waitSeconds = Math.ceil(60 - secondsSinceCreated);
+            // Check cooldown (30 seconds between OTPs)
+            if (secondsSinceCreated < 30) {
+                const waitSeconds = Math.ceil(30 - secondsSinceCreated);
                 res.status(429).json({
                     success: false,
                     error: {
@@ -231,9 +212,9 @@ export async function sendOtp(req: Request, res: Response, next: NextFunction): 
                 return;
             }
 
-            // Check if max attempts reached (3 attempts = ban for 1 hour)
+            // Check if max attempts reached (3 attempts = ban for 15 minutes)
             if (sendCount >= 3) {
-                const bannedUntil = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+                const bannedUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes from now
                 await db
                     .update(authPendingSignups)
                     .set({ banned_until: bannedUntil })
@@ -243,7 +224,7 @@ export async function sendOtp(req: Request, res: Response, next: NextFunction): 
                     success: false,
                     error: {
                         code: 'RATE_LIMITED',
-                        message: 'Too many attempts. Please try again in 1 hour.',
+                        message: 'Too many attempts. Please try again in 15 minutes.',
                         bannedUntil: bannedUntil.toISOString(),
                     },
                 });
@@ -660,24 +641,20 @@ export async function googleOAuthCallback(req: Request, res: Response, next: Nex
 
         // Generate the session data
         const sessionId = uuidv4();
-        const refreshToken = generateSecureToken();
         const expiresAt = getSessionExpiryDate();
 
         // Store session in database
         await db.insert(authSessions).values({
             id: sessionId,
             user_id: user!.id,
-            refresh_token_hash: await hashToken(refreshToken),
+            refresh_token_hash: '',
             user_agent: req.headers['user-agent'] || null,
             ip: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || null,
             expires_at: expiresAt,
         });
 
-        // Generate JWT token
+        // Generate JWT token (long-lived, matches session duration)
         const token = generateAccessToken(user!.id, user!.email!, sessionId);
-
-        // Set refresh cookie (access token is passed via URL for frontend)
-        setRefreshCookie(res, refreshToken);
 
         // Redirect to frontend with token in URL (will be exchanged for cookie)
         const returnTo = validateReturnTo(stateData.returnTo);
@@ -733,7 +710,6 @@ export async function logout(req: Request, res: Response, next: NextFunction): P
         }
 
         clearAuthCookie(res);
-        clearRefreshCookie(res);
 
         authLogger.info({ userId, sessionId, action: 'logout' }, 'User logged out');
         res.json(successResponse({ message: 'Logged out successfully.' }));
@@ -910,11 +886,11 @@ export async function resendOtp(req: Request, res: Response, next: NextFunction)
             throw Errors.pendingSignupNotFound();
         }
 
-        // Check cooldown (60 seconds)
+        // Check cooldown (30 seconds)
         const createdAt = pendingSignup.created_at!;
         const secondsSinceCreated = (Date.now() - createdAt.getTime()) / 1000;
-        if (secondsSinceCreated < 60) {
-            const waitSeconds = Math.ceil(60 - secondsSinceCreated);
+        if (secondsSinceCreated < 30) {
+            const waitSeconds = Math.ceil(30 - secondsSinceCreated);
             res.status(429).json({
                 success: false,
                 error: {
@@ -990,96 +966,7 @@ export async function checkPendingSignup(req: Request, res: Response, next: Next
     }
 }
 
-// =============================================================================
-// Refresh Token Controller
-// =============================================================================
-export async function refreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-        const refreshTokenValue = req.cookies?.[config.jwt.refreshCookieName];
 
-        if (!refreshTokenValue) {
-            throw Errors.unauthorized();
-        }
-
-        // Find all non-expired sessions
-        const sessions = await db
-            .select()
-            .from(authSessions)
-            .where(gt(authSessions.expires_at, new Date()));
-
-        // Find the session with matching refresh token
-        let matchedSession = null;
-        for (const session of sessions) {
-            if (verifyTokenHash(refreshTokenValue, session.refresh_token_hash)) {
-                matchedSession = session;
-                break;
-            }
-        }
-
-        if (!matchedSession) {
-            clearRefreshCookie(res);
-            throw Errors.unauthorized();
-        }
-
-        // Get the user
-        const [user] = await db
-            .select()
-            .from(authUsers)
-            .where(eq(authUsers.id, matchedSession.user_id))
-            .limit(1);
-
-        if (!user) {
-            clearRefreshCookie(res);
-            throw Errors.unauthorized();
-        }
-
-        // ===== TOKEN ROTATION (DISABLED) =====
-        // We disabled unconditional rotation because it causes race conditions
-        // if multiple tabs/requests try to refresh near the same time.
-        // Instead, we keep the SAME refresh token until it expires (7 days sliding).
-
-        /* 
-        const newRefreshToken = generateSecureToken();
-        await db
-            .update(authSessions)
-            .set({
-                refresh_token_hash: await hashToken(newRefreshToken),
-                expires_at: newExpiresAt,
-            })
-            .where(eq(authSessions.id, matchedSession.id));
-        setRefreshCookie(res, newRefreshToken);
-        */
-
-        // Update Session Expiry (Sliding Window)
-        const newExpiresAt = getSessionExpiryDate();
-        await db
-            .update(authSessions)
-            .set({
-                expires_at: newExpiresAt,
-                // keep existing refresh_token_hash
-            })
-            .where(eq(authSessions.id, matchedSession.id));
-
-        // Generate new access token
-        const newAccessToken = generateAccessToken(user.id, user.email!, matchedSession.id);
-
-        // Set new cookies
-        setAuthCookie(res, newAccessToken);
-        // Do NOT set new refresh cookie (keep existing one)
-        // setRefreshCookie(res, newRefreshToken); 
-
-        authLogger.info({ userId: user.id, sessionId: matchedSession.id, action: 'token_refresh' }, 'Token refreshed successfully');
-
-        const response: RefreshTokenResponse = {
-            accessToken: newAccessToken,
-            user: formatUserResponse(user),
-        };
-
-        res.json(successResponse(response));
-    } catch (error) {
-        next(error);
-    }
-}
 
 // =============================================================================
 // Cleanup Expired Data (can be called by cron)

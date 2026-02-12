@@ -40,7 +40,6 @@ import {
     resendOtp,
     checkPendingSignup,
     exchangeToken,
-    refreshToken,
 } from './controllers/auth.controller.js';
 
 const router = Router();
@@ -80,9 +79,6 @@ router.post('/login', loginRateLimiter, validateLogin, optionalCaptcha, login);
 router.get('/google', googleOAuthInit);
 router.get('/google/callback', googleOAuthCallback);
 router.post('/exchange-token', exchangeToken);
-
-// Token refresh
-router.post('/refresh', refreshToken);
 
 // Password reset
 router.post('/forgot-password', passwordResetRateLimiter, validateForgotPassword, optionalCaptcha, forgotPassword);

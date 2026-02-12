@@ -1,0 +1,8 @@
+Solve these bugs and they are final critical bugs : 
+1. I have told the other models a thousand fucking times to solve this problem : 
+Also solve this critical bug in the auth flow that we are sending a request every 15 minutes to refresh the access token, that is not at all accessible and while the user is inside the product, the user surprisingly logs out, if some other process is going on, either we solve this or we just remove this rotation of access token every 15 minutes and just keep the simple refresh token logic that we already have. I don't want the access token logic now, I only want the old simple refresh_token and preptodo_token logic, no more security and I even don't want to sovle this access_token of every 15 minutes issue, this has just brough many many logout errors that I didn't want. So remove this totally and let's go back to the old logic.
+2. In the recaptcha while signing up, when the user has already been verified and then the signup button enables and then tries to send the request the otp, the recaptch is again verified and then an error occurs. Fix this edge case or check whether we are actually sending the code form the frontend or not. 
+3. We have to highly imrove the auth errors messages and make it more clear.
+4. Also in the otp sending, we have kept a 60 seconds timer reduce that to 30 second.
+5. In the rate limiting logic we restrict the user to not send otp till 1 hour after 3 tries, reduce that to 15 minutes.
+6. Instead of showing the wait in the button, show the wait as in resent otp button text that I guess we already have and we only show it after 60 seconds, the only change will be that we will show the timer on the side of that button and than enable it after 30 seconds.

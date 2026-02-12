@@ -30,7 +30,7 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 }) => {
 	const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 	const turnstileRef = useRef<TurnstileWidgetRef>(null);
-	const { isOnCooldown, startCooldown, remainingSeconds } = useCooldown(60000); // 60 second cooldown
+	const { isOnCooldown, startCooldown, remainingSeconds } = useCooldown(30000); // 30 second cooldown
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
@@ -49,10 +49,6 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 
 		onSubmit(email, captchaToken ?? undefined);
 		startCooldown();
-
-		// Reset captcha after submission
-		turnstileRef.current?.reset();
-		setCaptchaToken(null);
 	};
 
 	return (

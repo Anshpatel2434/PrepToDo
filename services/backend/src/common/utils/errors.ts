@@ -61,33 +61,33 @@ export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
 // =============================================================================
 export const ErrorMessages: Record<ErrorCode, string> = {
     // Authentication
-    INVALID_CREDENTIALS: 'Invalid email or password. Please try again.',
+    INVALID_CREDENTIALS: 'The email or password you entered is incorrect. Please double-check and try again.',
     EMAIL_NOT_FOUND: 'No account found with this email address.',
-    EMAIL_ALREADY_EXISTS: 'An account with this email already exists.',
+    EMAIL_ALREADY_EXISTS: 'An account with this email already exists. Please sign in instead.',
     INVALID_EMAIL: 'Please enter a valid email address.',
-    EMAIL_NOT_VERIFIED: 'Please verify your email before logging in.',
-    PASSWORD_NOT_SET: 'Please set a password to continue.',
+    EMAIL_NOT_VERIFIED: 'Please verify your email before signing in.',
+    PASSWORD_NOT_SET: 'This account uses Google sign-in. Please use "Continue with Google" or set a password first.',
     WEAK_PASSWORD: 'Password must be at least 8 characters with uppercase, lowercase, and numbers.',
 
     // OTP
-    INVALID_OTP: 'The verification code is incorrect. Please try again.',
-    OTP_EXPIRED: 'The verification code has expired. Please request a new one.',
-    OTP_ALREADY_SENT: 'A verification code was already sent. Please check your email.',
+    INVALID_OTP: 'That code doesn\'t match. Please check the 6-digit code from your email and try again.',
+    OTP_EXPIRED: 'This code has expired. Click "Resend Code" to get a new one.',
+    OTP_ALREADY_SENT: 'A verification code was already sent. Please check your email or wait before requesting a new one.',
 
     // Session
-    UNAUTHORIZED: 'You need to be logged in to access this.',
-    SESSION_EXPIRED: 'Your session has expired. Please log in again.',
-    INVALID_TOKEN: 'Invalid authentication token.',
+    UNAUTHORIZED: 'Please sign in to continue.',
+    SESSION_EXPIRED: 'You\'ve been signed out because your session expired. Please sign in again.',
+    INVALID_TOKEN: 'Your session is invalid. Please sign in again.',
 
     // Rate Limiting
     RATE_LIMITED: 'Too many attempts. Please wait a few minutes and try again.',
 
     // CAPTCHA
-    CAPTCHA_FAILED: 'Security verification failed. Please try again.',
-    CAPTCHA_REQUIRED: 'Please complete the security verification.',
+    CAPTCHA_FAILED: 'Security check failed. Please refresh the page and try again.',
+    CAPTCHA_REQUIRED: 'Please complete the security verification to continue.',
 
     // Password Reset
-    RESET_TOKEN_INVALID: 'This password reset link is invalid.',
+    RESET_TOKEN_INVALID: 'This password reset link is invalid or has already been used.',
     RESET_TOKEN_EXPIRED: 'This password reset link has expired. Please request a new one.',
 
     // OAuth
@@ -95,8 +95,8 @@ export const ErrorMessages: Record<ErrorCode, string> = {
     OAUTH_EMAIL_MISMATCH: 'Email address does not match the expected account.',
 
     // Pending Signup
-    PENDING_SIGNUP_NOT_FOUND: 'Signup session not found. Please start again.',
-    PENDING_SIGNUP_EXPIRED: 'Signup session expired. Please start again.',
+    PENDING_SIGNUP_NOT_FOUND: 'Your signup session was not found. Please go back and start the sign-up process again.',
+    PENDING_SIGNUP_EXPIRED: 'Your signup session has expired due to too many failed attempts. Please start the sign-up process again.',
 
     // Admin Panel
     ADMIN_UNAUTHORIZED: 'Admin authentication required.',
@@ -105,7 +105,7 @@ export const ErrorMessages: Record<ErrorCode, string> = {
 
     // General
     VALIDATION_ERROR: 'Please check your input and try again.',
-    INTERNAL_ERROR: 'Something went wrong. Please try again later.',
+    INTERNAL_ERROR: 'Something went wrong on our end. Please try again later.',
     NOT_FOUND: 'The requested resource was not found.',
     BAD_REQUEST: 'Invalid request. Please try again.',
 };

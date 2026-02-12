@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { motion } from "framer-motion";
-import { FaKey, FaArrowLeft, FaClock } from "react-icons/fa";
+import { FaKey, FaArrowLeft } from "react-icons/fa";
 import { useCooldown } from "../../../hooks/useDebounce";
 
 interface OtpStepProps {
@@ -24,18 +24,12 @@ export const OtpStep: React.FC<OtpStepProps> = ({
 	isLoading,
 	isResending,
 }) => {
-	const { isOnCooldown, startCooldown, remainingSeconds } = useCooldown(120000); // 2 minutes (OTP expiry)
+	const { isOnCooldown, startCooldown, remainingSeconds } = useCooldown(30000); // 30 seconds cooldown for resend
 
 	// Start cooldown on mount (since OTP was just sent)
 	useEffect(() => {
 		startCooldown();
 	}, [startCooldown]);
-
-	const formatTime = (seconds: number) => {
-		const mins = Math.floor(seconds / 60);
-		const secs = seconds % 60;
-		return `${mins}:${secs.toString().padStart(2, "0")}`;
-	};
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
@@ -127,45 +121,31 @@ export const OtpStep: React.FC<OtpStepProps> = ({
 				</p>
 			</div>
 
-			{/* Timer */}
+			{/* Resend Code */}
 			<div className="flex items-center justify-center mb-4">
-				<FaClock
+				<button
+					type="button"
+					onClick={handleResendOtp}
+					disabled={isOnCooldown || isResending}
 					className={`
-          mr-2 
-          ${isDark ? "text-text-muted-dark" : "text-text-muted-light"}
-        `}
-					size={14}
-				/>
-				<span
-					className={`
-          text-sm font-medium
-          ${remainingSeconds > 60
+              text-sm font-medium transition-colors duration-200
+              ${isOnCooldown || isResending
 							? isDark
-								? "text-text-secondary-dark"
-								: "text-text-secondary-light"
-							: "text-red-500"
+								? "text-text-muted-dark cursor-not-allowed"
+								: "text-text-muted-light cursor-not-allowed"
+							: isDark
+								? "text-brand-primary-dark hover:text-brand-primary-hover-dark cursor-pointer"
+								: "text-brand-primary-light hover:text-brand-primary-hover-light cursor-pointer"
 						}
-        `}
-				>
-					{isOnCooldown ? formatTime(remainingSeconds) : "Code expired"}
-				</span>
-				{!isOnCooldown && (
-					<button
-						type="button"
-						onClick={handleResendOtp}
-						disabled={isResending}
-						className={`
-              ml-3 text-sm font-medium transition-colors duration-200
-              ${isDark
-								? "text-brand-primary-dark hover:text-brand-primary-hover-dark"
-								: "text-brand-primary-light hover:text-brand-primary-hover-light"
-							}
-              ${isResending ? 'opacity-50 cursor-not-allowed' : ''}
             `}
-					>
-						{isResending ? 'Sending...' : 'Resend'}
-					</button>
-				)}
+				>
+					{isResending
+						? "Sending..."
+						: isOnCooldown
+							? `Resend Code (${remainingSeconds}s)`
+							: "Resend Code"
+					}
+				</button>
 			</div>
 
 			{/* OTP input form */}
