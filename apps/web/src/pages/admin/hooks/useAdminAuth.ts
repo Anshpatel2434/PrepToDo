@@ -11,6 +11,8 @@ interface AdminUser {
 interface UseAdminAuthReturn {
     admin: AdminUser | null;
     isLoading: boolean;
+    error: string | null;
+    login: (credentials: any) => Promise<void>;
     logout: () => Promise<void>;
     checkSession: () => Promise<void>;
 }
@@ -20,6 +22,7 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 export function useAdminAuth(): UseAdminAuthReturn {
     const [admin, setAdmin] = useState<AdminUser | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
 
     // Attempt auto-login using the user's normal JWT
@@ -78,6 +81,27 @@ export function useAdminAuth(): UseAdminAuthReturn {
         checkSession();
     }, [checkSession]);
 
+    const login = async (credentials: any) => {
+        try {
+            setIsLoading(true);
+            setError(null);
+            const response = await adminApiClient<{ authenticated: boolean; email: string; role: 'admin' }>('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify(credentials),
+            });
+
+            if (response.authenticated) {
+                setAdmin({ email: response.email, role: response.role });
+                navigate('/admin/dashboard/overview');
+            }
+        } catch (err: any) {
+            setError(err.message || 'Login failed');
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const logout = async () => {
         try {
             await adminApiClient('/auth/logout', { method: 'POST' });
@@ -88,5 +112,5 @@ export function useAdminAuth(): UseAdminAuthReturn {
         }
     };
 
-    return { admin, isLoading, logout, checkSession };
+    return { admin, isLoading, error, login, logout, checkSession };
 }
