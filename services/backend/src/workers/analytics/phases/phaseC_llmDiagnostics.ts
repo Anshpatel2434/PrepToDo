@@ -8,6 +8,7 @@ import { db } from "../../../db";
 import { userMetricProficiency, userProficiencySignals } from "../../../db/schema";
 import { eq } from "drizzle-orm";
 import { createChildLogger } from "../../../common/utils/logger.js";
+import { CostTracker } from "../../../common/utils/CostTracker";
 
 const logger = createChildLogger('analytics-phase-c');
 
@@ -62,7 +63,8 @@ function createHumanReadableDescription(dimensionType: string, dimensionKey: str
 
 export async function phaseC_llmDiagnostics(
     userId: string,
-    incorrectAttempts: AttemptDatum[]
+    incorrectAttempts: AttemptDatum[],
+    costTracker?: CostTracker
 ): Promise<z.infer<typeof DiagnosticsOutputSchema>> {
 
     if (incorrectAttempts.length === 0) {
@@ -248,15 +250,21 @@ For each incorrect attempt, provide personalized diagnostics that help THIS SPEC
             });
         }
 
-        // Log cost if tracker provided
+        // Log cost via CostTracker
         if (completion.usage) {
-            // We can't log here easily without passing tracker down.
-            // For now, let's just log it to standard logger as info
-            logger.info({
-                input_tokens: completion.usage.prompt_tokens,
-                output_tokens: completion.usage.completion_tokens,
-                model: MODEL
-            }, 'LLM Usage Stats');
+            if (costTracker) {
+                costTracker.logCall(
+                    'phaseC_llmDiagnostics',
+                    completion.usage.prompt_tokens,
+                    completion.usage.completion_tokens
+                );
+            } else {
+                logger.info({
+                    input_tokens: completion.usage.prompt_tokens,
+                    output_tokens: completion.usage.completion_tokens,
+                    model: MODEL
+                }, 'LLM Usage Stats');
+            }
         }
 
         logger.info({ diagnosticsCount: parsed.diagnostics.length }, "Generated personalized diagnostics");

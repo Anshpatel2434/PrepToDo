@@ -14,6 +14,7 @@ import { db } from "../../db";
 import { practiceSessions } from "../../db/schema";
 import { and, eq } from "drizzle-orm";
 import { createChildLogger } from "../../common/utils/logger.js";
+import { CostTracker } from "../../common/utils/CostTracker";
 
 const logger = createChildLogger('analytics-worker');
 
@@ -26,6 +27,9 @@ export async function runAnalytics(params: {
     logger.info({ user_id }, "VARC Analytics Processing started");
 
     try {
+        // Initialize Cost Tracker
+        const costTracker = new CostTracker();
+        logger.info("💰 [CostTracker] Initialized for monitoring AI costs");
         // Fetch all unanalyzed sessions for this user
         logger.info("Fetching unanalyzed sessions");
 
@@ -122,7 +126,7 @@ export async function runAnalytics(params: {
                 const incorrectAttempts = dataset.filter(a => (!a.correct && a.user_answer?.user_answer));
                 logger.info({ incorrectCount: incorrectAttempts.length }, "Running LLM diagnostics");
 
-                const diagnostics = await phaseC_llmDiagnostics(user_id, incorrectAttempts);
+                const diagnostics = await phaseC_llmDiagnostics(user_id, incorrectAttempts, costTracker);
 
                 // Store diagnostics in session_data
                 if (diagnostics.diagnostics.length > 0) {
@@ -154,10 +158,7 @@ export async function runAnalytics(params: {
                     logger.info('Diagnostics stored in session analytics');
                 }
 
-                // Track cost for this session's diagnostics
-                // Note: phaseC_llmDiagnostics currently doesn't return token usage or accept tracker.
-                // TODO: Update phaseC to return usage stats or accept tracker.
-                // For now, we are skipping granular cost tracking here until phaseC is refactored.
+                // Cost tracking is now handled via CostTracker passed to phaseC
 
 
                 // --- PHASE D: PROFICIENCY ENGINE ---
@@ -213,6 +214,10 @@ export async function runAnalytics(params: {
             totalGenres,
             totalQuestionTypes
         }, "VARC Analytics finished for all sessions");
+
+        // Print and persist cost tracking report
+        costTracker.printReport();
+        await costTracker.persistToDb('analytics', user_id);
 
         return {
             success: true,

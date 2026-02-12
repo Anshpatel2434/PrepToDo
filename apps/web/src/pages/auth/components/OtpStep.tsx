@@ -210,6 +210,40 @@ export const OtpStep: React.FC<OtpStepProps> = ({
 										prevInput?.focus();
 									}
 								}}
+								onPaste={(e) => {
+									e.preventDefault();
+									const pastedData = e.clipboardData
+										.getData("text")
+										.replace(/\D/g, "");
+									if (!pastedData) return;
+
+									const otpArray = otp.split("");
+									const newOtp = new Array(6).fill("");
+
+									// Fill with existing
+									for (let i = 0; i < otpArray.length; i++) {
+										if (i < 6) newOtp[i] = otpArray[i];
+									}
+
+									// Fill with pasted
+									for (let i = 0; i < pastedData.length; i++) {
+										if (index + i < 6) {
+											newOtp[index + i] = pastedData[i];
+										}
+									}
+
+									onOtpChange(newOtp.join(""));
+
+									// Focus next appropriate input
+									const nextIndex = Math.min(
+										index + pastedData.length,
+										5
+									);
+									const nextInput = document.querySelector(
+										`input[name="otp-${nextIndex}"]`
+									) as HTMLInputElement;
+									nextInput?.focus();
+								}}
 								name={`otp-${index}`}
 								className={`
                   w-full h-12 text-center text-lg font-bold rounded-xl border-2 transition-colors duration-200

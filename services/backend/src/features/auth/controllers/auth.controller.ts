@@ -1022,16 +1022,30 @@ export async function refreshToken(req: Request, res: Response, next: NextFuncti
             throw Errors.unauthorized();
         }
 
-        // ===== TOKEN ROTATION =====
-        // Generate new refresh token and update session
-        const newRefreshToken = generateSecureToken();
-        const newExpiresAt = getSessionExpiryDate();
+        // ===== TOKEN ROTATION (DISABLED) =====
+        // We disabled unconditional rotation because it causes race conditions
+        // if multiple tabs/requests try to refresh near the same time.
+        // Instead, we keep the SAME refresh token until it expires (7 days sliding).
 
+        /* 
+        const newRefreshToken = generateSecureToken();
         await db
             .update(authSessions)
             .set({
                 refresh_token_hash: await hashToken(newRefreshToken),
                 expires_at: newExpiresAt,
+            })
+            .where(eq(authSessions.id, matchedSession.id));
+        setRefreshCookie(res, newRefreshToken);
+        */
+
+        // Update Session Expiry (Sliding Window)
+        const newExpiresAt = getSessionExpiryDate();
+        await db
+            .update(authSessions)
+            .set({
+                expires_at: newExpiresAt,
+                // keep existing refresh_token_hash
             })
             .where(eq(authSessions.id, matchedSession.id));
 
@@ -1040,7 +1054,8 @@ export async function refreshToken(req: Request, res: Response, next: NextFuncti
 
         // Set new cookies
         setAuthCookie(res, newAccessToken);
-        setRefreshCookie(res, newRefreshToken);
+        // Do NOT set new refresh cookie (keep existing one)
+        // setRefreshCookie(res, newRefreshToken); 
 
         authLogger.info({ userId: user.id, sessionId: matchedSession.id, action: 'token_refresh' }, 'Token refreshed successfully');
 

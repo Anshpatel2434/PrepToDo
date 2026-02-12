@@ -261,7 +261,74 @@ const DailyVAPage: React.FC = () => {
 
         setIsSubmitting(true);
 
-        try {
+        const MAX_RETRIES = 1;
+
+        const submitWithRetry = async (retryCount = 0) => {
+            try {
+                // 1. Prepare Data
+                const timeNow = Date.now();
+                const finalTimeSpentOnCurrent = startTime ? Math.floor((timeNow - startTime) / 1000) : 0;
+
+                const attemptList = Object.values(attempts).map((a) => {
+                    const isCurrent = a.question_id === currentQuestionId;
+                    const pending = pendingAttempts[a.question_id!] || {};
+                    return {
+                        ...a,
+                        ...pending,
+                        time_spent_seconds: (a.time_spent_seconds || 0) + (pending.time_spent_seconds || 0) + (isCurrent ? finalTimeSpentOnCurrent : 0),
+                        // Ensure strictly required fields for DB
+                        id: a.id ? a.id : uuid4(),
+                        user_id: session.user_id,
+                        session_id: session.id,
+                        user_answer: pending.user_answer || a.user_answer || {},
+                        marked_for_review: pending.marked_for_review ?? a.marked_for_review ?? false,
+                        rationale_viewed: false,
+                        rationale_helpful: null,
+                        ai_feedback: null,
+                    };
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                }) as any;
+
+                if (attemptList.length > 0) {
+                    await saveAttempts({ attempts: attemptList }).unwrap();
+                }
+
+                await saveSession({
+                    session_id: session.id,
+                    status: "completed",
+                    completed_at: new Date().toISOString(),
+                    time_spent_seconds: elapsedTime,
+                    total_questions: questions.length,
+                    correct_answers: progress.correct,
+                    score_percentage: progress.percentage,
+                    current_question_index: currentQuestionIndex,
+                }).unwrap();
+
+                dispatch(setViewMode("solution"));
+                showToast.success("Practice submitted successfully!");
+            } catch (e: any) {
+                console.error(`Submit attempt ${retryCount + 1} failed:`, e);
+
+                if (retryCount < MAX_RETRIES) {
+                    // Wait 1 second before retrying
+                    setTimeout(() => submitWithRetry(retryCount + 1), 1000);
+                } else {
+                    const errorMessage = e?.data?.message || e?.message || "Please check your connection.";
+                    showToast.error(`Failed to submit: ${errorMessage}`);
+                    setIsSubmitting(false); // Only set false on final failure
+                }
+            } finally {
+                if (retryCount >= MAX_RETRIES) { // Ensure loop ends
+                    // Logic handled in catch block for final failure, success handles dispatch
+                }
+                // Reset submitting state if success
+                // The 'finally' block runs after every try, which is tricky with recursion. 
+                // Better to handle setIsSubmitting(false) explicitly in success/failure paths.
+            }
+        };
+
+        // Refactored slightly to avoid "finally" complications with recursion
+        const performSubmit = async () => {
             // 1. Prepare Data
             const timeNow = Date.now();
             const finalTimeSpentOnCurrent = startTime ? Math.floor((timeNow - startTime) / 1000) : 0;
@@ -286,28 +353,75 @@ const DailyVAPage: React.FC = () => {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
             }) as any;
 
-            if (attemptList.length > 0) {
-                await saveAttempts({ attempts: attemptList }).unwrap();
+            try {
+                if (attemptList.length > 0) {
+                    await saveAttempts({ attempts: attemptList }).unwrap();
+                }
+
+                await saveSession({
+                    session_id: session.id,
+                    status: "completed",
+                    completed_at: new Date().toISOString(),
+                    time_spent_seconds: elapsedTime,
+                    total_questions: questions.length,
+                    correct_answers: progress.correct,
+                    score_percentage: progress.percentage,
+                    current_question_index: currentQuestionIndex,
+                }).unwrap();
+
+                dispatch(setViewMode("solution"));
+                showToast.success("Practice submitted successfully!");
+            } catch (error) {
+                throw error;
             }
-
-            await saveSession({
-                session_id: session.id,
-                status: "completed",
-                completed_at: new Date().toISOString(),
-                time_spent_seconds: elapsedTime,
-                total_questions: questions.length,
-                correct_answers: progress.correct,
-                score_percentage: progress.percentage,
-                current_question_index: currentQuestionIndex,
-            }).unwrap();
-
-            dispatch(setViewMode("solution"));
-        } catch (e) {
-            console.error("Failed to submit exam:", e);
-            alert("Failed to submit. Please check your connection.");
-        } finally {
-            setIsSubmitting(false);
         }
+
+
+        // Retry Wrapper
+        let retries = 0;
+        const execute = async () => {
+            try {
+                await performSubmit();
+            } catch (e: any) {
+                if (retries < MAX_RETRIES) {
+                    retries++;
+                    console.warn(`Submission failed, retrying (${retries}/${MAX_RETRIES})...`);
+                    setTimeout(execute, 1000);
+                } else {
+                    console.error("Failed to submit exam:", e);
+                    const errorMessage = e?.data?.message || e?.message || "Please check your connection.";
+                    showToast.error(`Failed to submit: ${errorMessage}`);
+                    setIsSubmitting(false);
+                }
+            } finally {
+                // Only turn off submitting if success or final failure
+                // If retrying, we want to keep it true.
+                // This logic is handled above.
+                if (retries === 0 && !isSubmitting) {
+                    // Initial success
+                }
+            }
+        };
+
+        // Simplified Execution
+        try {
+            await performSubmit();
+            setIsSubmitting(false);
+        } catch (e) {
+            console.warn("First submission attempt failed, retrying...");
+            setTimeout(async () => {
+                try {
+                    await performSubmit();
+                    setIsSubmitting(false);
+                } catch (e2: any) {
+                    console.error("Final submission attempt failed:", e2);
+                    const errorMessage = e2?.data?.message || e2?.message || "Please check your connection.";
+                    showToast.error(`Failed to submit: ${errorMessage}`);
+                    setIsSubmitting(false);
+                }
+            }, 1000);
+        }
+
     }, [
         session.id,
         session.user_id,
