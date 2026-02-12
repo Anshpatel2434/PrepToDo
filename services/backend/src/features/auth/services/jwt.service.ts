@@ -116,25 +116,3 @@ export function verifyAccessTokenFast(token: string): JwtPayload | null {
         return null;
     }
 }
-
-// =============================================================================
-// Helper: Generate Secure Random Token
-// =============================================================================
-export function generateSecureToken(): string {
-    return crypto.randomBytes(40).toString('hex');
-}
-
-// =============================================================================
-// Helper: Hash Token (SHA-256)
-// =============================================================================
-export async function hashToken(token: string): Promise<string> {
-    return crypto.createHash('sha256').update(token).digest('hex');
-}
-
-// =============================================================================
-// Helper: Verify Token Hash
-// =============================================================================
-export function verifyTokenHash(token: string, hash: string): boolean {
-    const computedHash = crypto.createHash('sha256').update(token).digest('hex');
-    return computedHash === hash;
-}
