@@ -1,3 +1,0 @@
-src/pages/admin/components/AdminLayout.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/pages/admin/components/AdminLayout.tsx(4,1): error TS6133: 'motion' is declared but its value is never read.
-src/pages/admin/pages/ContentPage.tsx(4,1): error TS6192: All imports in import declaration are unused.

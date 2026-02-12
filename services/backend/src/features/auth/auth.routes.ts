@@ -64,8 +64,8 @@ router.use((_req, res, next) => {
 router.post('/check-email', validateCheckEmail, optionalCaptcha, checkEmail);
 
 // OTP flow
-// router.post('/send-otp', otpRateLimiter, validateSendOtp, verifyCaptcha, sendOtp); // for production
-router.post('/send-otp', otpRateLimiter, validateSendOtp, sendOtp); // for development
+router.post('/send-otp', otpRateLimiter, validateSendOtp, verifyCaptcha, sendOtp); // for production
+// router.post('/send-otp', otpRateLimiter, validateSendOtp, sendOtp); // for development
 router.post('/verify-otp', validateVerifyOtp, verifyOtpController);
 router.post('/resend-otp', otpRateLimiter, validateResendOtp, resendOtp);
 router.post('/check-pending-signup', validateCheckPendingSignup, checkPendingSignup);
