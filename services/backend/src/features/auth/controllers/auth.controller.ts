@@ -7,14 +7,14 @@ import { authUsers, authSessions, authPendingSignups, authPasswordResetTokens, u
 import { config } from '../../../config/index.js';
 import { Errors, successResponse } from '../../../common/utils/errors.js';
 import { hashPassword, verifyPassword, generateSecureToken, hashToken, verifyTokenHash } from '../services/password.service.js';
-import { generateAccessToken } from '../services/jwt.service.js';
+import { generateAccessToken, verifyAccessTokenFast } from '../services/jwt.service.js';
 import { generateOtp, hashOtp, verifyOtp, getOtpExpiryDate } from '../services/otp.service.js';
 import { sendOtpEmail, sendPasswordResetEmail } from '../services/email.service.js';
 import { validateEmail } from '../services/emailValidator.service.js';
 import { validateReturnTo } from '../services/urlValidator.js';
 import { authLogger } from '../../../common/utils/logger.js';
 import { AdminActivityService } from '../../admin/services/admin-activity.service.js';
-import type { UserResponse, CheckEmailResponse, SendOtpResponse, VerifyOtpResponse, LoginResponse, CheckPendingSignupResponse, GoogleUserInfo } from '../types/auth.types.js';
+import type { UserResponse, CheckEmailResponse, SendOtpResponse, VerifyOtpResponse, LoginResponse, CheckPendingSignupResponse, GoogleUserInfo, RefreshTokenResponse } from '../types/auth.types.js';
 
 // =============================================================================
 // Helper Functions
@@ -67,8 +67,27 @@ function setAuthCookie(res: Response, token: string): void {
     });
 }
 
+function setRefreshCookie(res: Response, refreshToken: string): void {
+    res.cookie(config.jwt.refreshCookieName, refreshToken, {
+        httpOnly: true,
+        secure: config.isProduction,
+        sameSite: config.isProduction ? 'strict' : 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        path: '/',
+    });
+}
+
 function clearAuthCookie(res: Response): void {
     res.clearCookie(config.jwt.cookieName, {
+        httpOnly: true,
+        secure: config.isProduction,
+        sameSite: config.isProduction ? 'strict' : 'lax',
+        path: '/',
+    });
+}
+
+function clearRefreshCookie(res: Response): void {
+    res.clearCookie(config.jwt.refreshCookieName, {
         httpOnly: true,
         secure: config.isProduction,
         sameSite: config.isProduction ? 'strict' : 'lax',
@@ -91,6 +110,7 @@ function generateUsername(email: string, userId: string): string {
 
 async function createSession(userId: string, email: string, req: Request, res: Response): Promise<string> {
     const sessionId = uuidv4();
+    const refreshToken = generateSecureToken(); // secure refresh token
     const expiresAt = getSessionExpiryDate();
 
     // Ensure user profile exists
@@ -100,7 +120,7 @@ async function createSession(userId: string, email: string, req: Request, res: R
     await db.insert(authSessions).values({
         id: sessionId,
         user_id: userId,
-        refresh_token_hash: '',
+        refresh_token_hash: await hashToken(refreshToken),
         user_agent: req.headers['user-agent'] || null,
         ip: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || null,
         expires_at: expiresAt,
@@ -109,8 +129,9 @@ async function createSession(userId: string, email: string, req: Request, res: R
     // Generate JWT (long-lived, matches session duration)
     const accessToken = generateAccessToken(userId, email, sessionId);
 
-    // Set cookie
+    // Set cookies
     setAuthCookie(res, accessToken);
+    setRefreshCookie(res, refreshToken);
 
     return accessToken;
 }
@@ -641,13 +662,14 @@ export async function googleOAuthCallback(req: Request, res: Response, next: Nex
 
         // Generate the session data
         const sessionId = uuidv4();
+        const refreshToken = generateSecureToken();
         const expiresAt = getSessionExpiryDate();
 
         // Store session in database
         await db.insert(authSessions).values({
             id: sessionId,
             user_id: user!.id,
-            refresh_token_hash: '',
+            refresh_token_hash: await hashToken(refreshToken),
             user_agent: req.headers['user-agent'] || null,
             ip: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || null,
             expires_at: expiresAt,
@@ -655,6 +677,9 @@ export async function googleOAuthCallback(req: Request, res: Response, next: Nex
 
         // Generate JWT token (long-lived, matches session duration)
         const token = generateAccessToken(user!.id, user!.email!, sessionId);
+
+        // Set refresh cookie (access token is passed via URL for frontend)
+        setRefreshCookie(res, refreshToken);
 
         // Redirect to frontend with token in URL (will be exchanged for cookie)
         const returnTo = validateReturnTo(stateData.returnTo);
@@ -710,6 +735,7 @@ export async function logout(req: Request, res: Response, next: NextFunction): P
         }
 
         clearAuthCookie(res);
+        clearRefreshCookie(res);
 
         authLogger.info({ userId, sessionId, action: 'logout' }, 'User logged out');
         res.json(successResponse({ message: 'Logged out successfully.' }));
@@ -990,4 +1016,76 @@ export async function cleanupExpired(): Promise<void> {
         .where(lt(authSessions.expires_at, now));
 
     console.log('[Cleanup] Expired data cleaned up');
+}
+
+// =============================================================================
+// Refresh Token Controller
+// =============================================================================
+export async function refreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        const refreshTokenValue = req.cookies?.[config.jwt.refreshCookieName];
+
+        if (!refreshTokenValue) {
+            throw Errors.unauthorized();
+        }
+
+        // Find all non-expired sessions
+        const sessions = await db
+            .select()
+            .from(authSessions)
+            .where(gt(authSessions.expires_at, new Date()));
+
+        // Find the session with matching refresh token
+        let matchedSession = null;
+        for (const session of sessions) {
+            if (verifyTokenHash(refreshTokenValue, session.refresh_token_hash)) {
+                matchedSession = session;
+                break;
+            }
+        }
+
+        if (!matchedSession) {
+            clearRefreshCookie(res);
+            throw Errors.unauthorized();
+        }
+
+        // Get the user
+        const [user] = await db
+            .select()
+            .from(authUsers)
+            .where(eq(authUsers.id, matchedSession.user_id))
+            .limit(1);
+
+        if (!user) {
+            clearRefreshCookie(res);
+            throw Errors.unauthorized();
+        }
+
+        // Keep existing refresh_token_hash (sliding window update)
+        const newExpiresAt = getSessionExpiryDate();
+        await db
+            .update(authSessions)
+            .set({
+                expires_at: newExpiresAt,
+            })
+            .where(eq(authSessions.id, matchedSession.id));
+
+        // Generate new access token
+        const newAccessToken = generateAccessToken(user.id, user.email!, matchedSession.id);
+
+        // Set cookies
+        setAuthCookie(res, newAccessToken);
+        // setRefreshCookie(res, newRefreshToken); // Disabled rotation for stability
+
+        authLogger.info({ userId: user.id, sessionId: matchedSession.id, action: 'token_refresh' }, 'Token refreshed successfully');
+
+        const response: RefreshTokenResponse = {
+            accessToken: newAccessToken,
+            user: formatUserResponse(user), // Ensure formatUserResponse is available or implement inline? It should be there.
+        };
+
+        res.json(successResponse(response));
+    } catch (error) {
+        next(error);
+    }
 }

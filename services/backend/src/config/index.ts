@@ -48,7 +48,9 @@ export const config = {
     jwt: {
         secret: process.env.JWT_SECRET!,
         accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '7d',
+        refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
         cookieName: 'preptodo_token',
+        refreshCookieName: 'preptodo_refresh_token',
     },
 
     // Google OAuth

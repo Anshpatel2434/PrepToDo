@@ -2,6 +2,7 @@
 // Auth Feature - JWT Service
 // =============================================================================
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { config } from '../../../config/index.js';
 import { db } from '../../../db/index.js';
 import { authSessions } from '../../../db/schema.js';
@@ -114,4 +115,26 @@ export function verifyAccessTokenFast(token: string): JwtPayload | null {
     } catch {
         return null;
     }
+}
+
+// =============================================================================
+// Helper: Generate Secure Random Token
+// =============================================================================
+export function generateSecureToken(): string {
+    return crypto.randomBytes(40).toString('hex');
+}
+
+// =============================================================================
+// Helper: Hash Token (SHA-256)
+// =============================================================================
+export async function hashToken(token: string): Promise<string> {
+    return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+// =============================================================================
+// Helper: Verify Token Hash
+// =============================================================================
+export function verifyTokenHash(token: string, hash: string): boolean {
+    const computedHash = crypto.createHash('sha256').update(token).digest('hex');
+    return computedHash === hash;
 }

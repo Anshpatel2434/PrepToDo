@@ -51,7 +51,10 @@ export const verifyCaptcha = async (
         const data = await response.json() as TurnstileResponse;
 
         if (!data.success) {
-            authLogger.error({ errorCodes: data['error-codes'] }, '[CAPTCHA] Verification failed');
+            authLogger.error({
+                errorCodes: data['error-codes'],
+                secretKeyPrefix: config.turnstile.secretKey ? `${config.turnstile.secretKey.substring(0, 4)}...` : 'undefined'
+            }, '[CAPTCHA] Verification failed');
             throw Errors.captchaFailed();
         }
 
