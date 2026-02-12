@@ -13,8 +13,8 @@ const requiredEnvVars = [
     'GOOGLE_CLIENT_ID',
     'GOOGLE_CLIENT_SECRET',
     'TURNSTILE_SECRET_KEY',
-    'SMTP_USER',
-    'SMTP_PASSWORD',
+    'TURNSTILE_SECRET_KEY',
+    'RESEND_API_KEY',
     'DEV_FRONTEND_URL',
     'PROD_FRONTEND_URL',
     'DEV_BACKEND_URL',
@@ -57,7 +57,7 @@ export const config = {
     google: {
         clientId: process.env.GOOGLE_CLIENT_ID!,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-        callbackUrl: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3001/api/auth/google/callback',
+        callbackUrl: process.env.NODE_ENV === 'production' ? process.env.PROD_GOOGLE_CALLBACK_URL : process.env.DEV_GOOGLE_CALLBACK_URL,
     },
 
     // Cloudflare Turnstile
@@ -66,14 +66,11 @@ export const config = {
         verifyUrl: 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
     },
 
-    // SMTP (Gmail)
-    smtp: {
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: parseInt(process.env.SMTP_PORT || '587', 10),
-        user: process.env.SMTP_USER!,
-        password: process.env.SMTP_PASSWORD!,
-        fromName: process.env.SMTP_FROM_NAME || 'PrepToDo',
-        fromEmail: process.env.SMTP_USER!,
+    // Resend Email
+    resend: {
+        apiKey: process.env.RESEND_API_KEY!,
+        fromName: process.env.EMAIL_FROM_NAME || 'PrepToDo',
+        fromEmail: process.env.EMAIL_FROM_ADDRESS || 'preptodo.app@gmail.com',
     },
 
     // URLs

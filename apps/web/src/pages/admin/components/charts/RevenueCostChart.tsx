@@ -22,10 +22,10 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                 </p>
                 <div className="space-y-1">
                     <p className="text-sm text-[#4ade80]">
-                        Revenue: ${(payload[0].value / 100).toFixed(2)}
+                        Revenue: ${payload[0].value.toFixed(4)}
                     </p>
-                    <p className="text-sm text-[#f87171]">
-                        Cost: ${(payload[1].value / 100).toFixed(2)}
+                    <p className="text-[#f87171]">
+                        Cost: ${payload[1].value.toFixed(4)}
                     </p>
                 </div>
             </div>
@@ -68,7 +68,7 @@ export const RevenueCostChart: FC<RevenueCostChartProps> = ({ data }) => {
                         fontSize={12}
                         tickLine={false}
                         axisLine={false}
-                        tickFormatter={(value) => `$${value / 100}`}
+                        tickFormatter={(value) => `$${value}`}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Area

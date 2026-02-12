@@ -25,6 +25,7 @@ import {
     CheckSessionResponse,
     TestDataResponse
 } from '../types/customized-mocks.types';
+import { AdminActivityService } from '../../admin/services/admin-activity.service';
 
 // =============================================================================
 // Helper Functions
@@ -262,6 +263,10 @@ export async function createCustomizedMock(req: Request, res: Response, next: Ne
         });
 
         // Return immediately with the ID
+
+        // Log activity
+        await AdminActivityService.logExamGeneration(user_id, examId, params);
+
         res.json(successResponse({
             success: true,
             exam_id: examId,
@@ -417,6 +422,9 @@ export async function startMockSession(req: Request, res: Response, next: NextFu
             created_at: new Date(),
             updated_at: new Date()
         }).returning();
+
+        // Log activity
+        await AdminActivityService.logSessionStart(authUserId, session.id, 'custom_mock');
 
         res.json(successResponse(session));
     } catch (error) {

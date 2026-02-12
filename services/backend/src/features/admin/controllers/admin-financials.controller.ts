@@ -21,12 +21,12 @@ export async function getFinancialSummary(req: Request, res: Response, next: Nex
 
         const [totalAiCost, thisMonthAiCost, costsByWorker] = await Promise.all([
             // Total AI cost (lifetime)
-            db.select({ total: sql<number>`COALESCE(sum(cost_cents), 0)` })
+            db.select({ total: sql<number>`COALESCE(sum(cost_usd), 0)` })
                 .from(adminAiCostLog)
                 .then(r => Number(r[0].total)),
 
             // This month AI cost
-            db.select({ total: sql<number>`COALESCE(sum(cost_cents), 0)` })
+            db.select({ total: sql<number>`COALESCE(sum(cost_usd), 0)` })
                 .from(adminAiCostLog)
                 .where(gte(adminAiCostLog.created_at, thisMonthStart))
                 .then(r => Number(r[0].total)),
@@ -34,7 +34,7 @@ export async function getFinancialSummary(req: Request, res: Response, next: Nex
             // Breakdown by worker type
             db.select({
                 workerType: adminAiCostLog.worker_type,
-                totalCost: sql<number>`COALESCE(sum(cost_cents), 0)`,
+                totalCost: sql<number>`COALESCE(sum(cost_usd), 0)`,
             })
                 .from(adminAiCostLog)
                 .groupBy(adminAiCostLog.worker_type),
@@ -78,7 +78,7 @@ export async function getAiCosts(req: Request, res: Response, next: NextFunction
     try {
         const [totalCost, totalTokens, costsByModel, costsByWorker, costsByFunction] = await Promise.all([
             // Total cost
-            db.select({ total: sql<number>`COALESCE(sum(cost_cents), 0)` })
+            db.select({ total: sql<number>`COALESCE(sum(cost_usd), 0)` })
                 .from(adminAiCostLog)
                 .then(r => Number(r[0].total)),
 
@@ -93,7 +93,7 @@ export async function getAiCosts(req: Request, res: Response, next: NextFunction
             // By model
             db.select({
                 modelName: adminAiCostLog.model_name,
-                totalCost: sql<number>`COALESCE(sum(cost_cents), 0)`,
+                totalCost: sql<number>`COALESCE(sum(cost_usd), 0)`,
                 callCount: sql<number>`count(*)`,
             })
                 .from(adminAiCostLog)
@@ -102,7 +102,7 @@ export async function getAiCosts(req: Request, res: Response, next: NextFunction
             // By worker
             db.select({
                 workerType: adminAiCostLog.worker_type,
-                totalCost: sql<number>`COALESCE(sum(cost_cents), 0)`,
+                totalCost: sql<number>`COALESCE(sum(cost_usd), 0)`,
                 callCount: sql<number>`count(*)`,
             })
                 .from(adminAiCostLog)
@@ -111,12 +111,12 @@ export async function getAiCosts(req: Request, res: Response, next: NextFunction
             // Top 10 expensive functions
             db.select({
                 functionName: adminAiCostLog.function_name,
-                totalCost: sql<number>`COALESCE(sum(cost_cents), 0)`,
+                totalCost: sql<number>`COALESCE(sum(cost_usd), 0)`,
                 callCount: sql<number>`count(*)`,
             })
                 .from(adminAiCostLog)
                 .groupBy(adminAiCostLog.function_name)
-                .orderBy(desc(sql`sum(cost_cents)`))
+                .orderBy(desc(sql`sum(cost_usd)`))
                 .limit(10),
         ]);
 
@@ -158,7 +158,7 @@ export async function getCostBreakdown(req: Request, res: Response, next: NextFu
         // Aggregate by worker type
         const costsByWorker = await db.select({
             workerType: adminAiCostLog.worker_type,
-            totalCost: sum(adminAiCostLog.cost_cents),
+            totalCost: sum(adminAiCostLog.cost_usd),
             queryCount: sql<number>`count(*)`
         })
             .from(adminAiCostLog)
@@ -168,13 +168,13 @@ export async function getCostBreakdown(req: Request, res: Response, next: NextFu
         // Aggregate by function name (top 10 expensive functions)
         const costsByFunction = await db.select({
             functionName: adminAiCostLog.function_name,
-            totalCost: sum(adminAiCostLog.cost_cents),
+            totalCost: sum(adminAiCostLog.cost_usd),
             queryCount: sql<number>`count(*)`
         })
             .from(adminAiCostLog)
             .where(gte(adminAiCostLog.created_at, startDate))
             .groupBy(adminAiCostLog.function_name)
-            .orderBy(desc(sum(adminAiCostLog.cost_cents)))
+            .orderBy(desc(sum(adminAiCostLog.cost_usd)))
             .limit(10);
 
         res.json(successResponse({

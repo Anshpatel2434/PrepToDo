@@ -18,17 +18,17 @@ interface DashboardMetrics {
     dailyActiveUsers: number;
     newLoginsToday: number;
     totalSessions: number;
-    totalRevenueCents: number;
-    aiCostTodayCents: number;
-    aiCostTotalCents: number;
-    avgCostPerUserCents: number;
+    totalRevenueUsd: number;
+    aiCostTodayUsd: number;
+    aiCostTotalUsd: number;
+    avgCostPerUserUsd: number;
     usersWithAiCost: number;
 }
 
 interface SpendingUser {
     userId: string | null;
     email: string;
-    totalCostCents: number;
+    totalCostUsd: number;
     callCount: number;
 }
 
@@ -46,8 +46,8 @@ interface MetricsHistory {
     active_users_today: number;
     total_sessions: number;
     sessions_today: number;
-    ai_cost_cumulative_cents: number;
-    ai_cost_today_cents: number;
+    ai_cost_cumulative_usd: number;
+    ai_cost_today_usd: number;
 }
 
 export default function OverviewPage() {
@@ -109,7 +109,7 @@ export default function OverviewPage() {
         },
         {
             header: 'Total Cost',
-            cell: (u) => <span className="text-orange-400 font-mono">${(u.totalCostCents / 100).toFixed(2)}</span>
+            cell: (u) => <span className="text-orange-400 font-mono">${u.totalCostUsd.toFixed(4)}</span>
         },
         {
             header: 'API Calls',
@@ -124,7 +124,7 @@ export default function OverviewPage() {
     const revenueCostChartData = chartData.map(d => ({
         date: d.date,
         revenue: 0, // No revenue yet
-        cost: Number(d.ai_cost_today_cents || 0),
+        cost: Number(d.ai_cost_today_usd || 0),
     }));
 
     const userGrowthChartData = chartData.map(d => ({
@@ -160,15 +160,15 @@ export default function OverviewPage() {
         },
         {
             title: 'AI Cost (Today)',
-            value: `$${((metrics?.aiCostTodayCents || 0) / 100).toFixed(2)}`,
-            subtitle: `$${((metrics?.aiCostTotalCents || 0) / 100).toFixed(2)} total`,
+            value: `$${(metrics?.aiCostTodayUsd || 0).toFixed(4)}`,
+            subtitle: `$${(metrics?.aiCostTotalUsd || 0).toFixed(4)} total`,
             icon: CreditCard,
             color: 'text-orange-400',
             bg: 'bg-orange-400/10'
         },
         {
             title: 'Avg Cost / User',
-            value: `$${((metrics?.avgCostPerUserCents || 0) / 100).toFixed(2)}`,
+            value: `$${(metrics?.avgCostPerUserUsd || 0).toFixed(4)}`,
             subtitle: `${metrics?.usersWithAiCost || 0} users with AI usage`,
             icon: TrendingUp,
             color: 'text-purple-400',

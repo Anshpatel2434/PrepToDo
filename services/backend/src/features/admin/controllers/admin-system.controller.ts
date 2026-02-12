@@ -17,6 +17,7 @@ import {
 import { desc, sql, gte, eq } from 'drizzle-orm';
 import { successResponse, Errors } from '../../../common/utils/errors.js';
 import { createChildLogger } from '../../../common/utils/logger.js';
+import { DailyMetricsService } from '../services/daily-metrics.service.js';
 
 const logger = createChildLogger('admin-system');
 
@@ -126,98 +127,17 @@ export async function runQuery(req: Request, res: Response, next: NextFunction):
 // =============================================================================
 export async function takeDailySnapshot(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        const todayStr = todayStart.toISOString().split('T')[0];
+        const todayStr = new Date().toISOString().split('T')[0];
+        logger.info({ date: todayStr }, 'Taking daily metrics snapshot via DailyMetricsService');
 
-        logger.info({ date: todayStr }, 'Taking daily metrics snapshot');
+        await DailyMetricsService.refreshMetrics();
 
-        // Compute all metrics in parallel
-        const [
-            totalUsers,
-            newUsersToday,
-            activeUsersToday,
-            totalSessions,
-            sessionsToday,
-            totalQuestionsAttempted,
-            questionsAttemptedToday,
-            totalPassagesGenerated,
-            passagesGeneratedToday,
-            totalExamsGenerated,
-            examsGeneratedToday,
-            aiCostToday,
-            aiCostCumulative,
-        ] = await Promise.all([
-            db.select({ count: sql<number>`count(*)` }).from(users).then(r => Number(r[0].count)),
-            db.select({ count: sql<number>`count(*)` }).from(users).where(gte(users.created_at, todayStart)).then(r => Number(r[0].count)),
-            db.select({ count: sql<number>`count(*)` }).from(users).where(gte(users.last_sign_in_at, todayStart)).then(r => Number(r[0].count)),
-            db.select({ count: sql<number>`count(*)` }).from(practiceSessions).then(r => Number(r[0].count)),
-            db.select({ count: sql<number>`count(*)` }).from(practiceSessions).where(gte(practiceSessions.created_at, todayStart)).then(r => Number(r[0].count)),
-            db.select({ count: sql<number>`count(*)` }).from(questionAttempts).then(r => Number(r[0].count)),
-            db.select({ count: sql<number>`count(*)` }).from(questionAttempts).where(gte(questionAttempts.created_at, todayStart)).then(r => Number(r[0].count)),
-            db.select({ count: sql<number>`count(*)` }).from(passages).then(r => Number(r[0].count)),
-            db.select({ count: sql<number>`count(*)` }).from(passages).where(gte(passages.created_at, todayStart)).then(r => Number(r[0].count)),
-            db.select({ count: sql<number>`count(*)` }).from(examPapers).then(r => Number(r[0].count)),
-            db.select({ count: sql<number>`count(*)` }).from(examPapers).where(gte(examPapers.created_at, todayStart)).then(r => Number(r[0].count)),
-            db.select({ total: sql<number>`COALESCE(sum(cost_cents), 0)` }).from(adminAiCostLog).where(gte(adminAiCostLog.created_at, todayStart)).then(r => Number(r[0].total)),
-            db.select({ total: sql<number>`COALESCE(sum(cost_cents), 0)` }).from(adminAiCostLog).then(r => Number(r[0].total)),
-        ]);
-
-        // Upsert the row for today (ON CONFLICT UPDATE)
-        await db.execute(sql`
-            INSERT INTO admin_platform_metrics_daily (
-                id, date, total_users, new_users_today, active_users_today,
-                total_sessions, sessions_today,
-                total_questions_attempted, questions_attempted_today,
-                total_passages_generated, passages_generated_today,
-                total_exams_generated, exams_generated_today,
-                ai_cost_today_cents, ai_cost_cumulative_cents,
-                created_at
-            ) VALUES (
-                gen_random_uuid(), ${todayStr}, ${totalUsers}, ${newUsersToday}, ${activeUsersToday},
-                ${totalSessions}, ${sessionsToday},
-                ${totalQuestionsAttempted}, ${questionsAttemptedToday},
-                ${totalPassagesGenerated}, ${passagesGeneratedToday},
-                ${totalExamsGenerated}, ${examsGeneratedToday},
-                ${aiCostToday}, ${aiCostCumulative},
-                NOW()
-            )
-            ON CONFLICT (date) DO UPDATE SET
-                total_users = EXCLUDED.total_users,
-                new_users_today = EXCLUDED.new_users_today,
-                active_users_today = EXCLUDED.active_users_today,
-                total_sessions = EXCLUDED.total_sessions,
-                sessions_today = EXCLUDED.sessions_today,
-                total_questions_attempted = EXCLUDED.total_questions_attempted,
-                questions_attempted_today = EXCLUDED.questions_attempted_today,
-                total_passages_generated = EXCLUDED.total_passages_generated,
-                passages_generated_today = EXCLUDED.passages_generated_today,
-                total_exams_generated = EXCLUDED.total_exams_generated,
-                exams_generated_today = EXCLUDED.exams_generated_today,
-                ai_cost_today_cents = EXCLUDED.ai_cost_today_cents,
-                ai_cost_cumulative_cents = EXCLUDED.ai_cost_cumulative_cents
-        `);
-
-        logger.info({ date: todayStr }, 'Daily metrics snapshot saved successfully');
+        logger.info({ date: todayStr }, 'Daily metrics snapshot process completed');
 
         res.json(successResponse({
             date: todayStr,
-            snapshot: {
-                totalUsers,
-                newUsersToday,
-                activeUsersToday,
-                totalSessions,
-                sessionsToday,
-                totalQuestionsAttempted,
-                questionsAttemptedToday,
-                totalPassagesGenerated,
-                passagesGeneratedToday,
-                totalExamsGenerated,
-                examsGeneratedToday,
-                aiCostTodayCents: aiCostToday,
-                aiCostCumulativeCents: aiCostCumulative,
-            },
-        }, 'Snapshot saved successfully'));
+            message: 'Daily metrics aggregated successfully'
+        }));
     } catch (error) {
         next(error);
     }

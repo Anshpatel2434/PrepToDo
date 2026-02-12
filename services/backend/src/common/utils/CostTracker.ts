@@ -41,8 +41,8 @@ export class CostTracker {
     }
 
     private calculateCallCost(inputTokens: number, outputTokens: number): number {
-        const inputCost = (inputTokens / 1_000_000) * this.INPUT_COST_PER_MILLION;
-        const outputCost = (outputTokens / 1_000_000) * this.OUTPUT_COST_PER_MILLION;
+        const inputCost = (inputTokens / 1000000) * this.INPUT_COST_PER_MILLION;
+        const outputCost = (outputTokens / 1000000) * this.OUTPUT_COST_PER_MILLION;
         return inputCost + outputCost;
     }
 
@@ -148,7 +148,7 @@ export class CostTracker {
                     model_name: 'gpt-4o-mini', // Default for now, could be dynamic in future
                     input_tokens: call.inputTokens,
                     output_tokens: call.outputTokens,
-                    cost_cents: this.calculateCallCost(call.inputTokens, call.outputTokens).toString(),
+                    cost_usd: this.calculateCallCost(call.inputTokens, call.outputTokens).toFixed(9),
                     user_id: userId || null,
                     exam_id: examId || null,
                     session_id: sessionId || null,

@@ -13,6 +13,7 @@ import { sendOtpEmail, sendPasswordResetEmail } from '../services/email.service.
 import { validateEmail } from '../services/emailValidator.service.js';
 import { validateReturnTo } from '../services/urlValidator.js';
 import { authLogger } from '../../../common/utils/logger.js';
+import { AdminActivityService } from '../../admin/services/admin-activity.service.js';
 import type { UserResponse, CheckEmailResponse, SendOtpResponse, VerifyOtpResponse, LoginResponse, CheckPendingSignupResponse, GoogleUserInfo, RefreshTokenResponse } from '../types/auth.types.js';
 
 // =============================================================================
@@ -61,7 +62,7 @@ function setAuthCookie(res: Response, token: string): void {
         httpOnly: true,
         secure: config.isProduction,
         sameSite: config.isProduction ? 'strict' : 'lax',
-        maxAge: 15 * 60 * 1000, // 15 minutes (matches access token expiry)
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (matches jwt.expiresIn)
         path: '/',
     });
 }
@@ -416,6 +417,9 @@ export async function completeSignup(req: Request, res: Response, next: NextFunc
         // Create session and get token
         const accessToken = await createSession(userId, email.toLowerCase(), req, res);
 
+        // Log activity
+        await AdminActivityService.logLogin(userId);
+
         // Get created user
         const [user] = await db
             .select()
@@ -472,6 +476,9 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
         // Create session and get token
         const accessToken = await createSession(user.id, user.email!, req, res);
 
+        // Log activity
+        await AdminActivityService.logLogin(user.id);
+
         const response: LoginResponse = {
             user: formatUserResponse(user),
             message: 'Logged in successfully!',
@@ -507,7 +514,7 @@ export async function googleOAuthInit(req: Request, res: Response, next: NextFun
 
         const params = new URLSearchParams({
             client_id: config.google.clientId,
-            redirect_uri: config.google.callbackUrl,
+            redirect_uri: config.google.callbackUrl!,
             response_type: 'code',
             scope: 'email profile',
             access_type: 'offline',
@@ -568,7 +575,7 @@ export async function googleOAuthCallback(req: Request, res: Response, next: Nex
                 code: code as string,
                 client_id: config.google.clientId,
                 client_secret: config.google.clientSecret,
-                redirect_uri: config.google.callbackUrl,
+                redirect_uri: config.google.callbackUrl!,
                 grant_type: 'authorization_code',
             }),
         });
@@ -675,6 +682,10 @@ export async function googleOAuthCallback(req: Request, res: Response, next: Nex
         // Redirect to frontend with token in URL (will be exchanged for cookie)
         const returnTo = validateReturnTo(stateData.returnTo);
         authLogger.info({ email: user!.email, userId: user!.id, provider: 'google', action: 'oauth_login' }, 'Google OAuth login successful');
+
+        // Log activity
+        await AdminActivityService.logLogin(user!.id);
+
         res.redirect(`${config.frontendUrl}/auth/callback?token=${encodeURIComponent(token)}&returnTo=${encodeURIComponent(returnTo)}`);
     } catch (err) {
         authLogger.error({ error: (err as Error).message, action: 'oauth_login' }, 'Google OAuth login failed');

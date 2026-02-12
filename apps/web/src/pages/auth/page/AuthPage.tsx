@@ -81,8 +81,26 @@ export const AuthPage: React.FC = () => {
 
 	const handleClosePopup = () => {
 		setAuthPopupOpen(false);
-		// Navigate back to home or previous page
-		window.history.back();
+		// Check for stored redirect
+		const storedRedirect = localStorage.getItem('post_auth_redirect');
+
+		// Auth paths to filter out (to avoid loops)
+		const authPaths = ['/auth', '/auth/', '/auth/callback', '/auth/reset-password'];
+		const isAuthPath = (path: string) => {
+			const normalized = path.toLowerCase().split('?')[0];
+			return authPaths.some(p => normalized === p || normalized.startsWith('/auth/'));
+		};
+
+		if (storedRedirect) {
+			localStorage.removeItem('post_auth_redirect');
+			let destination = storedRedirect;
+			if (isAuthPath(destination)) {
+				destination = '/dashboard';
+			}
+			navigate(destination, { replace: true });
+		} else {
+			navigate('/dashboard', { replace: true });
+		}
 	};
 
 	return (

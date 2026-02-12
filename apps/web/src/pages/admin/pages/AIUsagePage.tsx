@@ -41,7 +41,7 @@ export default function AIUsagePage() {
 
     const functionColumns: Column<{ name: string; cost: number; calls: number }>[] = [
         { header: 'Function', cell: (f) => <span className="font-mono text-white">{f.name}</span> },
-        { header: 'Cost', cell: (f) => <span className="text-orange-400 font-mono">${(f.cost / 100).toFixed(4)}</span> },
+        { header: 'Cost', cell: (f) => <span className="text-orange-400 font-mono">${f.cost.toFixed(4)}</span> },
         { header: 'Calls', cell: (f) => <span className="text-[#94a3b8]">{f.calls.toLocaleString()}</span> },
     ];
 
@@ -54,7 +54,7 @@ export default function AIUsagePage() {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-[#94a3b8]">Total Cost (Lifetime)</p>
-                            <p className="mt-2 text-2xl font-bold text-white">${(data.totalCost / 100).toFixed(2)}</p>
+                            <p className="mt-2 text-2xl font-bold text-white">${data.totalCost.toFixed(4)}</p>
                         </div>
                         <div className="rounded-lg bg-red-400/10 p-3 text-red-400"><DollarSign className="h-6 w-6" /></div>
                     </div>

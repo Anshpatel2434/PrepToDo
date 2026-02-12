@@ -18,7 +18,7 @@ const CustomTooltip = ({ active, payload }: any) => {
             <div className="rounded-lg border border-[#2a2d3a] bg-[#1a1d27] p-3 shadow-xl">
                 <p className="text-sm font-medium text-[#e2e8f0]">{payload[0].name}</p>
                 <p className="text-sm text-[#94a3b8]">
-                    ${(payload[0].value / 100).toFixed(2)}
+                    ${payload[0].value.toFixed(4)}
                 </p>
             </div>
         );

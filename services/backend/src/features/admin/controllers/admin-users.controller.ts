@@ -99,13 +99,13 @@ export async function getUserDetails(req: Request, res: Response, next: NextFunc
         const [aiCostData, attemptStats, analytics] = await Promise.all([
             // AI cost for this user
             db.select({
-                totalCostCents: sql<number>`COALESCE(sum(cost_cents), 0)`,
+                totalCostUsd: sql<number>`COALESCE(sum(cost_usd), 0)`,
                 callCount: sql<number>`count(*)`,
             })
                 .from(adminAiCostLog)
                 .where(eq(adminAiCostLog.user_id, id as string))
                 .then(r => ({
-                    totalCostCents: Number(r[0]?.totalCostCents || 0),
+                    totalCostUsd: Number(r[0]?.totalCostUsd || 0),
                     callCount: Number(r[0]?.callCount || 0),
                 })),
 

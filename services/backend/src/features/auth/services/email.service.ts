@@ -1,41 +1,29 @@
 // =============================================================================
 // Auth Feature - Email Service
 // =============================================================================
-import nodemailer from 'nodemailer';
-import type { Transporter } from 'nodemailer';
+import { Resend } from 'resend';
 import { config } from '../../../config/index.js';
 import { authLogger as logger } from '../../../common/utils/logger.js';
 
 // =============================================================================
 // Email Transporter
 // =============================================================================
-let transporter: Transporter | null = null;
-
-function getTransporter(): Transporter {
-  if (!transporter) {
-    transporter = nodemailer.createTransport({
-      host: config.smtp.host,
-      port: config.smtp.port,
-      secure: config.smtp.port === 465,
-      auth: {
-        user: config.smtp.user,
-        pass: config.smtp.password,
-      },
-    });
-  }
-  return transporter;
-}
+const resend = new Resend(config.resend.apiKey);
 
 // =============================================================================
 // Verify Email Service Connection
 // =============================================================================
 export async function verifyEmailConnection(): Promise<boolean> {
   try {
-    await getTransporter().verify();
-    logger.info('SMTP connection verified');
+    // Resend doesn't have a direct 'verify' connection method like SMTP.
+    // We check if the API key is present.
+    if (!config.resend.apiKey) {
+      throw new Error('Resend API key is missing');
+    }
+    logger.info('Resend email service configured');
     return true;
   } catch (error) {
-    logger.error({ error: error instanceof Error ? error.message : String(error) }, 'SMTP connection failed');
+    logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Email service configuration failed');
     return false;
   }
 }
@@ -91,12 +79,28 @@ export async function sendOtpEmail(to: string, otp: string): Promise<void> {
     </html>
   `;
 
-  await getTransporter().sendMail({
-    from: `"${config.smtp.fromName}" <${config.smtp.fromEmail}>`,
+  const { error } = await resend.emails.send({
+    from: `"${config.resend.fromName}" <${config.resend.fromEmail}>`,
     to,
     subject: `${otp} is your verification code`,
     html,
   });
+
+  if (error) {
+    if (error.name === 'validation_error' && error.message?.includes('testing emails')) {
+      logger.warn(
+        `
+=============================================================================
+RESEND TEST MODE DETECTED
+You can only send emails to the verified address (usually the account owner).
+To send to other addresses, verify your domain at https://resend.com/domains
+=============================================================================
+        `
+      );
+    }
+    logger.error({ error }, 'Failed to send OTP email via Resend');
+    throw new Error('Failed to send OTP email');
+  }
 }
 
 // =============================================================================
@@ -152,10 +156,26 @@ export async function sendPasswordResetEmail(
     </html>
   `;
 
-  await getTransporter().sendMail({
-    from: `"${config.smtp.fromName}" <${config.smtp.fromEmail}>`,
+  const { error } = await resend.emails.send({
+    from: `"${config.resend.fromName}" <${config.resend.fromEmail}>`,
     to,
     subject: 'Reset your password',
     html,
   });
+
+  if (error) {
+    if (error.name === 'validation_error' && error.message?.includes('testing emails')) {
+      logger.warn(
+        `
+=============================================================================
+RESEND TEST MODE DETECTED
+You can only send emails to the verified address (usually the account owner).
+To send to other addresses, verify your domain at https://resend.com/domains
+=============================================================================
+        `
+      );
+    }
+    logger.error({ error }, 'Failed to send password reset email via Resend');
+    throw new Error('Failed to send password reset email');
+  }
 }

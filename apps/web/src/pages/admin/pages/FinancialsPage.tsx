@@ -58,7 +58,7 @@ export default function FinancialsPage() {
     const cards = [
         {
             title: 'Total AI Costs',
-            value: `$${(data.costs.totalAi / 100).toFixed(2)}`,
+            value: `$${data.costs.totalAi.toFixed(4)}`,
             subtitle: 'Lifetime spending on AI APIs',
             icon: DollarSign,
             color: 'text-red-400',
@@ -66,7 +66,7 @@ export default function FinancialsPage() {
         },
         {
             title: 'AI Costs (This Month)',
-            value: `$${(data.costs.thisMonthAi / 100).toFixed(2)}`,
+            value: `$${data.costs.thisMonthAi.toFixed(4)}`,
             subtitle: 'Current month spending',
             icon: RefreshCw,
             color: 'text-orange-400',

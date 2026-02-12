@@ -29,7 +29,7 @@ interface UserDetail {
 }
 
 interface AiCostData {
-    totalCostCents: number;
+    totalCostUsd: number;
     callCount: number;
 }
 
@@ -137,7 +137,7 @@ export default function UserDetailPage() {
         },
         {
             title: 'AI Cost (User)',
-            value: `$${((aiCost?.totalCostCents || 0) / 100).toFixed(2)}`,
+            value: `$${(aiCost?.totalCostUsd || 0).toFixed(4)}`,
             subtitle: `${aiCost?.callCount || 0} API calls`,
             icon: DollarSign,
             color: 'text-orange-400',
