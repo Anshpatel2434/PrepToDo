@@ -12,8 +12,8 @@ export async function adminApiClient<T = any>(
 
     const configHeaders: HeadersInit = {
         "Content-Type": "application/json",
-        ...(localStorage.getItem('preptodo_access_token')
-            ? { "Authorization": `Bearer ${localStorage.getItem('preptodo_access_token')}` }
+        ...(localStorage.getItem('preptodo_admin_token')
+            ? { "Authorization": `Bearer ${localStorage.getItem('preptodo_admin_token')}` }
             : {}),
         ...headers,
     };

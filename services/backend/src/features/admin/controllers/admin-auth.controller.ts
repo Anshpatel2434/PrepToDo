@@ -83,6 +83,7 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
             authenticated: true,
             email,
             role: 'admin',
+            token, // Return token for frontend storage
         }, 'Admin login successful'));
 
     } catch (error) {
@@ -140,6 +141,7 @@ export async function autoLogin(req: Request, res: Response, next: NextFunction)
             authenticated: true,
             email: user.email,
             role: 'admin',
+            token, // Return token for frontend storage
         }, 'Admin auto-login successful'));
 
     } catch (error) {

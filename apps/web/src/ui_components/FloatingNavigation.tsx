@@ -34,7 +34,7 @@ import { useTheme } from "../context/ThemeContext";
 // Import UserResponse type
 import type { UserResponse } from "../services/apiClient";
 // import logo from "/logo_new.png";
-import logo from "../assets/l6.png";
+import logo from "../assets/logo_final_2d_round.png";
 // ----------------------------------------------------------------------------
 // TYPES
 // ----------------------------------------------------------------------------

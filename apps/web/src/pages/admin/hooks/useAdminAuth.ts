@@ -45,6 +45,9 @@ export function useAdminAuth(): UseAdminAuthReturn {
             const data = await response.json();
             if (data.data?.authenticated) {
                 setAdmin({ email: data.data.email, role: data.data.role });
+                if (data.data.token) {
+                    localStorage.setItem('preptodo_admin_token', data.data.token);
+                }
                 return true;
             }
             return false;
@@ -85,13 +88,16 @@ export function useAdminAuth(): UseAdminAuthReturn {
         try {
             setIsLoading(true);
             setError(null);
-            const response = await adminApiClient<{ authenticated: boolean; email: string; role: 'admin' }>('/auth/login', {
+            const response = await adminApiClient<{ authenticated: boolean; email: string; role: 'admin'; token?: string }>('/auth/login', {
                 method: 'POST',
                 body: JSON.stringify(credentials),
             });
 
             if (response.authenticated) {
                 setAdmin({ email: response.email, role: response.role });
+                if (response.token) {
+                    localStorage.setItem('preptodo_admin_token', response.token);
+                }
                 navigate('/admin/dashboard/overview');
             }
         } catch (err: any) {
@@ -106,6 +112,7 @@ export function useAdminAuth(): UseAdminAuthReturn {
         try {
             await adminApiClient('/auth/logout', { method: 'POST' });
             setAdmin(null);
+            localStorage.removeItem('preptodo_admin_token');
             navigate('/auth');
         } catch {
             // Logout failure is non-critical — session will expire naturally
