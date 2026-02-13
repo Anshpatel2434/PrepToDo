@@ -18,11 +18,16 @@ export async function adminApiClient<T = any>(
         ...headers,
     };
 
-    const response = await fetch(`${BACKEND_URL}/api/admin${endpoint}`, {
-        ...customConfig,
-        headers: configHeaders,
-        credentials: "include", // Essential for httpOnly cookie
-    });
+    const response = await fetch(
+        endpoint === "/daily-content/generate"
+            ? `${BACKEND_URL}/api${endpoint}`
+            : `${BACKEND_URL}/api/admin${endpoint}`,
+        {
+            ...customConfig,
+            headers: configHeaders,
+            credentials: "include",
+        }
+    );
 
     const data = await response.json();
 
