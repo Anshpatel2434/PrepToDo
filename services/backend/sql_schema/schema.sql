@@ -1,5 +1,6 @@
 CREATE SCHEMA "public";
 CREATE SCHEMA "auth";
+CREATE SCHEMA "drizzle";
 CREATE TYPE "auth"."aal_level" AS ENUM('aal1', 'aal2', 'aal3');
 CREATE TYPE "auth"."code_challenge_method" AS ENUM('s256', 'plain');
 CREATE TYPE "auth"."factor_status" AS ENUM('unverified', 'verified');
@@ -16,7 +17,7 @@ CREATE TABLE "admin_ai_cost_log" (
 	"model_name" text DEFAULT 'gpt-4o-mini' NOT NULL,
 	"input_tokens" integer DEFAULT 0 NOT NULL,
 	"output_tokens" integer DEFAULT 0 NOT NULL,
-	"cost_cents" numeric(10, 4) DEFAULT '0' NOT NULL,
+	"cost_usd" numeric(14, 9) DEFAULT '0' NOT NULL,
 	"user_id" uuid,
 	"exam_id" uuid,
 	"session_id" uuid,
@@ -37,8 +38,8 @@ CREATE TABLE "admin_platform_metrics_daily" (
 	"passages_generated_today" integer DEFAULT 0,
 	"total_exams_generated" integer DEFAULT 0,
 	"exams_generated_today" integer DEFAULT 0,
-	"ai_cost_today_cents" numeric(10, 4) DEFAULT '0',
-	"ai_cost_cumulative_cents" numeric(12, 4) DEFAULT '0',
+	"ai_cost_today_usd" numeric(14, 9) DEFAULT '0',
+	"ai_cost_cumulative_usd" numeric(14, 9) DEFAULT '0',
 	"avg_session_duration_seconds" integer DEFAULT 0,
 	"avg_accuracy_percentage" numeric(5, 2),
 	"revenue_today_cents" integer DEFAULT 0,
@@ -196,7 +197,7 @@ CREATE TABLE "passages" (
 	"source" varchar(100),
 	"generation_model" varchar(50),
 	"generation_prompt_version" varchar(20),
-	"generation_cost_cents" integer,
+	"generation_cost_usd" numeric(14, 9),
 	"quality_score" numeric(3, 2),
 	"times_used" integer DEFAULT 0,
 	"avg_completion_time_seconds" integer,
@@ -409,9 +410,16 @@ CREATE TABLE "users" (
 	"raw_app_meta_data" text,
 	"raw_user_meta_data" text,
 	"is_sso_user" boolean DEFAULT false,
-	"role" varchar(20) DEFAULT 'user',
 	"created_at" timestamp with time zone DEFAULT now(),
-	"updated_at" timestamp with time zone DEFAULT now()
+	"updated_at" timestamp with time zone DEFAULT now(),
+	"role" varchar(20) DEFAULT 'user',
+	"ai_insights_remaining" integer DEFAULT 20,
+	"customized_mocks_remaining" integer DEFAULT 2
+);
+CREATE TABLE "drizzle"."__drizzle_migrations" (
+	"id" serial PRIMARY KEY,
+	"hash" text NOT NULL,
+	"created_at" bigint
 );
 ALTER TABLE "admin_ai_cost_log" ADD CONSTRAINT "admin_ai_cost_log_exam_id_fkey" FOREIGN KEY ("exam_id") REFERENCES "exam_papers"("id") ON DELETE SET NULL;
 ALTER TABLE "admin_ai_cost_log" ADD CONSTRAINT "admin_ai_cost_log_session_id_fkey" FOREIGN KEY ("session_id") REFERENCES "practice_sessions"("id") ON DELETE SET NULL;
@@ -530,3 +538,4 @@ CREATE UNIQUE INDEX "user_profiles_pkey" ON "user_profiles" ("id");
 CREATE UNIQUE INDEX "user_profiles_username_key" ON "user_profiles" ("username");
 CREATE UNIQUE INDEX "users_email_key" ON "users" ("email");
 CREATE UNIQUE INDEX "users_pkey" ON "users" ("id");
+CREATE UNIQUE INDEX "__drizzle_migrations_pkey" ON "drizzle"."__drizzle_migrations" ("id");

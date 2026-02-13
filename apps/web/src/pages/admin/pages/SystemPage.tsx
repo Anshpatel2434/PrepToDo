@@ -12,8 +12,8 @@ interface QueryResult {
 interface ActivityLog {
     id: string;
     user_id: string;
-    action: string;
-    details: string;
+    event_type: string; // Matched with DB
+    metadata: any; // Matched with DB
     created_at: string;
     user?: { email: string; profile?: { display_name: string } };
 }
@@ -23,6 +23,7 @@ export default function SystemPage() {
     const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isRunning, setIsRunning] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false); // For daily content generation
 
     // Activity logs
     const [logs, setLogs] = useState<ActivityLog[]>([]);
@@ -73,6 +74,25 @@ export default function SystemPage() {
         }
     };
 
+    const handleGenerateDaily = async () => {
+        if (!confirm('Are you sure you want to trigger daily content generation? This process may take a few minutes.')) return;
+
+        setIsGenerating(true);
+        try {
+            await adminApiClient('/daily-content/generate', {
+                method: 'POST',
+                body: JSON.stringify({ force: true })
+            });
+            alert('Daily content generation triggered successfully!');
+            // Refresh logs after a short delay
+            setTimeout(() => setLogsPagination(prev => ({ ...prev })), 2000);
+        } catch (err: any) {
+            alert(`Failed to generate content: ${err.message}`);
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
     const logColumns: Column<ActivityLog>[] = [
         {
             header: 'User',
@@ -82,10 +102,16 @@ export default function SystemPage() {
                 </span>
             ),
         },
-        { header: 'Action', accessorKey: 'action' },
+        { header: 'Action', accessorKey: 'event_type' }, // Changed to event_type
         {
             header: 'Details',
-            cell: (log) => <span className="text-[#94a3b8]">{typeof log.details === 'string' ? log.details : JSON.stringify(log.details)}</span>,
+            cell: (log) => (
+                <span className="text-[#94a3b8] text-xs font-mono">
+                    {typeof log.metadata === 'string'
+                        ? log.metadata
+                        : JSON.stringify(log.metadata, null, 1).replace(/[\{\}]/g, '')}
+                </span>
+            ),
         },
         {
             header: 'Time',
@@ -95,7 +121,17 @@ export default function SystemPage() {
 
     return (
         <div className="space-y-8">
-            <h1 className="text-2xl font-bold text-white">System Operations</h1>
+            <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold text-white">System Operations</h1>
+                <button
+                    onClick={handleGenerateDaily}
+                    disabled={isGenerating}
+                    className="flex items-center rounded-lg bg-emerald-600/20 text-emerald-400 border border-emerald-600/50 px-4 py-2 text-sm font-medium hover:bg-emerald-600/30 transition-colors disabled:opacity-50"
+                >
+                    <Play className="mr-2 h-4 w-4" />
+                    {isGenerating ? 'Generating...' : 'Trigger Daily Content'}
+                </button>
+            </div>
 
             {/* SQL Runner */}
             <div className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27] flex flex-col overflow-hidden">

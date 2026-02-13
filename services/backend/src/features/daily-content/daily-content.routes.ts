@@ -5,6 +5,7 @@ import { Router } from 'express';
 
 // Middleware
 import { requireAuth } from '../auth/middleware/auth.middleware.js';
+import { requireAdmin } from '../admin/middleware/admin.middleware.js';
 
 // Validation (using express-validator for now, can be replaced with Zod middleware)
 import { body, query, param } from 'express-validator';
@@ -180,9 +181,9 @@ router.post(
 // =============================================================================
 
 // Generate daily content (admin or cron job)
-// TODO: Add admin middleware or API key authentication
 router.post(
     '/generate',
+    requireAdmin,
     generateDailyContent
 );
 

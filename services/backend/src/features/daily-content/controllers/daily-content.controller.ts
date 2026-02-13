@@ -26,6 +26,7 @@ import type {
     DailyContentGenerationResponse,
 } from '../types/daily-content.types.js';
 import { analyticsService } from '../../analytics/analytics.service.js';
+import { AdminActivityService } from '../../admin/services/admin-activity.service.js';
 
 // =============================================================================
 // Helper Functions
@@ -826,6 +827,15 @@ export async function generateDailyContent(req: Request, res: Response, next: Ne
             exam_id: result.exam_id || "",
             message: result.message,
         };
+
+        // Log to Admin Activity
+        if (req.user?.userId) {
+            await AdminActivityService.logExamGeneration(
+                req.user.userId,
+                result.exam_id || 'unknown',
+                { force, success: result.success }
+            );
+        }
 
         res.json(successResponse(response));
     } catch (error) {

@@ -66,6 +66,7 @@ export default function UserDetailPage() {
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState({
         role: '',
+        email: '',
         ai_insights_remaining: 0,
         customized_mocks_remaining: 0,
     });
@@ -100,6 +101,7 @@ export default function UserDetailPage() {
         if (user) {
             setEditForm({
                 role: user.role,
+                email: user.email,
                 ai_insights_remaining: user.ai_insights_remaining ?? 0,
                 customized_mocks_remaining: user.customized_mocks_remaining ?? 0,
             });
@@ -274,6 +276,7 @@ export default function UserDetailPage() {
                                         setIsEditing(false);
                                         if (user) setEditForm({
                                             role: user.role,
+                                            email: user.email,
                                             ai_insights_remaining: user.ai_insights_remaining ?? 0,
                                             customized_mocks_remaining: user.customized_mocks_remaining ?? 0,
                                         });
@@ -303,7 +306,22 @@ export default function UserDetailPage() {
                     </div>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {/* Email */}
+                    <div>
+                        <label className="block text-xs font-medium text-[#94a3b8] mb-1.5 uppercase tracking-wider">Email</label>
+                        {isEditing ? (
+                            <input
+                                type="email"
+                                value={editForm.email}
+                                onChange={(e) => setEditForm(f => ({ ...f, email: e.target.value }))}
+                                className="w-full rounded-lg border border-[#2a2d3a] bg-[#0f1117] px-3 py-2 text-sm text-white focus:border-[#6366f1] focus:outline-none"
+                            />
+                        ) : (
+                            <p className="text-sm text-white truncate" title={user.email}>{user.email}</p>
+                        )}
+                    </div>
+
                     {/* Role */}
                     <div>
                         <label className="block text-xs font-medium text-[#94a3b8] mb-1.5 uppercase tracking-wider">Role</label>
