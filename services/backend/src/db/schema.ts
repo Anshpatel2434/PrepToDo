@@ -28,6 +28,10 @@ export const users = pgTable('users', {
     // Timestamps
     created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
     updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+
+    // Quotas
+    ai_insights_remaining: integer('ai_insights_remaining').default(20),
+    customized_mocks_remaining: integer('customized_mocks_remaining').default(2),
 });
 
 // ... (skipping to relations)

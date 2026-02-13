@@ -128,11 +128,18 @@ You are given REFERENCE MATERIAL from actual CAT papers (PYQs):
 - Two past CAT passages with their questions
 
 These references are your training data.
-You must ANALYZE them to understand:
+You must DEEPLY STUDY them to understand:
 1) How CAT questions are framed
 2) How traps are constructed
 3) How inference depth is calibrated
 4) How options are worded to avoid obvious clues
+5) The STYLE and STRUCTURE of questions — NOT the specific topics or subject matter
+
+⚠️ CRITICAL RULE — REFERENCE MATERIAL ISOLATION:
+- You MUST NOT bring any topics, examples, arguments, or factual claims from the reference passages into your generated questions.
+- The reference material is ONLY for learning the PATTERN of question construction.
+- Your questions must be derived EXCLUSIVELY from the NEW PASSAGE provided below.
+- If any generated option or question stem contains content from the reference passages, it will be REJECTED.
 
 ---
 
@@ -279,6 +286,8 @@ QUESTION SELECTION STRATEGY:
 - Vary cognitive demands: some literal, some inferential, some meta-level
 - Mix passage-level questions with detail-oriented questions
 - Balance abstract reasoning with concrete evidence-based questions
+- Prefer questions that require MULTI-PARAGRAPH synthesis over single-paragraph extraction
+- At least 1 question MUST require connecting ideas from 2+ different paragraphs
 ${personalizationInstructions}
 
 ---
@@ -334,6 +343,13 @@ INTERNAL QUALITY CHECK (do not output):
   * opposite trap (contradicts while borrowing vocabulary)
   * irrelevant-but-plausible trap (general truth, wrong for this passage)
 
+⚠️ OPTION LENGTH VARIATION (MANDATORY):
+- Options MUST vary significantly in length across the question set
+- Avoid making the correct option consistently the longest or most detailed
+- Within a single question, at least one wrong option should be LONGER than the correct one
+- Mix short (5-15 words), medium (15-30 words), and long (30+ words) options
+- If all 4 options are roughly the same length, the question WILL BE REJECTED
+
 3) INFERENCE DEPTH:
 - Each question should require at least 2 logical steps
 - Wrong options should be reachable by common CAT-style reasoning errors
@@ -377,7 +393,7 @@ IMPORTANT:
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
-        temperature: 0.3,
+        temperature: 0.4,
         messages: [
             {
                 role: "system",

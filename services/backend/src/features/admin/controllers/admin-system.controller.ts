@@ -142,3 +142,20 @@ export async function takeDailySnapshot(req: Request, res: Response, next: NextF
         next(error);
     }
 }
+
+// =============================================================================
+// Trigger Daily Content Generation
+// =============================================================================
+export async function triggerDailyGeneration(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        logger.info('Admin triggered daily content generation');
+
+        // Import and call the generate function directly
+        const { generateDailyContent } = await import('../../daily-content/controllers/daily-content.controller.js');
+
+        // Forward the request to the existing generateDailyContent controller
+        await generateDailyContent(req, res, next);
+    } catch (error) {
+        next(error);
+    }
+}

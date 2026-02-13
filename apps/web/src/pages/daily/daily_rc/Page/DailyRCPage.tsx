@@ -23,14 +23,12 @@ import {
     incrementElapsedTime,
     resetDailyPractice,
     commitPendingAttempt,
-    updateSessionAnalytics,
 } from "../../redux_usecase/dailyPracticeSlice";
 
 import {
     useFetchDailyTestDataQuery,
     useFetchDailyTestByIdQuery,
     useLazyFetchExistingSessionDetailsQuery,
-    useFetchExistingSessionDetailsQuery,
     useStartDailyRCSessionMutation,
     useSaveSessionDetailsMutation,
     useSaveQuestionAttemptsMutation,
@@ -44,7 +42,6 @@ import { DailyRCVAPageSkeleton } from "../../components/DailySkeleton";
 import type { Question } from "../../../../types";
 import { v4 as uuid4 } from "uuid";
 import { useExamNavigationGuard } from "../../navigation_hook/useExamNavigation";
-import { showToast } from "../../../../ui_components/CustomToaster";
 
 export default function DailyRCPage() {
     const dispatch = useDispatch();
@@ -145,34 +142,8 @@ export default function DailyRCPage() {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const isLoading = isTestDataLoading || isTodayLoading || isUserLoading || (!session.id && (isSessionLoading || isCreatingSession)) || isSubmitting;
 
-    // Polling for session updates in solution mode (to detect when AI analysis is done)
-    const { data: polledSessionData } = useFetchExistingSessionDetailsQuery(
-        {
-            user_id: session.user_id,
-            paper_id: currentTestData?.examInfo.id ? currentTestData?.examInfo.id : "",
-            session_type: "daily_challenge_rc",
-        },
-        {
-            skip: viewMode !== "solution" || session.is_analysed || !session.user_id || !currentTestData?.examInfo.id,
-            pollingInterval: 120000, // 2 minutes
-        }
-    );
-
-    useEffect(() => {
-        if (polledSessionData) {
-            // Check if analysis just finished
-            if (!session.is_analysed && polledSessionData.session.is_analysed) {
-                showToast.success("AI Insights are now available.", "ai-analysis-done");
-            }
-
-            dispatch(
-                updateSessionAnalytics({
-                    session: polledSessionData.session,
-                    attempts: polledSessionData.attempts,
-                })
-            );
-        }
-    }, [polledSessionData, dispatch, session.is_analysed]);
+    // AI insights are now generated on-demand via POST /api/ai-insights/generate
+    // (Removed 2-minute polling for session updates)
 
     // --- 2. Session Setup Logic ---
 

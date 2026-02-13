@@ -9,6 +9,8 @@ import { dashboardApi } from "../pages/dashboard/redux_usecases/dashboardApi";
 import { customizedMocksApi } from "../pages/customized-mocks/redux_usecase/customizedMocksApi";
 import customizedMockReducer from "../pages/customized-mocks/redux_usecase/customizedMockSlice";
 
+import { aiInsightsApi } from "../pages/ai-insights/redux_usecase/aiInsightsApi";
+
 export const store = configureStore({
     reducer: {
         auth: authReducer,
@@ -32,6 +34,9 @@ export const store = configureStore({
 
         // Customized Mock state
         customizedMock: customizedMockReducer,
+
+        // AI Insights api
+        [aiInsightsApi.reducerPath]: aiInsightsApi.reducer,
     },
     // Adding the api middleware enables caching, invalidation, polling,
     // and other useful features of RTK Query
@@ -41,7 +46,8 @@ export const store = configureStore({
             conceptTeachingApi.middleware,
             dailyPracticeApi.middleware,
             dashboardApi.middleware,
-            customizedMocksApi.middleware
+            customizedMocksApi.middleware,
+            aiInsightsApi.middleware
         ),
 });
 

@@ -11,7 +11,8 @@ import {
     passages,
     questions,
     examGenerationState,
-    questionAttempts
+    questionAttempts,
+    users
 } from '../../../db/schema';
 import { ApiError, Errors, successResponse } from '../../../common/utils/errors';
 import { createChildLogger } from '../../../common/utils/logger.js';
@@ -182,20 +183,17 @@ export async function createCustomizedMock(req: Request, res: Response, next: Ne
     try {
         if (!user_id || user_id !== params.user_id) throw Errors.unauthorized();
 
-        // --- Beta Limit Check ---
-        const BETA_MOCK_LIMIT = 2;
-        const activeMocks = await db.query.examPapers.findMany({
-            where: and(
-                eq(examPapers.generated_by_user_id, user_id),
-                inArray(examPapers.generation_status, ['completed', 'generating', 'initializing'])
-            ),
-            columns: { id: true }
-        });
+        // --- Quota Check ---
+        const [user] = await db
+            .select({ customized_mocks_remaining: users.customized_mocks_remaining })
+            .from(users)
+            .where(eq(users.id, user_id))
+            .limit(1);
 
-        if (activeMocks.length >= BETA_MOCK_LIMIT) {
-            throw Errors.badRequest(`Beta version is limited to ${BETA_MOCK_LIMIT} customized mocks.`);
+        if (!user || (user.customized_mocks_remaining ?? 0) < 1) {
+            throw Errors.badRequest('You have no customized mocks remaining. Please contact support to get more.');
         }
-        // ------------------------
+        // ---------------------
 
         // Prepare parameters (assign exam_id here to control it)
         // Wait: runCustomizedMocks orchestrator usually creates the ID if not passed, 
@@ -263,6 +261,11 @@ export async function createCustomizedMock(req: Request, res: Response, next: Ne
         });
 
         // Return immediately with the ID
+
+        // Decrement user's customized mocks quota
+        await db.update(users)
+            .set({ customized_mocks_remaining: sql`GREATEST(${users.customized_mocks_remaining} - 1, 0)` })
+            .where(eq(users.id, user_id));
 
         // Log activity
         await AdminActivityService.logExamGeneration(user_id, examId, params);

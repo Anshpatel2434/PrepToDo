@@ -260,11 +260,18 @@ Rationale: ${q.rationale}
 `).join("\n")}
 ` : ""}
 
-These references are your training data. Analyze them to understand:
+These references are your training data. DEEPLY STUDY them to understand:
 1) How CAT VA questions are framed
 2) How options/sentences are constructed
 3) What makes answers correct
 4) How distractors are designed to be tempting but incorrect
+5) The STYLE and STRUCTURE of questions — NOT the specific topics or subject matter
+
+⚠️ CRITICAL RULE — REFERENCE MATERIAL ISOLATION:
+- You MUST NOT bring any topics, examples, arguments, or factual claims from the reference questions into your generated questions.
+- The reference material is ONLY for learning the PATTERN of question construction.
+- Your questions must be derived EXCLUSIVELY from the SEMANTIC IDEAS and AUTHORIAL PERSONA provided below.
+- If any generated content replicates subject matter from the reference, it will be REJECTED.
 
 ---
 
@@ -273,6 +280,12 @@ These references are your training data. Analyze them to understand:
 <SEMANTIC_IDEAS>
 ${JSON.stringify(semanticIdeas, null, 2)}
 </SEMANTIC_IDEAS>
+
+⚠️ SEMANTIC IDEA USAGE — DIVERSITY MANDATE:
+- Do NOT fixate on a single semantic idea for multiple questions.
+- Each question type should draw from a DIFFERENT semantic idea or conceptual pair.
+- If you find yourself reusing the same central concept across questions, STOP and diversify.
+- The semantic ideas are a POOL of inspiration — sample broadly, do not cluster.
 
 ## AUTHORIAL PERSONA (STYLE GUIDE)
 
@@ -427,19 +440,20 @@ BAD OPENING EXAMPLES (WILL BE REJECTED):
 
 **Generation Requirements**:
 - Create 4 sentences that form a coherent paragraph when ordered correctly
-- The sentences should be scrambled (not in order 1-2-3-4)
+- ⚠️ GENERATE SENTENCES IN THEIR CORRECT LOGICAL ORDER (1=opening, 2=second, 3=third, 4=closing)
+- Do NOT scramble the sentences — our system will handle shuffling automatically
 - Each sentence should have clear connectors or logical flow markers
 - Multiple orderings should seem plausible, but only one is truly logical
 
 **Question text**: "The four sentences (labelled 1, 2, 3 and 4) below, when properly sequenced would yield a coherent paragraph. Decide on the proper sequencing of the order of the sentences and key in the sequence of the four numbers as your answer: "
 (The four sentences should not be added in the question text)
 
-**Critical Jumbling Requirement**:
-- The sentences MUST NOT be presented in sequential order (1-2-3-4)
-- You MUST randomize the sentence positions so the correct answer is NOT "1234"
-- Example: If logical order is A→B→C→D, present as: 1:C, 2:A, 3:D, 4:B (correct answer: "2143")
-- Avoid patterns like "1234", "4321", or any obvious sequence
-- The correct answer should require careful analysis of logical connections
+**IMPORTANT — Generate In Correct Order**:
+- Sentence 1 MUST be the logical OPENING sentence
+- Sentence 2 MUST be the logical SECOND sentence
+- Sentence 3 MUST be the logical THIRD sentence
+- Sentence 4 MUST be the logical CLOSING sentence
+- Set correct_answer.answer to "1234" (our system will shuffle and update this)
 
 **True Structure of CAT Para Jumbles**:
 - One sentence that introduces context (STANDALONE - no transition words at start)
@@ -447,10 +461,10 @@ BAD OPENING EXAMPLES (WILL BE REJECTED):
 - One that concludes or generalizes
 
 **Generation Process**:
-1. Write the OPENING sentence FIRST - verify it starts with a noun, verb, or descriptive phrase (NOT a transition)
-2. Write the CLOSING sentence - should provide insight or implication
-3. Write 2 MIDDLE sentences - these CAN use transitions like "This", "However", "Moreover"
-4. Scramble the positions so correct answer is NOT "1234"
+1. Write the OPENING sentence FIRST (sentence 1) - verify it starts with a noun, verb, or descriptive phrase (NOT a transition)
+2. Write the CLOSING sentence (sentence 4) - should provide insight or implication
+3. Write 2 MIDDLE sentences (sentences 2 and 3) - these CAN use transitions like "This", "However", "Moreover"
+4. Place them in order: 1=opening, 2=second, 3=third, 4=closing
 5. Verify: Can a test-taker identify the opener by elimination? (transition words = NOT opener)
 
 **Correct Sequence Characteristics**:
@@ -468,9 +482,9 @@ BAD OPENING EXAMPLES (WILL BE REJECTED):
 **Trap Design**: Create traps using thematic similarity and chronological illusion
 
 **MANDATORY VERIFICATION CHECKLIST (before finalizing)**:
-□ First sentence of correct sequence does NOT start with However/Thus/Therefore/This/That/Moreover/etc.
+□ First sentence (sentence 1) does NOT start with However/Thus/Therefore/This/That/Moreover/etc.
 □ First sentence introduces context WITHOUT requiring prior information
-□ Sentences are scrambled (answer is NOT "1234")
+□ Sentences are in CORRECT LOGICAL ORDER (1=opening, 4=closing)
 □ Each sentence depends on at least one other
 □ Only ONE valid ordering exists
 
@@ -483,11 +497,11 @@ BAD OPENING EXAMPLES (WILL BE REJECTED):
 
 **Technical Requirements**:
 - **CRITICAL: Generate EXACTLY 4 sentences (not 5)**
-- **CRITICAL: Sentences MUST be scrambled (not in order 1-2-3-4)**
-- Put sentences in jumbled_sentences: {"1": "sentence", "2": "sentence", "3": "sentence", "4": "sentence", "5": ""}
+- **CRITICAL: Sentences MUST be in CORRECT LOGICAL ORDER (1=opening, 4=closing)**
+- Put sentences in jumbled_sentences: {"1": "opening sentence", "2": "second sentence", "3": "third sentence", "4": "closing sentence", "5": ""}
 - **IMPORTANT: jumbled_sentences["5"] MUST be empty string ""**
 - Leave options empty: {"A": "", "B": "", "C": "", "D": ""}
-- Correct answer format example: "2413" (4-digit sequence using numbers 1-4 only)
+- Set correct_answer.answer to "1234" (system will shuffle automatically)
 
 ---
 
@@ -607,7 +621,7 @@ IMPORTANT:
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
-        temperature: 0.3,
+        temperature: 0.5,
         messages: [
             { role: "system", content: "You are a CAT VARC examiner." },
             { role: "user", content: prompt },
@@ -651,7 +665,42 @@ IMPORTANT:
             return shuffleAndFixOddOneOut(q);
         }
         if (q.question_type === 'para_jumble') {
-            return { ...q, question_text: PARA_JUMBLE_TEXT };
+            // Shuffle the sentences that were generated in correct order
+            const sentences = [
+                { originalPos: 1, text: q.jumbled_sentences["1"] },
+                { originalPos: 2, text: q.jumbled_sentences["2"] },
+                { originalPos: 3, text: q.jumbled_sentences["3"] },
+                { originalPos: 4, text: q.jumbled_sentences["4"] },
+            ];
+            // Fisher-Yates shuffle
+            for (let i = sentences.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [sentences[i], sentences[j]] = [sentences[j], sentences[i]];
+            }
+            // Ensure not still in order 1234
+            const isStillInOrder = sentences.every((s, idx) => s.originalPos === idx + 1);
+            if (isStillInOrder) {
+                // Swap first two to break the order
+                [sentences[0], sentences[1]] = [sentences[1], sentences[0]];
+            }
+            // Build new jumbled_sentences map and correct answer
+            const newJumbled: Record<string, string> = { "5": "" };
+            // The correct answer is: for each position in the correct order (1,2,3,4),
+            // find which new label it got
+            const correctOrderMap: Record<number, number> = {}; // originalPos -> newLabel
+            sentences.forEach((s, idx) => {
+                const newLabel = idx + 1;
+                newJumbled[String(newLabel)] = s.text;
+                correctOrderMap[s.originalPos] = newLabel;
+            });
+            // Answer is the sequence of new labels in correct reading order
+            const answer = [1, 2, 3, 4].map(pos => String(correctOrderMap[pos])).join("");
+            return {
+                ...q,
+                question_text: PARA_JUMBLE_TEXT,
+                jumbled_sentences: newJumbled,
+                correct_answer: { answer },
+            };
         }
         return q;
     });

@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { adminApiClient } from '../services/adminApiClient';
-import { ArrowLeft, Calendar, Activity, Clock, DollarSign, Target, Zap, Trophy, Flame } from 'lucide-react';
+import { ArrowLeft, Calendar, Activity, Clock, DollarSign, Target, Zap, Trophy, Flame, Save, Pencil } from 'lucide-react';
 import { ActivityHeatmap } from '../components/charts/ActivityHeatmap';
 import { SessionTimeline } from '../components/charts/SessionTimeline';
 
@@ -11,6 +11,8 @@ interface UserDetail {
     role: string;
     created_at: string;
     last_sign_in_at: string | null;
+    ai_insights_remaining: number;
+    customized_mocks_remaining: number;
     profile?: {
         display_name: string | null;
         username: string | null;
@@ -60,6 +62,16 @@ export default function UserDetailPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Admin edit form state
+    const [isEditing, setIsEditing] = useState(false);
+    const [editForm, setEditForm] = useState({
+        role: '',
+        ai_insights_remaining: 0,
+        customized_mocks_remaining: 0,
+    });
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
     useEffect(() => {
         const fetchUser = async () => {
             try {
@@ -82,6 +94,38 @@ export default function UserDetailPage() {
 
         if (id) fetchUser();
     }, [id]);
+
+    // Sync edit form when user data loads
+    useEffect(() => {
+        if (user) {
+            setEditForm({
+                role: user.role,
+                ai_insights_remaining: user.ai_insights_remaining ?? 0,
+                customized_mocks_remaining: user.customized_mocks_remaining ?? 0,
+            });
+        }
+    }, [user]);
+
+    const handleSaveUser = async () => {
+        if (!id) return;
+        setIsSaving(true);
+        setSaveMessage(null);
+        try {
+            await adminApiClient(`/users/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify(editForm),
+            });
+            // Update local state to reflect changes
+            setUser(prev => prev ? { ...prev, ...editForm } : prev);
+            setSaveMessage({ type: 'success', text: 'User updated successfully' });
+            setIsEditing(false);
+            setTimeout(() => setSaveMessage(null), 3000);
+        } catch (err: any) {
+            setSaveMessage({ type: 'error', text: err.message || 'Failed to update user' });
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     const heatmapData = useMemo(() => {
         if (!user) return [];
@@ -208,6 +252,104 @@ export default function UserDetailPage() {
                                 <Clock className="mr-2 h-4 w-4" />
                                 Last seen {new Date(user.last_sign_in_at).toLocaleDateString()}
                             </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Admin Actions Card */}
+            <div className="rounded-xl border border-[#2a2d3a] bg-[#1a1d27] p-6">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-white">Admin Actions</h2>
+                    <div className="flex items-center gap-2">
+                        {saveMessage && (
+                            <span className={`text-sm ${saveMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                                {saveMessage.text}
+                            </span>
+                        )}
+                        {isEditing ? (
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => {
+                                        setIsEditing(false);
+                                        if (user) setEditForm({
+                                            role: user.role,
+                                            ai_insights_remaining: user.ai_insights_remaining ?? 0,
+                                            customized_mocks_remaining: user.customized_mocks_remaining ?? 0,
+                                        });
+                                    }}
+                                    className="px-3 py-1.5 text-sm rounded-lg border border-[#2a2d3a] text-[#94a3b8] hover:text-white transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSaveUser}
+                                    disabled={isSaving}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg bg-[#6366f1] text-white hover:bg-[#5558e8] transition-colors disabled:opacity-50"
+                                >
+                                    <Save className="h-3.5 w-3.5" />
+                                    {isSaving ? 'Saving...' : 'Save'}
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => setIsEditing(true)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-[#2a2d3a] text-[#94a3b8] hover:text-white hover:border-[#6366f1] transition-colors"
+                            >
+                                <Pencil className="h-3.5 w-3.5" />
+                                Edit
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-3">
+                    {/* Role */}
+                    <div>
+                        <label className="block text-xs font-medium text-[#94a3b8] mb-1.5 uppercase tracking-wider">Role</label>
+                        {isEditing ? (
+                            <select
+                                value={editForm.role}
+                                onChange={(e) => setEditForm(f => ({ ...f, role: e.target.value }))}
+                                className="w-full rounded-lg border border-[#2a2d3a] bg-[#0f1117] px-3 py-2 text-sm text-white focus:border-[#6366f1] focus:outline-none"
+                            >
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        ) : (
+                            <p className="text-sm text-white capitalize">{user.role}</p>
+                        )}
+                    </div>
+
+                    {/* AI Insights Remaining */}
+                    <div>
+                        <label className="block text-xs font-medium text-[#94a3b8] mb-1.5 uppercase tracking-wider">AI Insights Remaining</label>
+                        {isEditing ? (
+                            <input
+                                type="number"
+                                min={0}
+                                value={editForm.ai_insights_remaining}
+                                onChange={(e) => setEditForm(f => ({ ...f, ai_insights_remaining: parseInt(e.target.value) || 0 }))}
+                                className="w-full rounded-lg border border-[#2a2d3a] bg-[#0f1117] px-3 py-2 text-sm text-white focus:border-[#6366f1] focus:outline-none"
+                            />
+                        ) : (
+                            <p className="text-sm text-white">{user.ai_insights_remaining ?? 'N/A'}</p>
+                        )}
+                    </div>
+
+                    {/* Customized Mocks Remaining */}
+                    <div>
+                        <label className="block text-xs font-medium text-[#94a3b8] mb-1.5 uppercase tracking-wider">Customized Mocks Remaining</label>
+                        {isEditing ? (
+                            <input
+                                type="number"
+                                min={0}
+                                value={editForm.customized_mocks_remaining}
+                                onChange={(e) => setEditForm(f => ({ ...f, customized_mocks_remaining: parseInt(e.target.value) || 0 }))}
+                                className="w-full rounded-lg border border-[#2a2d3a] bg-[#0f1117] px-3 py-2 text-sm text-white focus:border-[#6366f1] focus:outline-none"
+                            />
+                        ) : (
+                            <p className="text-sm text-white">{user.customized_mocks_remaining ?? 'N/A'}</p>
                         )}
                     </div>
                 </div>

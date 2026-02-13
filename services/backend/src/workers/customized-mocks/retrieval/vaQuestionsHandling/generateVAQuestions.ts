@@ -422,7 +422,7 @@ IMPORTANT:
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
-        temperature: 0.3,
+        temperature: 0.5,
         messages: [
             {
                 role: "system",
@@ -702,7 +702,7 @@ IMPORTANT:
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
-        temperature: 0.3,
+        temperature: 0.5,
         messages: [
             {
                 role: "system",
@@ -887,13 +887,11 @@ The question should:
 
 ---
 
-## CRITICAL JUMBLING REQUIREMENT:
-- The sentences MUST NOT be presented in sequential order (1-2-3-4)
-- You MUST randomize the sentence positions so the correct answer is NOT "1234"
-- Example: If the logical order is A→B→C→D, present them as: 1:C, 2:A, 3:D, 4:B (correct answer would be "2143")
-- The jumbled_sentences object should contain sentences in a SCRAMBLED order
-- Avoid patterns like "1234", "4321", or any obvious sequence
-- The correct answer should require careful analysis of logical connections
+## ⚠️ CRITICAL: GENERATE IN CORRECT ORDER
+- Generate all 4 sentences in their CORRECT LOGICAL ORDER
+- Sentence 1 = opening, Sentence 2 = second, Sentence 3 = third, Sentence 4 = closing
+- Do NOT scramble — our system will shuffle positions automatically
+- Set correct_answer.answer to "1234"
 
 ---
 
@@ -908,10 +906,10 @@ CAT para jumbles usually have:
 
 ## GENERATION PROCESS
 
-1. Write the OPENING sentence FIRST - verify it starts with a noun, verb, or descriptive phrase (NOT a transition)
-2. Write the CLOSING sentence - should provide insight or implication
-3. Write 2 MIDDLE sentences - these CAN use transitions like "This", "However", "Moreover"
-4. Scramble the positions so correct answer is NOT "1234"
+1. Write the OPENING sentence FIRST (sentence 1) - verify it starts with a noun, verb, or descriptive phrase (NOT a transition)
+2. Write the CLOSING sentence (sentence 4) - should provide insight or implication
+3. Write 2 MIDDLE sentences (sentences 2 and 3) - these CAN use transitions like "This", "However", "Moreover"
+4. Place them in order: 1=opening, 2=second, 3=third, 4=closing
 5. Verify: Can a test-taker identify the opener by elimination? (transition words = NOT opener)
 
 ---
@@ -994,9 +992,9 @@ Return STRICT JSON only in this format:
 }
 
 IMPORTANT:
-- Fill jumbled_sentences with the 4 sentences in keys 1-4, leave key 5 as empty string
+- Fill jumbled_sentences with the 4 sentences in keys 1-4 IN CORRECT LOGICAL ORDER, leave key 5 as empty string
 - Leave options as empty strings for keys A-D
-- Leave correct_answer.answer empty
+- Set correct_answer.answer to "1234" (system will shuffle automatically)
 - Leave rationale empty
 - Generate EXACTLY ${count} question
 - No additional text or commentary
@@ -1008,7 +1006,7 @@ IMPORTANT:
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
-        temperature: 0.3,
+        temperature: 0.5,
         messages: [
             {
                 role: "system",
@@ -1037,13 +1035,43 @@ IMPORTANT:
         );
     }
 
-    return parsed.questions.map(q => ({
-        ...q,
-        // Post-processing to ensure no hallucinated sentences in question text
-        question_text: PARA_JUMBLE_TEXT,
-        created_at: now,
-        updated_at: now
-    }));
+    return parsed.questions.map(q => {
+        // Shuffle sentences that were generated in correct order
+        const js = q.jumbled_sentences!;
+        const sentences = [
+            { originalPos: 1, text: js["1"] },
+            { originalPos: 2, text: js["2"] },
+            { originalPos: 3, text: js["3"] },
+            { originalPos: 4, text: js["4"] },
+        ];
+        // Fisher-Yates shuffle
+        for (let i = sentences.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [sentences[i], sentences[j]] = [sentences[j], sentences[i]];
+        }
+        // Ensure not still in order 1234
+        const isStillInOrder = sentences.every((s, idx) => s.originalPos === idx + 1);
+        if (isStillInOrder) {
+            [sentences[0], sentences[1]] = [sentences[1], sentences[0]];
+        }
+        // Build new jumbled_sentences map and correct answer
+        const newJumbled: Record<string, string> = { "5": "" };
+        const correctOrderMap: Record<number, number> = {};
+        sentences.forEach((s, idx) => {
+            const newLabel = idx + 1;
+            newJumbled[String(newLabel)] = s.text;
+            correctOrderMap[s.originalPos] = newLabel;
+        });
+        const answer = [1, 2, 3, 4].map(pos => String(correctOrderMap[pos])).join("");
+        return {
+            ...q,
+            question_text: PARA_JUMBLE_TEXT,
+            jumbled_sentences: newJumbled as any,
+            correct_answer: { answer },
+            created_at: now,
+            updated_at: now
+        };
+    });
 }
 
 /**
@@ -1341,7 +1369,7 @@ IMPORTANT:
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
-        temperature: 0.3,
+        temperature: 0.5,
         messages: [
             {
                 role: "system",

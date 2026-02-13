@@ -409,6 +409,8 @@ export async function completeSignup(req: Request, res: Response, next: NextFunc
             encrypted_password: encryptedPassword,
             email_confirmed_at: new Date(),
             provider: 'email',
+            ai_insights_remaining: 20,
+            customized_mocks_remaining: 2,
             created_at: new Date(),
             updated_at: new Date(),
         });
@@ -641,6 +643,8 @@ export async function googleOAuthCallback(req: Request, res: Response, next: Nex
                     family_name: userInfo.family_name,
                     picture: userInfo.picture,
                 }),
+                ai_insights_remaining: 20,
+                customized_mocks_remaining: 2,
                 created_at: new Date(),
                 updated_at: new Date(),
             });

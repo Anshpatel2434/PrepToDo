@@ -718,9 +718,14 @@ export async function fetchLeaderboard(req: Request, res: Response, next: NextFu
         // Calculate leaderboard
         const leaderboardMap = calculateLeaderboard(sessions, profiles);
 
-        // Sort by score and assign ranks
+        // Sort by accuracy (precision) first, then by time taken (ascending) as tiebreaker
         const leaderboard = Array.from(leaderboardMap.values())
-            .sort((a, b) => b.score - a.score)
+            .sort((a, b) => {
+                // Primary: accuracy (precision) descending — higher accuracy always wins
+                if (b.accuracy !== a.accuracy) return b.accuracy - a.accuracy;
+                // Secondary: time taken ascending — faster is better when accuracy is equal
+                return a.time_taken_seconds - b.time_taken_seconds;
+            })
             .map((entry, index) => ({
                 ...entry,
                 rank: index + 1,

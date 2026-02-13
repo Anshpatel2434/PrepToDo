@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { useGenerateInsightMutation } from "../../ai-insights/redux_usecase/aiInsightsApi";
 import { Brain, Lightbulb, Target, CheckCircle2, TrendingUp, Sparkles, Check, X } from "lucide-react";
 import type { Option, Question } from "../../../types";
 import { ConfidenceSelector } from "./ConfidenceSelector";
@@ -39,6 +40,8 @@ interface QuestionPanelProps {
         diagnostic?: DiagnosticData;
     };
     isCorrect?: boolean;
+    sessionId?: string;
+    attemptId?: string;
 }
 
 export const QuestionPanel: React.FC<QuestionPanelProps> = ({
@@ -53,6 +56,8 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
     onSolutionViewTypeChange,
     aiInsights,
     isCorrect: propIsCorrect,
+    sessionId,
+    attemptId,
 }) => {
     const isExamMode = viewMode === "exam";
     const displayUserAnswer = typeof userAnswer === 'string' ? userAnswer : String(userAnswer || "");
@@ -126,6 +131,31 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
         );
     };
 
+    const [generateInsight, { isLoading: insightLoading }] = useGenerateInsightMutation();
+    const [insightError, setInsightError] = useState<string | null>(null);
+    const [localDiagnostic, setLocalDiagnostic] = useState<DiagnosticData | null>(null);
+
+    // Reset local state when question changes
+    React.useEffect(() => {
+        setLocalDiagnostic(null);
+        setInsightError(null);
+    }, [question.id, attemptId]);
+
+    const handleGenerateInsight = async () => {
+        if (!sessionId || !attemptId || !question.id) return;
+        setInsightError(null);
+        try {
+            const result = await generateInsight({
+                session_id: sessionId,
+                question_id: question.id,
+                attempt_id: attemptId,
+            }).unwrap();
+            setLocalDiagnostic(result.diagnostic);
+        } catch (err: unknown) {
+            setInsightError(err instanceof Error ? err.message : 'Something went wrong');
+        }
+    };
+
     const renderAIInsights = () => {
         if (propIsCorrect) {
             return (
@@ -143,38 +173,63 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
             );
         }
 
-        if (!aiInsights?.isAnalysed) {
-            return (
-                <div className="flex flex-col items-center justify-center p-12 space-y-6 opacity-70">
-                    <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                    >
-                        <Sparkles className={`w-8 h-8 ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}`} />
-                    </motion.div>
-                    <div className="text-center space-y-2">
-                        <p className={`font-medium ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
-                            Analyzing your response...
-                        </p>
-                        <p className={`text-xs ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
-                            Identifying reasoning patterns and gaps. {`(Generally takes 2-3 minutes)`}
-                        </p>
-                    </div>
-                </div>
-            );
+        // Check for existing diagnostic (from props or local state)
+        const existingDiagnostic = localDiagnostic || aiInsights?.diagnostic;
+
+        if (existingDiagnostic) {
+            return renderDiagnosticContent(existingDiagnostic);
         }
 
-        const diagnostic = aiInsights.diagnostic;
-        if (!diagnostic) {
-            return (
-                <div className={`p-8 text-center rounded-xl border border-dashed ${isDark ? "border-border-dark" : "border-border-light"}`}>
-                    <p className={`font-medium ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
-                        No AI insights available for this attempt.
-                    </p>
-                </div>
-            );
-        }
+        // Show Generate button
+        return (
+            <div className="flex flex-col items-center justify-center p-10 space-y-5">
+                {insightLoading ? (
+                    <>
+                        <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                        >
+                            <Sparkles className={`w-8 h-8 ${isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}`} />
+                        </motion.div>
+                        <div className="text-center space-y-2">
+                            <p className={`font-medium ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                                Generating personalized insight...
+                            </p>
+                            <p className={`text-xs ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                                This usually takes 10-20 seconds
+                            </p>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <Sparkles className={`w-10 h-10 ${isDark ? "text-brand-primary-dark/40" : "text-brand-primary-light/40"}`} />
+                        <div className="text-center space-y-1">
+                            <p className={`font-medium ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                                AI-Powered Diagnostic
+                            </p>
+                            <p className={`text-xs ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                                Get personalized feedback on why you got this wrong and how to improve.
+                            </p>
+                        </div>
+                        <button
+                            onClick={handleGenerateInsight}
+                            className={`px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 hover:scale-105 ${isDark
+                                ? "bg-brand-primary-dark text-white"
+                                : "bg-brand-primary-light text-white"
+                                }`}
+                        >
+                            Generate AI Insights
+                        </button>
+                        {insightError && (
+                            <p className="text-error text-sm mt-2">{insightError}</p>
+                        )}
+                    </>
+                )}
+            </div>
+        );
+    };
 
+    const renderDiagnosticContent = (diagnostic: DiagnosticData) => {
         const analysis = diagnostic.analysis || diagnostic.personalized_analysis;
         const action = diagnostic.action || diagnostic.targeted_advice;
         const performance = diagnostic.performance || diagnostic.strength_comparison;

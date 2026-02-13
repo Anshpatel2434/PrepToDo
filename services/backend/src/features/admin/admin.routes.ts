@@ -2,7 +2,7 @@
 // Admin Feature - Routes
 // =============================================================================
 import { Router } from 'express';
-import { body, query } from 'express-validator';
+import { body, query, param } from 'express-validator';
 import { validate } from '../../common/middleware/validate.js';
 import { requireAdmin } from './middleware/admin.middleware.js';
 import { adminLoginRateLimiter } from './middleware/admin-rate-limit.js';
@@ -75,6 +75,20 @@ router.get(
 
 router.get('/users/:id', requireAdmin, adminUsersController.getUserDetails);
 
+router.put(
+    '/users/:id',
+    requireAdmin,
+    [
+        param('id').isUUID(),
+        body('role').optional().isIn(['user', 'admin']),
+        body('ai_insights_remaining').optional().isInt({ min: 0 }),
+        body('customized_mocks_remaining').optional().isInt({ min: 0 }),
+        body('email').optional().isEmail(),
+        validate
+    ],
+    adminUsersController.updateUser
+);
+
 // =============================================================================
 // Financials Routes
 // =============================================================================
@@ -114,5 +128,8 @@ router.post(
 
 // Take Daily Metrics Snapshot
 router.post('/system/snapshot', requireAdmin, adminSystemController.takeDailySnapshot);
+
+// Trigger Daily Content Generation
+router.post('/system/generate-daily', requireAdmin, adminSystemController.triggerDailyGeneration);
 
 export const adminRouter = router;

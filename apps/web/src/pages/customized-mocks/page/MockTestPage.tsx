@@ -5,7 +5,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { MdChevronLeft, MdChevronRight, MdArrowBack } from "react-icons/md";
 import { useTheme } from "../../../context/ThemeContext";
 import { v4 as uuid4 } from "uuid";
-import { showToast } from "../../../ui_components/CustomToaster";
 
 // Redux
 import {
@@ -33,7 +32,6 @@ import {
     selectCurrentAttempt,
     selectAnalysisViewType,
     setAnalysisViewType,
-    updateSessionAnalytics,
 } from "../redux_usecase/customizedMockSlice";
 
 import {
@@ -42,7 +40,6 @@ import {
     useStartMockSessionMutation,
     useSaveMockSessionDetailsMutation,
     useSaveMockQuestionAttemptsMutation,
-    useFetchExistingMockSessionQuery,
 } from "../redux_usecase/customizedMocksApi";
 
 import { MockQuestionPalette } from "../components/MockQuestionPalette";
@@ -177,31 +174,8 @@ const MockTestPage: React.FC = () => {
     // Fetch user (Auth source of truth)
     const { data: user, isLoading: isUserLoading } = useFetchUserQuery();
 
-    // Polling for session updates in solution mode
-    const { data: polledSessionData } = useFetchExistingMockSessionQuery(
-        {
-            user_id: user?.id || "",
-            paper_id: examId || "",
-        },
-        {
-            skip: viewMode !== "solution" || session.is_analysed || !user?.id || !examId,
-            pollingInterval: 120000, // 2 minutes
-        }
-    );
-
-    useEffect(() => {
-        if (polledSessionData) {
-            if (!session.is_analysed && polledSessionData.session.is_analysed) {
-                showToast.success("AI Insights are now available.", "ai-analysis-done");
-            }
-            dispatch(
-                updateSessionAnalytics({
-                    session: polledSessionData.session,
-                    attempts: polledSessionData.attempts,
-                })
-            );
-        }
-    }, [polledSessionData, dispatch, session.is_analysed]);
+    // AI insights are now generated on-demand via POST /api/ai-insights/generate
+    // (Removed 2-minute polling for session updates)
 
     useEffect(() => {
         if (!testData || session.id || isLoading || isInitializingRef.current || questionOrder.length === 0 || !user || isUserLoading || !examId) {
@@ -571,6 +545,8 @@ const MockTestPage: React.FC = () => {
                                     diagnostic: session.analytics?.analytics?.diagnostics?.find((d: any) => d.attempt_id === currentAttempt?.id)
                                 }}
                                 isCorrect={currentAttempt?.is_correct}
+                                sessionId={session.id}
+                                attemptId={currentAttempt?.id}
                             />
                         </SplitPaneLayout>
                     ) : (
@@ -592,6 +568,8 @@ const MockTestPage: React.FC = () => {
                                     diagnostic: session.analytics?.analytics?.diagnostics?.find((d: any) => d.attempt_id === currentAttempt?.id)
                                 }}
                                 isCorrect={currentAttempt?.is_correct}
+                                sessionId={session.id}
+                                attemptId={currentAttempt?.id}
                             />
                         </div>
                     )}

@@ -25,14 +25,12 @@ import {
     incrementElapsedTime,
     resetDailyPractice,
     commitPendingAttempt,
-    updateSessionAnalytics,
 } from "../../redux_usecase/dailyPracticeSlice";
 
 import {
     useFetchDailyTestDataQuery,
     useFetchDailyTestByIdQuery,
     useLazyFetchExistingSessionDetailsQuery,
-    useFetchExistingSessionDetailsQuery,
     useStartDailyVASessionMutation, // Note: VA specific mutation
     useSaveSessionDetailsMutation,
     useSaveQuestionAttemptsMutation,
@@ -137,32 +135,8 @@ const DailyVAPage: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const isLoading = isTestDataLoading || isTodayLoading || isUserLoading || (!session.id && (isSessionLoading || isCreatingSession)) || isSubmitting;
 
-    // Polling for session updates in solution mode
-    const { data: polledSessionData } = useFetchExistingSessionDetailsQuery(
-        {
-            user_id: session.user_id,
-            paper_id: currentTestData?.examInfo.id ? currentTestData?.examInfo.id : "",
-            session_type: "daily_challenge_va",
-        },
-        {
-            skip: viewMode !== "solution" || session.is_analysed || !session.user_id || !currentTestData?.examInfo.id,
-            pollingInterval: 120000, // 2 minutes
-        }
-    );
-
-    useEffect(() => {
-        if (polledSessionData) {
-            if (!session.is_analysed && polledSessionData.session.is_analysed) {
-                showToast.success("AI Insights are now available.", "ai-analysis-done");
-            }
-            dispatch(
-                updateSessionAnalytics({
-                    session: polledSessionData.session,
-                    attempts: polledSessionData.attempts,
-                })
-            );
-        }
-    }, [polledSessionData, dispatch, session.is_analysed]);
+    // AI insights are now generated on-demand via POST /api/ai-insights/generate
+    // (Removed 2-minute polling for session updates)
 
     // 2. Initialization
 

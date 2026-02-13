@@ -4,7 +4,6 @@
 import { metricMappingJson } from "../../config/core_metric_reasoning_map_v1_0";
 import { phaseA_fetchSessionData } from "./phases/phaseA_fetchSessionData";
 import { phaseB_computeProficiencyMetrics } from "./phases/phaseB_computeProficiencyMetrics";
-import { phaseC_llmDiagnostics } from "./phases/phaseC_llmDiagnostics";
 import { phaseD_updateProficiency } from "./phases/phaseD_updateProficiency";
 import { phaseE_rollupSignals } from "./phases/phaseE_rollupSignals";
 import { phaseF_updateUserAnalytics } from "./phases/phaseF_updateUserAnalytics";
@@ -122,44 +121,8 @@ export async function runAnalytics(params: {
                 // Note: session_id in phase B is mostly for tagging the updates
                 const sessionMetrics = phaseB_computeProficiencyMetrics(user_id, session_id, dataset, metricMapping);
 
-                // --- PHASE C: LLM DIAGNOSTICS ---
-                const incorrectAttempts = dataset.filter(a => (!a.correct && a.user_answer?.user_answer));
-                logger.info({ incorrectCount: incorrectAttempts.length }, "Running LLM diagnostics");
-
-                const diagnostics = await phaseC_llmDiagnostics(user_id, incorrectAttempts, costTracker);
-
-                // Store diagnostics in session_data
-                if (diagnostics.diagnostics.length > 0) {
-                    // We need to fetch current sessionData/analytics first because Drizzle updates are overwrites usually unless we use jsonb_set logic, 
-                    // but simple way is fetch-modify-save or just merge if we know the structure.
-                    // PracticeSessionSchema says `analytics` is the field for diagnostics? 
-                    // No, `analytics` column in schema is `text('analytics')`.
-                    // The original code updated `analytics: { ...analyics, diagnostics }`.
-
-                    const existingAnalytics = typeof session.analytics === 'string'
-                        ? JSON.parse(session.analytics)
-                        : session.analytics || {};
-
-                    const newAnalytics = {
-                        ...existingAnalytics,
-                        version: 'v1.0',
-                        analyzed_at: new Date().toISOString(),
-                        diagnostics: diagnostics.diagnostics,
-                    };
-
-                    await db.update(practiceSessions)
-                        .set({ analytics: JSON.stringify(newAnalytics) })
-                        .where(eq(practiceSessions.id, session_id));
-
-                    await db.update(practiceSessions)
-                        .set({ analytics: JSON.stringify(newAnalytics) })
-                        .where(eq(practiceSessions.id, session_id));
-
-                    logger.info('Diagnostics stored in session analytics');
-                }
-
-                // Cost tracking is now handled via CostTracker passed to phaseC
-
+                // Note: Phase C (LLM Diagnostics) has been removed from the pipeline.
+                // AI insights are now generated on-demand via POST /api/ai-insights/generate
 
                 // --- PHASE D: PROFICIENCY ENGINE ---
                 console.log("\n🧮 [Phase D/6] Updating atomic proficiency scores");

@@ -70,7 +70,7 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
         res.cookie(config.admin.cookieName, token, {
             httpOnly: true,
             secure: config.isProduction, // Secure in prod
-            sameSite: 'strict',          // Strict for admin
+            sameSite: config.isProduction ? 'none' : 'lax',
             maxAge: 60 * 60 * 1000,      // 1 hour
             path: '/',
         });
@@ -130,7 +130,7 @@ export async function autoLogin(req: Request, res: Response, next: NextFunction)
         res.cookie(config.admin.cookieName, token, {
             httpOnly: true,
             secure: config.isProduction,
-            sameSite: 'strict',
+            sameSite: config.isProduction ? 'none' : 'lax',
             maxAge: 60 * 60 * 1000, // 1 hour
             path: '/',
         });
@@ -160,7 +160,7 @@ export async function logout(req: Request, res: Response, next: NextFunction): P
         res.clearCookie(config.admin.cookieName, {
             httpOnly: true,
             secure: config.isProduction,
-            sameSite: 'strict',
+            sameSite: config.isProduction ? 'none' : 'lax',
             path: '/',
         });
 

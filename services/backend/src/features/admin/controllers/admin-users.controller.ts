@@ -151,3 +151,38 @@ export async function getUserDetails(req: Request, res: Response, next: NextFunc
         next(error);
     }
 }
+
+// =============================================================================
+// Update User Fields
+// =============================================================================
+export async function updateUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        const { id } = req.params;
+        const { role, email, ai_insights_remaining, customized_mocks_remaining } = req.body;
+
+        // Check user exists
+        const existing = await db.query.users.findFirst({
+            where: eq(users.id, id as string),
+            columns: { id: true }
+        });
+
+        if (!existing) {
+            throw Errors.notFound('User');
+        }
+
+        // Build update object with only provided fields
+        const updateData: Record<string, any> = { updated_at: new Date() };
+        if (role !== undefined) updateData.role = role;
+        if (email !== undefined) updateData.email = email;
+        if (ai_insights_remaining !== undefined) updateData.ai_insights_remaining = ai_insights_remaining;
+        if (customized_mocks_remaining !== undefined) updateData.customized_mocks_remaining = customized_mocks_remaining;
+
+        await db.update(users).set(updateData).where(eq(users.id, id as string));
+
+        logger.info({ userId: id, fields: Object.keys(updateData) }, 'Admin updated user fields');
+
+        res.json(successResponse({ message: 'User updated successfully' }));
+    } catch (error) {
+        next(error);
+    }
+}
