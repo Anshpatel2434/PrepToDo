@@ -33,6 +33,8 @@ export const UserProfileSchema = z.object({
     created_at: TimestampSchema,
     updated_at: TimestampSchema,
     email: z.string().email(),
+    ai_insights_remaining: z.number().optional(),
+    customized_mocks_remaining: z.number().optional(),
 });
 
 export type UserItem = z.infer<typeof UserSchema>;

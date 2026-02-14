@@ -110,7 +110,7 @@ function BarColumn({
             onMouseLeave={handleMouseLeave}
         >
             {/* Bar Container - Glass test tube effect */}
-            <div className={`relative w-full max-w-[60px] h-30 overflow-hidden rounded-t-2xl border-2 ${isDark ? "bg-white/5 border-white/10" : "bg-black/5 border-black/10"} backdrop-blur-sm shadow-inner`}>
+            <div className={`relative w-full max-w-[60px] h-40 overflow-hidden rounded-t-2xl border-2 ${isDark ? "bg-white/5 border-white/10" : "bg-black/5 border-black/10"} backdrop-blur-sm shadow-inner`}>
                 {/* Liquid Fill with Wave Effect - positioned absolutely at bottom */}
                 <motion.div
                     initial={{ height: 0 }}

@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { eq, and, ne } from 'drizzle-orm';
 
 import { db } from '../../../db/index.js';
-import { userProfiles, userAnalytics, userProficiencySignals, userMetricProficiency } from '../../../db/schema.js';
+import { userProfiles, userAnalytics, userProficiencySignals, userMetricProficiency, users } from '../../../db/schema.js';
 import { Errors, successResponse } from '../../../common/utils/errors.js';
 import { createChildLogger } from '../../../common/utils/logger.js';
 
@@ -33,15 +33,27 @@ export async function getDashboardData(req: Request, res: Response, next: NextFu
         dashboardLogger.info({ userId, action: 'get_dashboard' }, 'Fetching dashboard data');
 
         // Fetch all data in parallel for better performance
-        const [profileData, analyticsData, signalsData, metricsData] = await Promise.all([
+        const [profileData, analyticsData, signalsData, metricsData, quotaData] = await Promise.all([
             db.select().from(userProfiles).where(eq(userProfiles.id, userId)).limit(1),
             db.select().from(userAnalytics).where(eq(userAnalytics.user_id, userId)).limit(1),
             db.select().from(userProficiencySignals).where(eq(userProficiencySignals.user_id, userId)).limit(1),
             db.select().from(userMetricProficiency).where(eq(userMetricProficiency.user_id, userId)),
+            db.select({
+                ai_insights_remaining: users.ai_insights_remaining,
+                customized_mocks_remaining: users.customized_mocks_remaining
+            }).from(users).where(eq(users.id, userId)).limit(1),
         ]);
 
+        const profile = profileData[0] || null;
+        if (profile && quotaData[0]) {
+            // @ts-ignore - Merging extra fields not in original Schema
+            profile.ai_insights_remaining = quotaData[0].ai_insights_remaining;
+            // @ts-ignore - Merging extra fields not in original Schema
+            profile.customized_mocks_remaining = quotaData[0].customized_mocks_remaining;
+        }
+
         const response: DashboardDataResponse = {
-            profile: profileData[0] || null,
+            profile: profile,
             analytics: analyticsData[0] || null,
             proficiencySignals: signalsData[0] || null,
             metricProficiency: metricsData || [],

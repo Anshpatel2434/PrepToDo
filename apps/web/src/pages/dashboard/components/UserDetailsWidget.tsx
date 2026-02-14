@@ -10,6 +10,8 @@ import {
     Loader2,
     AlertCircle,
     AtSign,
+    Bot,
+    FileText,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import type { UserAnalytics, UserProfile } from "../../../types";
@@ -52,7 +54,7 @@ interface ColorfulStatCardProps {
     value: React.ReactNode;
     subtext?: string;
     icon: React.ReactNode;
-    colorScheme: "streak" | "points" | "accuracy" | "practice";
+    colorScheme: "streak" | "points" | "accuracy" | "practice" | "ai" | "mocks";
     isDark: boolean;
     delay?: number;
     description?: string;
@@ -90,6 +92,22 @@ const colorClasses = {
         accentDark: "text-stat-practice-accent-dark",
         iconBgLight: "backdrop-blur-xl bg-violet-300/10",
         iconBgDark: "backdrop-blur-xl bg-violet-300/10",
+    },
+    ai: {
+        light: "bg-stat-accuracy-light", // Using similar to accuracy for now or a new one if available
+        dark: "bg-stat-accuracy-dark",
+        accentLight: "text-indigo-600",
+        accentDark: "text-indigo-400",
+        iconBgLight: "backdrop-blur-xl bg-indigo-500/10",
+        iconBgDark: "backdrop-blur-xl bg-indigo-500/10",
+    },
+    mocks: {
+        light: "bg-stat-practice-light", // Using similar to practice
+        dark: "bg-stat-practice-dark",
+        accentLight: "text-rose-600",
+        accentDark: "text-rose-400",
+        iconBgLight: "backdrop-blur-xl bg-rose-500/10",
+        iconBgDark: "backdrop-blur-xl bg-rose-500/10",
     },
 };
 
@@ -534,6 +552,16 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
         { duration: 1400, delay: 400 }
     );
 
+    const animatedAiInsights = useAnimatedCounter(
+        profile?.ai_insights_remaining || 0,
+        { duration: 1400, delay: 500 }
+    );
+
+    const animatedMocks = useAnimatedCounter(
+        profile?.customized_mocks_remaining || 0,
+        { duration: 1400, delay: 600 }
+    );
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -738,8 +766,8 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                                 exit={{ opacity: 0, y: -10 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                {/* Colorful Stat Cards Grid — 2x2 */}
-                                <div className="grid grid-cols-2 gap-2.5">
+                                {/* Colorful Stat Cards Grid — 2 cols on mobile, 3 on larger screens */}
+                                <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5">
                                     <ColorfulStatCard
                                         label="Day Streak"
                                         value={
@@ -813,6 +841,34 @@ export const UserDetailsWidget: React.FC<UserDetailsWidgetProps> = ({
                                         isDark={isDark}
                                         delay={3}
                                         description="Total dedicated time spent learning on the platform."
+                                    />
+
+                                    <ColorfulStatCard
+                                        label="AI Insights"
+                                        value={
+                                            <span className="tabular-nums">
+                                                {animatedAiInsights}
+                                            </span>
+                                        }
+                                        icon={<Bot size={24} />}
+                                        colorScheme="ai"
+                                        isDark={isDark}
+                                        delay={4}
+                                        description="Remaining credits for detailed AI analysis."
+                                    />
+
+                                    <ColorfulStatCard
+                                        label="Custom Mocks"
+                                        value={
+                                            <span className="tabular-nums">
+                                                {animatedMocks}
+                                            </span>
+                                        }
+                                        icon={<FileText size={24} />}
+                                        colorScheme="mocks"
+                                        isDark={isDark}
+                                        delay={5}
+                                        description="Remaining custom mock exams you can generate."
                                     />
                                 </div>
 
