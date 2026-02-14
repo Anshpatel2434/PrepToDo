@@ -7,6 +7,7 @@ import OpenAI from "openai";
 import { Passage, Question, ReasoningGraphContext } from "../../types";
 import { CostTracker } from "../../../../common/utils/CostTracker";
 import { createChildLogger } from "../../../../common/utils/logger.js";
+import { extractCorrectAnswerString } from "../../../../common/utils/parseCorrectAnswer.js";
 
 const logger = createChildLogger('batch-rc-rationales');
 const client = new OpenAI();
@@ -106,7 +107,7 @@ ${Object.entries(q.options)
                 .map(([key, value]) => `${key}) ${value}`)
                 .join("\n")}
 
-CORRECT ANSWER: ${q.correct_answer.answer}
+CORRECT ANSWER: ${extractCorrectAnswerString(q.correct_answer)}
 
 REASONING GRAPH (Hidden Rubric — Do Not Mention):
 Core Metrics: ${context.metric_keys.join(", ")}
@@ -161,7 +162,7 @@ ${rq.question_text}
 Options:
 ${JSON.stringify(rq.options, null, 2)}
 
-Correct Answer: ${rq.correct_answer.answer}
+Correct Answer: ${extractCorrectAnswerString(rq.correct_answer)}
 
 Rationale:
 ${rq.rationale}

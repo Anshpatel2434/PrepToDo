@@ -17,6 +17,7 @@ import {
 } from '../../../db/schema.js';
 import { ApiError, Errors, successResponse } from '../../../common/utils/errors.js';
 import { createChildLogger } from '../../../common/utils/logger.js';
+import { parseCorrectAnswer } from '../../../common/utils/parseCorrectAnswer.js';
 
 const logger = createChildLogger('daily-content-controller');
 import type {
@@ -243,7 +244,7 @@ export async function fetchDailyTestById(req: Request, res: Response, next: Next
                 question_type: q.question_type,
                 options: q.options,
                 jumbled_sentences: q.jumbled_sentences,
-                correct_answer: include_solutions ? q.correct_answer : null,
+                correct_answer: include_solutions ? parseCorrectAnswer(q.correct_answer) : null,
                 rationale: q.rationale,
                 difficulty: q.difficulty,
                 tags: q.tags,

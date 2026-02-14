@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Brain, Lightbulb, Target, CheckCircle2, TrendingUp, Sparkles, Check, X } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import type { Option, Question } from "../../../types";
+import { extractCorrectAnswer, extractUserAnswer } from "../../../utils/answerUtils";
 import {
     selectViewMode,
     selectCurrentAttempt,
@@ -31,9 +32,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 
     const isExamMode = viewMode === "exam";
 
-    // Derived State
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const userAnswer = (currentAttempt?.user_answer as any)?.user_answer || "";
+    const userAnswer = extractUserAnswer(currentAttempt?.user_answer) || "";
     const selectedOption = userAnswer; // For standard questions
     const jumbleSequence = userAnswer; // For TITA questions
 
@@ -100,8 +99,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getOptionIndicator = (option: Option) => {
         const isSelected = selectedOption === option.id;
-        const correctAnswerId =
-            (question.correct_answer as any)?.answer || question.correct_answer;
+        const correctAnswerId = extractCorrectAnswer(question.correct_answer);
         const isCorrectOption = correctAnswerId === option.id;
 
         if (isExamMode) {
@@ -473,9 +471,9 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                                     <span
                                         className={
                                             // Fallback if correct_answer is missing (e.g. before refetch)
-                                            !question.correct_answer?.answer
+                                            !extractCorrectAnswer(question.correct_answer)
                                                 ? "text-gray-500"
-                                                : question.correct_answer.answer === userAnswer
+                                                : extractCorrectAnswer(question.correct_answer) === userAnswer
                                                     ? "text-success"
                                                     : "text-error"
                                         }
@@ -485,7 +483,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                                     <br />
                                     Correct:{" "}
                                     <span className="text-success">
-                                        {question.correct_answer?.answer || "Loading..."}
+                                        {extractCorrectAnswer(question.correct_answer) || "Loading..."}
                                     </span>
                                 </div>
                             )}
@@ -557,7 +555,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                     <div className="h-20" /> {/* Spacer for navigation buttons */}
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

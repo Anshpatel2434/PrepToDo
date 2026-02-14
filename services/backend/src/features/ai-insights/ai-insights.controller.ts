@@ -14,6 +14,7 @@ import { Errors, successResponse } from '../../common/utils/errors.js';
 import { createChildLogger } from '../../common/utils/logger.js';
 import { CostTracker } from '../../common/utils/CostTracker.js';
 import { generateSingleInsight } from '../../workers/analytics/generateSingleInsight.js';
+import { extractCorrectAnswerString } from '../../common/utils/parseCorrectAnswer.js';
 
 const logger = createChildLogger('ai-insights');
 
@@ -92,7 +93,7 @@ export async function generateInsight(req: Request, res: Response, next: NextFun
             user_answer: attempt.user_answer,
             question_text: question.question_text,
             options: question.options,
-            correct_answer: question.correct_answer,
+            correct_answer: extractCorrectAnswerString(question.correct_answer),
             jumbled_sentences: question.jumbled_sentences,
         };
 

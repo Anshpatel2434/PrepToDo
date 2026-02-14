@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { MdChevronLeft, MdChevronRight, MdArrowBack } from "react-icons/md";
 import { useTheme } from "../../../context/ThemeContext";
+import { extractCorrectAnswer } from "../../../utils/answerUtils";
 import { v4 as uuid4 } from "uuid";
 
 // Redux
@@ -433,7 +434,7 @@ const MockTestPage: React.FC = () => {
     const handleAnswerUpdate = useCallback((answerValue: string) => {
         if (viewMode !== 'exam' || !currentQuestion || !session.user_id) return;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const correctAnswer = (currentQuestion.correct_answer as any)?.answer || currentQuestion.correct_answer;
+        const correctAnswer = extractCorrectAnswer(currentQuestion.correct_answer);
         const isCorrect = answerValue === correctAnswer;
 
         dispatch(submitAnswer({

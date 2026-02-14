@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import { Passage, Question, ReasoningGraphContext } from "../../schemas/types";
 import { CostTracker } from "../../../../common/utils/CostTracker";
 import { createChildLogger } from "../../../../common/utils/logger.js";
+import { extractCorrectAnswerString } from "../../../../common/utils/parseCorrectAnswer.js";
 
 const logger = createChildLogger('va-rationales-batch');
 const client = new OpenAI();
@@ -90,7 +91,7 @@ ${q.question_text}
 
 ${questionContent}
 
-CORRECT ANSWER: ${q.correct_answer.answer}
+CORRECT ANSWER: ${extractCorrectAnswerString(q.correct_answer)}
 
 REASONING GRAPH (Hidden Rubric):
 Core Metrics: ${context.metric_keys.join(", ")}
@@ -115,7 +116,7 @@ ${q.question_text}
 ${q.question_type === "para_jumble" || q.question_type === "odd_one_out"
                     ? `Jumbled Sentences: ${JSON.stringify(q.jumbled_sentences, null, 2)}`
                     : `Options: ${JSON.stringify(q.options, null, 2)}`}
-Correct: ${q.correct_answer.answer}
+Correct: ${extractCorrectAnswerString(q.correct_answer)}
 Rationale: ${q.rationale}
 `).join("\n")}`;
         }).filter(Boolean).join("\n===\n");

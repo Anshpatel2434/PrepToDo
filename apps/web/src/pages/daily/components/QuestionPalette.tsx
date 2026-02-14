@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import type { Question, QuestionAttempt, UUID } from "../../../types";
+import { extractCorrectAnswer, extractUserAnswer } from "../../../utils/answerUtils";
 import {
     selectCurrentQuestionIndex,
     setCurrentQuestionIndex,
@@ -30,20 +31,10 @@ const formatTime = (seconds?: number) => {
     return m > 0 ? `${m}m ${s}s` : `${s}s`;
 };
 
-const getCorrectAnswer = (question: Question) => {
-    const ca = question.correct_answer as unknown;
-    if (typeof ca === "object" && ca !== null && "answer" in ca) {
-        return String((ca as { answer?: unknown }).answer ?? "");
-    }
-    return String(ca ?? "");
-};
+const getCorrectAnswer = (question: Question) => extractCorrectAnswer(question.correct_answer);
 
 const getUserAnswer = (attempt?: Partial<QuestionAttempt>) => {
-    const ua = attempt?.user_answer as unknown;
-    if (typeof ua === "object" && ua !== null && "user_answer" in ua) {
-        return (ua as { user_answer?: unknown }).user_answer;
-    }
-    return undefined;
+    return extractUserAnswer(attempt?.user_answer);
 };
 
 export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
@@ -164,11 +155,10 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
 
     return (
         <motion.div
-            className={`h-full w-full shrink-0 backdrop-blur-xl border-l shadow-xl flex flex-col ${
-                isDark
+            className={`h-full w-full shrink-0 backdrop-blur-xl border-l shadow-xl flex flex-col ${isDark
                     ? "bg-bg-primary-dark/95 border-border-dark"
                     : "bg-bg-primary-light/95 border-border-light"
-            }`}
+                }`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -177,9 +167,8 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
 
             {/* Status Legend */}
             <div
-                className={`p-4 border-b space-y-2 ${
-                    isDark ? "border-border-dark" : "border-border-light"
-                }`}
+                className={`p-4 border-b space-y-2 ${isDark ? "border-border-dark" : "border-border-light"
+                    }`}
             >
                 {viewMode === "exam" ? (
                     <>
@@ -220,9 +209,8 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
                                 Not Visited
                             </span>
                             <span
-                                className={`font-medium ${
-                                    isDark ? "text-text-muted-dark" : "text-text-muted-light"
-                                }`}
+                                className={`font-medium ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                                    }`}
                             >
                                 {examStats.notVisited}
                             </span>
@@ -230,9 +218,8 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
                     </>
                 ) : (
                     <div
-                        className={`space-y-2 text-xs ${
-                            isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
-                        }`}
+                        className={`space-y-2 text-xs ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                            }`}
                     >
                         <div className="flex items-center gap-2">
                             <span className="inline-block w-3 h-3 rounded-full bg-success" />
@@ -244,9 +231,8 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
                         </div>
                         <div className="flex items-center gap-2">
                             <span
-                                className={`inline-block w-3 h-3 rounded-full ${
-                                    isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"
-                                }`}
+                                className={`inline-block w-3 h-3 rounded-full ${isDark ? "bg-bg-tertiary-dark" : "bg-bg-tertiary-light"
+                                    }`}
                             />
                             <span>Unattempted</span>
                         </div>
@@ -282,12 +268,11 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
                                 className={`
                                     relative w-10 h-10 flex items-center justify-center rounded-full font-medium text-sm border-2
                                     ${getStatusColor(status)}
-                                    ${
-                                        currentIndex === i
-                                            ? isDark
-                                                ? "ring-2 ring-brand-primary-dark/60 shadow-md"
-                                                : "ring-2 ring-brand-primary-light/60 shadow-md"
-                                            : ""
+                                    ${currentIndex === i
+                                        ? isDark
+                                            ? "ring-2 ring-brand-primary-dark/60 shadow-md"
+                                            : "ring-2 ring-brand-primary-light/60 shadow-md"
+                                        : ""
                                     }
                                 `}
                                 whileHover={{ scale: 1.08 }}
@@ -299,11 +284,10 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
                                 {/* Exam Mode: tick badge when marked + answered */}
                                 {viewMode === "exam" && isMarked && hasAnswer && (
                                     <span
-                                        className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center shadow border ${
-                                            isDark
+                                        className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center shadow border ${isDark
                                                 ? "bg-bg-primary-dark text-info border-info/40"
                                                 : "bg-bg-primary-light text-info border-info/30"
-                                        }`}
+                                            }`}
                                         title="Marked + answered"
                                     >
                                         <MdCheck size={12} />
@@ -313,11 +297,10 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
                                 {/* Solution Mode: show mark icon regardless of correctness */}
                                 {viewMode === "solution" && isMarked && (
                                     <span
-                                        className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center shadow ${
-                                            isDark
+                                        className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center shadow ${isDark
                                                 ? "bg-bg-primary-dark text-warning"
                                                 : "bg-bg-primary-light text-warning"
-                                        }`}
+                                            }`}
                                         title="Marked for review"
                                     >
                                         <MdFlag size={12} />
@@ -331,25 +314,22 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
 
             {viewMode === "solution" && (
                 <div
-                    className={`shrink-0 p-4 border-t space-y-2 ${
-                        isDark ? "border-border-dark" : "border-border-light"
-                    }`}
+                    className={`shrink-0 p-4 border-t space-y-2 ${isDark ? "border-border-dark" : "border-border-light"
+                        }`}
                 >
                     <div
-                        className={`text-xs font-semibold uppercase tracking-wide ${
-                            isDark ? "text-text-primary-dark" : "text-text-primary-light"
-                        }`}
+                        className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-text-primary-dark" : "text-text-primary-light"
+                            }`}
                     >
                         Attempt Info
                     </div>
 
                     {currentQuestion ? (
                         <div
-                            className={`text-xs space-y-1 ${
-                                isDark
+                            className={`text-xs space-y-1 ${isDark
                                     ? "text-text-secondary-dark"
                                     : "text-text-secondary-light"
-                            }`}
+                                }`}
                         >
                             <div className="flex items-center justify-between gap-3">
                                 <span className="opacity-70">Your time</span>
@@ -382,9 +362,8 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
                         </div>
                     ) : (
                         <div
-                            className={`text-xs ${
-                                isDark ? "text-text-muted-dark" : "text-text-muted-light"
-                            }`}
+                            className={`text-xs ${isDark ? "text-text-muted-dark" : "text-text-muted-light"
+                                }`}
                         >
                             No question selected.
                         </div>

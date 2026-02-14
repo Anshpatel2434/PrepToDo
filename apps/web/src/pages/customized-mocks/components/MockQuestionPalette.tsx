@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import type { Question, QuestionAttempt, UUID } from "../../../types";
+import { extractCorrectAnswer, extractUserAnswer } from "../../../utils/answerUtils";
 import {
     selectCurrentQuestionIndex,
     setCurrentQuestionIndex,
@@ -30,20 +31,10 @@ const formatTime = (seconds?: number) => {
     return m > 0 ? `${m}m ${s}s` : `${s}s`;
 };
 
-const getCorrectAnswer = (question: Question) => {
-    const ca = question.correct_answer as unknown;
-    if (typeof ca === "object" && ca !== null && "answer" in ca) {
-        return String((ca as { answer?: unknown }).answer ?? "");
-    }
-    return String(ca ?? "");
-};
+const getCorrectAnswer = (question: Question) => extractCorrectAnswer(question.correct_answer);
 
 const getUserAnswer = (attempt?: Partial<QuestionAttempt>) => {
-    const ua = attempt?.user_answer as unknown;
-    if (typeof ua === "object" && ua !== null && "user_answer" in ua) {
-        return (ua as { user_answer?: unknown }).user_answer;
-    }
-    return undefined;
+    return extractUserAnswer(attempt?.user_answer);
 };
 
 export const MockQuestionPalette: React.FC<QuestionPaletteProps> = ({
@@ -156,8 +147,8 @@ export const MockQuestionPalette: React.FC<QuestionPaletteProps> = ({
     return (
         <motion.div
             className={`h-full w-full shrink-0 backdrop-blur-xl border-l shadow-xl flex flex-col ${isDark
-                    ? "bg-bg-primary-dark/95 border-border-dark"
-                    : "bg-bg-primary-light/95 border-border-light"
+                ? "bg-bg-primary-dark/95 border-border-dark"
+                : "bg-bg-primary-light/95 border-border-light"
                 }`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -285,8 +276,8 @@ export const MockQuestionPalette: React.FC<QuestionPaletteProps> = ({
                                 {viewMode === "exam" && isMarked && hasAnswer && (
                                     <span
                                         className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center shadow border ${isDark
-                                                ? "bg-bg-primary-dark text-info border-info/40"
-                                                : "bg-bg-primary-light text-info border-info/30"
+                                            ? "bg-bg-primary-dark text-info border-info/40"
+                                            : "bg-bg-primary-light text-info border-info/30"
                                             }`}
                                         title="Marked + answered"
                                     >
@@ -298,8 +289,8 @@ export const MockQuestionPalette: React.FC<QuestionPaletteProps> = ({
                                 {viewMode === "solution" && isMarked && (
                                     <span
                                         className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center shadow ${isDark
-                                                ? "bg-bg-primary-dark text-warning"
-                                                : "bg-bg-primary-light text-warning"
+                                            ? "bg-bg-primary-dark text-warning"
+                                            : "bg-bg-primary-light text-warning"
                                             }`}
                                         title="Marked for review"
                                     >
@@ -314,25 +305,22 @@ export const MockQuestionPalette: React.FC<QuestionPaletteProps> = ({
 
             {viewMode === 'solution' && (
                 <div
-                    className={`shrink-0 p-4 border-t space-y-2 ${
-                        isDark ? 'border-border-dark' : 'border-border-light'
-                    }`}
+                    className={`shrink-0 p-4 border-t space-y-2 ${isDark ? 'border-border-dark' : 'border-border-light'
+                        }`}
                 >
                     <div
-                        className={`text-xs font-semibold uppercase tracking-wide ${
-                            isDark ? 'text-text-primary-dark' : 'text-text-primary-light'
-                        }`}
+                        className={`text-xs font-semibold uppercase tracking-wide ${isDark ? 'text-text-primary-dark' : 'text-text-primary-light'
+                            }`}
                     >
                         Attempt Info
                     </div>
 
                     {currentQuestion ? (
                         <div
-                            className={`text-xs space-y-1 ${
-                                isDark
+                            className={`text-xs space-y-1 ${isDark
                                     ? 'text-text-secondary-dark'
                                     : 'text-text-secondary-light'
-                            }`}
+                                }`}
                         >
                             <div className='flex items-center justify-between gap-3'>
                                 <span className='opacity-70'>Your time</span>
@@ -357,9 +345,8 @@ export const MockQuestionPalette: React.FC<QuestionPaletteProps> = ({
                         </div>
                     ) : (
                         <div
-                            className={`text-xs ${
-                                isDark ? 'text-text-muted-dark' : 'text-text-muted-light'
-                            }`}
+                            className={`text-xs ${isDark ? 'text-text-muted-dark' : 'text-text-muted-light'
+                                }`}
                         >
                             No question selected.
                         </div>

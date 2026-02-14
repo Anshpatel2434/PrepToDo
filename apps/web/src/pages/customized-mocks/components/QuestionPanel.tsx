@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useGenerateInsightMutation } from "../../ai-insights/redux_usecase/aiInsightsApi";
 import { Brain, Lightbulb, Target, CheckCircle2, TrendingUp, Sparkles, Check, X } from "lucide-react";
 import type { Option, Question } from "../../../types";
+import { extractCorrectAnswer } from "../../../utils/answerUtils";
 import { ConfidenceSelector } from "./ConfidenceSelector";
 import type { SolutionViewType } from "./SolutionToggle";
 import { SolutionToggle } from "./SolutionToggle";
@@ -98,8 +99,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 
     const getOptionIndicator = (option: Option) => {
         const isSelected = displayUserAnswer === option.id;
-        const correctAnswerRaw = question.correct_answer as Record<string, unknown>;
-        const correctAnswerId = typeof correctAnswerRaw === 'object' ? correctAnswerRaw?.answer : correctAnswerRaw;
+        const correctAnswerId = extractCorrectAnswer(question.correct_answer);
         const isCorrectOption = correctAnswerId === option.id;
 
         if (isExamMode) {
@@ -325,9 +325,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
     };
 
     const getCorrectAnswerText = (): string => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const raw = question.correct_answer as any;
-        return typeof raw === 'object' ? raw.answer : raw;
+        return extractCorrectAnswer(question.correct_answer);
     }
 
     return (
