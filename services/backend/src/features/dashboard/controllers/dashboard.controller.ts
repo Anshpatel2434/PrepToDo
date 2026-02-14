@@ -5,6 +5,7 @@ import { db } from '../../../db/index.js';
 import { userProfiles, userAnalytics, userProficiencySignals, userMetricProficiency, users } from '../../../db/schema.js';
 import { Errors, successResponse } from '../../../common/utils/errors.js';
 import { createChildLogger } from '../../../common/utils/logger.js';
+import { TimeService } from '../../../common/utils/time.js';
 
 // Create dashboard-specific logger
 const dashboardLogger = createChildLogger('dashboard');
@@ -179,7 +180,7 @@ export async function updateUserProfile(req: Request, res: Response, next: NextF
 
         // Only update fields that are provided
         const updateData: Partial<typeof userProfiles.$inferInsert> = {
-            updated_at: new Date(),
+            updated_at: TimeService.getISTNow(),
         };
 
         // Username validation and uniqueness check

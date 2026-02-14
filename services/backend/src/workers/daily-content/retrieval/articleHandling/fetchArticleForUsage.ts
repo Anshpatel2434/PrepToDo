@@ -7,6 +7,7 @@ import { db } from "../../../../db/index";
 import { articles } from "../../../../db/schema";
 import { eq, and, lt, isNull, or } from "drizzle-orm";
 import { createChildLogger } from "../../../../common/utils/logger.js";
+import { TimeService } from "../../../../common/utils/time";
 
 const logger = createChildLogger('article-fetcher');
 
@@ -26,10 +27,10 @@ export async function fetchArticleForUsage(params: {
         `🚀 [ARTICLE] Fetching article | genre=${genre}, usage=${usageType}`
     );
 
-    const now = new Date();
+    const now = TimeService.getISTNow();
 
     // 100-day cooldown window
-    const cooldownDate = new Date(Date.now() - 100 * 24 * 60 * 60 * 1000);
+    const cooldownDate = new Date(now.getTime() - 100 * 24 * 60 * 60 * 1000);
 
     /**
      * STEP 1: Fetch eligible articles

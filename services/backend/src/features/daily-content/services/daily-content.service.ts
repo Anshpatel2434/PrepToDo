@@ -9,6 +9,7 @@ import { db } from "../../../db/index.js";
 import { examPapers } from "../../../db/schema.js";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { createChildLogger } from "../../../common/utils/logger.js";
+import { TimeService } from "../../../common/utils/time";
 
 const logger = createChildLogger('daily-content-service');
 
@@ -27,9 +28,12 @@ export class DailyContentService {
         try {
             // Check if content already exists for today
             if (!force) {
-                const today = new Date().toISOString().split('T')[0];
-                const startOfToday = new Date(`${today}T00:00:00.000Z`);
-                const endOfToday = new Date(`${today}T23:59:59.999Z`);
+                const today = TimeService.getISTDateString();
+                const startOfToday = TimeService.startOfTodayIST();
+
+                const endOfToday = new Date(startOfToday);
+                endOfToday.setDate(endOfToday.getDate() + 1);
+                endOfToday.setMilliseconds(-1);
 
                 const existingExam = await db.query.examPapers.findFirst({
                     where: and(

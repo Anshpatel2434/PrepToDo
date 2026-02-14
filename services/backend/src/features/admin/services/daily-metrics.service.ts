@@ -8,6 +8,7 @@ import {
     authSessions
 } from '../../../db/schema.js';
 import { createChildLogger } from '../../../common/utils/logger.js';
+import { TimeService } from '../../../common/utils/time';
 
 const logger = createChildLogger('daily-metrics-service');
 
@@ -16,10 +17,40 @@ export class DailyMetricsService {
      * Aggregates metrics for a specific date (defaults to today) and updates the DB.
      * This is idempotent and can be run multiple times a day to refresh "today's" stats.
      */
-    static async refreshMetrics(dateObj: Date = new Date()): Promise<void> {
-        const dateStr = dateObj.toISOString().split('T')[0];
-        const startOfDay = new Date(dateStr);
-        startOfDay.setUTCHours(0, 0, 0, 0); // Ensure UTC consistency if needed, though schema handles timestamp with tz
+    static async refreshMetrics(dateObj: Date = TimeService.getISTNow()): Promise<void> {
+        const dateStr = TimeService.getISTDateString(dateObj);
+
+        // Calculate start of day in IST for the given date
+        // If dateObj is today, use startOfTodayIST
+        // If dateObj is arbitrary, we parse the dateStr in IST context
+
+        // For simplicity, we construct the range using the date string which is YYYY-MM-DD
+        // in IST. We need to create a Date object that represents 00:00 IST on that day.
+
+        // Since we don't have a parse method in TimeService yet, we can simple use the fact 
+        // that our TimeService.startOfTodayIST() returns a Date object.
+
+        // Let's rely on string comparison for the "date" field (stored as date type)
+        // usage, but for querying timestamps (created_at), we need Date objects.
+
+        // Heuristic: dateStr is YYYY-MM-DD (IST).
+        // To get start of that day in UTC (for DB query), we need to subtract 5.5 hours from
+        // YYYY-MM-DD T00:00:00 UTC? No.
+
+        // Let's use date-fns-tz if possible, or simple offset math if we are confident.
+        // Actually, TimeService.startOfTodayIST() returns a Date object which is the instant of midnight IST.
+        // So validation:
+
+        let startOfDay: Date;
+        if (dateStr === TimeService.getISTDateString()) {
+            startOfDay = TimeService.startOfTodayIST();
+        } else {
+            // Construct midnight IST for an arbitrary date
+            // IST is UTC+5:30.
+            // So 00:00 IST is 18:30 UTC previous day.
+            const target = new Date(dateStr + 'T00:00:00+05:30');
+            startOfDay = target;
+        }
 
         const endOfDay = new Date(startOfDay);
         endOfDay.setDate(endOfDay.getDate() + 1);

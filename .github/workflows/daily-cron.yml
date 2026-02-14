@@ -1,0 +1,17 @@
+name: Daily PrepToDo Cron
+
+on:
+  schedule:
+    - cron: "30 18 * * *"  # Runs at 12:00 AM IST (18:30 UTC)
+  workflow_dispatch:       # Allows manual run
+
+jobs:
+  run-daily-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call Backend Cron Endpoint
+        run: |
+          curl -X POST \
+          -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+          ${{ secrets.BACKEND_URL }}/internal/run-daily-job

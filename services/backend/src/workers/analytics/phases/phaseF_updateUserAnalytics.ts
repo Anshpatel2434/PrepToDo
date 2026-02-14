@@ -8,6 +8,7 @@ import { eq, and, gte, lt, inArray } from "drizzle-orm";
 import z from "zod";
 import { v4 as uuidv4 } from "uuid";
 import { createChildLogger } from "../../../common/utils/logger.js";
+import { TimeService } from "../../../common/utils/time";
 
 const logger = createChildLogger('analytics-phase-f');
 
@@ -48,8 +49,8 @@ export async function phaseF_updateUserAnalytics(
     logger.info('Updating user_analytics');
 
     const today = sessionData.completed_at
-        ? new Date(sessionData.completed_at).toISOString().split('T')[0]
-        : new Date().toISOString().split('T')[0];
+        ? TimeService.getISTDateString(new Date(sessionData.completed_at))
+        : TimeService.getISTDateString();
 
 
     // Determine if this is a real session or just a streak update
@@ -87,7 +88,8 @@ export async function phaseF_updateUserAnalytics(
     });
 
     // 8. Check if user has >= 10 minutes of practice today for streak calculation
-    const dayStart = new Date(`${today}T00:00:00.000Z`);
+    // Use IST start of day
+    const dayStart = TimeService.startOfTodayIST();
     const dayEndDate = new Date(dayStart);
     dayEndDate.setUTCDate(dayEndDate.getUTCDate() + 1);
 
@@ -261,7 +263,7 @@ async function updateReadingSpeedProficiency(
 
     // Update speed_vs_accuracy_data with aggregated daily averages
     // Use the session's completed_at date, not today's date
-    const sessionDate = new Date(completed_at).toISOString().split('T')[0];
+    const sessionDate = TimeService.getISTDateString(new Date(completed_at));
 
     // Helper to parse speedVsAccuracyData
     const parseSpeedData = (val: any) => {
@@ -557,9 +559,14 @@ async function calculateStreaks(
                 currentStreak = 1;
                 logger.info({ currentStreak }, "First active day: starting streak");
             } else {
+                // Parse dates as IST strings (YYYY-MM-DD)
+                // We create date objects at midnight UTC to compare days difference safely
                 const lastDate = new Date(lastActiveDate + 'T00:00:00Z');
                 const todayDate = new Date(today + 'T00:00:00Z');
-                const daysDiff = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+
+                // Calculate difference in days
+                const msPerDay = 1000 * 60 * 60 * 24;
+                const daysDiff = Math.floor((todayDate.getTime() - lastDate.getTime()) / msPerDay);
 
                 logger.info({ lastActiveDate, today, daysDiff }, "Date comparison for streak");
 

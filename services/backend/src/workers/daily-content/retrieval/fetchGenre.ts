@@ -7,6 +7,7 @@ import { db } from "../../../db/index";
 import { genres } from "../../../db/schema";
 import { eq, lt, isNull, or, asc, and } from "drizzle-orm";
 import { createChildLogger } from "../../../common/utils/logger.js";
+import { TimeService } from "../../../common/utils/time";
 
 const logger = createChildLogger('fetch-genre-today');
 
@@ -17,10 +18,10 @@ const logger = createChildLogger('fetch-genre-today');
  */
 export async function fetchGenreForToday() {
     logger.info("Fetching genre start");
-    const now = new Date();
+    const now = TimeService.getISTNow();
 
     // Calculate the cooldown date (24 hours ago)
-    const cooldownDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const cooldownDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
     /**
      * STEP 1: Fetch eligible genres
