@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { MdChevronLeft, MdChevronRight, MdArrowBack } from "react-icons/md";
 import { useTheme } from "../../../context/ThemeContext";
-import { extractCorrectAnswer } from "../../../utils/answerUtils";
+
 import { v4 as uuid4 } from "uuid";
 
 // Redux
@@ -83,7 +83,8 @@ const MockTestPage: React.FC = () => {
     const shouldFetchSolutions = viewMode === "solution" || session.status === "completed";
 
     // --- 1. Data Fetching & Initialization ---
-    const { data: testData, isLoading: isTestDataLoading } = useFetchMockTestByIdQuery(
+    // --- 1. Data Fetching & Initialization ---
+    const { data: testData, isLoading: isTestDataLoading, isFetching: isTestDataFetching } = useFetchMockTestByIdQuery(
         {
             exam_id: examId ? examId : "",
             include_solutions: shouldFetchSolutions
@@ -167,7 +168,7 @@ const MockTestPage: React.FC = () => {
         : null;
 
     const [showPalette, setShowPalette] = React.useState(true);
-    const isLoading = isTestDataLoading || (!session.id && (isSessionLoading || isCreatingSession));
+    const isLoading = isTestDataLoading || isTestDataFetching || (!session.id && (isSessionLoading || isCreatingSession));
 
     // --- 2. Session Setup Logic ---
     const isInitializingRef = useRef(false);
@@ -434,7 +435,8 @@ const MockTestPage: React.FC = () => {
     const handleAnswerUpdate = useCallback((answerValue: string) => {
         if (viewMode !== 'exam' || !currentQuestion || !session.user_id) return;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const correctAnswer = extractCorrectAnswer(currentQuestion.correct_answer);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const correctAnswer = (currentQuestion.correct_answer as any)?.answer || "";
         const isCorrect = answerValue === correctAnswer;
 
         dispatch(submitAnswer({

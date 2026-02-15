@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useGenerateInsightMutation } from "../../ai-insights/redux_usecase/aiInsightsApi";
 import { Brain, Lightbulb, Target, CheckCircle2, TrendingUp, Sparkles, Check, X } from "lucide-react";
 import type { Option, Question } from "../../../types";
-import { extractCorrectAnswer } from "../../../utils/answerUtils";
+
 import { ConfidenceSelector } from "./ConfidenceSelector";
 import type { SolutionViewType } from "./SolutionToggle";
 import { SolutionToggle } from "./SolutionToggle";
@@ -99,8 +99,10 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 
     const getOptionIndicator = (option: Option) => {
         const isSelected = displayUserAnswer === option.id;
-        const correctAnswerId = extractCorrectAnswer(question.correct_answer);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const correctAnswerId = (question.correct_answer as any)?.answer || "";
         const isCorrectOption = correctAnswerId === option.id;
+        const hasCorrectAnswer = !!correctAnswerId;
 
         if (isExamMode) {
             // Show radio button in exam mode
@@ -117,14 +119,28 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
             );
         }
 
-        // Solution mode - show tick for correct, cross for incorrect selected
+        // Solution mode
+
+        // 1. If correct answer is not yet loaded (race condition protection), show neutral
+        if (!hasCorrectAnswer) {
+            return (
+                <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 ${isDark ? "border-border-dark" : "border-border-light"}`} />
+            );
+        }
+
+        // 2. Show tick for correct option
         if (isCorrectOption) {
             return <Check className="w-5 h-5 text-success flex-shrink-0" />;
         }
+
+        // 3. Show cross ONLY if user selected this WRONG option
+        // If user didn't select anything (unattempted), displayUserAnswer is ""
+        // So isSelected (false) && !isCorrectOption (true) -> false. No cross.
         if (isSelected && !isCorrectOption) {
             return <X className="w-5 h-5 text-error flex-shrink-0" />;
         }
-        // Unselected wrong options - show empty radio
+
+        // 4. Default: Unselected options
         return (
             <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 ${isDark ? "border-border-dark" : "border-border-light"
                 }`} />
@@ -325,7 +341,8 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
     };
 
     const getCorrectAnswerText = (): string => {
-        return extractCorrectAnswer(question.correct_answer);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (question.correct_answer as any)?.answer || "";
     }
 
     return (
@@ -435,7 +452,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                                 </div>
                             ) : (
                                 <div className={`p-4 rounded-xl border text-center font-mono text-lg ${isDark ? " text-text-primary-dark " : " text-text-primary-light "} `}>
-                                    Your Answer: <span className={getCorrectAnswerText() === displayUserAnswer ? "text-success" : "text-error"}>{displayUserAnswer || "-"}</span><br />
+                                    Your Answer: <span className={!getCorrectAnswerText() || !displayUserAnswer ? "text-gray-500" : getCorrectAnswerText() === displayUserAnswer ? "text-success" : "text-error"}>{displayUserAnswer || "-"}</span><br />
                                     Correct: <span className="text-success">{getCorrectAnswerText()}</span>
                                 </div>
                             )}

@@ -1,7 +1,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { eq, and, desc, inArray, sql } from 'drizzle-orm';
+import { eq, and, desc, asc, inArray, sql } from 'drizzle-orm';
 import { db } from '../../../db';
 import {
     examPapers,
@@ -18,6 +18,7 @@ import { ApiError, Errors, successResponse } from '../../../common/utils/errors'
 import { createChildLogger } from '../../../common/utils/logger.js';
 
 const logger = createChildLogger('customized-mocks-controller');
+import { parseCorrectAnswer } from '../../../common/utils/parseCorrectAnswer';
 import { runCustomizedMocks } from '../../../workers/customized-mocks/runCustomizedMocks';
 import {
     CreateCustomizedMockRequest,
@@ -347,7 +348,8 @@ export async function fetchMockTestById(req: Request, res: Response, next: NextF
         });
 
         const examQuestions = await db.query.questions.findMany({
-            where: eq(questions.paper_id, exam_id as any)
+            where: eq(questions.paper_id, exam_id as any),
+            orderBy: [asc(questions.created_at), asc(questions.id)],
         });
 
         // Parse and filter fields
@@ -358,20 +360,9 @@ export async function fetchMockTestById(req: Request, res: Response, next: NextF
             let parsedJumbled = q.jumbled_sentences;
             if (typeof q.jumbled_sentences === 'string') { try { parsedJumbled = JSON.parse(q.jumbled_sentences); } catch { } }
 
-            let parsedCorrectAnswer = { answer: "" };
-            if (include_solutions) {
-                if (typeof q.correct_answer === 'string') {
-                    try {
-                        if (q.correct_answer.trim().startsWith('{')) parsedCorrectAnswer = JSON.parse(q.correct_answer);
-                        else parsedCorrectAnswer = { answer: q.correct_answer };
-                    } catch { parsedCorrectAnswer = { answer: q.correct_answer }; }
-                } else if (typeof q.correct_answer === 'object') {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    parsedCorrectAnswer = q.correct_answer as any;
-                }
-            } else {
-                parsedCorrectAnswer = { answer: "" }; // Hide answer
-            }
+            const parsedCorrectAnswer = include_solutions
+                ? parseCorrectAnswer(q.correct_answer)
+                : { answer: "" };
 
             return {
                 ...q,

@@ -189,7 +189,6 @@ For each question, provide a rationale that:
 2) Eliminates at least TWO wrong options in a way that is clearly guided by the elimination cues.
    - For each eliminated option: 
      * State the option letter
-     * Why it tempts
      * What it gets wrong
      * **CRITICAL: Reference the specific passage line(s)** that contradict or don't support this option
      * Format: "However, the passage says in paragraph [number]: '[exact quote]' which contradicts this" (Use the explicit paragraph numbers [x])

@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import type { Question, QuestionAttempt, UUID } from "../../../types";
-import { extractCorrectAnswer, extractUserAnswer } from "../../../utils/answerUtils";
+
 import {
     selectCurrentQuestionIndex,
     setCurrentQuestionIndex,
@@ -31,10 +31,16 @@ const formatTime = (seconds?: number) => {
     return m > 0 ? `${m}m ${s}s` : `${s}s`;
 };
 
-const getCorrectAnswer = (question: Question) => extractCorrectAnswer(question.correct_answer);
+const getCorrectAnswer = (question: Question) => {
+    return (question.correct_answer)?.answer || "";
+};
 
 const getUserAnswer = (attempt?: Partial<QuestionAttempt>) => {
-    return extractUserAnswer(attempt?.user_answer);
+    const ans = attempt?.user_answer?.user_answer;
+    // Unattempted or empty object check (if user_answer is {})
+    if (typeof attempt?.user_answer === 'object' && Object.keys(attempt?.user_answer || {}).length === 0) return undefined;
+
+    return ans || "";
 };
 
 export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
@@ -76,10 +82,8 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
             if (!attempt || !hasAnswer) return "unattempted";
 
             const correctAnswer = getCorrectAnswer(question);
-            const isCorrect =
-                typeof attempt.is_correct === "boolean"
-                    ? attempt.is_correct
-                    : String(userAnswer) === correctAnswer;
+            // Ignore backend is_correct to align with QuestionPanel which calculates checks on the fly
+            const isCorrect = String(userAnswer) === correctAnswer;
 
             return isCorrect ? "correct" : "incorrect";
         },
@@ -156,8 +160,8 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
     return (
         <motion.div
             className={`h-full w-full shrink-0 backdrop-blur-xl border-l shadow-xl flex flex-col ${isDark
-                    ? "bg-bg-primary-dark/95 border-border-dark"
-                    : "bg-bg-primary-light/95 border-border-light"
+                ? "bg-bg-primary-dark/95 border-border-dark"
+                : "bg-bg-primary-light/95 border-border-light"
                 }`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -285,8 +289,8 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
                                 {viewMode === "exam" && isMarked && hasAnswer && (
                                     <span
                                         className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center shadow border ${isDark
-                                                ? "bg-bg-primary-dark text-info border-info/40"
-                                                : "bg-bg-primary-light text-info border-info/30"
+                                            ? "bg-bg-primary-dark text-info border-info/40"
+                                            : "bg-bg-primary-light text-info border-info/30"
                                             }`}
                                         title="Marked + answered"
                                     >
@@ -298,8 +302,8 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
                                 {viewMode === "solution" && isMarked && (
                                     <span
                                         className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center shadow ${isDark
-                                                ? "bg-bg-primary-dark text-warning"
-                                                : "bg-bg-primary-light text-warning"
+                                            ? "bg-bg-primary-dark text-warning"
+                                            : "bg-bg-primary-light text-warning"
                                             }`}
                                         title="Marked for review"
                                     >
@@ -327,8 +331,8 @@ export const QuestionPalette: React.FC<QuestionPaletteProps> = ({
                     {currentQuestion ? (
                         <div
                             className={`text-xs space-y-1 ${isDark
-                                    ? "text-text-secondary-dark"
-                                    : "text-text-secondary-light"
+                                ? "text-text-secondary-dark"
+                                : "text-text-secondary-light"
                                 }`}
                         >
                             <div className="flex items-center justify-between gap-3">

@@ -621,7 +621,7 @@ IMPORTANT:
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
-        temperature: 0.5,
+        temperature: 0.4,
         messages: [
             { role: "system", content: "You are a CAT VARC examiner." },
             { role: "user", content: prompt },

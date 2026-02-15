@@ -15,6 +15,10 @@ import {
     graphNodes,
 } from './tables.js';
 
+console.log('--- relations.ts executing ---');
+console.log('In relations.ts: userProfiles is', userProfiles ? 'DEFINED' : 'UNDEFINED');
+console.log('In relations.ts: users is', users ? 'DEFINED' : 'UNDEFINED');
+
 // =============================================================================
 // Relations
 // =============================================================================

@@ -146,7 +146,7 @@ CAT RC passages are typically sourced from:
 - Technical and policy reports (think-tank briefs, white papers)
 
 PASSAGE CHARACTERISTICS:
-- Length: 400-500 words
+- Length: 300-400 words
 - Complexity: high lexical density, multiple clauses, low redundancy
 - Structure: layered argumentation (definitions, premises, evidence, objections, conclusions)
 - Viewpoint: expository or argumentative, presenting a thesis plus counter-arguments
@@ -160,7 +160,7 @@ HOW PASSAGES ARE ADAPTED FOR CAT:
 
 ### GENERATION CONSTRAINTS (MANDATORY)
 
-- Word count: 400-500 words (optimal range for CAT)
+- Word count: 300-400 words (optimal range for CAT)
 - Paragraphs: 3 to 4
 - Tone: neutral, analytical, academic
 - No storytelling
@@ -296,7 +296,7 @@ If not, expand the analysis until it is.
 
     const completion = await client.chat.completions.create({
         model: MODEL,
-        temperature: 0.2, // low creativity, high control
+        temperature: 0.4, // low creativity, high control
         messages: [
             {
                 role: "system",

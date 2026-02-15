@@ -84,7 +84,7 @@ export default function DailyRCPage() {
 
     // Fetch full exam content (requires auth) - this gets questions/passages
     const shouldFetchSolutions = viewMode === 'solution';
-    const { data: currentTestData, isLoading: isTestDataLoading } = useFetchDailyTestByIdQuery(
+    const { data: currentTestData, isLoading: isTestDataLoading, isFetching: isTestDataFetching } = useFetchDailyTestByIdQuery(
         {
             exam_id: examId || "",
             include_solutions: shouldFetchSolutions
@@ -140,7 +140,7 @@ export default function DailyRCPage() {
     const [showPalette, setShowPalette] = React.useState(true);
     const [initError, setInitError] = React.useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const isLoading = isTestDataLoading || isTodayLoading || isUserLoading || (!session.id && (isSessionLoading || isCreatingSession)) || isSubmitting;
+    const isLoading = isTestDataLoading || isTestDataFetching || isTodayLoading || isUserLoading || (!session.id && (isSessionLoading || isCreatingSession)) || isSubmitting;
 
     // AI insights are now generated on-demand via POST /api/ai-insights/generate
     // (Removed 2-minute polling for session updates)

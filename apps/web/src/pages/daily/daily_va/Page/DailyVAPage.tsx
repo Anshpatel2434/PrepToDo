@@ -82,7 +82,7 @@ const DailyVAPage: React.FC = () => {
     const examId = urlExamId || todayData?.examInfo?.id || null;
 
     // Fetch full exam content (requires auth) - this gets questions/passages
-    const { data: currentTestData, isLoading: isTestDataLoading } = useFetchDailyTestByIdQuery(
+    const { data: currentTestData, isLoading: isTestDataLoading, isFetching: isTestDataFetching } = useFetchDailyTestByIdQuery(
         {
             exam_id: examId || "",
             include_solutions: shouldFetchSolutions
@@ -133,7 +133,7 @@ const DailyVAPage: React.FC = () => {
 
     const [showPalette, setShowPalette] = React.useState(true);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const isLoading = isTestDataLoading || isTodayLoading || isUserLoading || (!session.id && (isSessionLoading || isCreatingSession)) || isSubmitting;
+    const isLoading = isTestDataLoading || isTestDataFetching || isTodayLoading || isUserLoading || (!session.id && (isSessionLoading || isCreatingSession)) || isSubmitting;
 
     // AI insights are now generated on-demand via POST /api/ai-insights/generate
     // (Removed 2-minute polling for session updates)

@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import type { Question, QuestionAttempt, UUID } from "../../../types";
-import { extractCorrectAnswer, extractUserAnswer } from "../../../utils/answerUtils";
+
 import {
     selectCurrentQuestionIndex,
     setCurrentQuestionIndex,
@@ -31,10 +31,18 @@ const formatTime = (seconds?: number) => {
     return m > 0 ? `${m}m ${s}s` : `${s}s`;
 };
 
-const getCorrectAnswer = (question: Question) => extractCorrectAnswer(question.correct_answer);
+const getCorrectAnswer = (question: Question) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (question.correct_answer as any)?.answer || "";
+};
 
 const getUserAnswer = (attempt?: Partial<QuestionAttempt>) => {
-    return extractUserAnswer(attempt?.user_answer);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ans = (attempt?.user_answer as any)?.user_answer;
+    // Unattempted or empty object check
+    if (typeof attempt?.user_answer === 'object' && Object.keys(attempt?.user_answer || {}).length === 0) return undefined;
+
+    return ans || "";
 };
 
 export const MockQuestionPalette: React.FC<QuestionPaletteProps> = ({
@@ -76,10 +84,8 @@ export const MockQuestionPalette: React.FC<QuestionPaletteProps> = ({
             if (!attempt || !hasAnswer) return "unattempted";
 
             const correctAnswer = getCorrectAnswer(question);
-            const isCorrect =
-                typeof attempt.is_correct === "boolean"
-                    ? attempt.is_correct
-                    : String(userAnswer) === correctAnswer;
+            // Ignore backend is_correct to align with QuestionPanel which calculates checks on the fly
+            const isCorrect = String(userAnswer) === correctAnswer;
 
             return isCorrect ? "correct" : "incorrect";
         },
@@ -318,8 +324,8 @@ export const MockQuestionPalette: React.FC<QuestionPaletteProps> = ({
                     {currentQuestion ? (
                         <div
                             className={`text-xs space-y-1 ${isDark
-                                    ? 'text-text-secondary-dark'
-                                    : 'text-text-secondary-light'
+                                ? 'text-text-secondary-dark'
+                                : 'text-text-secondary-light'
                                 }`}
                         >
                             <div className='flex items-center justify-between gap-3'>

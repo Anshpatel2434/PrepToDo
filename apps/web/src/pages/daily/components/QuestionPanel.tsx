@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Brain, Lightbulb, Target, CheckCircle2, TrendingUp, Sparkles, Check, X } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import type { Option, Question } from "../../../types";
-import { extractCorrectAnswer, extractUserAnswer } from "../../../utils/answerUtils";
+
 import {
     selectViewMode,
     selectCurrentAttempt,
@@ -32,7 +32,8 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
 
     const isExamMode = viewMode === "exam";
 
-    const userAnswer = extractUserAnswer(currentAttempt?.user_answer) || "";
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const userAnswer = (currentAttempt?.user_answer as any)?.user_answer || "";
     const selectedOption = userAnswer; // For standard questions
     const jumbleSequence = userAnswer; // For TITA questions
 
@@ -99,8 +100,10 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getOptionIndicator = (option: Option) => {
         const isSelected = selectedOption === option.id;
-        const correctAnswerId = extractCorrectAnswer(question.correct_answer);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const correctAnswerId = (question.correct_answer as any)?.answer || "";
         const isCorrectOption = correctAnswerId === option.id;
+        const hasCorrectAnswer = !!correctAnswerId;
 
         if (isExamMode) {
             // Show radio button in exam mode
@@ -117,14 +120,28 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
             );
         }
 
-        // Solution mode - show tick for correct, cross for incorrect selected
+        // Solution mode
+
+        // 1. If correct answer is not yet loaded (race condition protection), show neutral
+        if (!hasCorrectAnswer) {
+            return (
+                <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 ${isDark ? "border-border-dark" : "border-border-light"}`} />
+            );
+        }
+
+        // 2. Show tick for correct option
         if (isCorrectOption) {
             return <Check className="w-5 h-5 text-success flex-shrink-0" />;
         }
+
+        // 3. Show cross ONLY if user selected this WRONG option
+        // If user didn't select anything (unattempted), selectedOption is ""
+        // So isSelected (false) && !isCorrectOption (true) -> false. No cross.
         if (isSelected && !isCorrectOption) {
             return <X className="w-5 h-5 text-error flex-shrink-0" />;
         }
-        // Unselected wrong options - show empty radio
+
+        // 4. Default: Unselected options (whether unattempted or just not chosen)
         return (
             <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 ${isDark ? "border-border-dark" : "border-border-light"
                 }`} />
@@ -470,10 +487,12 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                                     Your Answer:{" "}
                                     <span
                                         className={
-                                            // Fallback if correct_answer is missing (e.g. before refetch)
-                                            !extractCorrectAnswer(question.correct_answer)
+                                            // Fallback if correct_answer is missing (e.g. before refetch) OR if unattempted
+                                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                            !((question.correct_answer as any)?.answer) || !userAnswer
                                                 ? "text-gray-500"
-                                                : extractCorrectAnswer(question.correct_answer) === userAnswer
+                                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                                : ((question.correct_answer as any)?.answer) === userAnswer
                                                     ? "text-success"
                                                     : "text-error"
                                         }
@@ -483,7 +502,8 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                                     <br />
                                     Correct:{" "}
                                     <span className="text-success">
-                                        {extractCorrectAnswer(question.correct_answer) || "Loading..."}
+                                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                        {((question.correct_answer as any)?.answer) || "Loading..."}
                                     </span>
                                 </div>
                             )}

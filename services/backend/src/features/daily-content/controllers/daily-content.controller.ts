@@ -229,6 +229,7 @@ export async function fetchDailyTestById(req: Request, res: Response, next: Next
         // Fetch questions
         const questionData = await db.query.questions.findMany({
             where: eq(questions.paper_id, exam.id),
+            orderBy: [asc(questions.created_at), asc(questions.id)],
         });
 
         const include_solutions = req.query.include_solutions === 'true';
