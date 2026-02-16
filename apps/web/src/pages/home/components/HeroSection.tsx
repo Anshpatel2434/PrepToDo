@@ -212,16 +212,21 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 />
 
                 {/* Hero Headline */}
+                {/* Hero Headline */}
                 <motion.h1
                     variants={fadeInUp}
                     className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight leading-[1.1] "
                 >
-                    <span className="relative inline-block">
+                    <span className={isDark ? "text-text-primary-dark" : "text-text-primary-light"}>
+                        What if your CAT VARC practice
+                    </span>
+                    <br />
+                    <span className="relative inline-block mt-1 sm:mt-2">
                         <span className={`bg-clip-text text-transparent bg-linear-to-r ${isDark
                             ? "from-brand-accent-dark via-brand-primary-dark to-brand-secondary-dark"
                             : "from-brand-primary-light via-brand-secondary-light to-brand-accent-light"
                             }`}>
-                            Stop Guessing
+                            Adapted to How You Think?
                         </span>
                         {/* Underline decoration */}
                         <svg className="absolute w-full h-2 md:h-3 -bottom-1.5 md:-bottom-2 left-0 text-brand-primary-light opacity-60" viewBox="0 0 200 9" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
@@ -234,20 +239,27 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                             </defs>
                         </svg>
                     </span>
-
-                    <br />
-                    <span className={isDark ? "text-text-primary-dark" : "text-text-primary-light"}>
-                        What to Study for CAT VARC
-                    </span>
                 </motion.h1>
 
                 {/* Subtext */}
                 <motion.p
                     variants={fadeInUp}
-                    className={`text-base md:text-xl max-w-2xl mb-8 leading-relaxed ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                    className={`text-base md:text-xl max-w-2xl mb-6 leading-relaxed ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
                         }`}
                 >
-                    Stop analyzing your own data. Let our AI pinpoint exactly what brings your score down and give you the daily practice to fix it.
+                    PrepToDo studies your solving patterns and turns them into a focused daily plan — so you improve where it actually matters.
+                </motion.p>
+
+                {/* Punchline */}
+                <motion.p
+                    variants={fadeInUp}
+                    className={`text-lg md:text-2xl font-semibold mb-10 ${isDark ? "text-white" : "text-gray-900"
+                        }`}
+                >
+                    Stop guessing. <br className="hidden sm:inline" />
+                    <span className={isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}>
+                        Start progressing.
+                    </span>
                 </motion.p>
 
                 {/* CTAs */}
@@ -264,7 +276,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     >
                         <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:animate-shine" />
                         <span className="relative z-10 flex items-center gap-2">
-                            {isAuthenticated ? "Continue Learning" : "Get My Daily Plan"}
+                            {isAuthenticated ? "Continue Learning" : "Start Learning"}
                             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </span>
                     </button>
