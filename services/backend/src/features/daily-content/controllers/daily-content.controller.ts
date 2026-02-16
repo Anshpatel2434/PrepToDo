@@ -103,10 +103,7 @@ export async function fetchDailyTestData(req: Request, res: Response, next: Next
     try {
         // Get today's date range in IST
         const startOfToday = TimeService.startOfTodayIST();
-        // endOfToday should be startOfToday + 24 hours - 1ms
-        // Using setHours on a Date object uses the system local time (likely UTC on server)
-        // which causes the range to be incorrect (e.g. only 00:00 IST to 05:30 IST)
-        const endOfToday = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000 - 1);
+        const endOfToday = TimeService.endOfTodayIST();
 
         logger.info({ startOfToday, endOfToday }, 'Fetching exam for date (IST)');
 

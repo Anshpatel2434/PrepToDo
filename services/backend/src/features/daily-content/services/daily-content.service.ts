@@ -30,10 +30,7 @@ export class DailyContentService {
             if (!force) {
                 const today = TimeService.getISTDateString();
                 const startOfToday = TimeService.startOfTodayIST();
-
-                const endOfToday = new Date(startOfToday);
-                endOfToday.setDate(endOfToday.getDate() + 1);
-                endOfToday.setMilliseconds(-1);
+                const endOfToday = TimeService.endOfTodayIST();
 
                 const existingExam = await db.query.examPapers.findFirst({
                     where: and(

@@ -18,12 +18,25 @@ export class TimeService {
     }
 
     /**
-     * Get the start of today in IST
+     * Get the start of today in IST (00:00:00.000 IST)
+     * Returns a Date object representing midnight IST
      */
     static startOfTodayIST(): Date {
-        const nowIST = this.getISTNow();
-        nowIST.setHours(0, 0, 0, 0);
-        return nowIST;
+        const todayStr = this.getISTDateString();
+        // Parse the date string as IST timezone to get midnight IST
+        const startOfDay = new Date(`${todayStr}T00:00:00.000+05:30`);
+        return startOfDay;
+    }
+
+    /**
+     * Get the end of today in IST (23:59:59.999 IST)
+     * Returns a Date object representing the last millisecond of today IST
+     */
+    static endOfTodayIST(): Date {
+        const todayStr = this.getISTDateString();
+        // Parse the date string as IST timezone to get end of day IST
+        const endOfDay = new Date(`${todayStr}T23:59:59.999+05:30`);
+        return endOfDay;
     }
 
     /**
