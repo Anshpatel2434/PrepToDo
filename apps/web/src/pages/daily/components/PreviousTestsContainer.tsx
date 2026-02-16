@@ -66,8 +66,20 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
         if (!todayExamId || !previousTests) return false;
         const exam = previousTests.find(e => e.id === examId);
         if (!exam) return todayExamId === examId;
-        const today = new Date().toISOString().split('T')[0];
-        const examDate = new Date(exam.created_at).toISOString().split('T')[0];
+
+        // Compare dates in IST timezone to handle exams created at midnight IST
+        // which might have a different UTC date
+        const getISTDateString = (date: Date) => {
+            return date.toLocaleString('en-US', {
+                timeZone: 'Asia/Kolkata',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }).split(',')[0].split('/').reverse().join('-');
+        };
+
+        const today = getISTDateString(new Date());
+        const examDate = getISTDateString(new Date(exam.created_at));
         return todayExamId === examId && examDate === today;
     };
 
