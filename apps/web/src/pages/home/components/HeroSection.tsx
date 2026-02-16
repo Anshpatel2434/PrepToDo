@@ -187,11 +187,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 {/* Left Floating Card: AI Insights - Tilted inward from left */}
                 {/* 2xl breakpoint pushes it further out to use extra space */}
                 <Floating3DCard
-                    lightSrc={leaderboard_light}
-                    darkSrc={leaderboard_dark}
+                    lightSrc={insights_light}
+                    darkSrc={insights_dark}
                     alt="AI Insights"
                     isDark={isDark}
-                    className="top-42 -left-8 lg:-left-20 2xl:left-20 opacity-90 blur-[1px]"
+                    className="top-42 -left-8 lg:-left-20 2xl:left-20 opacity-80 blur-[1px]"
                     rotateY={10}
                     rotateX={2}
                     rotateZ={-5}
@@ -200,11 +200,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
                 {/* Right Floating Card: Leaderboard - Tilted inward from right */}
                 <Floating3DCard
-                    lightSrc={insights_light}
-                    darkSrc={insights_dark}
+                    lightSrc={leaderboard_light}
+                    darkSrc={leaderboard_dark}
                     alt="Daily Leaderboard"
                     isDark={isDark}
-                    className="-top-8 -right-8 lg:-right-20 2xl:right-10 opacity-90 blur-[1px]"
+                    className="-top-8 -right-8 lg:-right-20 2xl:right-10 opacity-80 blur-[1px]"
                     rotateY={-10}
                     rotateX={2}
                     rotateZ={5}
@@ -215,21 +215,27 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 {/* Hero Headline */}
                 <motion.h1
                     variants={fadeInUp}
-                    className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight leading-[1.1] "
+                    className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[0.95] mb-6 md:mb-8"
                 >
-                    <span className={isDark ? "text-text-primary-dark" : "text-text-primary-light"}>
-                        What if your CAT VARC practice
+                    <span className={`block mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>
+                        You solve CAT.
+                    </span>
+                    <span className={`bg-clip-text text-transparent bg-gradient-to-r ${isDark
+                        ? "from-brand-primary-dark via-brand-secondary-dark to-brand-accent-dark"
+                        : "from-brand-primary-light via-brand-secondary-light to-brand-accent-light"
+                        }`}>
+                        PrepToDo solves
                     </span>
                     <br />
-                    <span className="relative inline-block mt-1 sm:mt-2">
-                        <span className={`bg-clip-text text-transparent bg-linear-to-r ${isDark
-                            ? "from-brand-accent-dark via-brand-primary-dark to-brand-secondary-dark"
-                            : "from-brand-primary-light via-brand-secondary-light to-brand-accent-light"
+                    <span className="relative inline-block mt-1">
+                        <span className={`${isDark
+                            ? "text-text-primary-dark"
+                            : "text-text-primary-light"
                             }`}>
-                            Adapted to How You Think?
+                            what's holding you back.
                         </span>
                         {/* Underline decoration */}
-                        <svg className="absolute w-full h-2 md:h-3 -bottom-1.5 md:-bottom-2 left-0 text-brand-primary-light opacity-60" viewBox="0 0 200 9" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                        <svg className="absolute w-full h-2 md:h-3 -bottom-1 md:-bottom-2 left-0 text-brand-primary-light opacity-80" viewBox="0 0 200 9" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
                             <path d="M2.00028 6.99997C2.00028 6.99997 91.0003 1.00002 198.001 2.99999" stroke={`url(#gradient-${isDark ? 'dark' : 'light'})`} strokeWidth="3" vectorEffect="non-scaling-stroke" strokeLinecap="round" />
                             <defs>
                                 <linearGradient id={`gradient-${isDark ? 'dark' : 'light'}`} x1="2" y1="6.99997" x2="198" y2="2.99999" gradientUnits="userSpaceOnUse">
@@ -244,23 +250,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 {/* Subtext */}
                 <motion.p
                     variants={fadeInUp}
-                    className={`text-base md:text-xl max-w-2xl mb-6 leading-relaxed ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
+                    className={`text-lg md:text-xl max-w-3xl mb-10 leading-relaxed font-medium ${isDark ? "text-gray-400" : "text-gray-600"
                         }`}
                 >
-                    PrepToDo studies your solving patterns and turns them into a focused daily plan — so you improve where it actually matters.
+                    Built for <span className={isDark ? "text-gray-200" : "text-gray-900"}>CAT VARC</span> — Reading Comprehension and Verbal Ability — we analyze how you perform so your improvement isn’t left to guesswork.
                 </motion.p>
 
-                {/* Punchline */}
-                <motion.p
-                    variants={fadeInUp}
-                    className={`text-lg md:text-2xl font-semibold mb-10 ${isDark ? "text-white" : "text-gray-900"
-                        }`}
-                >
-                    Stop guessing. <br className="hidden sm:inline" />
-                    <span className={isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}>
-                        Start progressing.
-                    </span>
-                </motion.p>
+                {/* Punchline Removed for Minimalism */}
 
                 {/* CTAs */}
                 <motion.div
