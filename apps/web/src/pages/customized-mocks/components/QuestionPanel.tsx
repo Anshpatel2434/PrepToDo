@@ -7,6 +7,7 @@ import type { Option, Question } from "../../../types";
 import { ConfidenceSelector } from "./ConfidenceSelector";
 import type { SolutionViewType } from "./SolutionToggle";
 import { SolutionToggle } from "./SolutionToggle";
+import type { UserResponse } from "../../../services/apiClient";
 
 // Define types locally if not exported from types.ts
 interface DiagnosticData {
@@ -43,6 +44,7 @@ interface QuestionPanelProps {
     isCorrect?: boolean;
     sessionId?: string;
     attemptId?: string;
+    user?: UserResponse | undefined | null;
 }
 
 export const QuestionPanel: React.FC<QuestionPanelProps> = ({
@@ -59,6 +61,7 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
     isCorrect: propIsCorrect,
     sessionId,
     attemptId,
+    user,
 }) => {
     const isExamMode = viewMode === "exam";
     const displayUserAnswer = typeof userAnswer === 'string' ? userAnswer : String(userAnswer || "");
@@ -147,6 +150,20 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
         );
     };
 
+    // Helper component to avoid deep prop drilling
+    const RemainingInsightsCount = ({ isDark }: { isDark: boolean }) => {
+
+        if (!user) return null;
+
+        return (
+            <p className={`text-[10px] uppercase tracking-wider font-semibold ${isDark ? "text-text-tertiary-dark" : "text-text-tertiary-light"}`}>
+                {user.ai_insights_remaining !== undefined
+                    ? `${user.ai_insights_remaining} insights remaining`
+                    : "Standard Plan"}
+            </p>
+        );
+    };
+
     const [generateInsight, { isLoading: insightLoading }] = useGenerateInsightMutation();
     const [insightError, setInsightError] = useState<string | null>(null);
     const [localDiagnostic, setLocalDiagnostic] = useState<DiagnosticData | null>(null);
@@ -227,15 +244,18 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                                 Get personalized feedback on why you got this wrong and how to improve.
                             </p>
                         </div>
-                        <button
-                            onClick={handleGenerateInsight}
-                            className={`px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 hover:scale-105 ${isDark
-                                ? "bg-brand-primary-dark text-white"
-                                : "bg-brand-primary-light text-white"
-                                }`}
-                        >
-                            Generate AI Insights
-                        </button>
+                        <div className="flex flex-col items-center gap-2">
+                            <button
+                                onClick={handleGenerateInsight}
+                                className={`px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 hover:scale-105 ${isDark
+                                    ? "bg-brand-primary-dark text-white"
+                                    : "bg-brand-primary-light text-white"
+                                    }`}
+                            >
+                                Generate AI Insights
+                            </button>
+                            <RemainingInsightsCount isDark={isDark} />
+                        </div>
                         {insightError && (
                             <p className="text-error text-sm mt-2">{insightError}</p>
                         )}

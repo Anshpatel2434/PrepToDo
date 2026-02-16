@@ -448,6 +448,7 @@ export default function DailyRCPage() {
                         <QuestionPanel
                             question={currentQuestion}
                             isDark={isDark}
+                            user={user}
                         />
                     </SplitPaneLayout>
                 </div>

@@ -221,7 +221,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                             ? "from-brand-accent-dark via-brand-primary-dark to-brand-secondary-dark"
                             : "from-brand-primary-light via-brand-secondary-light to-brand-accent-light"
                             }`}>
-                            An AI Tutor That Studies
+                            Stop Guessing
                         </span>
                         {/* Underline decoration */}
                         <svg className="absolute w-full h-2 md:h-3 -bottom-1.5 md:-bottom-2 left-0 text-brand-primary-light opacity-60" viewBox="0 0 200 9" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
@@ -237,7 +237,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
                     <br />
                     <span className={isDark ? "text-text-primary-dark" : "text-text-primary-light"}>
-                        You as Closely as You Study CAT
+                        What to Study for CAT VARC
                     </span>
                 </motion.h1>
 
@@ -247,7 +247,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     className={`text-base md:text-xl max-w-2xl mb-8 leading-relaxed ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"
                         }`}
                 >
-                    Daily drills, mistake analysis, and adaptive tests built from your performance data.
+                    Stop analyzing your own data. Let our AI pinpoint exactly what brings your score down and give you the daily practice to fix it.
                 </motion.p>
 
                 {/* CTAs */}
@@ -264,7 +264,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     >
                         <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:animate-shine" />
                         <span className="relative z-10 flex items-center gap-2">
-                            {isAuthenticated ? "Continue Learning" : "Start Learning Free"}
+                            {isAuthenticated ? "Continue Learning" : "Get My Daily Plan"}
                             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </span>
                     </button>
@@ -280,7 +280,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                             }`}
                     >
                         <PlayCircle className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity" />
-                        <span>Explore Features</span>
+                        <span>See How It Works</span>
                     </button>
                 </motion.div>
 

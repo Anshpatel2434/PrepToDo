@@ -533,6 +533,7 @@ const DailyVAPage: React.FC = () => {
                     <QuestionPanel
                         question={currentQuestion}
                         isDark={isDark}
+                        user={user}
                     />
                 </div>
 

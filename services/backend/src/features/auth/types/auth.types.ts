@@ -11,6 +11,8 @@ export interface UserResponse {
     role: string;
     created_at: string | null;
     updated_at: string | null;
+    ai_insights_remaining?: number;
+    customized_mocks_remaining?: number;
 }
 
 export interface CheckEmailResponse {

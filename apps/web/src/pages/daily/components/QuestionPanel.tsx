@@ -14,15 +14,19 @@ import {
 } from "../redux_usecase/dailyPracticeSlice";
 import { ConfidenceSelector } from "./ConfidenceSelector";
 import { SolutionToggle } from "./SolutionToggle";
+import type { UserResponse } from "../../../services/apiClient";
+
 
 interface QuestionPanelProps {
     question: Question;
     isDark: boolean;
+    user: UserResponse | undefined | null;
 }
 
 export const QuestionPanel: React.FC<QuestionPanelProps> = ({
     question,
     isDark,
+    user,
 }) => {
     const dispatch = useDispatch();
     const viewMode = useSelector(selectViewMode);
@@ -36,6 +40,20 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
     const userAnswer = (currentAttempt?.user_answer as any)?.user_answer || "";
     const selectedOption = userAnswer; // For standard questions
     const jumbleSequence = userAnswer; // For TITA questions
+
+
+    // Helper component to avoid deep prop drilling or complex prop types changes
+    const RemainingInsightsCount = ({ isDark }: { isDark: boolean }) => {
+        if (!user) return null;
+
+        return (
+            <p className={`text-[10px] uppercase tracking-wider font-semibold ${isDark ? "text-text-tertiary-dark" : "text-text-tertiary-light"}`}>
+                {user.ai_insights_remaining !== undefined
+                    ? `${user.ai_insights_remaining} insights remaining`
+                    : "Standard Plan"}
+            </p>
+        );
+    };
 
     const handleAnswerUpdate = useCallback(
         (answerValue: string) => {
@@ -231,15 +249,19 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
                                 Get personalized feedback on why you got this wrong and how to improve.
                             </p>
                         </div>
-                        <button
-                            onClick={handleGenerateInsight}
-                            className={`px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 hover:scale-105 ${isDark
-                                ? "bg-brand-primary-dark text-white"
-                                : "bg-brand-primary-light text-white"
-                                }`}
-                        >
-                            Generate AI Insights
-                        </button>
+                        <div className="flex flex-col items-center gap-2">
+                            <button
+                                onClick={handleGenerateInsight}
+                                className={`px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 hover:scale-105 ${isDark
+                                    ? "bg-brand-primary-dark text-white"
+                                    : "bg-brand-primary-light text-white"
+                                    }`}
+                            >
+                                Generate AI Insights
+                            </button>
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                            <RemainingInsightsCount isDark={isDark} />
+                        </div>
                         {insightError && (
                             <p className="text-error text-sm mt-2">{insightError}</p>
                         )}

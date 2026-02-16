@@ -550,6 +550,7 @@ const MockTestPage: React.FC = () => {
                                 isCorrect={currentAttempt?.is_correct}
                                 sessionId={session.id}
                                 attemptId={currentAttempt?.id}
+                                user={user}
                             />
                         </SplitPaneLayout>
                     ) : (

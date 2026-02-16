@@ -28,6 +28,7 @@ import type {
 } from '../types/daily-content.types.js';
 import { analyticsService } from '../../analytics/analytics.service.js';
 import { AdminActivityService } from '../../admin/services/admin-activity.service.js';
+import { TimeService } from '../../../common/utils/time.js';
 
 // =============================================================================
 // Helper Functions
@@ -100,12 +101,12 @@ export async function fetchDailyTestData(req: Request, res: Response, next: Next
     logger.info('fetchDailyTestData called');
 
     try {
-        // Get today's date range
-        const today = new Date().toISOString().split('T')[0];
-        const startOfToday = new Date(`${today}T00:00:00.000Z`);
-        const endOfToday = new Date(`${today}T23:59:59.999Z`);
+        // Get today's date range in IST
+        const startOfToday = TimeService.startOfTodayIST();
+        const endOfToday = new Date(startOfToday);
+        endOfToday.setHours(23, 59, 59, 999);
 
-        logger.info({ today }, 'Fetching exam for date');
+        logger.info({ startOfToday, endOfToday }, 'Fetching exam for date (IST)');
 
         // Fetch today's daily practice exam
         const examInfo = await db.query.examPapers.findFirst({

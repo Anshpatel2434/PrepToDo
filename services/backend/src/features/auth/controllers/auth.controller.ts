@@ -53,6 +53,8 @@ function formatUserResponse(user: typeof authUsers.$inferSelect): UserResponse {
         role: (user as any).role || 'user',
         created_at: user.created_at?.toISOString() || null,
         updated_at: user.updated_at?.toISOString() || null,
+        ai_insights_remaining: user.ai_insights_remaining ?? 0,
+        customized_mocks_remaining: user.customized_mocks_remaining ?? 0,
     };
 }
 

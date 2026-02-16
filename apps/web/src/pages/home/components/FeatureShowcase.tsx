@@ -233,12 +233,12 @@ export const FeatureShowcase = ({ isDark }: { isDark: boolean }) => {
 
 					{/* Card 1: Daily Practice */}
 					<FeatureCard
-						title="Daily Practice"
-						philosophy="Consistent Habit"
+						title="Build Your Streak"
+						philosophy="Consistency Wins"
 						bullets={[
-							"One common article used daily for RC and VA questions.",
-							"Read the article, solve questions, and track your daily performance.",
-							"Daily leaderboard and streaks to stay consistent."
+							"Master RC & VA with one high-quality article daily.",
+							"Turn 15 minutes of downtime into measurable score gains.",
+							"Compete on the daily leaderboard and watch your rank rise."
 						]}
 						ctaText="View today's practice"
 						href="/daily"
@@ -256,12 +256,12 @@ export const FeatureShowcase = ({ isDark }: { isDark: boolean }) => {
 
 					{/* Card 2: Analytics */}
 					<FeatureCard
-						title="Analytics"
-						philosophy="Data Driven"
+						title="Pinpoint Weaknesses"
+						philosophy="Data Over Instinct"
 						bullets={[
-							"See accuracy, streaks, and time spent.",
-							"Identify weak areas like genre or different core metrics.",
-							"Track improvement trends over time."
+							"Don't waste time on questions you already ace.",
+							"Identify the exact topics dragging your percentile down.",
+							"Visualize your trajectory to a top MBA seat."
 						]}
 						ctaText="Explore your data"
 						href="/dashboard"
@@ -279,12 +279,12 @@ export const FeatureShowcase = ({ isDark }: { isDark: boolean }) => {
 
 					{/* Card 3: Custom Sectionals */}
 					<FeatureCard
-						title="Customized Sectionals"
-						philosophy="Targeted Growth"
+						title="Targeted Improvement"
+						philosophy="Surgical Precision"
 						bullets={[
-							"Create sectionals based on your weak topics and genres",
-							"Filter by difficulty & topic",
-							"Practice RC and VA in an exam-like format"
+							"Attack your lowest-performing areas directly.",
+							"Control difficulty to build confidence where you lack it.",
+							"Simulate exam pressure with instant feedback."
 						]}
 						ctaText="Create a sectional"
 						href="/customized-mocks"

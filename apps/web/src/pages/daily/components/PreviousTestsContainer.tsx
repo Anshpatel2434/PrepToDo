@@ -9,13 +9,33 @@ import {
 } from "lucide-react";
 import { useFetchPreviousDailyTestsQuery } from "../redux_usecase/dailyPracticeApi";
 import { useTheme } from "../../../context/ThemeContext";
-import { PageLoader } from "../../../ui_components/PageLoader";
+
 
 interface PreviousTestsContainerProps {
     onExamSelect: (examId: string, examDate: string) => void;
     selectedExamId: string | null;
     todayExamId: string | null;
 }
+
+const PreviousTestSkeleton = () => {
+    const { isDark } = useTheme();
+    return (
+        <div className={`
+            w-full p-5 flex items-center gap-4 rounded-3xl border
+            ${isDark ? "bg-white/5 border-white/5" : "bg-white border-black/5"}
+        `}>
+            <div className={`
+                w-8 h-8 rounded-2xl shrink-0 animate-pulse
+                ${isDark ? "bg-white/10" : "bg-gray-200"}
+            `} />
+            <div className="flex-1 space-y-2">
+                <div className={`h-4 w-3/4 rounded animate-pulse ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+                <div className={`h-3 w-1/2 rounded animate-pulse ${isDark ? "bg-white/5" : "bg-gray-100"}`} />
+            </div>
+            <div className={`w-8 h-8 rounded-xl shrink-0 animate-pulse ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+        </div>
+    );
+};
 
 const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
     onExamSelect,
@@ -26,9 +46,11 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 20;
 
-    const { data: previousTests, isLoading } = useFetchPreviousDailyTestsQuery({
+    const { data: previousTests, isLoading, isFetching } = useFetchPreviousDailyTestsQuery({
         page: currentPage,
         limit: itemsPerPage,
+    }, {
+        refetchOnMountOrArgChange: true,
     });
 
     const formatDate = (dateString: string) => {
@@ -61,12 +83,6 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
         setCurrentPage((prev) => prev + 1);
     };
 
-    if (isLoading) {
-        if (isLoading) {
-            return <PageLoader variant="inline" size="md" className="py-12" />;
-        }
-    }
-
     const containerVariants = {
         visible: {
             transition: {
@@ -83,6 +99,8 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
             transition: { type: "spring" as const, stiffness: 300, damping: 25 }
         }
     };
+
+    const showSkeleton = isLoading || isFetching;
 
     return (
         <motion.div
@@ -105,8 +123,14 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
             </div>
 
             {/* Content Area */}
-            {!isLoading && previousTests && previousTests.length > 0 ? (
-                <div className="space-y-6">
+            <div className="space-y-6">
+                {showSkeleton ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {[...Array(6)].map((_, i) => (
+                            <PreviousTestSkeleton key={i} />
+                        ))}
+                    </div>
+                ) : previousTests && previousTests.length > 0 ? (
                     <motion.div
                         variants={containerVariants}
                         initial="hidden"
@@ -163,7 +187,7 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
                                             </h3>
                                         </div>
 
-                                        <div className={`p-2 rounded-xl transition-transform group-hover:translate-x-1 ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+                                        <div className={`p-2 rounded-xl transition-transform group-hover:translate-x-1 ${isDark ? "bg-white/5 text-text-primary-dark" : "bg-gray-50 text-text-primary-light"}`}>
                                             <ArrowRight size={14} className="opacity-30" />
                                         </div>
                                     </motion.button>
@@ -171,55 +195,55 @@ const PreviousTestsContainer: React.FC<PreviousTestsContainerProps> = ({
                             })}
                         </AnimatePresence>
                     </motion.div>
-
-                    {/* Pagination */}
-                    <div className="flex items-center justify-between pt-6">
-                        <p className={`text-xs font-bold uppercase tracking-widest opacity-40 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
-                            Page {currentPage} Overflow
-                        </p>
-                        <div className="flex gap-3">
-                            <motion.button
-                                onClick={handlePreviousPage}
-                                disabled={currentPage === 1}
-                                whileTap={{ scale: 0.95 }}
-                                className={`
-                                    flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all
-                                    border-2 ${isDark ? "border-white/5" : "border-gray-100 bg-white shadow-sm"}
-                                    ${currentPage === 1 ? "opacity-30 cursor-not-allowed" : "hover:scale-105 active:scale-95"}
-                                `}
-                            >
-                                <ChevronLeft size={16} />
-                                <span>Previous</span>
-                            </motion.button>
-                            <motion.button
-                                onClick={handleNextPage}
-                                disabled={previousTests.length < itemsPerPage}
-                                whileTap={{ scale: 0.95 }}
-                                className={`
-                                    flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all
-                                    border-2 ${isDark ? "border-white/5" : "border-gray-100 bg-white shadow-sm"}
-                                    ${previousTests.length < itemsPerPage ? "opacity-30 cursor-not-allowed" : "hover:scale-105 active:scale-95"}
-                                `}
-                            >
-                                <span>Next</span>
-                                <ChevronRight size={16} />
-                            </motion.button>
+                ) : (
+                    <div className={`text-center py-20 rounded-[2.5rem] border-2 border-dashed ${isDark ? "border-white/10" : "border-gray-100 bg-gray-50/30"}`}>
+                        <div className="w-20 h-20 rounded-full bg-gray-400/10 flex items-center justify-center mx-auto mb-6">
+                            <History className="opacity-20" size={32} />
                         </div>
+                        <p className={`text-xl font-bold mb-2 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
+                            No History Found
+                        </p>
+                        <p className={`text-sm opacity-50 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                            Your past achievements will appear here once you complete a challenge.
+                        </p>
+                    </div>
+                )}
+
+                {/* Pagination */}
+                <div className="flex items-center justify-between pt-6">
+                    <p className={`text-xs font-bold uppercase tracking-widest opacity-40 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
+                        Page {currentPage} Overflow
+                    </p>
+                    <div className="flex gap-3">
+                        <motion.button
+                            onClick={handlePreviousPage}
+                            disabled={currentPage === 1 || showSkeleton}
+                            whileTap={{ scale: 0.95 }}
+                            className={`
+                                flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all
+                                border-2 ${isDark ? "border-white/5 text-white bg-white/5" : "border-gray-100 bg-white shadow-sm text-text-primary-light"}
+                                ${currentPage === 1 || showSkeleton ? "opacity-30 cursor-not-allowed" : "hover:scale-105 active:scale-95"}
+                            `}
+                        >
+                            <ChevronLeft size={16} />
+                            <span>Previous</span>
+                        </motion.button>
+                        <motion.button
+                            onClick={handleNextPage}
+                            disabled={(!previousTests || previousTests.length < itemsPerPage) || showSkeleton}
+                            whileTap={{ scale: 0.95 }}
+                            className={`
+                                flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all
+                                border-2 ${isDark ? "border-white/5 bg-white/5 text-white" : "border-gray-100 bg-white shadow-sm text-text-primary-light"}
+                                ${(!previousTests || previousTests.length < itemsPerPage) || showSkeleton ? "opacity-30 cursor-not-allowed" : "hover:scale-105 active:scale-95"}
+                            `}
+                        >
+                            <span>Next</span>
+                            <ChevronRight size={16} />
+                        </motion.button>
                     </div>
                 </div>
-            ) : (
-                <div className={`text-center py-20 rounded-[2.5rem] border-2 border-dashed ${isDark ? "border-white/10" : "border-gray-100 bg-gray-50/30"}`}>
-                    <div className="w-20 h-20 rounded-full bg-gray-400/10 flex items-center justify-center mx-auto mb-6">
-                        <History className="opacity-20" size={32} />
-                    </div>
-                    <p className={`text-xl font-bold mb-2 ${isDark ? "text-text-primary-dark" : "text-text-primary-light"}`}>
-                        No History Found
-                    </p>
-                    <p className={`text-sm opacity-50 ${isDark ? "text-text-secondary-dark" : "text-text-secondary-light"}`}>
-                        Your past achievements will appear here once you complete a challenge.
-                    </p>
-                </div>
-            )}
+            </div>
         </motion.div>
     );
 };
