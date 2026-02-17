@@ -128,7 +128,8 @@ You teach the elimination process and thinking errors behind tempting wrong opti
 IMPORTANT:
 - Do NOT expose graph scaffolding
 - Do NOT use section headers like "PART 1"
-- Write like actual PYQ rationales
+- Write like actual PYQ rationales — your output MUST be indistinguishable from rationales in actual CAT papers
+- Rationales should be brilliant, clear, and easy to understand
 
 ---
 
@@ -152,7 +153,14 @@ ${questionBlocks}
 For each question, provide a rationale following these type-specific guidelines:
 
 **For para_jumble questions:**
-1) Identify the "Anchor": Explain the Mandatory Pair (two sentences that must stay together) or the starting sentence, citing specific keywords (pronouns, conjunctions, or chronology).
+
+⚠️ CRITICAL — SENTENCE NUMBERING:
+The sentence numbers (1, 2, 3, 4) refer to the DISPLAYED labels as shown to the student, NOT the original order of generation.
+When you refer to "Sentence 1", you mean the sentence labeled '1' in the jumbled_sentences object below.
+The correct answer sequence (e.g., "3142") uses these DISPLAYED labels.
+You MUST cross-reference the jumbled_sentences object to see what text each label maps to.
+
+1) Identify the "Anchor": Explain the Mandatory Pair (two sentences that must stay together) or the starting sentence, citing specific keywords (pronouns, conjunctions, or chronology). Reference sentences by their DISPLAYED label numbers.
 2) Explain wrong sequences: 
    - The Trap: Why the flow seems okay initially (e.g., "Sentence 1 and 2 share a keyword").
    - The Flaw: The specific "logical break" (e.g., "Sentence 3 introduces an acronym that wasn't defined until Sentence 4").
@@ -160,6 +168,12 @@ For each question, provide a rationale following these type-specific guidelines:
 4) The "Golden Key": Highlight the specific **connector word** (e.g., **"However," "This," "Thus"**) that locks the order.
 
 **For odd_one_out questions:**
+
+⚠️ CRITICAL — SENTENCE NUMBERING:
+The sentence numbers (1, 2, 3, 4, 5) refer to the DISPLAYED labels as shown to the student.
+When you refer to "Sentence 3", you mean the sentence labeled '3' in the jumbled_sentences object.
+The correct answer (the odd one) uses the DISPLAYED label.
+
 1) Define the "Common Thread": Briefly state the specific theme or logical structure that connects four of the sentences.
 2) Eliminate TWO "Trap" sentences: 
    - Option: State the sentence letter/number.

@@ -129,11 +129,12 @@ You are given REFERENCE MATERIAL from actual CAT papers (PYQs):
 
 These references are your training data.
 You must DEEPLY STUDY them to understand:
-1) How CAT questions are framed
-2) How traps are constructed
-3) How inference depth is calibrated
-4) How options are worded to avoid obvious clues
+1) How CAT questions are framed — your output MUST be indistinguishable from these
+2) How traps are constructed — replicate the EXACT subtlety and sophistication
+3) How inference depth is calibrated — match the reasoning complexity of actual CAT papers
+4) How options are worded to avoid obvious clues — every option must feel like a genuine CAT option
 5) The STYLE and STRUCTURE of questions — NOT the specific topics or subject matter
+6) A student solving your questions should feel like they are solving an actual CAT paper
 
 ⚠️ CRITICAL RULE — REFERENCE MATERIAL ISOLATION:
 - You MUST NOT bring any topics, examples, arguments, or factual claims from the reference passages into your generated questions.

@@ -292,25 +292,40 @@ Rationale: ${q.rationale}
 `).join("\n")}
 `).join("\n---\n")}
 
-These references are your training data. Analyze them to understand:
-1) How CAT para-summary questions are framed
-2) How options are constructed
-3) What makes a summary "best"
+These references are your training data. DEEPLY STUDY them to understand:
+1) How CAT para-summary questions are framed — your output MUST be indistinguishable from these
+2) How options are constructed — replicate the EXACT style, length, and nuance
+3) What makes a summary "best" — match the reasoning depth of actual CAT papers
 4) How distractors are designed to be tempting but incorrect
+
+⚠️ CRITICAL RULE — REFERENCE MATERIAL ISOLATION:
+- You MUST NOT bring any topics, examples, arguments, or factual claims from the reference questions into your generated questions.
+- The reference material is ONLY for learning the PATTERN of question construction.
+- Your questions must be derived from the SEMANTIC IDEAS provided below.
+- If any generated content replicates subject matter from the reference, it will be REJECTED.
 
 ---
 
-## SEMANTIC IDEAS (CONTENT SOURCE)
+## SEMANTIC IDEAS (DIVERSE INSPIRATION POOL)
 
 <SEMANTIC_IDEAS>
 ${JSON.stringify(semanticIdeas, null, 2)}
 </SEMANTIC_IDEAS>
 
-## AUTHORIAL PERSONA (STYLE GUIDE)
+⚠️ SEMANTIC IDEA USAGE — CREATIVITY MANDATE:
+- These ideas are a DIVERSE POOL of inspiration — NOT narrow constraints.
+- Use them as launching points for creative, original question content.
+- You MAY extend beyond the literal ideas — they provide DIRECTION, not boundaries.
+- Show CREATIVE BREADTH: draw from different aspects of the ideas, not the same narrow sub-topic.
+- The goal is variety and originality while staying thematically grounded.
+
+## AUTHORIAL PERSONA (STYLE GUIDE ONLY)
 
 <AUTHORIAL_PERSONA>
 ${JSON.stringify(authorialPersona, null, 2)}
 </AUTHORIAL_PERSONA>
+
+This persona guides writing STYLE only — tone, formality, argumentative posture. It does NOT restrict the topic space.
 ${personalizationInstructions}
 
 ---
@@ -553,25 +568,39 @@ Rationale: ${q.rationale}
 `).join("\n")}
 `).join("\n---\n")}
 
-These references are your training data. Analyze them to understand:
-1) How CAT para-completion questions are framed
-2) Where the blank is typically placed (end of paragraph)
+These references are your training data. DEEPLY STUDY them to understand:
+1) How CAT para-completion questions are framed — your output MUST be indistinguishable from these
+2) Where the blank is typically placed — replicate the EXACT construction patterns
 3) What makes a sentence complete the argument logically
-4) How distractors are designed
+4) How distractors are designed to be tempting but incorrect
+
+⚠️ CRITICAL RULE — REFERENCE MATERIAL ISOLATION:
+- You MUST NOT bring any topics, examples, arguments, or factual claims from the reference questions into your generated questions.
+- The reference material is ONLY for learning the PATTERN of question construction.
+- Your questions must be derived from the SEMANTIC IDEAS provided below.
+- If any generated content replicates subject matter from the reference, it will be REJECTED.
 
 ---
 
-## SEMANTIC IDEAS (CONTENT SOURCE)
+## SEMANTIC IDEAS (DIVERSE INSPIRATION POOL)
 
 <SEMANTIC_IDEAS>
 ${JSON.stringify(semanticIdeas, null, 2)}
 </SEMANTIC_IDEAS>
 
-## AUTHORIAL PERSONA (STYLE GUIDE)
+⚠️ SEMANTIC IDEA USAGE — CREATIVITY MANDATE:
+- These ideas are a DIVERSE POOL of inspiration — NOT narrow constraints.
+- Use them as launching points for creative, original question content.
+- You MAY extend beyond the literal ideas — they provide DIRECTION, not boundaries.
+- Show CREATIVE BREADTH: draw from different aspects of the ideas, not the same narrow sub-topic.
+
+## AUTHORIAL PERSONA (STYLE GUIDE ONLY)
 
 <AUTHORIAL_PERSONA>
 ${JSON.stringify(authorialPersona, null, 2)}
 </AUTHORIAL_PERSONA>
+
+This persona guides writing STYLE only — tone, formality, argumentative posture. It does NOT restrict the topic space.
 
 ---
 
@@ -853,25 +882,39 @@ Rationale: ${q.rationale}
 `).join("\n")}
 `).join("\n---\n")}
 
-These references are your training data. Analyze them to understand:
-1) How sentences are constructed for para-jumble
-2) How logical connections are established
+These references are your training data. DEEPLY STUDY them to understand:
+1) How sentences are constructed for para-jumble — your output MUST be indistinguishable from these
+2) How logical connections are established — replicate the EXACT style of sentence design
 3) How distractor orderings are plausible but wrong
 4) What makes the correct ordering unique
 
+⚠️ CRITICAL RULE — REFERENCE MATERIAL ISOLATION:
+- You MUST NOT bring any topics, examples, arguments, or factual claims from the reference questions into your generated questions.
+- The reference material is ONLY for learning the PATTERN of question construction.
+- Your questions must be derived from the SEMANTIC IDEAS provided below.
+- If any generated content replicates subject matter from the reference, it will be REJECTED.
+
 ---
 
-## SEMANTIC IDEAS (CONTENT SOURCE)
+## SEMANTIC IDEAS (DIVERSE INSPIRATION POOL)
 
 <SEMANTIC_IDEAS>
 ${JSON.stringify(semanticIdeas, null, 2)}
 </SEMANTIC_IDEAS>
 
-## AUTHORIAL PERSONA (STYLE GUIDE)
+⚠️ SEMANTIC IDEA USAGE — CREATIVITY MANDATE:
+- These ideas are a DIVERSE POOL of inspiration — NOT narrow constraints.
+- Use them as launching points for creative, original question content.
+- You MAY extend beyond the literal ideas — they provide DIRECTION, not boundaries.
+- Show CREATIVE BREADTH: draw from different aspects of the ideas, not the same narrow sub-topic.
+
+## AUTHORIAL PERSONA (STYLE GUIDE ONLY)
 
 <AUTHORIAL_PERSONA>
 ${JSON.stringify(authorialPersona, null, 2)}
 </AUTHORIAL_PERSONA>
+
+This persona guides writing STYLE only — tone, formality, argumentative posture. It does NOT restrict the topic space.
 
 ---
 
@@ -1231,25 +1274,39 @@ Rationale: ${q.rationale}
 `).join("\n")}
 `).join("\n---\n")}
 
-These references are your training data. Analyze them to understand:
-1) How CAT odd-one-out questions are framed
-2) What makes four sentences similar and one different
+These references are your training data. DEEPLY STUDY them to understand:
+1) How CAT odd-one-out questions are framed — your output MUST be indistinguishable from these
+2) What makes four sentences similar and one different — replicate the EXACT subtlety level
 3) How the difference is subtle but identifiable
 4) How distractors are designed to confuse
 
+⚠️ CRITICAL RULE — REFERENCE MATERIAL ISOLATION:
+- You MUST NOT bring any topics, examples, arguments, or factual claims from the reference questions into your generated questions.
+- The reference material is ONLY for learning the PATTERN of question construction.
+- Your questions must be derived from the SEMANTIC IDEAS provided below.
+- If any generated content replicates subject matter from the reference, it will be REJECTED.
+
 ---
 
-## SEMANTIC IDEAS (CONTENT SOURCE)
+## SEMANTIC IDEAS (DIVERSE INSPIRATION POOL)
 
 <SEMANTIC_IDEAS>
 ${JSON.stringify(semanticIdeas, null, 2)}
 </SEMANTIC_IDEAS>
 
-## AUTHORIAL PERSONA (STYLE GUIDE)
+⚠️ SEMANTIC IDEA USAGE — CREATIVITY MANDATE:
+- These ideas are a DIVERSE POOL of inspiration — NOT narrow constraints.
+- Use them as launching points for creative, original question content.
+- You MAY extend beyond the literal ideas — they provide DIRECTION, not boundaries.
+- Show CREATIVE BREADTH: draw from different aspects of the ideas, not the same narrow sub-topic.
+
+## AUTHORIAL PERSONA (STYLE GUIDE ONLY)
 
 <AUTHORIAL_PERSONA>
 ${JSON.stringify(authorialPersona, null, 2)}
 </AUTHORIAL_PERSONA>
+
+This persona guides writing STYLE only — tone, formality, argumentative posture. It does NOT restrict the topic space.
 ${personalizationInstructions}
 
 ---

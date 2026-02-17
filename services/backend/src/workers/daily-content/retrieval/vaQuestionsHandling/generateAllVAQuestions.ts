@@ -261,9 +261,9 @@ Rationale: ${q.rationale}
 ` : ""}
 
 These references are your training data. DEEPLY STUDY them to understand:
-1) How CAT VA questions are framed
-2) How options/sentences are constructed
-3) What makes answers correct
+1) How CAT VA questions are framed — your output MUST be indistinguishable from these
+2) How options/sentences are constructed — replicate the EXACT style, length, and nuance
+3) What makes answers correct — match the reasoning depth of actual CAT papers
 4) How distractors are designed to be tempting but incorrect
 5) The STYLE and STRUCTURE of questions — NOT the specific topics or subject matter
 
@@ -275,23 +275,27 @@ These references are your training data. DEEPLY STUDY them to understand:
 
 ---
 
-## SEMANTIC IDEAS (CONTENT SOURCE)
+## SEMANTIC IDEAS (DIVERSE INSPIRATION POOL)
 
 <SEMANTIC_IDEAS>
 ${JSON.stringify(semanticIdeas, null, 2)}
 </SEMANTIC_IDEAS>
 
-⚠️ SEMANTIC IDEA USAGE — DIVERSITY MANDATE:
+⚠️ SEMANTIC IDEA USAGE — CREATIVITY & DIVERSITY MANDATE:
+- These ideas are a DIVERSE POOL of inspiration — NOT narrow constraints.
 - Do NOT fixate on a single semantic idea for multiple questions.
-- Each question type should draw from a DIFFERENT semantic idea or conceptual pair.
+- Each question type MUST draw from a DIFFERENT semantic idea or conceptual pair.
 - If you find yourself reusing the same central concept across questions, STOP and diversify.
-- The semantic ideas are a POOL of inspiration — sample broadly, do not cluster.
+- The semantic ideas are launching points — sample broadly, show creative breadth, do not cluster.
+- You MAY extend beyond the literal ideas — they provide DIRECTION, not boundaries.
 
-## AUTHORIAL PERSONA (STYLE GUIDE)
+## AUTHORIAL PERSONA (STYLE GUIDE ONLY)
 
 <AUTHORIAL_PERSONA>
 ${JSON.stringify(authorialPersona, null, 2)}
 </AUTHORIAL_PERSONA>
+
+This persona guides writing STYLE only — tone, formality, argumentative posture. It does NOT restrict the topic space.
 
 ---
 

@@ -127,13 +127,16 @@ ${JSON.stringify(authorialPersona, null, 2)}
 
 ---
 
-### INPUT 3: REFERENCE PASSAGES (STYLE & DIFFICULTY ANCHORS ONLY)
+### INPUT 3: REFERENCE PASSAGES (STYLE & DIFFICULTY ANCHORS — CRITICAL)
 
-These passages are provided ONLY to help you understand:
+These passages are provided to help you understand and REPLICATE:
 - sentence complexity
 - paragraph length
 - abstraction level
 - CAT-style neutrality
+- overall reading feel
+
+Your passage MUST be indistinguishable from these reference passages in terms of quality, register, and discourse sophistication. A student reading your passage should feel like they are reading an actual CAT paper.
 
 STRICT RULES FOR REFERENCE PASSAGES:
 - Do NOT reuse phrasing

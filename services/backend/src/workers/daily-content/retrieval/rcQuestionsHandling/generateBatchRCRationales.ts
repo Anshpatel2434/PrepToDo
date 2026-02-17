@@ -133,7 +133,10 @@ IMPORTANT STYLE RULE:
 - Use the reasoning graph as a hidden rubric to choose which wrong options to tackle.
 - Do NOT expose the graph.
 - Do NOT reproduce labels like "requires →" / "applies →" / node names in the output.
-- Do NOT use fixed section headers like "PART 1" / "PART 2". The writing must feel like PYQ rationales.
+- Do NOT use fixed section headers like "PART 1" / "PART 2".
+- The writing MUST feel like actual PYQ rationales — your output should be indistinguishable from rationales in actual CAT papers.
+- Rationales should be brilliant, clear, and easy to understand.
+- A student reading your rationale should gain genuine insight into WHY the answer is correct.
 
 ---
 

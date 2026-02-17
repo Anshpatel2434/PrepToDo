@@ -1,7 +1,7 @@
 // =============================================================================
 // Daily Content Worker - Select Correct Answers
 // =============================================================================
-// OpenAI-based answer selection - copied with updated imports
+// OpenAI-based answer selection with answer distribution enforcement
 
 import OpenAI from "openai";
 import { z } from "zod";
@@ -22,6 +22,49 @@ const CorrectAnswerSchema = z.object({
 const ResponseSchema = z.object({
     questionsWithAnswer: z.array(CorrectAnswerSchema)
 });
+
+/**
+ * Shuffles the option positions (A/B/C/D) for a question and updates the correct answer.
+ * This provides a code-level guarantee that the correct answer is not biased toward any letter.
+ */
+function shuffleOptions(question: any): any {
+    const options = question.options;
+    const correctLetter = question.correct_answer?.answer;
+
+    if (!options || !correctLetter || !options[correctLetter]) {
+        return question;
+    }
+
+    const letters: ("A" | "B" | "C" | "D")[] = ["A", "B", "C", "D"];
+    const optionEntries = letters.map(letter => ({
+        letter,
+        text: options[letter],
+        isCorrect: letter === correctLetter,
+    }));
+
+    // Fisher-Yates shuffle
+    for (let i = optionEntries.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [optionEntries[i], optionEntries[j]] = [optionEntries[j], optionEntries[i]];
+    }
+
+    const newOptions: Record<string, string> = {};
+    let newCorrectLetter = correctLetter;
+
+    optionEntries.forEach((entry, idx) => {
+        const newLetter = letters[idx];
+        newOptions[newLetter] = entry.text;
+        if (entry.isCorrect) {
+            newCorrectLetter = newLetter;
+        }
+    });
+
+    return {
+        ...question,
+        options: newOptions,
+        correct_answer: { answer: newCorrectLetter },
+    };
+}
 
 export async function selectCorrectAnswers(params: {
     passageText: string;
@@ -46,6 +89,13 @@ STRICT RULES:
 - Do NOT modify question text
 - Do NOT modify options
 - Do NOT add explanations
+
+⚠️ ANSWER DISTRIBUTION RULE (MANDATORY):
+- You MUST distribute correct answers across A, B, C, and D.
+- Do NOT assign the same letter to all questions.
+- For a set of 4+ questions, each letter (A, B, C, D) should appear at least once.
+- For fewer than 4 questions, no letter should be repeated more than once.
+- Each question must still be answered on its own merit — do not sacrifice accuracy for distribution.
 
 --------------------------------
 PASSAGE
@@ -83,11 +133,11 @@ Return STRICT JSON:
 
     const completion = await client.chat.completions.parse({
         model: MODEL,
-        temperature: 0.0,
+        temperature: 0.1,
         messages: [
             {
                 role: "system",
-                content: "You are a CAT answer key verifier. You select answers only.",
+                content: "You are a CAT answer key verifier. You select answers only. Distribute answers across A, B, C, D — avoid repeating the same letter for every question.",
             },
             {
                 role: "user",
@@ -115,7 +165,15 @@ Return STRICT JSON:
         updated_at: new Date().toISOString(),
     }));
 
-    logger.info("✅ [Answer Key] Answers merged into question objects");
+    // Post-processing: Shuffle option positions to guarantee no positional bias
+    const shuffledQuestions = updatedQuestions.map(q => shuffleOptions(q));
 
-    return updatedQuestions;
+    const answerDist = shuffledQuestions.reduce((acc: Record<string, number>, q: any) => {
+        const letter = q.correct_answer?.answer || "?";
+        acc[letter] = (acc[letter] || 0) + 1;
+        return acc;
+    }, {});
+    logger.info({ answerDist }, "✅ [Answer Key] Answer distribution after shuffle");
+
+    return shuffledQuestions;
 }
