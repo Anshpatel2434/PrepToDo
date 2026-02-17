@@ -27,8 +27,8 @@ export const users = pgTable('users', {
     updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 
     // Quotas
-    ai_insights_remaining: integer('ai_insights_remaining').default(20),
-    customized_mocks_remaining: integer('customized_mocks_remaining').default(2),
+    ai_insights_remaining: integer('ai_insights_remaining').default(10),
+    customized_mocks_remaining: integer('customized_mocks_remaining').default(1),
 });
 
 // =============================================================================
