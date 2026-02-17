@@ -3,8 +3,8 @@
 // =============================================================================
 import type { Request, Response, NextFunction } from 'express';
 import { db } from '../../../db/index.js';
-import { users, practiceSessions, adminAiCostLog, questionAttempts, userAnalytics } from '../../../db/schema.js';
-import { eq, desc, sql, like, or, sum } from 'drizzle-orm';
+import { users, userProfiles, practiceSessions, adminAiCostLog, questionAttempts, userAnalytics } from '../../../db/schema.js';
+import { eq, desc, sql, like } from 'drizzle-orm';
 import { successResponse, Errors } from '../../../common/utils/errors.js';
 import { createChildLogger } from '../../../common/utils/logger.js';
 
@@ -25,33 +25,39 @@ export async function getUsers(req: Request, res: Response, next: NextFunction):
             ? like(users.email, `%${search}%`)
             : undefined;
 
-        // Parallel fetch count and data
-        const [totalCountRes, usersList] = await Promise.all([
+        // Parallel fetch count and data — using explicit LEFT JOIN instead of relational queries
+        const [totalCountRes, rawRows] = await Promise.all([
             db.select({ count: sql<number>`count(*)` })
                 .from(users)
                 .where(whereClause),
 
-            db.query.users.findMany({
-                where: whereClause,
-                limit,
-                offset,
-                orderBy: [desc(users.created_at)],
-                columns: {
-                    id: true,
-                    email: true,
-                    role: true,
-                    created_at: true,
-                    last_sign_in_at: true
-                },
-                with: {
-                    profile: {
-                        columns: { display_name: true }
-                    }
-                }
+            db.select({
+                id: users.id,
+                email: users.email,
+                role: users.role,
+                created_at: users.created_at,
+                last_sign_in_at: users.last_sign_in_at,
+                display_name: userProfiles.display_name,
             })
+                .from(users)
+                .leftJoin(userProfiles, eq(users.id, userProfiles.id))
+                .where(whereClause)
+                .orderBy(desc(users.created_at))
+                .limit(limit)
+                .offset(offset)
         ]);
 
         const total = Number(totalCountRes[0].count);
+
+        // Shape response to match expected format
+        const usersList = rawRows.map(row => ({
+            id: row.id,
+            email: row.email,
+            role: row.role,
+            created_at: row.created_at,
+            last_sign_in_at: row.last_sign_in_at,
+            profile: row.display_name ? { display_name: row.display_name } : null,
+        }));
 
         res.json(successResponse({
             users: usersList,
@@ -74,19 +80,45 @@ export async function getUserDetails(req: Request, res: Response, next: NextFunc
     try {
         const { id } = req.params;
 
-        // 1. Fetch user (without practiceSessions relation — it goes through userProfiles, not users)
-        const user = await db.query.users.findFirst({
-            where: eq(users.id, id as string),
-            with: {
-                profile: {
-                    columns: { display_name: true, username: true, subscription_tier: true }
-                }
-            }
-        });
+        // 1. Fetch user with profile via explicit LEFT JOIN
+        const userRows = await db.select({
+            id: users.id,
+            email: users.email,
+            role: users.role,
+            created_at: users.created_at,
+            last_sign_in_at: users.last_sign_in_at,
+            updated_at: users.updated_at,
+            ai_insights_remaining: users.ai_insights_remaining,
+            customized_mocks_remaining: users.customized_mocks_remaining,
+            display_name: userProfiles.display_name,
+            username: userProfiles.username,
+            subscription_tier: userProfiles.subscription_tier,
+        })
+            .from(users)
+            .leftJoin(userProfiles, eq(users.id, userProfiles.id))
+            .where(eq(users.id, id as string))
+            .limit(1);
 
-        if (!user) {
+        if (userRows.length === 0) {
             throw Errors.notFound('User');
         }
+
+        const row = userRows[0];
+        const user = {
+            id: row.id,
+            email: row.email,
+            role: row.role,
+            created_at: row.created_at,
+            last_sign_in_at: row.last_sign_in_at,
+            updated_at: row.updated_at,
+            ai_insights_remaining: row.ai_insights_remaining,
+            customized_mocks_remaining: row.customized_mocks_remaining,
+            profile: {
+                display_name: row.display_name,
+                username: row.username,
+                subscription_tier: row.subscription_tier,
+            },
+        };
 
         // Fetch sessions separately (practiceSessions.user_id → userProfiles.id, which equals users.id)
         const recentSessions = await db.select()
@@ -109,7 +141,7 @@ export async function getUserDetails(req: Request, res: Response, next: NextFunc
                     callCount: Number(r[0]?.callCount || 0),
                 })),
 
-            // Question attempt stats for this user (user_id references userProfiles.id which is same as users.id)
+            // Question attempt stats
             db.select({
                 totalAttempted: sql<number>`count(*)`,
                 totalCorrect: sql<number>`COALESCE(sum(CASE WHEN is_correct THEN 1 ELSE 0 END), 0)`,
@@ -160,13 +192,13 @@ export async function updateUser(req: Request, res: Response, next: NextFunction
         const { id } = req.params;
         const { role, email, ai_insights_remaining, customized_mocks_remaining } = req.body;
 
-        // Check user exists
-        const existing = await db.query.users.findFirst({
-            where: eq(users.id, id as string),
-            columns: { id: true }
-        });
+        // Check user exists with direct select (no relational query)
+        const existing = await db.select({ id: users.id })
+            .from(users)
+            .where(eq(users.id, id as string))
+            .limit(1);
 
-        if (!existing) {
+        if (existing.length === 0) {
             throw Errors.notFound('User');
         }
 
