@@ -2,7 +2,6 @@ import { sql } from 'drizzle-orm';
 import * as ps from 'drizzle-orm/pg-core';
 import { pgTable, uuid, varchar, text, timestamp, boolean, integer } from 'drizzle-orm/pg-core';
 
-console.log('--- tables.ts executing ---');
 // =============================================================================
 // Users Table (in public schema)
 // =============================================================================
