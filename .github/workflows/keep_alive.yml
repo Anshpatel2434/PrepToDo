@@ -1,0 +1,33 @@
+name: Daily PrepToDo Cron & Keep-Alive
+
+on:
+  schedule:
+    # Runs every 14 minutes to reset Render's 15-min inactivity timer
+    - cron: "*/14 * * * *" 
+  workflow_dispatch: # Allows manual run for testing
+
+jobs:
+  ping-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check IST Silent Window (2AM - 7AM)
+        shell: bash
+        run: |
+          # Get current hour and minute in UTC
+          H=$(date -u +%H)
+          M=$(date -u +%M)
+          
+          # Logic: Skip if UTC is between 20:30 (2:00 AM IST) and 01:30 (7:00 AM IST)
+          # We check if (Hour > 20 OR (Hour == 20 AND Minute >= 30)) OR (Hour < 1 OR (Hour == 1 AND Minute <= 30))
+          if [[ ($H -gt 20 || ($H -eq 20 && $M -ge 30)) || ($H -lt 1 || ($H -eq 1 && $M -le 30)) ]]; then
+            echo "Inside IST 2AM-7AM window. Skipping ping to save Render resources."
+            exit 0
+          fi
+          echo "Outside silent window. Proceeding with ping."
+
+      - name: Call Backend Endpoint
+        run: |
+          curl -X POST \
+          -H "Content-Type: application/json" \
+          -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+          ${{ secrets.BACKEND_URL }}/internal/run-daily-job
