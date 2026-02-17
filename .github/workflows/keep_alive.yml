@@ -30,4 +30,4 @@ jobs:
           curl -X POST \
           -H "Content-Type: application/json" \
           -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
-          ${{ secrets.BACKEND_URL }}/internal/run-daily-job
+          ${{ secrets.BACKEND_URL }}/api/daily-content/articles
