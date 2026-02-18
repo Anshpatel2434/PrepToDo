@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { adminApiClient } from '../services/adminApiClient';
 import { useNavigate } from 'react-router-dom';
 
@@ -23,6 +23,8 @@ export function useAdminAuth(): UseAdminAuthReturn {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
+    // Guard: prevent checkSession from running more than once per mount
+    const hasCheckedRef = useRef(false);
 
     // Attempt auto-login using the user's normal JWT (via cookie)
     const attemptAutoLogin = useCallback(async (): Promise<boolean> => {
@@ -76,6 +78,9 @@ export function useAdminAuth(): UseAdminAuthReturn {
     }, [attemptAutoLogin]);
 
     useEffect(() => {
+        // Only run checkSession once per component lifetime to prevent infinite loops
+        if (hasCheckedRef.current) return;
+        hasCheckedRef.current = true;
         checkSession();
     }, [checkSession]);
 
