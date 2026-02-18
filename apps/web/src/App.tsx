@@ -31,7 +31,6 @@ const AdminApp = lazy(() => import("./pages/admin/page/AdminApp"));
 
 // Default exports
 const AuthCallback = lazy(() => import("./pages/auth/components/AuthCallback"));
-const TeachConceptPage = lazy(() => import("./pages/teach-concept/page/TeachConceptPage"));
 const DailyPage = lazy(() => import("./pages/daily/page/DailyPage"));
 const DailyRCPage = lazy(() => import("./pages/daily/daily_rc/Page/DailyRCPage"));
 const DailyVAPage = lazy(() => import("./pages/daily/daily_va/Page/DailyVAPage"));
@@ -96,14 +95,6 @@ const router = createBrowserRouter([
                 element: (
                     <Suspense fallback={<PageLoader />}>
                         <ResetPasswordPage />
-                    </Suspense>
-                ),
-            },
-            {
-                path: "/trialAI/teach_concept",
-                element: (
-                    <Suspense fallback={<PageLoader />}>
-                        <TeachConceptPage />
                     </Suspense>
                 ),
             },
