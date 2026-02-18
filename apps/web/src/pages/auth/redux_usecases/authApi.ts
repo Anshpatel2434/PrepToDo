@@ -236,11 +236,10 @@ export const authApi = createApi({
                 try {
                     dispatch(startLoading());
                     const { data } = await queryFulfilled;
-                    // Store access token in localStorage
-                    if (data.accessToken) {
-                        setStoredToken(data.accessToken);
-                    }
                     dispatch(setUser(data.user));
+                    // Directly update fetchUser cache so SafeAuthRoute sees the user
+                    // immediately without waiting for a /me refetch (avoids cookie race)
+                    dispatch(authApi.util.updateQueryData('fetchUser', undefined, () => data.user));
                     dispatch(clearPendingSignup());
                     // Clear localStorage
                     localStorage.removeItem('pendingSignupId');
@@ -263,11 +262,10 @@ export const authApi = createApi({
                 try {
                     dispatch(startLoading());
                     const { data } = await queryFulfilled;
-                    // Store access token in localStorage
-                    if (data.accessToken) {
-                        setStoredToken(data.accessToken);
-                    }
                     dispatch(setUser(data.user));
+                    // Directly update fetchUser cache so SafeAuthRoute sees the user
+                    // immediately without waiting for a /me refetch (avoids cookie race)
+                    dispatch(authApi.util.updateQueryData('fetchUser', undefined, () => data.user));
                 } catch (err) {
                     dispatch(authError(getErrorMessage(err)));
                 }
