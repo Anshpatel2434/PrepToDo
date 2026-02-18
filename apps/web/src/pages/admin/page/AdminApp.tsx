@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import React, { useEffect, useRef } from 'react';
+import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { useAdminAuth, AdminAuthProvider } from '../hooks/useAdminAuth';
 import { useFetchUserQuery } from '../../auth/redux_usecases/authApi';
 
@@ -31,45 +31,50 @@ export default function AdminApp() {
 
 // Actual admin app content — reads from the shared context
 function AdminAppContent() {
-    const { admin, isLoading: isAdminAuthLoading } = useAdminAuth();
+    const { admin, isLoading: isAdminAuthLoading, checkSession } = useAdminAuth();
     const { data: mainUser, isLoading: isMainAuthLoading } = useFetchUserQuery();
     const navigate = useNavigate();
-    const location = useLocation();
+    const hasTriggeredCheckRef = useRef(false);
 
     const isLoading = isAdminAuthLoading || isMainAuthLoading;
 
-    // Effect to handle redirection based on auth state
+    // Trigger admin session check ONLY after mainUser is confirmed admin.
+    // Uses a 1-second delay to ensure the auth cookie is stored by the browser
+    // (on fresh login, the cookie from the login response may not be stored yet).
+    // On page refresh, the cookie is already stored so the delay is just a brief wait.
     useEffect(() => {
-        if (!isLoading) {
-            // 1. If not logged in at all, redirect to normal auth page
+        if (mainUser?.role === 'admin' && !hasTriggeredCheckRef.current) {
+            hasTriggeredCheckRef.current = true;
+            const timer = setTimeout(() => {
+                checkSession();
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [mainUser, checkSession]);
+
+    // Redirect non-admin users
+    useEffect(() => {
+        if (!isMainAuthLoading) {
             if (!mainUser) {
                 navigate('/auth', { replace: true });
                 return;
             }
-
-            // 2. If logged in but not an admin, kick them out
             if (mainUser.role !== 'admin') {
                 navigate('/home', { replace: true });
                 return;
             }
-
-            // 3. If admin user but admin session not established yet,
-            //    the useAdminAuth hook will handle session verification via cookie.
-            //    If no admin session cookie exists, redirect to auth page.
-            if (!admin && !isAdminAuthLoading) {
-                // User has admin role but no admin panel session — redirect to auth
-                navigate('/auth', { replace: true });
-                return;
-            }
         }
-    }, [admin, mainUser, isLoading, isAdminAuthLoading, location.pathname, navigate]);
+    }, [mainUser, isMainAuthLoading, navigate]);
 
-    if (isLoading) {
-        return <AdminLoader />;
-    }
+    // Redirect if admin check completed and failed
+    useEffect(() => {
+        if (!isAdminAuthLoading && !admin && hasTriggeredCheckRef.current && mainUser?.role === 'admin') {
+            // Admin check completed but failed — no admin session
+            navigate('/auth', { replace: true });
+        }
+    }, [admin, isAdminAuthLoading, mainUser, navigate]);
 
-    // If no admin session, show loader while redirect happens
-    if (!admin) {
+    if (isLoading || !admin) {
         return <AdminLoader />;
     }
 

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { adminApiClient } from '../services/adminApiClient';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,17 +16,15 @@ interface AdminAuthContextType {
     error: string | null;
     login: (credentials: any) => Promise<void>;
     logout: () => Promise<void>;
+    checkSession: () => Promise<void>;
 }
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 
 // =============================================================================
-// Context (singleton — ensures only ONE auth check runs across all consumers)
+// Context
 // =============================================================================
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
-
-// Module-level flag — survives component unmount/remount cycles
-let _hasCheckedSession = false;
 
 export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     const [admin, setAdmin] = useState<AdminUser | null>(null);
@@ -40,7 +38,6 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
         return () => { isMountedRef.current = false; };
     }, []);
 
-    // Attempt auto-login using the user's normal JWT (via cookie)
     const attemptAutoLogin = useCallback(async (): Promise<boolean> => {
         try {
             const response = await fetch(`${BACKEND_URL}/api/admin/auth/auto-login`, {
@@ -67,40 +64,28 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
 
-    // Check session — runs exactly ONCE in the app's lifetime
-    useEffect(() => {
-        if (_hasCheckedSession) {
-            // Already checked in a previous mount — just mark as not loading
-            setIsLoading(false);
-            return;
-        }
-        _hasCheckedSession = true;
-
-        const checkSession = async () => {
-            try {
-                setIsLoading(true);
-                const response = await adminApiClient<{ authenticated: boolean; email: string; role: 'admin' }>('/auth/verify');
-                if (response.authenticated && isMountedRef.current) {
-                    setAdmin({ email: response.email, role: response.role });
-                } else {
-                    const autoLogged = await attemptAutoLogin();
-                    if (!autoLogged && isMountedRef.current) {
-                        setAdmin(null);
-                    }
-                }
-            } catch {
+    // Called by AdminAppContent AFTER mainUser is confirmed admin
+    // NOT called automatically on mount
+    const checkSession = useCallback(async () => {
+        try {
+            if (isMountedRef.current) setIsLoading(true);
+            const response = await adminApiClient<{ authenticated: boolean; email: string; role: 'admin' }>('/auth/verify');
+            if (response.authenticated && isMountedRef.current) {
+                setAdmin({ email: response.email, role: response.role });
+            } else {
                 const autoLogged = await attemptAutoLogin();
                 if (!autoLogged && isMountedRef.current) {
                     setAdmin(null);
                 }
-            } finally {
-                if (isMountedRef.current) {
-                    setIsLoading(false);
-                }
             }
-        };
-
-        checkSession();
+        } catch {
+            const autoLogged = await attemptAutoLogin();
+            if (!autoLogged && isMountedRef.current) {
+                setAdmin(null);
+            }
+        } finally {
+            if (isMountedRef.current) setIsLoading(false);
+        }
     }, [attemptAutoLogin]);
 
     const login = useCallback(async (credentials: any) => {
@@ -132,8 +117,6 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
             await adminApiClient('/auth/logout', { method: 'POST' });
             setAdmin(null);
             localStorage.removeItem('preptodo_admin_token');
-            // Reset the flag so next admin visit re-checks session
-            _hasCheckedSession = false;
             navigate('/auth');
         } catch {
             // Logout failure is non-critical
@@ -141,15 +124,14 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     }, [navigate]);
 
     return (
-        <AdminAuthContext.Provider value= {{ admin, isLoading, error, login, logout }
-}>
-    { children }
-    </AdminAuthContext.Provider>
+        <AdminAuthContext.Provider value={{ admin, isLoading, error, login, logout, checkSession }}>
+            {children}
+        </AdminAuthContext.Provider>
     );
 }
 
 // =============================================================================
-// Hook — consumers just read from context, no independent state or effects
+// Hook
 // =============================================================================
 export function useAdminAuth(): AdminAuthContextType {
     const context = useContext(AdminAuthContext);

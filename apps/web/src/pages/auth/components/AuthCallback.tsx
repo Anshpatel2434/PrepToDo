@@ -11,6 +11,7 @@ export const AuthCallback = () => {
 
     useEffect(() => {
         const token = searchParams.get('token');
+        const refreshToken = searchParams.get('refreshToken');
         const returnTo = searchParams.get('returnTo');
         const error = searchParams.get('error');
 
@@ -28,7 +29,7 @@ export const AuthCallback = () => {
 
         const handleExchange = async () => {
             try {
-                await exchangeToken({ token }).unwrap();
+                await exchangeToken({ token, refreshToken: refreshToken || undefined }).unwrap();
                 toast.success('Successfully signed in!', { id: 'auth-success' });
 
                 // Check if we have a stored redirect

@@ -388,7 +388,7 @@ export const authApi = createApi({
         }),
 
         // Exchange OAuth token
-        exchangeToken: builder.mutation<{ message: string }, { token: string }>({
+        exchangeToken: builder.mutation<{ message: string }, { token: string; refreshToken?: string }>({
             query: (body) => ({
                 url: '/exchange-token',
                 method: 'POST',

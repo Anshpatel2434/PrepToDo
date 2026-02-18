@@ -684,17 +684,17 @@ export async function googleOAuthCallback(req: Request, res: Response, next: Nex
         // Generate JWT token (long-lived, matches session duration)
         const token = generateAccessToken(user!.id, user!.email!, sessionId);
 
-        // Set refresh cookie (access token is passed via URL for frontend)
-        setRefreshCookie(res, refreshToken);
+        // Don't set refresh cookie here — it would be on the Render domain.
+        // Instead, pass both tokens to the frontend via URL so exchangeToken can set cookies on the correct domain.
 
-        // Redirect to frontend with token in URL (will be exchanged for cookie)
+        // Redirect to frontend with both tokens in URL (will be exchanged for cookies)
         const returnTo = validateReturnTo(stateData.returnTo);
         authLogger.info({ email: user!.email, userId: user!.id, provider: 'google', action: 'oauth_login' }, 'Google OAuth login successful');
 
         // Log activity
         await AdminActivityService.logLogin(user!.id);
 
-        res.redirect(`${config.frontendUrl}/auth/callback?token=${encodeURIComponent(token)}&returnTo=${encodeURIComponent(returnTo)}`);
+        res.redirect(`${config.frontendUrl}/auth/callback?token=${encodeURIComponent(token)}&refreshToken=${encodeURIComponent(refreshToken)}&returnTo=${encodeURIComponent(returnTo)}`);
     } catch (err) {
         authLogger.error({ error: (err as Error).message, action: 'oauth_login' }, 'Google OAuth login failed');
         res.redirect(`${config.frontendUrl}/auth?error=oauth_failed`);
@@ -710,14 +710,19 @@ export async function googleOAuthCallback(req: Request, res: Response, next: Nex
 // =============================================================================
 export async function exchangeToken(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-        const { token } = req.body;
+        const { token, refreshToken } = req.body;
 
         if (!token) {
             throw Errors.badRequest('Token is required');
         }
 
-        // Simply set the cookie - the token is already valid JWT from OAuth callback
+        // Set auth cookie - the token is already valid JWT from OAuth callback
         setAuthCookie(res, token);
+
+        // Set refresh cookie if provided (from Google OAuth flow)
+        if (refreshToken) {
+            setRefreshCookie(res, refreshToken);
+        }
 
         res.json(successResponse({ message: 'Session activated' }));
     } catch (error) {
