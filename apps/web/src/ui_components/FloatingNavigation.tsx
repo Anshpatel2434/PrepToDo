@@ -26,7 +26,6 @@ import {
     useFetchUserQuery,
     useLogoutMutation,
     clearStoredToken,
-    getStoredToken,
 } from "../pages/auth/redux_usecases/authApi";
 import { resetAuth } from "../pages/auth/redux_usecases/authSlice";
 import toast from "react-hot-toast";
@@ -181,10 +180,8 @@ export const FloatingNavigation: React.FC = () => {
         refetchOnMountOrArgChange: true,
         refetchOnFocus: true,
     });
-    // Validate that both user data exists AND a valid token is present
-    // This prevents showing stale user data in navbar when OAuth is cancelled
-    const hasValidToken = getStoredToken() !== null;
-    const user = (authState && hasValidToken) ? authState : null;
+    // Auth is cookie-based: if /me returns a user, they're authenticated
+    const user = authState ?? null;
     const isAuthenticated = user !== null;
     const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
 

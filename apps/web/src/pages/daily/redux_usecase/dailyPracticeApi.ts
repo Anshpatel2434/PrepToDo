@@ -79,14 +79,7 @@ export const dailyPracticeApi = createApi({
     reducerPath: "dailyPracticeApi",
     baseQuery: fetchBaseQuery({
         baseUrl: `${BACKEND_URL}/api/daily-content`,
-        credentials: 'include', // Include cookies for auth, removing strict dependency on Supabase client
-        prepareHeaders: (headers) => {
-            const token = localStorage.getItem('preptodo_access_token');
-            if (token) {
-                headers.set('Authorization', `Bearer ${token}`);
-            }
-            return headers;
-        },
+        credentials: 'include', // Include cookies for auth
     }),
     tagTypes: ["DailyPractice", "Session", "Attempts"],
     endpoints: (builder) => ({

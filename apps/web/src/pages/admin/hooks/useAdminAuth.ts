@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { adminApiClient } from '../services/adminApiClient';
 import { useNavigate } from 'react-router-dom';
-import { getStoredToken } from '../../auth/redux_usecases/authApi';
 
 interface AdminUser {
     email: string;
@@ -25,17 +24,13 @@ export function useAdminAuth(): UseAdminAuthReturn {
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
 
-    // Attempt auto-login using the user's normal JWT
+    // Attempt auto-login using the user's normal JWT (via cookie)
     const attemptAutoLogin = useCallback(async (): Promise<boolean> => {
-        const token = getStoredToken();
-        if (!token) return false;
-
         try {
             const response = await fetch(`${BACKEND_URL}/api/admin/auth/auto-login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
                 },
                 credentials: 'include',
             });

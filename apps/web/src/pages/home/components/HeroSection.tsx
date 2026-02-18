@@ -345,61 +345,72 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                         initial={{ opacity: 0, y: 40 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 1, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                        className="flex-1 w-full max-w-sm lg:max-w-xs xl:max-w-sm flex flex-col items-center lg:items-start gap-5"
+                        className="flex-1 w-full max-w-[280px] sm:max-w-sm lg:max-w-xs xl:max-w-sm flex flex-col items-center lg:items-start gap-5"
                         style={{ perspective: "1200px" }}
                     >
-                        {/* Headline — accent bar style, above the image */}
-                        <div className="flex items-center gap-3 px-1">
-                            <div className={`w-2 h-8 rounded-full flex-shrink-0 ${isDark ? "bg-brand-primary-dark" : "bg-brand-primary-light"}`} />
-                            <p className={`text-lg md:text-xl font-bold tracking-tight leading-tight ${isDark ? "text-white" : "text-gray-900"}`}>
-                                Every wrong answer has a pattern.
+                        {/* Headline */}
+                        <div className="flex flex-col gap-1.5 px-1">
+                            <span className={`text-[11px] font-bold uppercase tracking-[0.2em] ${isDark ? "text-brand-primary-dark/70" : "text-brand-primary-light/60"}`}>
+                                AI Diagnostics
+                            </span>
+                            <p className={`text-xl md:text-2xl font-extrabold tracking-tight leading-snug ${isDark ? "text-gray-200" : "text-gray-800"}`}>
+                                Every wrong answer
                                 <br />
-                                <span className={isDark ? "text-brand-primary-dark" : "text-brand-primary-light"}>We find it.</span>
+                                has a pattern.{" "}
+                                <span
+                                    className={`bg-clip-text text-transparent bg-gradient-to-r ${isDark
+                                        ? "from-brand-primary-dark via-emerald-300 to-brand-primary-dark"
+                                        : "from-brand-primary-light via-teal-400 to-brand-primary-light"
+                                        }`}
+                                    style={{
+                                        backgroundSize: "200% 100%",
+                                        animation: "shimmer 3s ease-in-out infinite",
+                                    }}
+                                >
+                                    We find it.
+                                </span>
                             </p>
+                            <style>{`
+                                @keyframes shimmer {
+                                    0%, 100% { background-position: 0% 50%; }
+                                    50% { background-position: 100% 50%; }
+                                }
+                            `}</style>
                         </div>
 
-                        {/* Floating 3D image */}
-                        <div className="relative w-full">
-                            {/* Ambient glow */}
-                            <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[110%] h-[110%] rounded-full blur-[60px] pointer-events-none ${isDark
-                                ? "bg-brand-primary-dark/12"
-                                : "bg-brand-primary-light/8"
-                                }`} />
-
-                            <motion.div
-                                animate={{
-                                    y: [-3, 3, -3],
-                                    rotateX: [1.5, -1, 1.5],
-                                    rotateY: [-5, -3, -5],
-                                    rotateZ: [0.5, -0.3, 0.5],
-                                }}
-                                transition={{
-                                    duration: 7,
-                                    ease: "easeInOut",
-                                    repeat: Infinity,
-                                }}
-                                style={{ transformStyle: "preserve-3d" }}
-                                className="relative"
-                            >
-                                <div className={`overflow-hidden rounded-2xl ${isDark
-                                    ? "shadow-2xl shadow-black/50 ring-1 ring-white/10"
-                                    : "shadow-2xl shadow-brand-primary-light/15 ring-1 ring-gray-200"
-                                    }`}>
-                                    <img
-                                        src={insights_light}
-                                        alt="AI Insights"
-                                        loading="eager"
-                                        className={`w-full h-auto ${isDark ? "hidden" : "block"}`}
-                                    />
-                                    <img
-                                        src={insights_dark}
-                                        alt="AI Insights"
-                                        loading="eager"
-                                        className={`w-full h-auto ${isDark ? "block" : "hidden"}`}
-                                    />
-                                </div>
-                            </motion.div>
-                        </div>
+                        {/* Floating image */}
+                        <motion.div
+                            animate={{
+                                y: [-4, 4, -4],
+                                rotateX: [1, 3, 1],
+                                rotateY: [-4, -2, -4],
+                                scale: [1, 1.01, 1],
+                            }}
+                            transition={{
+                                duration: 8,
+                                ease: "easeInOut",
+                                repeat: Infinity,
+                            }}
+                            style={{ transformStyle: "preserve-3d" }}
+                        >
+                            <div className={`overflow-hidden rounded-2xl ${isDark
+                                ? "shadow-[0_20px_60px_-10px_rgba(0,0,0,0.7)] ring-1 ring-white/10"
+                                : "shadow-[0_20px_60px_-10px_rgba(15,95,83,0.3)] ring-1 ring-gray-200"
+                                }`}>
+                                <img
+                                    src={insights_light}
+                                    alt="AI Insights — personalized solution analysis"
+                                    loading="eager"
+                                    className={`w-full h-auto ${isDark ? "hidden" : "block"}`}
+                                />
+                                <img
+                                    src={insights_dark}
+                                    alt="AI Insights — personalized solution analysis"
+                                    loading="eager"
+                                    className={`w-full h-auto ${isDark ? "block" : "hidden"}`}
+                                />
+                            </div>
+                        </motion.div>
                     </motion.div>
                 </div>
 
