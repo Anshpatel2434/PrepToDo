@@ -63,7 +63,7 @@ function setAuthCookie(res: Response, token: string): void {
     res.cookie(config.jwt.cookieName, token, {
         httpOnly: true,
         secure: config.isProduction,
-        sameSite: config.isProduction ? 'none' : 'lax',
+        sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (matches jwt.expiresIn)
         path: '/',
     });
@@ -73,7 +73,7 @@ function setRefreshCookie(res: Response, refreshToken: string): void {
     res.cookie(config.jwt.refreshCookieName, refreshToken, {
         httpOnly: true,
         secure: config.isProduction,
-        sameSite: config.isProduction ? 'none' : 'lax',
+        sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         path: '/',
     });
@@ -83,7 +83,7 @@ function clearAuthCookie(res: Response): void {
     res.clearCookie(config.jwt.cookieName, {
         httpOnly: true,
         secure: config.isProduction,
-        sameSite: config.isProduction ? 'none' : 'lax',
+        sameSite: 'lax',
         path: '/',
     });
 }
@@ -92,7 +92,7 @@ function clearRefreshCookie(res: Response): void {
     res.clearCookie(config.jwt.refreshCookieName, {
         httpOnly: true,
         secure: config.isProduction,
-        sameSite: config.isProduction ? 'none' : 'lax',
+        sameSite: 'lax',
         path: '/',
     });
 }
