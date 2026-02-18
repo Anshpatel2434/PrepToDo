@@ -40,6 +40,13 @@ export const aiInsightsApi = createApi({
     baseQuery: fetchBaseQuery({
         baseUrl: `${BACKEND_URL}/api/ai-insights`,
         credentials: 'include', // Include cookies for auth
+        prepareHeaders: (headers) => {
+            const token = localStorage.getItem('preptodo_access_token');
+            if (token) {
+                headers.set('Authorization', `Bearer ${token}`);
+            }
+            return headers;
+        },
     }),
     tagTypes: ["AIInsights"],
     endpoints: (builder) => ({

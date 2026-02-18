@@ -80,6 +80,13 @@ export const dailyPracticeApi = createApi({
     baseQuery: fetchBaseQuery({
         baseUrl: `${BACKEND_URL}/api/daily-content`,
         credentials: 'include', // Include cookies for auth
+        prepareHeaders: (headers) => {
+            const token = localStorage.getItem('preptodo_access_token');
+            if (token) {
+                headers.set('Authorization', `Bearer ${token}`);
+            }
+            return headers;
+        },
     }),
     tagTypes: ["DailyPractice", "Session", "Attempts"],
     endpoints: (builder) => ({

@@ -6,7 +6,7 @@ import {
 	AuthPopup,
 	type AuthPopupCloseReason,
 } from "../pages/auth/components/AuthPopup";
-import { useFetchUserQuery } from "../pages/auth/redux_usecases/authApi";
+import { useFetchUserQuery, getStoredToken } from "../pages/auth/redux_usecases/authApi";
 import { PageLoader } from "./PageLoader";
 
 interface SafeAuthRouteProps {
@@ -26,8 +26,11 @@ export const SafeAuthRoute: React.FC<SafeAuthRouteProps> = ({
 		refetchOnFocus: true,
 	});
 
-	// Auth is cookie-based: if /me returns a user, they're authenticated
-	const isAuthenticated = user !== null && user !== undefined;
+	// Validate that both user data exists AND a valid token is present
+	// This prevents showing authenticated content when OAuth was cancelled
+	// and stale cache data might briefly exist
+	const hasValidToken = getStoredToken() !== null;
+	const isAuthenticated = user !== null && user !== undefined && hasValidToken;
 
 	if (isAuthenticated) return <>{children}</>;
 

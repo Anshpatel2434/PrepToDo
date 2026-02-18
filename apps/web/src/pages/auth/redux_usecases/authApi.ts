@@ -3,16 +3,22 @@ import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolk
 import { startLoading, otpSent, otpVerified, authError, setUser, clearUser, setPendingSignup, clearPendingSignup, setForgotPasswordEmail } from "./authSlice";
 import type { UserResponse } from "../../../services/apiClient";
 
-// Legacy token cleanup: clear any leftover localStorage token from previous versions
-try { localStorage.removeItem('preptodo_access_token'); } catch { /* ignore */ }
+// =============================================================================
+// Token Storage Utilities
+// =============================================================================
+// Stores JWT access token in localStorage for cross-origin Bearer auth.
+// Cookies alone don't work cross-origin (third-party cookie restrictions).
+const TOKEN_KEY = 'preptodo_access_token';
 
-// =============================================================================
-// Token Storage Utilities (DEPRECATED - keeping stubs for backward compat)
-// =============================================================================
-// Auth is now fully cookie-based. These are no-ops kept to avoid import errors.
-export function getStoredToken(): string | null { return null; }
-export function setStoredToken(_token: string): void { /* no-op */ }
-export function clearStoredToken(): void { /* no-op */ }
+export function getStoredToken(): string | null {
+    try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
+}
+export function setStoredToken(token: string): void {
+    try { localStorage.setItem(TOKEN_KEY, token); } catch { /* ignore */ }
+}
+export function clearStoredToken(): void {
+    try { localStorage.removeItem(TOKEN_KEY); } catch { /* ignore */ }
+}
 
 // =============================================================================
 // Backend API Configuration
@@ -148,6 +154,13 @@ function getErrorMessage(error: unknown): string {
 const rawBaseQuery = fetchBaseQuery({
     baseUrl: `${BACKEND_URL}/api/auth`,
     credentials: 'include', // Include cookies in requests
+    prepareHeaders: (headers) => {
+        const token = getStoredToken();
+        if (token) {
+            headers.set('Authorization', `Bearer ${token}`);
+        }
+        return headers;
+    },
 });
 
 // Wrapper to handle 401s by logging out (since we have long-lived tokens now)
@@ -236,6 +249,10 @@ export const authApi = createApi({
                 try {
                     dispatch(startLoading());
                     const { data } = await queryFulfilled;
+                    // Store access token in localStorage for Bearer auth
+                    if (data.accessToken) {
+                        setStoredToken(data.accessToken);
+                    }
                     dispatch(setUser(data.user));
                     // Directly update fetchUser cache so SafeAuthRoute sees the user
                     // immediately without waiting for a /me refetch (avoids cookie race)
@@ -262,6 +279,10 @@ export const authApi = createApi({
                 try {
                     dispatch(startLoading());
                     const { data } = await queryFulfilled;
+                    // Store access token in localStorage for Bearer auth
+                    if (data.accessToken) {
+                        setStoredToken(data.accessToken);
+                    }
                     dispatch(setUser(data.user));
                     // Directly update fetchUser cache so SafeAuthRoute sees the user
                     // immediately without waiting for a /me refetch (avoids cookie race)
@@ -300,11 +321,17 @@ export const authApi = createApi({
         // when OAuth flow is cancelled via browser back button
         fetchUser: builder.query<UserResponse | null, void>({
             queryFn: async (_arg, _queryApi, _extraOptions, fetchWithBQ) => {
-                // Auth is cookie-based — always attempt the API call
-                // The cookie is sent automatically via credentials: 'include'
+                // If no token exists, return null immediately without making a network request
+                // This prevents RTK Query from returning stale cached user data
+                const token = getStoredToken();
+                if (!token) {
+                    return { data: null };
+                }
+
+                // Token exists, make the API call
                 const result = await fetchWithBQ('/me');
                 if (result.error) {
-                    // On error (e.g., 401 = not logged in), return null
+                    // On error (e.g., 401), return null
                     return { data: null };
                 }
 
