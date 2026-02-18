@@ -17,12 +17,11 @@ export function clearStoredToken(): void { /* no-op */ }
 // =============================================================================
 // Backend API Configuration
 // =============================================================================
-// For API calls, use empty string (Vite proxy in dev, Vercel rewrite in prod)
+// For API calls, use empty string in dev (Vite proxy) or VITE_BACKEND_URL in prod
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
-// For OAuth redirects, we MUST use the actual backend URL (not proxied).
-// The CSRF cookie set during /api/auth/google must be on the same domain
-// that Google calls back to (PROD_GOOGLE_CALLBACK_URL).
-const OAUTH_BACKEND_URL = import.meta.env.VITE_OAUTH_BACKEND_URL || 'http://localhost:3001';
+// For OAuth redirects, we need the actual backend URL (not proxied)
+// In production, this is the same as VITE_BACKEND_URL; in dev, fallback to localhost
+const OAUTH_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 
 // =============================================================================
 // Request Types

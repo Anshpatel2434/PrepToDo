@@ -1,6 +1,5 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://preptodo.onrender.com/api/:path*" },
     { "source": "/(.*)", "destination": "/" }
   ]
 }
