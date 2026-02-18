@@ -62,6 +62,7 @@ export function createRCQuestions(
             options: q.options,
             difficulty: q.difficulty || "medium",
             tags: q.tags || [],
+            correctAnswer: q.correct_answer || { answer: "" },
         });
 
         questionIds.push(questionId);
@@ -87,6 +88,7 @@ export function createVAQuestions(
             jumbledSentences: q.jumbled_sentences,
             difficulty: q.difficulty || "medium",
             tags: q.tags || [],
+            correctAnswer: q.correct_answer || { answer: "" },
         });
 
         questionIds.push(questionId);

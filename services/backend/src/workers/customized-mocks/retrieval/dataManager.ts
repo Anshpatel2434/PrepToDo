@@ -68,6 +68,7 @@ export class DataManager {
         options: Question['options'];
         difficulty: Question['difficulty'];
         tags: string[];
+        correctAnswer: { answer: string };
     }): string {
         if (!this.passages.has(params.passageId)) {
             throw new Error(`Cannot register RC question: Passage ${params.passageId} not found`);
@@ -84,7 +85,7 @@ export class DataManager {
             questionType: params.questionType,
             options: params.options,
             jumbledSentences: { "1": "", "2": "", "3": "", "4": "", "5": "" },
-            correctAnswer: { answer: "" },
+            correctAnswer: params.correctAnswer,
             rationale: "",
             difficulty: params.difficulty,
             tags: params.tags,
@@ -105,6 +106,7 @@ export class DataManager {
         jumbledSentences?: Question['jumbled_sentences'];
         difficulty: Question['difficulty'];
         tags: string[];
+        correctAnswer: { answer: string };
     }): string {
         const questionId = uuidv4();
         const now = new Date().toISOString();
@@ -117,7 +119,7 @@ export class DataManager {
             questionType: params.questionType,
             options: params.options || { "A": "", "B": "", "C": "", "D": "" },
             jumbledSentences: params.jumbledSentences || { "1": "", "2": "", "3": "", "4": "", "5": "" },
-            correctAnswer: { answer: "" },
+            correctAnswer: params.correctAnswer,
             rationale: "",
             difficulty: params.difficulty,
             tags: params.tags,

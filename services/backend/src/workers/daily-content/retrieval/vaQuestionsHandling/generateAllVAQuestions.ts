@@ -603,7 +603,7 @@ Return STRICT JSON in this format:
       "question_type": "para_summary|para_completion|para_jumble|odd_one_out",
       "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
       "jumbled_sentences": { "1": "...", "2": "...", "3": "...", "4": "...", "5": "..." },
-      "correct_answer": { "answer": "" },
+      "correct_answer": { "answer": "A" },
       "rationale": "",
       "difficulty": "easy|medium|hard",
       "tags": [],
