@@ -122,8 +122,8 @@ export const QuestionSchema = z.object({
     options: OptionsSchema,
     jumbled_sentences: JumbledSentencesSchema.nullish(), // Made nullable for non-jumble questions
     correct_answer: z.object({
-        answer: z.string()
-    }), //{"answer" : "answer"}
+        answer: z.string().min(1)
+    }), //{"answer" : "A|B|C|D" or "1234" or "3"}
     rationale: z.string(),
     difficulty: z.enum(["easy", "medium", "hard", "expert"]),
     tags: z.array(z.string()), // Use empty array [] instead of nullable

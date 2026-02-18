@@ -175,7 +175,7 @@ export const QuestionSchema = z.object({
     options: OptionsSchema,
     jumbled_sentences: JumbledSentencesSchema,
     correct_answer: z.object({
-        answer: z.string()
+        answer: z.string().min(1)
     }),
     rationale: z.string(),
     difficulty: z.enum(["easy", "medium", "hard", "expert"]),

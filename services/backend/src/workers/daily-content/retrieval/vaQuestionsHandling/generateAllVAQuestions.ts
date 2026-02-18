@@ -569,7 +569,7 @@ Common oddity reasons:
 - **CRITICAL: Put odd sentence at key "5"**
 - Put all 5 sentences in jumbled_sentences: {"1": "sentence", "2": "sentence", "3": "sentence", "4": "sentence", "5": "sentence"}
 - Leave options empty: {"A": "", "B": "", "C": "", "D": ""}
-- Correct answer: "5"
+- Set correct_answer.answer to "5"
 
 ---
 
@@ -615,7 +615,7 @@ Return STRICT JSON in this format:
 
 IMPORTANT:
 - Generate EXACTLY 4 questions (one of each type)
-- Leave correct_answer.answer empty
+- Fill correct_answer.answer with the correct option letter (A, B, C, D) or sequence string ("1234", "5")
 - Leave rationale empty
 - Leave tags as empty array []
 - The metrics should assess skills from ${JSON.stringify(user_core_metrics_definition_v1)}

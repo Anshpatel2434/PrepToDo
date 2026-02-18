@@ -41,7 +41,7 @@ const RCQuestionSchema = z.object({
         5: z.string(),
     }).nullish(),
     correct_answer: z.object({
-        answer: z.string()
+        answer: z.string().min(1)
     }),
     rationale: z.string(),
     difficulty: z.enum(["easy", "medium", "hard", "expert"]),

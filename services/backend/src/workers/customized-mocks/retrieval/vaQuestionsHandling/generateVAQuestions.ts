@@ -425,7 +425,7 @@ Return STRICT JSON only in this format:
 }
 
 IMPORTANT:
-- Leave correct_answer.answer empty
+- Fill correct_answer.answer with the correct option letter (A, B, C, D)
 - Leave rationale empty
 - Generate EXACTLY ${count} question(s)
 - No additional text or commentary
@@ -720,7 +720,7 @@ Return STRICT JSON only in this format:
 }
 
 IMPORTANT:
-- Leave correct_answer.answer empty
+- Fill correct_answer.answer with the correct option letter (A, B, C, D)
 - Leave rationale empty
 - Generate EXACTLY ${count} questions
 - No additional text or commentary
@@ -1024,7 +1024,7 @@ Return STRICT JSON only in this format:
         "4": "<sentence for position 4>",
         "5": ""
       },
-      "correct_answer": { "answer": "" },
+      "correct_answer": { "answer": "1234" },
       "rationale": "",
       "difficulty": "easy|medium|hard",
       "tags": [],
