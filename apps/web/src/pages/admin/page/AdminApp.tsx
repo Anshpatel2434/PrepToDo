@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
-import { useAdminAuth } from '../hooks/useAdminAuth';
+import { useAdminAuth, AdminAuthProvider } from '../hooks/useAdminAuth';
 import { useFetchUserQuery } from '../../auth/redux_usecases/authApi';
 
 // Lazy load pages
@@ -20,7 +20,17 @@ const AdminLoader = () => (
     </div>
 );
 
+// Wrapper that provides the context
 export default function AdminApp() {
+    return (
+        <AdminAuthProvider>
+            <AdminAppContent />
+        </AdminAuthProvider>
+    );
+}
+
+// Actual admin app content — reads from the shared context
+function AdminAppContent() {
     const { admin, isLoading: isAdminAuthLoading } = useAdminAuth();
     const { data: mainUser, isLoading: isMainAuthLoading } = useFetchUserQuery();
     const navigate = useNavigate();
