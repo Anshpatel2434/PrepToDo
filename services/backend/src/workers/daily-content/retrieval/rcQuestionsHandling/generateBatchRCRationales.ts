@@ -72,8 +72,8 @@ export async function generateBatchRCRationales(
     logger.info(`🧾 [Batch RC Rationales] Generating rationales for ${questions.length} questions in single API call`);
     // logger.debug("Input Reference Data:", JSON.stringify(referenceData, null, 2));
 
-    // Reduce reference data to 2 passages (from 3)
-    const reducedReferences = referenceData.slice(0, 2);
+    // Use ALL available reference data for maximum rationale quality
+    const reducedReferences = referenceData;
 
     // Filter out questions without reasoning context
     const validQuestions = questions.filter(q => {
@@ -137,6 +137,19 @@ IMPORTANT STYLE RULE:
 - The writing MUST feel like actual PYQ rationales — your output should be indistinguishable from rationales in actual CAT papers.
 - Rationales should be brilliant, clear, and easy to understand.
 - A student reading your rationale should gain genuine insight into WHY the answer is correct.
+
+CRITICAL — DEEP REFERENCE UTILIZATION:
+- You MUST deeply study EVERY reference rationale provided below.
+- Absorb the tone, structure, depth of analysis, and reasoning patterns from the reference rationales.
+- Your rationales must replicate the same analytical rigor, passage-anchoring precision, and elimination logic.
+- Study how reference rationales quote specific passage lines, how they frame eliminations, and what makes them effective.
+
+CRITICAL — REASONING GRAPH UTILIZATION:
+- The reasoning graph for each question contains nodes (reasoning steps) and edges (elimination cues).
+- You MUST use ALL reasoning steps and ALL elimination cues — not just the first few.
+- Each reasoning step tells you a specific cognitive move the student needs to make.
+- Each elimination cue tells you a specific relationship that helps eliminate a wrong option.
+- Weave these into natural-sounding rationale text WITHOUT exposing the graph structure.
 
 ---
 

@@ -11,18 +11,16 @@ import { generatePassage } from "./retrieval/passageHandling/generatePassage";
 import { searchPassageAndQuestionEmbeddings } from "./retrieval/searchPassageAndQuestionEmbeddings";
 import { fetchArticleForUsage } from "./retrieval/articleHandling/fetchArticleForUsage";
 import { generateRCQuestions, groupQuestionsWithPassages } from "./retrieval/rcQuestionsHandling/generateRCQuestions";
-import { selectCorrectAnswers } from "./retrieval/rcQuestionsHandling/selectCorrectAnswers";
 import { fetchNodes } from "./graph/fetchNodes";
 import { tagQuestionsWithNodes } from "./retrieval/rcQuestionsHandling/tagQuestionsWithNodes";
 import { getQuestionGraphContext } from "./graph/createReasoningGraphContext";
 import { generateBatchRCRationales } from "./retrieval/rcQuestionsHandling/generateBatchRCRationales";
 import { generateVAQuestions } from "./retrieval/vaQuestionsHandling/generateVAQuestions";
-import { selectVAAnswers } from "./retrieval/vaQuestionsHandling/selectVAAnswers";
 import { tagVAQuestionsWithNodes } from "./retrieval/vaQuestionsHandling/tagVAQuestionsWithNodes";
 import { generateBatchVARationales } from "./retrieval/vaQuestionsHandling/generateBatchVARationales";
 import { formatOutputForDB, generateOutputReport, validateOutputForDB } from "./retrieval/formatOutputForDB";
 import { saveAllDataToDB } from "./retrieval/saveAllDataToDB";
-import { createPassage, createRCQuestions, createVAQuestions, getQuestionsForProcessing, updateQuestionsWithAnswers, updateQuestionsWithRationalesAndTags } from "./retrieval/entityBuilder";
+import { createPassage, createRCQuestions, createVAQuestions, getQuestionsForProcessing, updateQuestionsWithRationalesAndTags } from "./retrieval/entityBuilder";
 import { db } from "../../db";
 import { examPapers, examGenerationState } from "../../db/schema";
 import { v4 as uuidv4 } from 'uuid';
@@ -218,42 +216,11 @@ export async function runCustomizedMocks(params: CustomizedMockRequest): Promise
         }
 
         // =========================================================================
-        // STEP 5: Select Answers
+        // STEP 5: Generate Rationales & Tagging (RC)
         // =========================================================================
-        await StateManager.update(examId, { status: 'selecting_answers', current_step: 5 });
+        await StateManager.update(examId, { status: 'generating_rc_rationales', current_step: 5 });
 
-        logger.info("📝 [Step 5] Selecting Answers...");
-
-        // RC Answers
-        const rcQuestions = getQuestionsForProcessing(dataManager, { questionType: 'rc_question' });
-        for (const passage of passages) {
-            const pQuestions = rcQuestions.filter(q => q.passage_id === passage.id);
-            if (pQuestions.length > 0) {
-                const answers = await selectCorrectAnswers({
-                    passageText: passage.content,
-                    questions: pQuestions
-                });
-                // Since selectCorrectAnswers returns full question objects (or subsets),
-                // we might need to assume it returns objects compatible with update
-                // The function currently returns updated question objects.
-                updateQuestionsWithAnswers(dataManager, answers);
-            }
-        }
-
-        // VA Answers
-        // Get VA questions (those without passage_id)
-        const vaQuestionsDB = dataManager.getQuestionsForDB().filter(q => !q.passage_id);
-        if (vaQuestionsDB.length > 0) {
-            const vaAnswers = await selectVAAnswers({ questions: vaQuestionsDB });
-            updateQuestionsWithAnswers(dataManager, vaAnswers);
-        }
-
-        // =========================================================================
-        // STEP 6: Generate Rationales & Tagging (RC)
-        // =========================================================================
-        await StateManager.update(examId, { status: 'generating_rc_rationales', current_step: 6 });
-
-        logger.info("📝 [Step 6] Generating RC Rationales & Tagging...");
+        logger.info("📝 [Step 5] Generating RC Rationales & Tagging...");
 
         // Fetch and strict filter nodes
         const rawNodes = await fetchNodes();
@@ -291,12 +258,13 @@ export async function runCustomizedMocks(params: CustomizedMockRequest): Promise
         }
 
         // =========================================================================
-        // STEP 7: Generate Rationales (VA) & Finalize
+        // STEP 6: Generate Rationales (VA) & Finalize
         // =========================================================================
-        await StateManager.update(examId, { status: 'generating_va_rationales', current_step: 7 });
+        await StateManager.update(examId, { status: 'generating_va_rationales', current_step: 6 });
 
-        logger.info("📝 [Step 7] Generating VA Rationales...");
+        logger.info("📝 [Step 6] Generating VA Rationales...");
 
+        const vaQuestionsDB = dataManager.getQuestionsForDB().filter(q => !q.passage_id);
         if (vaQuestionsDB.length > 0) {
             // 1. Tag
             const taggedVA = await tagVAQuestionsWithNodes({ questions: vaQuestionsDB });

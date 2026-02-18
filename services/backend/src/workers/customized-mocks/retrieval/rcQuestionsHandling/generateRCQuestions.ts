@@ -358,6 +358,24 @@ INTERNAL QUALITY CHECK (do not output):
 
 ---
 
+### ANSWER SELECTION (MANDATORY — DO THIS DURING GENERATION)
+
+⚠️ CRITICAL: You MUST select the correct answer for EACH question AS YOU CREATE IT.
+Do NOT leave correct_answer.answer empty.
+
+For each question:
+1. Re-read the passage carefully
+2. Verify which option is EXCLUSIVELY supported by the passage
+3. Confirm the other 3 options are WRONG for specific, identifiable reasons
+4. Set correct_answer.answer to the correct letter (A, B, C, or D)
+
+ANSWER DISTRIBUTION RULE:
+- Across all ${questionCount} questions, distribute correct answers roughly equally among A, B, C, and D
+- Do NOT make all answers the same letter
+- Aim for maximum variety in correct answer positions
+
+---
+
 ### OUTPUT FORMAT
 
 Return STRICT JSON only in this format:
@@ -370,7 +388,7 @@ Return STRICT JSON only in this format:
       "question_type": "rc_question",
       "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
       "jumbled_sentences": { "1": "", "2": "", "3": "", "4": "", "5": "" },
-      "correct_answer": { "answer": "" },
+      "correct_answer": { "answer": "A|B|C|D" },
       "rationale": "",
       "difficulty": "easy|medium|hard",
       "tags": [],
@@ -381,12 +399,11 @@ Return STRICT JSON only in this format:
 }
 
 IMPORTANT:
-- Leave correct_answer.answer empty
-- Leave rationale empty
+- You MUST fill correct_answer.answer with the correct option letter (A, B, C, or D)
+- Leave rationale empty (rationales are generated separately)
 - Generate EXACTLY ${questionCount} questions
 - No additional text or commentary
-- The question should be able to assess the metrics from
-- The question should be able to assess the metrics from ${JSON.stringify(user_core_metrics_definition_v1)} file and try to divide all the metrics across 4 questions. file and try to divide all the metrics across all questions.
+- The question should be able to assess the metrics from ${JSON.stringify(user_core_metrics_definition_v1)} and try to divide all the metrics across all questions.
 `;
 
     logger.info("⏳ [RC Questions] Waiting for LLM to generate questions");
@@ -399,7 +416,7 @@ IMPORTANT:
             {
                 role: "system",
                 content:
-                    "You are a CAT VARC examiner. You design reasoning questions with carefully constructed traps. You do not solve questions or provide explanations.",
+                    "You are a CAT VARC examiner. You design reasoning questions with carefully constructed traps. You also select the correct answer for each question based on the passage.",
             },
             {
                 role: "user",
@@ -429,11 +446,49 @@ IMPORTANT:
     logger.info(`✅ [RC Questions] Generated ${parsed.questions.length} questions`);
 
     const now = new Date().toISOString();
-    return parsed.questions.map(q => ({
-        ...q,
-        id: uuidv4(),
-        passage_id: passageData.passageData.id,
-        created_at: now,
-        updated_at: now
-    }));
+
+    // Post-processing: Shuffle options to guarantee no positional bias
+    const shuffledQuestions = parsed.questions.map(q => {
+        const optionKeys = ["A", "B", "C", "D"] as const;
+        const entries = optionKeys.map(k => ({ key: k, text: (q.options as Record<string, string>)[k] }));
+
+        // Fisher-Yates shuffle
+        for (let i = entries.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [entries[i], entries[j]] = [entries[j], entries[i]];
+        }
+
+        // Rebuild options with new positions
+        const newOptions: Record<string, string> = {};
+        let newCorrectAnswer = q.correct_answer?.answer || "A";
+        const originalCorrectText = (q.options as Record<string, string>)[newCorrectAnswer];
+
+        entries.forEach((entry, idx) => {
+            const newKey = optionKeys[idx];
+            newOptions[newKey] = entry.text;
+            if (entry.text === originalCorrectText) {
+                newCorrectAnswer = newKey;
+            }
+        });
+
+        return {
+            ...q,
+            id: uuidv4(),
+            passage_id: passageData.passageData.id,
+            options: newOptions,
+            correct_answer: { answer: newCorrectAnswer },
+            created_at: now,
+            updated_at: now
+        };
+    });
+
+    // Log answer distribution
+    const distribution = shuffledQuestions.reduce((acc, q) => {
+        const ans = q.correct_answer?.answer || "?";
+        acc[ans] = (acc[ans] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+    logger.info(`📊 [RC Questions] Answer distribution: ${JSON.stringify(distribution)}`);
+
+    return shuffledQuestions;
 }

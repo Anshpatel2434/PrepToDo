@@ -28,15 +28,12 @@ import {
     createPassage,
     createRCQuestions,
     createVAQuestions,
-    updateQuestionsWithAnswers,
     updateQuestionsWithRationalesAndTags,
     getQuestionsForProcessing
 } from "./retrieval/entityBuilder";
 
 import type { DailyContentResult, Passage, Question } from "./types";
 import { generatePassage } from "./retrieval/passageHandling/generatePassage";
-import { selectCorrectAnswers } from "./retrieval/rcQuestionsHandling/selectCorrectAnswers";
-import { selectVAAnswers } from "./retrieval/vaQuestionsHandling/selectVAAnswers";
 import { tagQuestionsWithNodes } from "./retrieval/rcQuestionsHandling/tagQuestionsWithNodes";
 import { tagVAQuestionsWithNodes } from "./retrieval/vaQuestionsHandling/tagVAQuestionsWithNodes";
 import { generateBatchRCRationales } from "./retrieval/rcQuestionsHandling/generateBatchRCRationales";
@@ -149,33 +146,13 @@ export async function runDailyContent(): Promise<DailyContentResult> {
         const vaQuestionIds = createVAQuestions(dataManager, vaQuestionsRaw);
         logger.info(`✅ [VA Questions] Created ${vaQuestionIds.length} questions`);
 
-        // --- PHASE 5: ANSWER SELECTION ---
-        logger.info("\n✅ [Step 8/15] Selecting correct answers for RC");
-        const allRCQuestions = getQuestionsForProcessing(dataManager).filter(q => q.passage_id !== null);
-        const rcQuestionsWithAnswers = await selectCorrectAnswers({
-            passageText,
-            questions: allRCQuestions,
-        });
-
-        // Update RC questions with answers
-        updateQuestionsWithAnswers(dataManager, rcQuestionsWithAnswers);
-
-        logger.info("\n✅ [Step 10/15] Selecting correct answers for VA");
-        const allVAQuestions = getQuestionsForProcessing(dataManager).filter(q => q.passage_id === null);
-        const vaQuestionsWithAnswers = await selectVAAnswers({
-            questions: allVAQuestions,
-        });
-
-        // Update VA questions with answers
-        updateQuestionsWithAnswers(dataManager, vaQuestionsWithAnswers);
-
-        // --- PHASE 6: GRAPH & RATIONALES ---
-        logger.info("\n🏷️ [Step 11/15] Fetching reasoning graph nodes");
+        // --- PHASE 5: GRAPH & RATIONALES ---
+        logger.info("\n🏷️ [Step 8/12] Fetching reasoning graph nodes");
         const nodes = await fetchNodes();
 
-        logger.info("\n🕸️ [Step 12/15] Tagging questions and building graph context");
+        logger.info("\n🕸️ [Step 9/12] Tagging questions and building graph context");
 
-        // Get updated questions after answer selection
+        // Get questions (answers are already embedded from generation)
         const updatedRCQuestions = getQuestionsForProcessing(dataManager).filter(q => q.passage_id !== null);
         const updatedVAQuestions = getQuestionsForProcessing(dataManager).filter(q => q.passage_id === null);
 
@@ -185,7 +162,7 @@ export async function runDailyContent(): Promise<DailyContentResult> {
         const rcContext = await getQuestionGraphContext(rcTagged, nodes as any);
         const vaContext = await getQuestionGraphContext(vaTagged, nodes as any);
 
-        logger.info("\n🧾 [Step 13/15] Generating rationales for RC (batched)");
+        logger.info("\n🧾 [Step 10/12] Generating rationales for RC (batched)");
         const rcQuestionsFinal = await generateBatchRCRationales({
             passageText,
             questions: updatedRCQuestions,
@@ -196,7 +173,7 @@ export async function runDailyContent(): Promise<DailyContentResult> {
         // Update RC questions with rationales and tags
         updateQuestionsWithRationalesAndTags(dataManager, rcQuestionsFinal);
 
-        logger.info("\n🧾 [Step 14/15] Generating rationales for VA (batched)");
+        logger.info("\n🧾 [Step 11/12] Generating rationales for VA (batched)");
         const vaQuestionsFinal = await generateBatchVARationales({
             questions: updatedVAQuestions,
             reasoningContexts: vaContext,
@@ -206,8 +183,8 @@ export async function runDailyContent(): Promise<DailyContentResult> {
         // Update VA questions with rationales and tags
         updateQuestionsWithRationalesAndTags(dataManager, vaQuestionsFinal);
 
-        // --- PHASE 7: FINALIZATION ---
-        logger.info("\n📋 [Step 15/16] Formatting output for database upload");
+        // --- PHASE 6: FINALIZATION ---
+        logger.info("\n📋 [Step 12/12] Formatting output for database upload");
 
         // Format output using DataManager
         const output = formatOutputForDB(dataManager, genre);

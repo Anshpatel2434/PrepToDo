@@ -101,7 +101,7 @@ CORRECT ANSWER: ${extractCorrectAnswerString(q.correct_answer)}
 REASONING GRAPH (Hidden Rubric):
 Core Metrics: ${context.metric_keys.join(", ")}
 Reasoning steps: ${context.nodes.map(n => `${n.label}: ${n.justification}`).join("; ")}
-Elimination cues: ${context.edges.slice(0, 2).map(e => `${e.relationship} from ${e.source_node_label} to ${e.target_node_label}`).join("; ")}
+Elimination cues: ${context.edges.map(e => `${e.relationship} from ${e.source_node_label} to ${e.target_node_label}`).join("; ")}
 `;
         }).filter(Boolean).join("\n");
 
@@ -109,7 +109,7 @@ Elimination cues: ${context.edges.slice(0, 2).map(e => `${e.relationship} from $
         const referenceExamples = Object.keys(questionsByType).map(qType => {
             const examples = referenceQuestions
                 .filter(q => q.question_type === qType)
-                .slice(0, 2);
+                .slice(0, 4);
 
             if (examples.length === 0) return "";
 
@@ -135,6 +135,19 @@ IMPORTANT:
 - Do NOT use section headers like "PART 1"
 - Write like actual PYQ rationales — your output MUST be indistinguishable from rationales in actual CAT papers
 - Rationales should be brilliant, clear, and easy to understand
+
+CRITICAL — DEEP REFERENCE UTILIZATION:
+- You MUST deeply study EVERY reference rationale provided below.
+- Absorb the tone, structure, depth of analysis, and reasoning patterns from the reference rationales.
+- Your rationales must replicate the same analytical rigor and elimination logic as the references.
+- Pay attention to how reference rationales explain WHY wrong options are tempting and exactly where they fail.
+
+CRITICAL — REASONING GRAPH UTILIZATION:
+- The reasoning graph for each question contains reasoning steps and elimination cues.
+- You MUST use ALL reasoning steps and ALL elimination cues in your rationale — not just the first few.
+- Each reasoning step guides the cognitive move the student needs to understand.
+- Each elimination cue helps target specific wrong options. Use every one of them.
+- Weave these into natural-sounding text WITHOUT exposing graph structure.
 
 ---
 
