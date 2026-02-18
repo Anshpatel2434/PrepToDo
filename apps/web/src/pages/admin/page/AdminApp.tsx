@@ -66,13 +66,9 @@ function AdminAppContent() {
         }
     }, [mainUser, isMainAuthLoading, navigate]);
 
-    // Redirect if admin check completed and failed
-    useEffect(() => {
-        if (!isAdminAuthLoading && !admin && hasTriggeredCheckRef.current && mainUser?.role === 'admin') {
-            // Admin check completed but failed — no admin session
-            navigate('/auth', { replace: true });
-        }
-    }, [admin, isAdminAuthLoading, mainUser, navigate]);
+    // Note: We do NOT redirect to /auth if admin check fails when the user IS an admin.
+    // That would cause an infinite redirect loop (user is logged in → gets redirected back).
+    // Instead, the loader stays visible while auto-login attempts to establish the admin session.
 
     if (isLoading || !admin) {
         return <AdminLoader />;

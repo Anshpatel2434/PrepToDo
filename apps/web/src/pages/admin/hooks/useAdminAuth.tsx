@@ -40,9 +40,16 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
     const attemptAutoLogin = useCallback(async (): Promise<boolean> => {
         try {
+            // Auto-login uses requireAuth (user auth), so we need the USER's token
+            const userToken = localStorage.getItem('preptodo_access_token');
+            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+            if (userToken) {
+                headers['Authorization'] = `Bearer ${userToken}`;
+            }
+
             const response = await fetch(`${BACKEND_URL}/api/admin/auth/auto-login`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
                 credentials: 'include',
             });
 
