@@ -24,3 +24,6 @@ logs
 dev_server.log
 
 .agent
+
+temp_docs
+goldmine

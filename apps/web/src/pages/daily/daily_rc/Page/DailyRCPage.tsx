@@ -296,6 +296,32 @@ export default function DailyRCPage() {
             }).unwrap();
 
             // 3. Update UI Mode ONLY after success
+            // Fetch updated session data to get correct answers and insights
+            if (user && currentTestData) {
+                const sessionResult = await fetchExistingSession({
+                    user_id: user.id,
+                    paper_id: currentTestData.examInfo.id,
+                    session_type: "daily_challenge_rc",
+                });
+
+                if (sessionResult.data && sessionResult.data.session) {
+                    const rcQuestions = currentTestData.questions.filter(
+                        (q: Question) =>
+                            q.question_type === "rc_question" || q.passage_id !== null
+                    );
+                    const questionIds = rcQuestions.map((q: Question) => q.id);
+
+                    dispatch(
+                        initializeSession({
+                            session: sessionResult.data.session,
+                            questionIds,
+                            existingAttempts: sessionResult.data.attempts,
+                            elapsedTime: sessionResult.data.session.time_spent_seconds,
+                            status: sessionResult.data.session.status,
+                        })
+                    );
+                }
+            }
             dispatch(setViewMode("solution"));
         } catch (err) {
             console.error("Failed to submit exam:", err);

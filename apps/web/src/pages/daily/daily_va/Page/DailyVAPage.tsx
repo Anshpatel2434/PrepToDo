@@ -278,6 +278,29 @@ const DailyVAPage: React.FC = () => {
                     current_question_index: currentQuestionIndex,
                 }).unwrap();
 
+                // Fetch updated session data to get correct answers and insights
+                if (user && currentTestData) {
+                    const sessionResult = await fetchExistingSession({
+                        user_id: user.id,
+                        paper_id: currentTestData.examInfo.id,
+                        session_type: "daily_challenge_va",
+                    });
+
+                    if (sessionResult.data && sessionResult.data.session) {
+                        const questionIds = questions.map((q) => q.id);
+
+                        dispatch(
+                            initializeSession({
+                                session: sessionResult.data.session,
+                                questionIds,
+                                existingAttempts: sessionResult.data.attempts,
+                                elapsedTime: sessionResult.data.session.time_spent_seconds,
+                                status: sessionResult.data.session.status,
+                            })
+                        );
+                    }
+                }
+
                 dispatch(setViewMode("solution"));
                 showToast.success("Practice submitted successfully!");
             } catch (e: any) {

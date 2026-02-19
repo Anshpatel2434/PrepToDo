@@ -344,6 +344,24 @@ const MockTestPage: React.FC = () => {
                 attemptList.length > 0 ? saveAttempts({ attempts: attemptList }).unwrap() : Promise.resolve(),
             ]);
 
+            // Fetch updated session data to get correct answers and insights
+            if (testData) {
+                const sessionResult = await fetchExistingSession({
+                    user_id: user?.id || "",
+                    paper_id: testData.examInfo.id,
+                });
+
+                if (sessionResult.data) {
+                    dispatch(initializeSession({
+                        session: sessionResult.data.session,
+                        questionIds: questionOrder,
+                        existingAttempts: sessionResult.data.attempts,
+                        elapsedTime: sessionResult.data.session.time_spent_seconds,
+                        status: sessionResult.data.session.status,
+                    }));
+                }
+            }
+
             dispatch(setViewMode("solution"));
         } catch (err) {
             console.error("Auto-submit failed:", err);
@@ -400,6 +418,25 @@ const MockTestPage: React.FC = () => {
                 }).unwrap(),
                 attemptList.length > 0 ? saveAttempts({ attempts: attemptList }).unwrap() : Promise.resolve(),
             ]);
+
+            // Fetch updated session data to get correct answers and insights
+            // Fetch updated session data to get correct answers and insights
+            if (testData) {
+                const sessionResult = await fetchExistingSession({
+                    user_id: user?.id || "",
+                    paper_id: testData.examInfo.id,
+                });
+
+                if (sessionResult.data) {
+                    dispatch(initializeSession({
+                        session: sessionResult.data.session,
+                        questionIds: questionOrder,
+                        existingAttempts: sessionResult.data.attempts,
+                        elapsedTime: sessionResult.data.session.time_spent_seconds,
+                        status: sessionResult.data.session.status,
+                    }));
+                }
+            }
 
             dispatch(setViewMode("solution"));
         } catch (err) {
