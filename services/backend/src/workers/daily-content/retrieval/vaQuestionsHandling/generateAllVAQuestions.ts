@@ -408,6 +408,7 @@ CAT para completion relies on:
 - Options: {"A": "Option 1", "B": "Option 2", "C": "Option 3", "D": "Option 4"}
 - Set jumbled_sentences to: {"1": "", "2": "", "3": "", "4": "", "5": ""}
 - Question Text: "There is a sentence that is missing in the paragraph below. Look at the paragraph and decide in which blank (option 1, 2, 3, or 4) the following sentence would best fit.\\nSentence: <sentence>\\nParagraph: <paragraph with blanks ___(1)___, ___(2)___, ___(3)___, ___(4)___>"
+- Set correct_answer.answer to "(The correct option from A,B,C or D here)"
 
 ---
 
