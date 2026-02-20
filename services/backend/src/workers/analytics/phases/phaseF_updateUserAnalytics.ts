@@ -132,8 +132,11 @@ export async function phaseF_updateUserAnalytics(
     const streakData = await calculateStreaks(user_id, today, hasSessionToday, existingAnalytics);
 
     // 10. Determine if we need to reset daily stats (new day)
-    const lastActiveDate = existingAnalytics?.last_active_date;
-    const isNewDay = !lastActiveDate || lastActiveDate !== today;
+    // We use updated_at for points, so we don't overload last_active_date
+    const lastUpdateIST = existingAnalytics?.updated_at
+        ? TimeService.getISTDateString(new Date(existingAnalytics.updated_at))
+        : null;
+    const isNewDayForPoints = !lastUpdateIST || lastUpdateIST !== today;
 
     // 11. Calculate points earned today (with streak bonus)
     // Base points = number of correct answers
@@ -142,7 +145,7 @@ export async function phaseF_updateUserAnalytics(
     const pointsWithBonus = Math.floor(basePointsEarned * streakMultiplier);
 
     let points_earned_today: number;
-    if (isNewDay) {
+    if (isNewDayForPoints) {
         // New day - reset daily points
         points_earned_today = pointsWithBonus;
     } else {
@@ -160,7 +163,7 @@ export async function phaseF_updateUserAnalytics(
 
     const upsertData = {
         user_id,
-        last_active_date: today,
+        last_active_date: hasSessionToday ? today : (existingAnalytics?.last_active_date || today),
         minutes_practiced: (existingAnalytics?.minutes_practiced || 0) + minutes_practiced,
         questions_attempted: (existingAnalytics?.questions_attempted || 0) + questions_attempted,
         questions_correct: (existingAnalytics?.questions_correct || 0) + questions_correct,
@@ -213,7 +216,7 @@ export async function phaseF_updateUserAnalytics(
         questions_attempted,
         questions_correct,
         accuracy_percentage,
-        last_active_date: today,
+        last_active_date: hasSessionToday ? today : (existingAnalytics?.last_active_date || today),
         points_earned_today,
         genre_performance,
         difficulty_performance,
@@ -591,9 +594,28 @@ async function calculateStreaks(
                 }
             }
         } else {
-            // User does NOT have >= 10 minutes today - streak is broken
-            currentStreak = 0;
-            logger.info("No qualifying session today: streak broken");
+            // User does NOT have >= 5 minutes today
+            if (!lastActiveDate) {
+                currentStreak = 0;
+            } else {
+                const lastDate = new Date(lastActiveDate + 'T00:00:00Z');
+                const todayDate = new Date(today + 'T00:00:00Z');
+                const msPerDay = 1000 * 60 * 60 * 24;
+                const daysDiff = Math.floor((todayDate.getTime() - lastDate.getTime()) / msPerDay);
+
+                if (daysDiff === 0) {
+                    currentStreak = previousStreak;
+                } else if (daysDiff === 1) {
+                    // They practiced yesterday! They still have the whole day today to practice.
+                    // DO NOT break the streak yet.
+                    currentStreak = previousStreak;
+                    logger.info("Streak maintained from yesterday (user still has time today to practice)");
+                } else {
+                    // They didn't practice yesterday (daysDiff > 1). Streak broken!
+                    currentStreak = 0;
+                    logger.info({ gap: daysDiff }, "No qualifying session yesterday: streak broken");
+                }
+            }
         }
 
         // Longest streak is max of current and previous longest
