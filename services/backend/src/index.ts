@@ -17,6 +17,7 @@ import { dailyContentRouter } from './features/daily-content/index.js';
 import { adminRouter } from './features/admin/index.js';
 import { aiInsightsRouter } from './features/ai-insights/ai-insights.routes.js';
 import internalRouter from './routes/internal.js';
+import { personaForumRouter } from './features/persona-forum/persona-forum.routes.js';
 import { logger, httpLogger } from './common/utils/logger.js';
 import pinoHttp from 'pino-http';
 
@@ -110,6 +111,9 @@ app.use('/api/admin', adminRouter);
 
 // Future feature routes will be mounted here:
 // app.use('/api/exams', examsRouter);
+
+// Phase 3: Persona Forum (Heartbeat trigger + public feed)
+app.use('/api/persona-forum', personaForumRouter);
 
 // =============================================================================
 // Error Handling

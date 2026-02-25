@@ -482,6 +482,42 @@ export const embeddingsTable = pgTable('embeddings', {
 });
 
 // =============================================================================
+// Phase 3: Persona Forum Tables
+// =============================================================================
+export const forumThreads = pgTable('forum_threads', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    title: text('title').notNull(),
+    slug: varchar('slug', { length: 255 }).notNull().unique(),
+    category: varchar('category', { length: 100 }),
+    seo_description: text('seo_description'),
+    schema_type: varchar('schema_type', { length: 50 }).default('BlogPosting'),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const forumPosts = pgTable('forum_posts', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    thread_id: uuid('thread_id').notNull().references(() => forumThreads.id, { onDelete: 'cascade' }),
+    content: text('content').notNull(),
+    mood: varchar('mood', { length: 100 }),
+    answer_summary: text('answer_summary'),
+    tags: text('tags').array(),
+    target_query: text('target_query'),
+    persona_state_snapshot: ps.jsonb('persona_state_snapshot'),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const personaState = pgTable('persona_state', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    current_mood: varchar('current_mood', { length: 100 }).default('caffeinated'),
+    mood_history: ps.jsonb('mood_history').default([]),
+    topics_covered: text('topics_covered').array().default([]),
+    last_heartbeat_at: timestamp('last_heartbeat_at', { withTimezone: true }),
+    heartbeat_count: integer('heartbeat_count').default(0),
+    creative_seed: integer('creative_seed').default(0),
+    updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+// =============================================================================
 // Type Exports
 // =============================================================================
 export type User = typeof users.$inferSelect;
@@ -515,6 +551,11 @@ export type TheoryChunk = typeof theoryChunks.$inferSelect;
 export type NewTheoryChunk = typeof theoryChunks.$inferInsert;
 export type Embedding = typeof embeddingsTable.$inferSelect;
 export type NewEmbedding = typeof embeddingsTable.$inferInsert;
+export type ForumThread = typeof forumThreads.$inferSelect;
+export type NewForumThread = typeof forumThreads.$inferInsert;
+export type ForumPost = typeof forumPosts.$inferSelect;
+export type NewForumPost = typeof forumPosts.$inferInsert;
+export type PersonaState = typeof personaState.$inferSelect;
 
 // Legacy alias for backwards compatibility
 export const authUsers = users;
