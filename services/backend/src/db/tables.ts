@@ -433,6 +433,55 @@ export const graphEdges = pgTable('graph_edges', {
 });
 
 // =============================================================================
+// Librarian Layer: Theory Chunks (Knowledge Fabric)
+// =============================================================================
+export const theoryChunks = pgTable('theory_chunks', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    topic: text('topic').notNull(),
+    sub_topic: text('sub_topic').notNull(),
+    concept_title: text('concept_title').notNull(),
+    content: text('content').notNull(),
+    source_pdf: text('source_pdf'),
+    page_number: integer('page_number'),
+    example_text: text('example_text'),
+    semantic_hash: text('semantic_hash'),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// =============================================================================
+// Librarian Layer: Embeddings (Vector Search via pgvector)
+// =============================================================================
+// Custom type for pgvector's vector(1536) column.
+// Drizzle doesn't natively support pgvector, so we use customType.
+const vector1536 = ps.customType<{ data: number[]; driverValue: string }>({
+    dataType() {
+        return 'vector(1536)';
+    },
+    toDriver(value: number[]): string {
+        return `[${value.join(',')}]`;
+    },
+    fromDriver(value: unknown): number[] {
+        // pgvector returns strings like "[0.1,0.2,...]"
+        if (typeof value === 'string') {
+            return JSON.parse(value);
+        }
+        return value as number[];
+    },
+});
+
+export const embeddingsTable = pgTable('embeddings', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    embedding: vector1536('embedding').notNull(),
+    embedding_model: text('embedding_model').default('text-embedding-3-small'),
+    theory_id: uuid('theory_id').references(() => theoryChunks.id, { onDelete: 'cascade' }),
+    passage_id: uuid('passage_id').references(() => passages.id, { onDelete: 'cascade' }),
+    question_id: uuid('question_id').references(() => questions.id, { onDelete: 'cascade' }),
+    content_preview: text('content_preview'),
+    metadata: ps.jsonb('metadata'),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// =============================================================================
 // Type Exports
 // =============================================================================
 export type User = typeof users.$inferSelect;
@@ -462,6 +511,10 @@ export type ExamGenerationState = typeof examGenerationState.$inferSelect;
 export type NewExamGenerationState = typeof examGenerationState.$inferInsert;
 export type GraphNode = typeof graphNodes.$inferSelect;
 export type GraphEdge = typeof graphEdges.$inferSelect;
+export type TheoryChunk = typeof theoryChunks.$inferSelect;
+export type NewTheoryChunk = typeof theoryChunks.$inferInsert;
+export type Embedding = typeof embeddingsTable.$inferSelect;
+export type NewEmbedding = typeof embeddingsTable.$inferInsert;
 
 // Legacy alias for backwards compatibility
 export const authUsers = users;

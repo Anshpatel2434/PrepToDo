@@ -174,7 +174,7 @@ const DailyPage: React.FC = () => {
                                 {/* Segmented Toggle (Refactored with framer-motion) */}
                                 <div
                                     className={cn(
-                                        "p-1 rounded-lg flex items-center relative",
+                                        "p-1 rounded-lg flex items-center relative hidden",
                                         isDark ? "bg-bg-tertiary-dark" : "bg-gray-100"
                                     )}
                                     role="tablist"

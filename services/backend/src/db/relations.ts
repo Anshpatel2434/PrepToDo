@@ -13,6 +13,8 @@ import {
     articles,
     graphEdges,
     graphNodes,
+    theoryChunks,
+    embeddingsTable,
 } from './tables.js';
 
 // =============================================================================
@@ -109,5 +111,32 @@ export const graphEdgesRelations = relations(graphEdges, ({ one }) => ({
         fields: [graphEdges.target_node_id],
         references: [graphNodes.id],
         relationName: 'targetNode',
+    }),
+}));
+
+export const graphNodesRelations = relations(graphNodes, ({ many }) => ({
+    outgoingEdges: many(graphEdges, { relationName: 'sourceNode' }),
+    incomingEdges: many(graphEdges, { relationName: 'targetNode' }),
+}));
+
+// =============================================================================
+// Librarian Layer Relations
+// =============================================================================
+export const theoryChunksRelations = relations(theoryChunks, ({ many }) => ({
+    embeddings: many(embeddingsTable),
+}));
+
+export const embeddingsRelations = relations(embeddingsTable, ({ one }) => ({
+    theoryChunk: one(theoryChunks, {
+        fields: [embeddingsTable.theory_id],
+        references: [theoryChunks.id],
+    }),
+    passage: one(passages, {
+        fields: [embeddingsTable.passage_id],
+        references: [passages.id],
+    }),
+    question: one(questions, {
+        fields: [embeddingsTable.question_id],
+        references: [questions.id],
     }),
 }));
