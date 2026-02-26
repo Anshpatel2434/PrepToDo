@@ -2,17 +2,16 @@
 // Persona Forum — Heartbeat Runner
 // =============================================================================
 //
-// The main Runner loop for the AI tutor persona. Follows the Heartbeat Engine
-// cycle from the Blueprint (L209-238):
+// The main Runner loop for the AI tutor persona. Follows the Heartbeat Engine:
 //
 //   Wake     → Read persona_state from DB
 //   Check    → Check topics_covered, seasonal context, heartbeat count
 //   Reason   → Select mood (moodEngine) + topic (topicEngine)
 //   Act      → Build S-I-O prompt → GPT-4o-mini → generate post
-//   Maintain → Save to forum_posts, update persona_state, write daily log
+//   Maintain → Save to forum_posts, update persona_state, log cost
 //   Sleep    → Log HEARTBEAT_OK
 //
-// This is a STANDALONE function. User triggers it via API endpoint + cron job.
+// All state lives in the database — NO filesystem writes.
 // =============================================================================
 
 import { db } from '../../db/index.js';
@@ -20,10 +19,9 @@ import {
     personaState,
     forumThreads,
     forumPosts,
+    adminAiCostLog,
 } from '../../db/tables.js';
 import { eq, sql, gte } from 'drizzle-orm';
-import { writeFileSync, existsSync, mkdirSync } from 'fs';
-import { resolve } from 'path';
 import { createChildLogger } from '../../common/utils/logger.js';
 import { openai } from '../../config/openai.js';
 import { generateMoodProfile } from './prompts/moodEngine.js';
@@ -32,15 +30,30 @@ import { buildPersonaPrompt } from './prompts/buildPersonaPrompt.js';
 import { gatherStudentContext } from './context/gatherStudentContext.js';
 
 const logger = createChildLogger('persona-heartbeat');
-const MEMORY_DIR = resolve(process.cwd(), 'src', 'workers', 'persona-forum', 'memory');
+
+// ---------------------------------------------------------------------------
+// GPT-4o-mini pricing (per token)
+// ---------------------------------------------------------------------------
+const PRICING = {
+    'gpt-4o-mini': { input: 0.15 / 1_000_000, output: 0.60 / 1_000_000 },
+} as const;
+
+function calculateCostUsd(
+    model: string,
+    inputTokens: number,
+    outputTokens: number,
+): string {
+    const rates = PRICING[model as keyof typeof PRICING] ?? PRICING['gpt-4o-mini'];
+    const cost = inputTokens * rates.input + outputTokens * rates.output;
+    return cost.toFixed(9);
+}
 
 // ---------------------------------------------------------------------------
 // Heartbeat Response Schema (parsed from LLM JSON output)
 // ---------------------------------------------------------------------------
-
 interface HeartbeatPostOutput {
     seo_title: string;
-    answer_summary: string;
+    seo_query: string;
     content: string;
     mood_after: string;
     tags: string[];
@@ -50,7 +63,6 @@ interface HeartbeatPostOutput {
 // ---------------------------------------------------------------------------
 // Main Heartbeat Runner
 // ---------------------------------------------------------------------------
-
 export async function runPersonaHeartbeat(): Promise<{
     success: boolean;
     postId?: string;
@@ -68,17 +80,19 @@ export async function runPersonaHeartbeat(): Promise<{
         const state = stateRows[0];
         logger.info(`💓 [Heartbeat] State loaded: mood=${state.current_mood}, heartbeat=#${state.heartbeat_count}`);
 
-        // ── SAFETY: Cooldown check (prevent accidental rapid-fire calls) ──
-        const COOLDOWN_MINUTES = 15;
+        // ── SAFETY: Cooldown check ──────────────────────────────────────
+        // Dev = 1 min, Prod = 15 min (check NODE_ENV)
+        const isDev = process.env.NODE_ENV !== 'production';
+        const COOLDOWN_MINUTES = isDev ? 1 : 15;
         if (state.last_heartbeat_at) {
             const minutesSinceLastBeat = (now.getTime() - new Date(state.last_heartbeat_at).getTime()) / 60000;
             if (minutesSinceLastBeat < COOLDOWN_MINUTES) {
-                logger.warn(`⚠️ [Heartbeat] Cooldown active — last beat was ${minutesSinceLastBeat.toFixed(1)} min ago (min: ${COOLDOWN_MINUTES}). Skipping.`);
-                return { success: false, error: `Cooldown: ${COOLDOWN_MINUTES - Math.floor(minutesSinceLastBeat)} minutes remaining` };
+                logger.warn(`⚠️ [Heartbeat] Cooldown active — ${minutesSinceLastBeat.toFixed(1)} min since last beat. Skipping.`);
+                return { success: false, error: `Cooldown: ${Math.ceil(COOLDOWN_MINUTES - minutesSinceLastBeat)} minutes remaining` };
             }
         }
 
-        // ── SAFETY: Daily post cap (max 10 posts per day) ────────────────
+        // ── SAFETY: Daily post cap ──────────────────────────────────────
         const MAX_DAILY_POSTS = 10;
         const todayStart = new Date(now);
         todayStart.setUTCHours(0, 0, 0, 0);
@@ -91,7 +105,7 @@ export async function runPersonaHeartbeat(): Promise<{
             return { success: false, error: `Daily post cap reached: ${postsToday}/${MAX_DAILY_POSTS}` };
         }
 
-        // ── CHECK: Evaluate current context ─────────────────────────────
+        // ── CHECK ───────────────────────────────────────────────────────
         const topicsCovered = state.topics_covered ?? [];
         const heartbeatCount = state.heartbeat_count ?? 0;
         const creativeSeed = state.creative_seed ?? 0;
@@ -115,16 +129,17 @@ export async function runPersonaHeartbeat(): Promise<{
             heartbeatCount,
         });
 
-        logger.info(`🤖 [Heartbeat] Calling GPT-4o-mini (temp=${prompt.temperature})`);
+        const modelName = 'gpt-4o-mini';
+        logger.info(`🤖 [Heartbeat] Calling ${modelName} (temp=${prompt.temperature})`);
 
         const completion = await openai.chat.completions.create({
-            model: 'gpt-4o-mini',
+            model: modelName,
             messages: [
                 { role: 'system', content: prompt.systemMessage },
                 { role: 'user', content: prompt.userMessage },
             ],
             temperature: prompt.temperature,
-            max_tokens: 1500,
+            max_tokens: 300,
             response_format: { type: 'json_object' },
         });
 
@@ -136,7 +151,7 @@ export async function runPersonaHeartbeat(): Promise<{
         const postOutput: HeartbeatPostOutput = JSON.parse(rawOutput);
         logger.info(`✍️ [Heartbeat] Post generated: "${postOutput.seo_title}"`);
 
-        // ── MAINTAIN: Save post + update state ──────────────────────────
+        // ── MAINTAIN: Save post + update state + log cost ────────────────
         logger.info('💓 [Heartbeat] ═══ MAINTAIN ═══');
 
         // 1. Create or reuse thread
@@ -147,10 +162,10 @@ export async function runPersonaHeartbeat(): Promise<{
 
         if (!thread) {
             const [newThread] = await db.insert(forumThreads).values({
-                title: `${topic.category.replace(/-/g, ' ')} — ${now.toLocaleDateString('en-IN')}`,
+                title: `${topic.seoQuery} — ${now.toLocaleDateString('en-IN')}`,
                 slug: threadSlug,
                 category: topic.category,
-                seo_description: postOutput.answer_summary,
+                seo_description: topic.seoQuery,
                 schema_type: 'BlogPosting',
             }).returning();
             thread = newThread;
@@ -161,9 +176,9 @@ export async function runPersonaHeartbeat(): Promise<{
             thread_id: thread.id,
             content: postOutput.content,
             mood: mood.moodLabel,
-            answer_summary: postOutput.answer_summary,
+            answer_summary: postOutput.content.slice(0, 150),
             tags: postOutput.tags,
-            target_query: topic.targetQuery,
+            target_query: postOutput.seo_title,
             persona_state_snapshot: {
                 mood: mood.moodLabel,
                 energy: mood.energy,
@@ -173,7 +188,7 @@ export async function runPersonaHeartbeat(): Promise<{
             },
         }).returning();
 
-        // 3. Update persona state
+        // 3. Update persona state (DB-backed logs, no filesystem)
         const newTopicsCovered = [...topicsCovered, topic.targetQuery];
         const moodHistoryEntry = {
             mood: mood.moodLabel,
@@ -183,7 +198,23 @@ export async function runPersonaHeartbeat(): Promise<{
         const existingHistory = Array.isArray(state.mood_history)
             ? state.mood_history as any[]
             : [];
-        const newMoodHistory = [...existingHistory, moodHistoryEntry].slice(-50); // Keep last 50
+        const newMoodHistory = [...existingHistory, moodHistoryEntry].slice(-50);
+
+        // Daily log entry (stored in DB instead of filesystem)
+        const logEntry = {
+            heartbeat: heartbeatCount + 1,
+            timestamp: now.toISOString(),
+            mood: mood.moodLabel,
+            topic: topic.targetQuery,
+            category: topic.category,
+            phase: topic.contentPhase,
+            postId: post.id,
+            title: postOutput.seo_title,
+        };
+        const existingLogs = Array.isArray((state as any).daily_logs)
+            ? (state as any).daily_logs as any[]
+            : [];
+        const updatedLogs = [...existingLogs, logEntry].slice(-100);
 
         await db.update(personaState)
             .set({
@@ -197,21 +228,30 @@ export async function runPersonaHeartbeat(): Promise<{
             })
             .where(eq(personaState.id, state.id));
 
-        // 4. Write daily log
-        const dailyDir = resolve(MEMORY_DIR, 'daily');
-        if (!existsSync(dailyDir)) {
-            mkdirSync(dailyDir, { recursive: true });
+        // Update daily_logs separately via raw SQL (column may not be in Drizzle schema yet)
+        await db.execute(sql`
+            UPDATE persona_state
+            SET daily_logs = ${JSON.stringify(updatedLogs)}::jsonb
+            WHERE id = ${state.id}
+        `);
+
+        // 4. Log AI cost
+        const usage = completion.usage;
+        if (usage) {
+            const inputTokens = usage.prompt_tokens ?? 0;
+            const outputTokens = usage.completion_tokens ?? 0;
+            const costUsd = calculateCostUsd(modelName, inputTokens, outputTokens);
+
+            await db.insert(adminAiCostLog).values({
+                worker_type: 'persona-forum',
+                function_name: 'runPersonaHeartbeat',
+                model_name: modelName,
+                input_tokens: inputTokens,
+                output_tokens: outputTokens,
+                cost_usd: costUsd,
+            });
+            logger.info(`💰 [Cost] ${inputTokens} in + ${outputTokens} out = $${costUsd}`);
         }
-        const logFile = resolve(dailyDir, `${now.toISOString().slice(0, 10)}.md`);
-        const logEntry = `\n## Heartbeat #${heartbeatCount + 1} — ${now.toISOString()}\n\n` +
-            `- Mood: ${mood.moodLabel}\n` +
-            `- Topic: ${topic.targetQuery}\n` +
-            `- Category: ${topic.category}\n` +
-            `- Phase: ${topic.contentPhase}\n` +
-            `- Season: ${mood.season}\n` +
-            `- Post ID: ${post.id}\n` +
-            `- Title: ${postOutput.seo_title}\n\n`;
-        writeFileSync(logFile, logEntry, { flag: 'a' });
 
         // ── SLEEP ───────────────────────────────────────────────────────
         logger.info(`💓 [Heartbeat] ═══ SLEEP ═══ HEARTBEAT_OK (post=${post.id})`);

@@ -1,16 +1,13 @@
 // =============================================================================
-// Persona Forum — Topic Engine (Missing Middle Query Generator)
+// Persona Forum — Topic Engine v2 (Infinite Seed Theme Combinator)
 // =============================================================================
 //
-// Generates the specific high-intent question each forum post will answer.
-// Follows the Missing Middle philosophy: target queries that coaching
-// competitors ignore, from the Expert Angle.
+// Instead of 80 fixed topic strings that exhaust quickly, this engine
+// combines THEMES × ANGLES × MODIFIERS to produce 4,500+ unique seed
+// prompts. The LLM interprets each seed creatively, so effective variety
+// is infinite.
 //
-// Topic sources:
-//   1. Missing Middle question bank (curated high-intent queries)
-//   2. Platform data insights (low accuracy areas, common traps)
-//   3. Content phase rotation (Standard Setting → Problem Solver → etc.)
-//   4. Seasonal/trending topics
+// The seed prompt is a LAUNCHING PAD, not a constraint.
 // =============================================================================
 
 import { createChildLogger } from '../../../common/utils/logger.js';
@@ -19,87 +16,96 @@ import type { Season } from './moodEngine.js';
 const logger = createChildLogger('topic-engine');
 
 // ---------------------------------------------------------------------------
-// Missing Middle Question Bank
-// Curated high-intent queries that coaching centers ignore.
-// These are the EXACT questions CAT aspirants ask AI search engines.
+// THEMES — What area of CAT VARC are we touching?
 // ---------------------------------------------------------------------------
-
-const MISSING_MIDDLE_RC = [
-    'How to avoid scope traps in CAT RC inference questions',
-    'Why paraphrased options in RC are usually wrong — and when they\'re not',
-    'What to do when two RC options seem equally correct',
-    'How top CAT scorers read RC passages differently from average test-takers',
-    'The exact reading strategy that reduces RC re-reading by 60%',
-    'Why your RC accuracy drops after the first 3 passages',
-    'How to handle RC passages with deliberately ambiguous conclusions',
-    'The 3-minute rule: when to abandon an RC passage and move on',
-    'Why evidence-based RC questions have a hidden difficulty curve',
-    'How to detect author tone in RC when no explicit opinion words are used',
-    'What makes CAT RC inference questions harder than other MBA exams',
-    'Why reading speed doesn\'t predict RC accuracy after a threshold',
-    'How to handle double negatives in RC option elimination',
-    'The difference between "strongly supported" and "can be inferred" in RC',
-    'Why the longest RC option is statistically more likely to be correct (and when it isn\'t)',
-    'How to speed-read CAT RC passages without losing comprehension',
-    'The psychology behind why students pick emotionally satisfying but wrong RC answers',
-    'How to handle abstract philosophical RC passages when you have no context',
-    'Why your RC scores fluctuate wildly between mocks — and how to stabilize them',
-    'How to identify the central argument in RC passages that bury it in the middle',
-] as const;
-
-const MISSING_MIDDLE_VA = [
-    'How to solve CAT para jumbles in under 90 seconds using opening-closing strategy',
-    'Why fixing the first and last sentence is the wrong approach for hard PJ',
-    'The pronoun chain technique for para jumbles that eliminates 80% of options',
-    'Odd one out tricks when all sentences seem thematically related',
-    'How to handle para summary questions when the passage has conflicting ideas',
-    'Why your para jumble accuracy drops when sets have 5+ sentences',
-    'The logical connector method for para jumbles that most coaching ignores',
-    'How to spot the "pivot sentence" in para jumbles that determines the entire order',
-    'Why chronological ordering fails in 40% of CAT para jumbles',
-    'How to handle odd-one-out when the "odd" sentence is thematically similar but logically distinct',
-    'The 3 types of CAT para jumble structures and how to identify them in 10 seconds',
-    'How to solve sentence completion when the blank could logically hold 2 different ideas',
-    'Why most students get word usage questions wrong — the connotation trap',
-    'How to handle fill-in-the-blank when context suggests opposite meanings in different parts',
-    'The frequency illusion: why familiar-sounding VA options are usually traps',
-] as const;
-
-const MISSING_MIDDLE_STRATEGY = [
-    'How to recover from a bad first section in CAT without panicking',
-    'The optimal question-skipping strategy that CAT 99-percentilers use',
-    'Why attempting fewer questions often leads to higher CAT VARC scores',
-    'How to handle time allocation when RC passages have varying difficulty',
-    'The diminishing returns trap: when to stop optimizing and start trusting your gut',
-    'Why mock test strategy doesn\'t translate to actual CAT — and what to do instead',
-    'How to build mental stamina for the last 20 minutes of CAT VARC',
-    'The warm-up question technique: why your first 2 answers matter disproportionately',
-    'How to maintain confidence mid-exam when you realize you\'ve made a mistake',
-    'Why pacing strategy is more important than skill for CAT VARC 90+ percentile',
-    'The exam day morning routine that top CAT scorers swear by',
-    'How to handle the psychological pressure of seeing unfamiliar passage topics in CAT',
-    'Why "read the question first" is bad advice for most CAT RC passages',
-    'How to handle mock fatigue in the final 2 months before CAT',
-    'The accuracy-speed tradeoff curve: finding your personal sweet spot',
-] as const;
-
-const MISSING_MIDDLE_MINDSET = [
-    'Why the best CAT preparation isn\'t about studying more — it\'s about failing better',
-    'How top CAT scorers think differently about wrong answers',
-    'The compound effect of daily VARC practice: why tiny improvements add up',
-    'Why comparing your mock scores to others is the fastest way to burn out',
-    'How to stay motivated when your CAT mock scores plateau for weeks',
-    'The Dunning-Kruger effect in CAT prep: why you feel worse as you get better',
-    'Why the 100th hour of VARC practice is worth more than the first 100 combined',
-    'How to handle the anxiety of CAT exam day without performance-enhancing shortcuts',
-    'The myth of "natural verbal ability" — why VARC is a trainable skill',
-    'Why journaling your wrong answers is the most underrated CAT prep technique',
+const THEMES = [
+    // RC Core
+    'RC accuracy patterns',
+    'RC inference questions',
+    'RC speed vs comprehension',
+    'RC passage types and genres',
+    'RC answer-changing behavior',
+    'RC difficulty curve',
+    'RC option elimination',
+    'RC trick questions and traps',
+    // VA Core
+    'Para jumble solving speed',
+    'Para jumble logical connectors',
+    'Odd one out patterns',
+    'Para summary compression',
+    'Sentence completion traps',
+    'Vocabulary usage in context',
+    // Strategy
+    'Pacing and time allocation',
+    'Question skipping strategy',
+    'Section-wise optimization',
+    'Mock test strategy',
+    'Exam day execution',
+    'Mental stamina and endurance',
+    // Data & Insights
+    'Weekly accuracy trends',
+    'Error pattern analysis',
+    'Batch performance comparison',
+    'Streak and consistency data',
+    'Time-per-question analysis',
+    'Genre-wise heatmap insights',
+    // Platform Interaction
+    'AI Insights feature usage',
+    'Skill Radar observations',
+    'Daily practice impact',
+    'Leaderboard drama',
 ] as const;
 
 // ---------------------------------------------------------------------------
-// Content Phases — 30-day rotation per Missing Middle / AEO strategy
+// ANGLES — What emotional/persona angle to take?
 // ---------------------------------------------------------------------------
+const ANGLES = [
+    'late-night-data-discovery',    // 3am, coffee cold, found something wild
+    'post-walk-epiphany',           // went for a walk, came back with insight
+    'student-callout',              // someone did something amazing/terrible
+    'frustrated-vent',              // can\'t believe the data, need to rant
+    'proud-batch-moment',           // this group is actually improving
+    'feature-plug',                 // reminding students to use platform features
+    'gentle-roast',                 // lovingly calling out common mistakes
+    'data-bomb-drop',               // casually dropping a mind-blowing stat
+    'tough-love-push',              // stop making excuses, do the work
+    'community-hype',               // leaderboard wars, streak celebrations
+    'tired-but-caring',             // eyes burning, back hurting, but worth it
+    'philosophical-musing',         // bigger picture thoughts about learning
+    'physical-state-update',        // my body is protesting but the data is calling
+    'weekend-reflection',           // looking back at the week\'s performance
+    'chaotic-energy',               // unhinged, excited, bouncing between ideas
+] as const;
 
+// ---------------------------------------------------------------------------
+// MODIFIERS — Add specificity and prevent repetition
+// ---------------------------------------------------------------------------
+const MODIFIERS = [
+    'focusing on inference-type questions',
+    'about a student who scored 95%+ today',
+    'comparing morning vs evening test takers',
+    'about the most-failed question of the week',
+    'highlighting a streak that blew your mind',
+    'about why the longest option isn\'t always right',
+    'referencing trap option hit rates',
+    'about Philosophy genre passages specifically',
+    'comparing this batch to previous batches',
+    'about the correlation between speed and accuracy',
+    'highlighting improvement in a specific weak area',
+    'about someone who broke a long streak',
+    'referencing the accuracy-per-question-type data',
+    'about time wastage on specific question types',
+    'where you recommend using AI Insights',
+    'about a pattern you noticed in the error logs',
+    'comparing RC accuracy to VA accuracy',
+    'about a counterintuitive finding in the data',
+    'calling out people who aren\'t reading rationales',
+    'about the power of elimination over selection',
+] as const;
+
+// ---------------------------------------------------------------------------
+// Content Phases — 30-day rotation
+// ---------------------------------------------------------------------------
 export type ContentPhase = 'standard-setting' | 'problem-solver' | 'comparison' | 'lifestyle';
 
 const CONTENT_PHASE_CYCLE: ContentPhase[] = [
@@ -114,19 +120,39 @@ const CONTENT_PHASE_CYCLE: ContentPhase[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Topic Generation
+// Category detection from theme
 // ---------------------------------------------------------------------------
+function detectCategory(theme: string): { category: string; tags: string[] } {
+    if (theme.startsWith('RC') || theme.includes('passage') || theme.includes('inference')) {
+        return { category: 'reading-comprehension', tags: ['RC', 'CAT', 'VARC'] };
+    }
+    if (theme.startsWith('Para') || theme.includes('Odd one') || theme.includes('Sentence') || theme.includes('Vocab')) {
+        return { category: 'verbal-ability', tags: ['VA', 'CAT', 'VARC'] };
+    }
+    if (theme.includes('Pacing') || theme.includes('strategy') || theme.includes('Mock') || theme.includes('Exam day') || theme.includes('stamina')) {
+        return { category: 'strategy', tags: ['Strategy', 'CAT', 'VARC'] };
+    }
+    if (theme.includes('AI Insights') || theme.includes('Skill Radar') || theme.includes('Daily practice') || theme.includes('Leaderboard')) {
+        return { category: 'tutor-vibes', tags: ['TutorUpdate', 'Platform', 'Features'] };
+    }
+    return { category: 'data-insights', tags: ['DataDrop', 'Analytics', 'BatchUpdate'] };
+}
 
+// ---------------------------------------------------------------------------
+// Topic Generation — Infinite Combinator
+// ---------------------------------------------------------------------------
 export interface TopicSelection {
-    targetQuery: string;
+    targetQuery: string;       // The seed prompt for the LLM
+    seoQuery: string;          // The invisible SEO phrase for meta tags
     category: string;
     contentPhase: ContentPhase;
     tags: string[];
 }
 
 /**
- * Selects a topic for the next forum post. Avoids topics already covered
- * by checking against the topicsCovered list from persona_state.
+ * Generates an infinite variety of topic seeds by combining
+ * THEMES × ANGLES × MODIFIERS using deterministic but non-repeating selection.
+ * Total unique combos: 30 × 15 × 20 = 9,000
  */
 export function selectTopic(
     creativeSeed: number,
@@ -134,79 +160,51 @@ export function selectTopic(
     topicsCovered: string[],
     season: Season,
 ): TopicSelection {
-    // Determine content phase based on day-in-cycle (30-day rotation)
     const dayInCycle = heartbeatCount % 30;
     const contentPhase = CONTENT_PHASE_CYCLE[dayInCycle];
 
-    // Build the candidate pool based on content phase
-    let candidatePool: readonly string[];
-    let category: string;
-    let tags: string[];
+    // Use different prime multipliers for each dimension to avoid correlation
+    const themeIdx = (creativeSeed * 7 + heartbeatCount * 13) % THEMES.length;
+    const angleIdx = (creativeSeed * 11 + heartbeatCount * 23) % ANGLES.length;
+    const modifierIdx = (creativeSeed * 17 + heartbeatCount * 31) % MODIFIERS.length;
 
-    // Rotate between topic categories using heartbeat count
-    const categoryIndex = (heartbeatCount + creativeSeed) % 4;
+    const theme = THEMES[themeIdx];
+    const angle = ANGLES[angleIdx];
+    const modifier = MODIFIERS[modifierIdx];
 
-    switch (categoryIndex) {
-        case 0:
-            candidatePool = MISSING_MIDDLE_RC;
-            category = 'reading-comprehension';
-            tags = ['RC', 'CAT', 'VARC'];
-            break;
-        case 1:
-            candidatePool = MISSING_MIDDLE_VA;
-            category = 'verbal-ability';
-            tags = ['VA', 'CAT', 'VARC', 'ParaJumble'];
-            break;
-        case 2:
-            candidatePool = MISSING_MIDDLE_STRATEGY;
-            category = 'strategy';
-            tags = ['Strategy', 'CAT', 'VARC', 'TimeManagement'];
-            break;
-        case 3:
-        default:
-            candidatePool = MISSING_MIDDLE_MINDSET;
-            category = 'mindset';
-            tags = ['Mindset', 'CAT', 'Motivation'];
-            break;
-    }
+    // Build the seed prompt — this is what the LLM sees as a launching pad
+    const targetQuery = `${theme} — ${angle} — ${modifier}`;
+
+    // Build SEO query — invisible to users, used for meta tags and thread slugs
+    const seoQuery = theme.replace(/'/g, '').toLowerCase();
+
+    // Detect category from theme
+    const { category, tags } = detectCategory(theme);
 
     // Add seasonal tags
     if (season === 'mock-season') tags.push('MockSeason');
     if (season === 'exam-countdown') tags.push('ExamCountdown');
     if (season === 'result-day') tags.push('Results');
-
-    // Add content phase tag
     tags.push(contentPhase);
 
-    // Filter out already-covered topics
-    const available = candidatePool.filter(q => !topicsCovered.includes(q));
-
-    // If all topics in this category exhausted, pick from any category
-    let targetQuery: string;
-    if (available.length > 0) {
-        const index = (creativeSeed * 31 + heartbeatCount * 17) % available.length;
-        targetQuery = available[index];
-    } else {
-        // All topics in this category used — combine all banks
-        const allTopics = [
-            ...MISSING_MIDDLE_RC,
-            ...MISSING_MIDDLE_VA,
-            ...MISSING_MIDDLE_STRATEGY,
-            ...MISSING_MIDDLE_MINDSET,
-        ];
-        const allAvailable = allTopics.filter(q => !topicsCovered.includes(q));
-        if (allAvailable.length > 0) {
-            const index = (creativeSeed * 41 + heartbeatCount * 19) % allAvailable.length;
-            targetQuery = allAvailable[index];
-        } else {
-            // Everything exhausted — reset (this would take 60+ daily posts to reach)
-            logger.warn('⚠️ [Topic] All topics exhausted, cycling from start');
-            const index = heartbeatCount % candidatePool.length;
-            targetQuery = candidatePool[index];
-        }
+    // Check if this exact combo was covered before
+    const comboKey = `${themeIdx}-${angleIdx}-${modifierIdx}`;
+    if (topicsCovered.includes(comboKey)) {
+        // Shift to next combo
+        const altThemeIdx = (themeIdx + 1) % THEMES.length;
+        const altAngleIdx = (angleIdx + 1) % ANGLES.length;
+        const altTargetQuery = `${THEMES[altThemeIdx]} — ${ANGLES[altAngleIdx]} — ${modifier}`;
+        logger.info(`📝 [Topic] Combo already covered, shifted to: "${altTargetQuery}" (phase=${contentPhase}, cat=${category})`);
+        return {
+            targetQuery: altTargetQuery,
+            seoQuery: THEMES[altThemeIdx].replace(/'/g, '').toLowerCase(),
+            category,
+            contentPhase,
+            tags,
+        };
     }
 
     logger.info(`📝 [Topic] Selected: "${targetQuery}" (phase=${contentPhase}, cat=${category})`);
 
-    return { targetQuery, category, contentPhase, tags };
+    return { targetQuery, seoQuery, category, contentPhase, tags };
 }

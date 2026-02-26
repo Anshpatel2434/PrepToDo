@@ -17,6 +17,7 @@ import {
     embeddingsTable,
     forumThreads,
     forumPosts,
+    forumReactions,
 } from './tables.js';
 
 // =============================================================================
@@ -150,10 +151,22 @@ export const forumThreadsRelations = relations(forumThreads, ({ many }) => ({
     posts: many(forumPosts),
 }));
 
-export const forumPostsRelations = relations(forumPosts, ({ one }) => ({
+export const forumPostsRelations = relations(forumPosts, ({ one, many }) => ({
     thread: one(forumThreads, {
         fields: [forumPosts.thread_id],
         references: [forumThreads.id],
+    }),
+    reactions: many(forumReactions),
+}));
+
+export const forumReactionsRelations = relations(forumReactions, ({ one }) => ({
+    post: one(forumPosts, {
+        fields: [forumReactions.post_id],
+        references: [forumPosts.id],
+    }),
+    user: one(users, {
+        fields: [forumReactions.user_id],
+        references: [users.id],
     }),
 }));
 

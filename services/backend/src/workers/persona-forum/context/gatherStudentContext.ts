@@ -62,7 +62,7 @@ export async function gatherStudentContext(): Promise<StudentContext> {
                 COUNT(*) FILTER (WHERE is_correct = true)::float /
                 NULLIF(COUNT(*)::float, 0) * 100 AS avg_accuracy
             FROM question_attempts
-            WHERE attempted_at >= ${today}
+            WHERE created_at >= ${today}
         `) as { rows: Array<{ avg_accuracy: number | null }> };
         const averageAccuracy = (accuracyResult.rows?.[0] as any)?.avg_accuracy ?? null;
 
@@ -100,7 +100,7 @@ export async function gatherStudentContext(): Promise<StudentContext> {
                 COUNT(*) FILTER (WHERE is_correct = false)::float /
                 NULLIF(COUNT(*)::float, 0) * 100 AS trap_rate
             FROM question_attempts
-            WHERE attempted_at >= ${today}
+            WHERE created_at >= ${today}
         `) as { rows: Array<{ trap_rate: number | null }> };
         const trapHitRate = (trapResult.rows?.[0] as any)?.trap_rate ?? null;
 
@@ -108,7 +108,7 @@ export async function gatherStudentContext(): Promise<StudentContext> {
         const activeResult = await db.execute(sql`
             SELECT COUNT(DISTINCT user_id) as active_users
             FROM question_attempts
-            WHERE attempted_at >= ${today}
+            WHERE created_at >= ${today}
         `) as { rows: Array<{ active_users: number }> };
         const totalActiveUsers = parseInt(String((activeResult.rows?.[0] as any)?.active_users ?? '0'));
 

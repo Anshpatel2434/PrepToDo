@@ -503,6 +503,9 @@ export const forumPosts = pgTable('forum_posts', {
     tags: text('tags').array(),
     target_query: text('target_query'),
     persona_state_snapshot: ps.jsonb('persona_state_snapshot'),
+    likes: integer('likes').default(0),
+    dislikes: integer('dislikes').default(0),
+    post_type: varchar('post_type', { length: 20 }).default('blog'),
     created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
@@ -514,7 +517,16 @@ export const personaState = pgTable('persona_state', {
     last_heartbeat_at: timestamp('last_heartbeat_at', { withTimezone: true }),
     heartbeat_count: integer('heartbeat_count').default(0),
     creative_seed: integer('creative_seed').default(0),
+    daily_logs: ps.jsonb('daily_logs').default([]),
     updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const forumReactions = pgTable('forum_reactions', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    post_id: uuid('post_id').notNull().references(() => forumPosts.id, { onDelete: 'cascade' }),
+    user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    reaction: varchar('reaction', { length: 10 }).notNull(),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
 // =============================================================================
@@ -556,8 +568,11 @@ export type NewForumThread = typeof forumThreads.$inferInsert;
 export type ForumPost = typeof forumPosts.$inferSelect;
 export type NewForumPost = typeof forumPosts.$inferInsert;
 export type PersonaState = typeof personaState.$inferSelect;
+export type ForumReaction = typeof forumReactions.$inferSelect;
+export type NewForumReaction = typeof forumReactions.$inferInsert;
 
 // Legacy alias for backwards compatibility
 export const authUsers = users;
 export type AuthUser = User;
 export type NewAuthUser = NewUser;
+

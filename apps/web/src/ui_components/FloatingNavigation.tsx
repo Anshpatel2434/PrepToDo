@@ -17,7 +17,8 @@ import {
     Menu,
     X,
     ArrowRight,
-    Loader2
+    Loader2,
+    MessageSquare,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -78,7 +79,14 @@ const navigationItems: NavigationItem[] = [
         icon: <Sliders size={20} strokeWidth={2} />,
         path: "/customized-mocks",
         description: "Tailored Tests",
-    }
+    },
+    {
+        id: "forum",
+        label: "Forum",
+        icon: <MessageSquare size={20} strokeWidth={2} />,
+        path: "/forum",
+        description: "AI Tutor's Desk",
+    },
 ];
 
 // ----------------------------------------------------------------------------
@@ -242,6 +250,7 @@ export const FloatingNavigation: React.FC = () => {
         if (location.pathname.startsWith('/daily')) return 'daily';
         if (location.pathname.startsWith('/dashboard')) return 'about';
         if (location.pathname.startsWith('/customized-mocks')) return 'customized-mocks';
+        if (location.pathname.startsWith('/forum')) return 'forum';
         return '';
     };
     const activeId = getActiveId();
