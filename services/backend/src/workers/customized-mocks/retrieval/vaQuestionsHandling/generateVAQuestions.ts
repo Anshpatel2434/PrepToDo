@@ -178,15 +178,25 @@ export async function generateVAQuestions(
         logger.info(`✅ [VA Questions] Total VA questions generated: ${allQuestions.length}`);
 
         // Final pass to ensure all questions have fresh UUIDs and proper field initialization
-        const finalQuestions = allQuestions.map(q => ({
-            ...q,
-            id: uuidv4(),
-            passage_id: null, // VA questions are standalone
-            jumbled_sentences: q.jumbled_sentences || { "1": "", "2": "", "3": "", "4": "", "5": "" },
-            options: q.options || { "A": "", "B": "", "C": "", "D": "" },
-            created_at: now,
-            updated_at: now
-        }));
+        const finalQuestions = allQuestions.map(q => {
+            // For para_completion: map numeric "1"→"A", "2"→"B" etc. if LLM returned a number
+            if (q.question_type === 'para_completion') {
+                const numToLetter: Record<string, string> = { '1': 'A', '2': 'B', '3': 'C', '4': 'D' };
+                const raw = q.correct_answer?.answer?.trim();
+                if (raw && numToLetter[raw]) {
+                    q = { ...q, correct_answer: { answer: numToLetter[raw] } };
+                }
+            }
+            return {
+                ...q,
+                id: uuidv4(),
+                passage_id: null, // VA questions are standalone
+                jumbled_sentences: q.jumbled_sentences || { "1": "", "2": "", "3": "", "4": "", "5": "" },
+                options: q.options || { "A": "", "B": "", "C": "", "D": "" },
+                created_at: now,
+                updated_at: now
+            };
+        });
 
         logger.info("✅ [VA Questions] Finalized VA questions with fresh IDs");
         return finalQuestions;

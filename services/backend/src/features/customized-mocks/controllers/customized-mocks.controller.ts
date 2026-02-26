@@ -368,7 +368,8 @@ export async function fetchMockTestById(req: Request, res: Response, next: NextF
                 ...q,
                 options: parsedOptions,
                 jumbled_sentences: parsedJumbled,
-                correct_answer: include_solutions ? parsedCorrectAnswer : null
+                correct_answer: include_solutions ? parsedCorrectAnswer : null,
+                rationale: include_solutions ? q.rationale : null,
             };
         });
 

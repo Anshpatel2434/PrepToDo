@@ -707,6 +707,14 @@ IMPORTANT:
                 correct_answer: { answer },
             };
         }
+        if (q.question_type === 'para_completion') {
+            // LLM sometimes returns position number ("1","2","3","4") instead of letter ("A","B","C","D")
+            const numToLetter: Record<string, string> = { '1': 'A', '2': 'B', '3': 'C', '4': 'D' };
+            const raw = q.correct_answer.answer.trim();
+            if (numToLetter[raw]) {
+                return { ...q, correct_answer: { answer: numToLetter[raw] } };
+            }
+        }
         return q;
     });
 }
