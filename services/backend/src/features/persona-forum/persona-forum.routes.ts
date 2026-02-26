@@ -220,8 +220,15 @@ router.get('/thread/:slug/schema', async (req: Request, res: Response) => {
 router.post('/post/:id/react', requireAuth, async (req: Request, res: Response) => {
     try {
         const postId = String(req.params.id);
-        const userId = (req as any).userId;
+        const userId = req.user?.userId;
         const { reaction } = req.body;
+
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                error: { code: 'UNAUTHORIZED', message: 'User not authenticated' },
+            });
+        }
 
         if (!reaction || !['like', 'dislike'].includes(reaction)) {
             return res.status(400).json({
