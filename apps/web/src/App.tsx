@@ -42,6 +42,10 @@ const RefundPolicy = lazy(() => import("./pages/legal/RefundPolicy"));
 const ResetPasswordPage = lazy(() => import("./pages/auth/ResetPasswordPage").then(m => ({ default: m.ResetPasswordPage })));
 const ErrorPage = lazy(() => import("./pages/error/ErrorPage"));
 
+// Forum (public, SEO-crawlable)
+const ForumPage = lazyNamed(import("./pages/forum/page/ForumPage"), "ForumPage");
+const ForumThreadPage = lazy(() => import("./pages/forum/page/ForumThreadPage"));
+
 /* ---------------- ROUTER CONFIG ---------------- */
 
 const router = createBrowserRouter([
@@ -167,6 +171,22 @@ const router = createBrowserRouter([
                 element: (
                     <Suspense fallback={<PageLoader />}>
                         <RefundPolicy />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/forum",
+                element: (
+                    <Suspense fallback={<PageLoader />}>
+                        <ForumPage />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/forum/:slug",
+                element: (
+                    <Suspense fallback={<PageLoader />}>
+                        <ForumThreadPage />
                     </Suspense>
                 ),
             },

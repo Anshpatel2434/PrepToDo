@@ -9,6 +9,7 @@ import { customizedMocksApi } from "../pages/customized-mocks/redux_usecase/cust
 import customizedMockReducer from "../pages/customized-mocks/redux_usecase/customizedMockSlice";
 
 import { aiInsightsApi } from "../pages/ai-insights/redux_usecase/aiInsightsApi";
+import { forumApi } from "../pages/forum/redux_usecase/forumApi";
 
 export const store = configureStore({
     reducer: {
@@ -33,6 +34,9 @@ export const store = configureStore({
 
         // AI Insights api
         [aiInsightsApi.reducerPath]: aiInsightsApi.reducer,
+
+        // Forum api
+        [forumApi.reducerPath]: forumApi.reducer,
     },
     // Adding the api middleware enables caching, invalidation, polling,
     // and other useful features of RTK Query
@@ -42,7 +46,8 @@ export const store = configureStore({
             dailyPracticeApi.middleware,
             dashboardApi.middleware,
             customizedMocksApi.middleware,
-            aiInsightsApi.middleware
+            aiInsightsApi.middleware,
+            forumApi.middleware,
         ),
 });
 
