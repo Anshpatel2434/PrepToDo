@@ -1,0 +1,8 @@
+# robots.txt for preptodo.in
+
+User-Agent: *
+Allow: /
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://www.preptodo.in/sitemap.xml

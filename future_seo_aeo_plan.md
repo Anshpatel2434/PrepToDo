@@ -4,6 +4,66 @@
 
 ---
 
+## Current SEO Infrastructure (Live)
+
+These files are already deployed and configured:
+
+| File | Path | Purpose |
+|------|------|---------|
+| `robots.txt` | `apps/web/public/robots.txt` | Allows all crawlers (`User-Agent: *`), blocks `/api/`, points to sitemap |
+| `sitemap.xml` | `apps/web/public/sitemap.xml` | Lists crawlable pages for search engines |
+| `vercel.json` | `apps/web/vercel.json` | Rewrite excludes `robots.txt` & `sitemap.xml` from SPA catch-all |
+| `index.html` | `apps/web/index.html` | Meta description optimized (≤160 chars) |
+
+> **Note:** When adding new public-facing routes below, remember to:
+> 1. Uncomment/add the route in `sitemap.xml`
+> 2. Add the route to the React Router in `App.tsx`
+
+---
+
+## Future Routes for SEO/AEO Content
+
+These routes should be added as static or SSR pages for maximum crawlability.
+
+### Blog & Articles (`/blog/*`)
+
+| Route | Purpose | Schema Type | Priority |
+|-------|---------|-------------|----------|
+| `/blog` | Blog index — lists all articles | CollectionPage | High |
+| `/blog/cat-varc-preparation-guide-2025` | Evergreen VARC prep guide | Article + HowTo | High |
+| `/blog/how-to-improve-rc-accuracy` | RC-specific strategy article | HowTo | High |
+| `/blog/para-jumble-solving-techniques` | PJ-specific tips | HowTo | Medium |
+| `/blog/cat-vs-xat-vs-snap-verbal` | Exam comparison article | Article | Medium |
+| `/blog/ai-powered-cat-preparation` | Feature highlight / thought leadership | Article | Medium |
+| `/blog/daily-practice-strategy` | How to use daily practice effectively | HowTo | Medium |
+| `/blog/mock-test-analysis-guide` | How to analyze mock results | HowTo | Medium |
+
+### FAQ Page (`/faq`)
+
+| Route | Purpose | Schema Type | Priority |
+|-------|---------|-------------|----------|
+| `/faq` | 30+ Q&As with `FAQPage` schema (critical for AEO) | FAQPage | **Highest** |
+
+### Topic Hub Pages (`/topics/*`)
+
+| Route | Purpose | Schema Type | Priority |
+|-------|---------|-------------|----------|
+| `/topics/reading-comprehension` | RC topic hub aggregating related content | CollectionPage | High |
+| `/topics/para-jumbles` | PJ topic hub | CollectionPage | High |
+| `/topics/para-completion` | Para completion hub | CollectionPage | Medium |
+| `/topics/odd-one-out` | Odd one out hub | CollectionPage | Medium |
+| `/topics/summary-questions` | Summary questions hub | CollectionPage | Medium |
+
+### Feature/Product Pages
+
+| Route | Purpose | Schema Type | Priority |
+|-------|---------|-------------|----------|
+| `/ai-tutor-features` | AI tutor deep-dive for search | Product | High |
+| `/daily-practice` | Daily practice feature page | WebApplication | High |
+| `/pricing` | Pricing page (if applicable) | Product + Offer | Medium |
+
+---
+
 ## Phase 1: Structured Landing Pages (SEO)
 
 ### Goal
