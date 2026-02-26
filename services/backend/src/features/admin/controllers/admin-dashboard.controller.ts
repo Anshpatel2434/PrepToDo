@@ -7,6 +7,7 @@ import { adminPlatformMetricsDaily, adminAiCostLog, users, practiceSessions, aut
 import { eq, desc, sql, gte, and } from 'drizzle-orm';
 import { successResponse } from '../../../common/utils/errors.js';
 import { createChildLogger } from '../../../common/utils/logger.js';
+import { TimeService } from '../../../common/utils/time.js';
 
 const logger = createChildLogger('admin-dashboard');
 
@@ -15,10 +16,9 @@ const logger = createChildLogger('admin-dashboard');
 // =============================================================================
 export async function getOverview(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
+        const todayStart = TimeService.startOfTodayIST();
 
-        const sevenDaysAgo = new Date();
+        const sevenDaysAgo = new Date(todayStart);
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
         // Parallelize all queries for performance
@@ -198,9 +198,8 @@ export async function getMetricsHistory(req: Request, res: Response, next: NextF
         });
 
         // Use live metrics for TODAY to ensure freshness
-        const today = new Date().toISOString().split('T')[0];
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
+        const today = TimeService.getISTDateString();
+        const todayStart = TimeService.startOfTodayIST();
 
         // Filter out any stale snapshot for today from the DB history
         const historicalData = history.filter(h => h.date !== today);
@@ -264,39 +263,39 @@ export async function getMetricsHistory(req: Request, res: Response, next: NextF
 
             // 1. Get daily costs
             const dailyCosts = await db.select({
-                date: sql<string>`to_char(${adminAiCostLog.created_at}, 'YYYY-MM-DD')`,
+                date: sql<string>`to_char(${adminAiCostLog.created_at} AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD')`,
                 cost: sql<number>`COALESCE(sum(${adminAiCostLog.cost_usd}), 0)`,
             })
                 .from(adminAiCostLog)
                 .where(gte(adminAiCostLog.created_at, thirtyDaysAgo))
-                .groupBy(sql`to_char(${adminAiCostLog.created_at}, 'YYYY-MM-DD')`);
+                .groupBy(sql`to_char(${adminAiCostLog.created_at} AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD')`);
 
             // 2. Get daily sessions
             const dailySessions = await db.select({
-                date: sql<string>`to_char(${practiceSessions.started_at}, 'YYYY-MM-DD')`,
+                date: sql<string>`to_char(${practiceSessions.started_at} AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD')`,
                 count: sql<number>`count(*)`,
             })
                 .from(practiceSessions)
                 .where(gte(practiceSessions.started_at, thirtyDaysAgo))
-                .groupBy(sql`to_char(${practiceSessions.started_at}, 'YYYY-MM-DD')`);
+                .groupBy(sql`to_char(${practiceSessions.started_at} AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD')`);
 
             // 3. Get daily new users
             const dailyNewUsers = await db.select({
-                date: sql<string>`to_char(${users.created_at}, 'YYYY-MM-DD')`,
+                date: sql<string>`to_char(${users.created_at} AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD')`,
                 count: sql<number>`count(*)`,
             })
                 .from(users)
                 .where(gte(users.created_at, thirtyDaysAgo))
-                .groupBy(sql`to_char(${users.created_at}, 'YYYY-MM-DD')`);
+                .groupBy(sql`to_char(${users.created_at} AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD')`);
 
             // 4. Get daily active users (from authSessions) - CRITICAL FIX
             const dailyActiveUsers = await db.select({
-                date: sql<string>`to_char(${authSessions.created_at}, 'YYYY-MM-DD')`,
+                date: sql<string>`to_char(${authSessions.created_at} AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD')`,
                 count: sql<number>`count(distinct ${authSessions.user_id})`,
             })
                 .from(authSessions)
                 .where(gte(authSessions.created_at, thirtyDaysAgo))
-                .groupBy(sql`to_char(${authSessions.created_at}, 'YYYY-MM-DD')`);
+                .groupBy(sql`to_char(${authSessions.created_at} AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD')`);
 
 
             // Merge data by date
@@ -326,9 +325,9 @@ export async function getMetricsHistory(req: Request, res: Response, next: NextF
             let currentTotalCost = totalCost;
 
             for (let i = 0; i < 30; i++) {
-                const d = new Date();
+                const d = new Date(todayStart);
                 d.setDate(d.getDate() - i);
-                const dateStr = d.toISOString().split('T')[0];
+                const dateStr = TimeService.getISTDateString(d);
 
                 // If we have a DB snapshot for this date (and it's not today), use it
                 const dbSnapshot = historicalData.find(h => h.date === dateStr);

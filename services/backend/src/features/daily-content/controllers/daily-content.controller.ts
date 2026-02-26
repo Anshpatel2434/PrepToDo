@@ -246,7 +246,7 @@ export async function fetchDailyTestById(req: Request, res: Response, next: Next
                 options: q.options,
                 jumbled_sentences: q.jumbled_sentences,
                 correct_answer: include_solutions ? parseCorrectAnswer(q.correct_answer) : null,
-                rationale: q.rationale,
+                rationale: include_solutions ? q.rationale : null,
                 difficulty: q.difficulty,
                 tags: q.tags,
                 created_at: q.created_at,

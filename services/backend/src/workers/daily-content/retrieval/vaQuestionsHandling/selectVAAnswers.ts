@@ -124,7 +124,14 @@ Return STRICT JSON only.
             return {
                 ...originalQ,
                 correct_answer: {
-                    answer: answerData.correct_answer.answer
+                    answer: (() => {
+                        const raw = answerData.correct_answer.answer.trim();
+                        if (originalQ.question_type === 'para_completion' || originalQ.question_type === 'para_summary') {
+                            const numToLetter: Record<string, string> = { '1': 'A', '2': 'B', '3': 'C', '4': 'D' };
+                            if (numToLetter[raw]) return numToLetter[raw];
+                        }
+                        return raw;
+                    })()
                 },
             };
         });

@@ -37,6 +37,10 @@ export async function getUsers(req: Request, res: Response, next: NextFunction):
                 role: users.role,
                 created_at: users.created_at,
                 last_sign_in_at: users.last_sign_in_at,
+                last_active: sql<string | null>`COALESCE(
+                    ${users.last_sign_in_at},
+                    (SELECT MAX(${practiceSessions.created_at}) FROM ${practiceSessions} WHERE ${practiceSessions.user_id} = ${users.id})
+                )`,
                 display_name: userProfiles.display_name,
             })
                 .from(users)
@@ -55,7 +59,7 @@ export async function getUsers(req: Request, res: Response, next: NextFunction):
             email: row.email,
             role: row.role,
             created_at: row.created_at,
-            last_sign_in_at: row.last_sign_in_at,
+            last_sign_in_at: row.last_active || row.last_sign_in_at,
             profile: row.display_name ? { display_name: row.display_name } : null,
         }));
 
