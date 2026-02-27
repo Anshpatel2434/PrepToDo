@@ -9,6 +9,7 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { SafeAuthRoute } from "./ui_components/SafeAuthRoute";
 import { PageLoader } from "./ui_components/PageLoader";
 import { CustomToaster } from "./ui_components/CustomToaster";
+import { Analytics } from "@vercel/analytics/react";
 
 import "./App.css";
 
@@ -213,6 +214,7 @@ function AppContent() {
         <>
             <RouterProvider router={router} />
             <CustomToaster />
+            <Analytics />
         </>
     );
 }
