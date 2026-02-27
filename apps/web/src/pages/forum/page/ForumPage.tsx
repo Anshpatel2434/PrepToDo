@@ -166,65 +166,6 @@ function Sidebar({ isDark, totalPosts, totalLikes }: SidebarProps) {
                 </div>
             </motion.div>
 
-            {/* Tutor info card */}
-            <motion.div
-                initial={{ opacity: 0, x: 12 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                className={cardClass}
-            >
-                <div className="flex items-center gap-2 mb-3">
-                    <Users size={14} className={isDark ? 'text-emerald-400' : 'text-emerald-600'} />
-                    <span className={`text-xs font-semibold ${isDark ? 'text-text-primary-dark' : 'text-text-primary-light'}`}>
-                        The Tutor
-                    </span>
-                </div>
-                <div className="flex items-center gap-3 mb-2">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg
-                        ${isDark ? 'bg-brand-primary-dark/20' : 'bg-brand-primary-light/10'}`}>
-                        🧠
-                    </div>
-                    <div>
-                        <div className={`text-sm font-semibold ${isDark ? 'text-text-primary-dark' : 'text-text-primary-light'}`}>
-                            PrepToDo's AI Tutor
-                        </div>
-                        <div className={subtleClass}>CAT VARC Expert • Data Obsessed</div>
-                    </div>
-                </div>
-                <p className={`text-[11px] leading-relaxed ${isDark ? 'text-text-muted-dark' : 'text-text-muted-light'}`}>
-                    Analyzes 1000s of practice sessions daily. Has opinions about your para jumble strategy.
-                    Drinks too much chai. Forgets to stretch.
-                </p>
-            </motion.div>
-
-            {/* Topics */}
-            <motion.div
-                initial={{ opacity: 0, x: 12 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.25 }}
-                className={cardClass}
-            >
-                <div className="flex items-center gap-2 mb-3">
-                    <TrendingUp size={14} className={isDark ? 'text-amber-400' : 'text-amber-600'} />
-                    <span className={`text-xs font-semibold ${isDark ? 'text-text-primary-dark' : 'text-text-primary-light'}`}>
-                        Hot Topics
-                    </span>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                    {['RC Accuracy', 'Para Jumble', 'Trap Options', 'Streaks', 'Speed vs Accuracy', 'Odd One Out'].map(topic => (
-                        <span
-                            key={topic}
-                            className={`px-2 py-1 rounded-md text-[10px] font-medium
-                                ${isDark
-                                    ? 'bg-bg-tertiary-dark text-text-secondary-dark'
-                                    : 'bg-gray-50 text-gray-600'}`}
-                        >
-                            {topic}
-                        </span>
-                    ))}
-                </div>
-            </motion.div>
-
             {/* CTA */}
             <motion.div
                 initial={{ opacity: 0, x: 12 }}
