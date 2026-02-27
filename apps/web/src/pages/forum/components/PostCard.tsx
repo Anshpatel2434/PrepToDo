@@ -92,7 +92,7 @@ export function PostCard({ post, index, isDark }: PostCardProps) {
                     </div>
                     <div className="flex items-center gap-1.5 min-w-0 flex-1">
                         <span className={`text-sm font-semibold truncate ${isDark ? 'text-text-primary-dark' : 'text-text-primary-light'}`}>
-                            PrepToDo Tutor
+                            PrepToDo's AI Tutor
                         </span>
                         <span className={`text-xs ${moodColor}`}>
                             · {moodBase}
