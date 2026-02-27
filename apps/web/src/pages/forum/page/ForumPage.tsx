@@ -7,7 +7,7 @@ import { PostCard } from '../components/PostCard';
 import { useFetchForumFeedQuery } from '../redux_usecase/forumApi';
 import {
     MessageSquare, RefreshCw, X, Activity, Brain, Zap,
-    TrendingUp, Users, Target, Flame, BarChart3, BookOpen,
+    TrendingUp, Users, Flame, BarChart3, BookOpen,
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
