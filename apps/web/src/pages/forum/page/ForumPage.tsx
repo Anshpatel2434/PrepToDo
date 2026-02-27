@@ -6,8 +6,7 @@ import { FloatingThemeToggle } from '../../../ui_components/ThemeToggle';
 import { PostCard } from '../components/PostCard';
 import { useFetchForumFeedQuery } from '../redux_usecase/forumApi';
 import {
-    MessageSquare, RefreshCw, X, Activity, Brain, Zap,
-    TrendingUp, Users, Flame, BarChart3, BookOpen,
+    MessageSquare, RefreshCw, X, Activity, Brain, Zap, Flame, BarChart3, BookOpen,
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -117,7 +116,6 @@ function Sidebar({ isDark, totalPosts, totalLikes }: SidebarProps) {
 
     const labelClass = `text-[11px] font-medium ${isDark ? 'text-text-muted-dark' : 'text-text-muted-light'}`;
     const valueClass = `text-lg font-bold ${isDark ? 'text-text-primary-dark' : 'text-text-primary-light'}`;
-    const subtleClass = `text-xs ${isDark ? 'text-text-secondary-dark' : 'text-text-secondary-light'}`;
 
     return (
         <div className="space-y-3">
