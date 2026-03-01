@@ -143,7 +143,7 @@ export default function OverviewPage() {
             bg: 'bg-blue-400/10'
         },
         {
-            title: 'Active Users (7d)',
+            title: 'Active Users (Today)',
             value: metrics?.dailyActiveUsers.toLocaleString(),
             subtitle: `${metrics?.newLoginsToday || 0} logins today`,
             icon: UserPlus,

@@ -5,7 +5,6 @@ import {
     practiceSessions,
     adminAiCostLog,
     adminPlatformMetricsDaily,
-    authSessions
 } from '../../../db/schema.js';
 import { createChildLogger } from '../../../common/utils/logger.js';
 import { TimeService } from '../../../common/utils/time';
@@ -76,10 +75,10 @@ export class DailyMetricsService {
                 .from(adminAiCostLog)
                 .where(and(gte(adminAiCostLog.created_at, startOfDay), lt(adminAiCostLog.created_at, endOfDay)));
 
-            // 3. Active Users (Users with a login session created today)
-            const [activeUsersRes] = await db.select({ count: sql<number>`count(distinct ${authSessions.user_id})` })
-                .from(authSessions)
-                .where(and(gte(authSessions.created_at, startOfDay), lt(authSessions.created_at, endOfDay)));
+            // 3. Active Users (Users with any practice session started today)
+            const [activeUsersRes] = await db.select({ count: sql<number>`count(distinct ${practiceSessions.user_id})` })
+                .from(practiceSessions)
+                .where(and(gte(practiceSessions.started_at, startOfDay), lt(practiceSessions.started_at, endOfDay)));
 
             // 4. Upsert into admin_platform_metrics_daily
             await db.insert(adminPlatformMetricsDaily).values({

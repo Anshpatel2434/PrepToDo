@@ -18,9 +18,6 @@ export async function getOverview(req: Request, res: Response, next: NextFunctio
     try {
         const todayStart = TimeService.startOfTodayIST();
 
-        const sevenDaysAgo = new Date(todayStart);
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
         // Parallelize all queries for performance
         const [
             totalUsers,
@@ -44,9 +41,10 @@ export async function getOverview(req: Request, res: Response, next: NextFunctio
                 .where(gte(users.created_at, todayStart))
                 .then(res => Number(res[0].count)),
 
-            // 3. Daily Active Users (users who logged in within last 7 days)
-            db.select({ count: sql<number>`count(*)` }).from(users)
-                .where(gte(users.last_sign_in_at, sevenDaysAgo))
+            // 3. Daily Active Users (distinct users with any practice session today)
+            db.select({ count: sql<number>`count(distinct ${practiceSessions.user_id})` })
+                .from(practiceSessions)
+                .where(gte(practiceSessions.started_at, todayStart))
                 .then(res => Number(res[0].count)),
 
             // 4. Total Sessions
@@ -220,10 +218,10 @@ export async function getMetricsHistory(req: Request, res: Response, next: NextF
                 .from(users)
                 .where(gte(users.created_at, todayStart))
                 .then(r => Number(r[0].count)),
-            // Active Users Today (from authSessions created today)
-            db.select({ count: sql<number>`count(distinct ${authSessions.user_id})` })
-                .from(authSessions)
-                .where(gte(authSessions.created_at, todayStart))
+            // Active Users Today (distinct users with any practice session today)
+            db.select({ count: sql<number>`count(distinct ${practiceSessions.user_id})` })
+                .from(practiceSessions)
+                .where(gte(practiceSessions.started_at, todayStart))
                 .then(r => Number(r[0].count)),
             // Total Sessions
             db.select({ count: sql<number>`count(*)` }).from(practiceSessions).then(r => Number(r[0].count)),
@@ -288,14 +286,14 @@ export async function getMetricsHistory(req: Request, res: Response, next: NextF
                 .where(gte(users.created_at, thirtyDaysAgo))
                 .groupBy(sql`to_char(${users.created_at} AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD')`);
 
-            // 4. Get daily active users (from authSessions) - CRITICAL FIX
+            // 4. Get daily active users (from practiceSessions)
             const dailyActiveUsers = await db.select({
-                date: sql<string>`to_char(${authSessions.created_at} AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD')`,
-                count: sql<number>`count(distinct ${authSessions.user_id})`,
+                date: sql<string>`to_char(${practiceSessions.started_at} AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD')`,
+                count: sql<number>`count(distinct ${practiceSessions.user_id})`,
             })
-                .from(authSessions)
-                .where(gte(authSessions.created_at, thirtyDaysAgo))
-                .groupBy(sql`to_char(${authSessions.created_at} AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD')`);
+                .from(practiceSessions)
+                .where(gte(practiceSessions.started_at, thirtyDaysAgo))
+                .groupBy(sql`to_char(${practiceSessions.started_at} AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD')`);
 
 
             // Merge data by date

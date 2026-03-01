@@ -139,7 +139,7 @@ export async function runPersonaHeartbeat(): Promise<{
                 { role: 'user', content: prompt.userMessage },
             ],
             temperature: prompt.temperature,
-            max_tokens: 300,
+            max_tokens: 200,
             response_format: { type: 'json_object' },
         });
 

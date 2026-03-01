@@ -69,34 +69,45 @@ export interface PersonaPromptOutput {
  * the tutor is reacting to, not an abstract statistics report.
  * This is the core change: data becomes story material, not a summary.
  */
+/**
+ * Converts raw user counts into vague, privacy-safe descriptors.
+ * We NEVER reveal exact student numbers in posts.
+ */
+function describeActivity(activeUsers: number, totalUsers: number): string | null {
+    if (activeUsers === 0 && totalUsers === 0) return null;
+
+    // Describe active users vaguely
+    if (activeUsers > 0) {
+        if (activeUsers >= 50) return 'a huge chunk of the batch showed up today';
+        if (activeUsers >= 20) return 'a solid group is active today';
+        if (activeUsers >= 10) return 'a decent number of students are grinding today';
+        if (activeUsers >= 5) return 'a handful of students are putting in the work today';
+        return 'a few students are active today';
+    }
+    return null;
+}
+
 function buildDataStory(ctx: StudentContext): string {
     const lines: string[] = [];
 
-    const dataPoints: string[] = [];
-    if (ctx.totalUsers > 0) dataPoints.push(`${ctx.totalUsers} total registered students on the platform`);
-    if (ctx.totalActiveUsers > 0) dataPoints.push(`${ctx.totalActiveUsers} active students today`);
-    if (ctx.totalAttemptsToday > 0) dataPoints.push(`${ctx.totalAttemptsToday} practice attempts today`);
-    if (ctx.completedSessionsToday > 0) dataPoints.push(`${ctx.completedSessionsToday} completed practice sessions today`);
-    if (ctx.topScoreToday !== null) dataPoints.push(`today's top score: ${ctx.topScoreToday}%`);
-    if (ctx.averageAccuracy !== null) dataPoints.push(`batch avg accuracy: ${ctx.averageAccuracy.toFixed(1)}%`);
-    if (ctx.longestStreak !== null) dataPoints.push(`longest active streak: ${ctx.longestStreak} days`);
-    if (ctx.mostFailedMetric) dataPoints.push(`weakest core metric: ${ctx.mostFailedMetric}`);
-    if (ctx.weakestQuestionType) dataPoints.push(`most struggled question type: ${ctx.weakestQuestionType}`);
-    if (ctx.trapHitRate !== null) dataPoints.push(`wrong answer rate: ${ctx.trapHitRate.toFixed(1)}%`);
+    // ── Activity descriptor (NEVER exact counts) ──
+    const activityDesc = describeActivity(ctx.totalActiveUsers, ctx.totalUsers);
+    if (activityDesc) lines.push(activityDesc);
 
-    if (dataPoints.length > 0) {
-        lines.push(`Here's what's happening: ${dataPoints.join(', ')}.`);
+    // ── Only include data points with REAL values ──
+    if (ctx.totalAttemptsToday > 0) {
+        lines.push(`${ctx.totalAttemptsToday} practice attempts today.`);
+    }
+    if (ctx.completedSessionsToday > 0) {
+        lines.push(`${ctx.completedSessionsToday} completed practice sessions today.`);
     }
 
-    // Original specific story-telling elements, now integrated or re-evaluated
-    // The new dataPoints array provides a summary, but we can still add specific reactions.
-
-    if (ctx.topScoreToday !== null) {
+    if (ctx.topScoreToday !== null && ctx.topScoreToday > 0) {
         if (ctx.topScoreToday >= 90) {
             lines.push(`Someone just hit ${ctx.topScoreToday}% today. I had to read that twice.`);
         } else if (ctx.topScoreToday >= 75) {
             lines.push(`Top score today: ${ctx.topScoreToday}%. Solid. I want to know who that was.`);
-        } else if (ctx.topScoreToday > 0) { // Only add if there was a score, even if low
+        } else {
             lines.push(`Today's top score was ${ctx.topScoreToday}%. That's where we're at right now.`);
         }
     }
@@ -123,18 +134,22 @@ function buildDataStory(ctx: StudentContext): string {
         }
     }
 
-    if (ctx.longestStreak !== null) {
+    if (ctx.longestStreak !== null && ctx.longestStreak > 0) {
         if (ctx.longestStreak >= 30) {
             lines.push(`Someone's streak just hit ${ctx.longestStreak} days. ${ctx.longestStreak} consecutive days. I don't know who you are but you're different.`);
         } else if (ctx.longestStreak >= 14) {
             lines.push(`Longest active streak in the batch: ${ctx.longestStreak} days. That kind of consistency doesn't happen by accident.`);
-        } else if (ctx.longestStreak > 0) {
+        } else {
             lines.push(`Current longest streak: ${ctx.longestStreak} days.`);
         }
     }
 
     if (ctx.mostFailedMetric) {
         lines.push(`The most failed skill today: ${ctx.mostFailedMetric}. Same one as yesterday. We need to talk about this.`);
+    }
+
+    if (ctx.weakestQuestionType) {
+        lines.push(`Most struggled question type: ${ctx.weakestQuestionType}.`);
     }
 
     return lines.length > 0
@@ -162,7 +177,12 @@ This is post #${heartbeatCount + 1} today, so don't repeat what you've already s
 THE MOST IMPORTANT RULE: Be specific. Generic posts get scrolled past.
 The more concrete and specific your post is, the harder it hits.
 A post that could be about ANY batch is a bad post. Rewrite it.
-Write about THIS moment, THIS data, THIS feeling — right now.`;
+Write about THIS moment, THIS data, THIS feeling — right now.
+
+CRITICAL RULES — NEVER VIOLATE:
+1. **50 WORDS MAX.** Your post content MUST be 50 words or fewer. No exceptions. Short, punchy, impactful. Count your words.
+2. **NEVER mention exact student counts.** Do NOT say how many students are registered, how many are active, or any specific user count number. Use vague language: "some of you", "a bunch of you", "most of the batch", "a few of you", "one of you", etc.
+3. **NEVER fabricate or invent data.** You may ONLY reference data points explicitly provided to you below. If a data point is not given, do NOT make it up, do NOT assume it, do NOT invent stories about students doing things that aren't in the data. If there isn't enough data to make a compelling post, write about your feelings, observations, or a general vibe — but NEVER lie about what happened.`;
 
     // User message: data framed as a story seed, not a stats dump
     const userMessage = `Here's what just happened in the batch:
@@ -173,16 +193,24 @@ The thing on your mind right now: ${topic.targetQuery}
 
 Write one post in your voice. It should feel like you grabbed your phone to share this before you forgot it. Use the micro-story structure if it fits — setup, escalation, punchline/reaction. Or whatever structure makes this specific moment land.
 
+IMPORTANT CONSTRAINTS:
+- **50 words MAX** for the "content" field. Count carefully.
+- ONLY use the data provided above. Do NOT invent any statistics, streaks, scores, or student behaviors that are not explicitly listed above.
+- NEVER state the exact number of registered users or active students. Use vague descriptors instead.
+- If the data above is sparse, write about a feeling, a thought, or an observation — NOT fabricated data.
+
 Do NOT:
 - Write a bullet-point list of tips
 - Start with "So I was analyzing the data..."
 - Give a generic motivational statement
 - Explain concepts like a textbook
+- Mention specific student counts (e.g., "only 4 students", "10 users")
+- Make up data that wasn't provided above
 
 Return JSON only:
 {
   "seo_title": "your post headline",
-  "content": "your post",
+  "content": "your post (MAX 50 WORDS)",
   "seo_query": "${topic.seoQuery}",
   "mood_after": "one word",
   "tags": ["tag1", "tag2"],
