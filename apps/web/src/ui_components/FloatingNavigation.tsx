@@ -8,17 +8,14 @@ import {
     AnimatePresence,
 } from "framer-motion";
 import {
-    LayoutGrid,
     CalendarCheck,
     PieChart,
     User,
     LogOut,
-    Sliders,
-    Menu,
-    X,
-    ArrowRight,
     Loader2,
     MessageSquare,
+    Home,
+    Target,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -51,7 +48,13 @@ interface NavigationItem {
 // DATA
 // ----------------------------------------------------------------------------
 const navigationItems: NavigationItem[] = [
-    // Home item removed as per request
+    {
+        id: "home",
+        label: "Home",
+        icon: <Home size={20} strokeWidth={2} />,
+        path: "/home",
+        description: "Home Page",
+    },
     {
         id: "daily",
         label: "Daily",
@@ -60,25 +63,18 @@ const navigationItems: NavigationItem[] = [
         description: "Daily Exercises",
     },
     {
-        id: "features",
-        label: "Features",
-        icon: <LayoutGrid size={20} strokeWidth={2} />,
-        path: "/home#features",
-        description: "Tools",
+        id: "practice",
+        label: "Practice",
+        icon: <Target size={20} strokeWidth={2} />,
+        path: "/practice",
+        description: "Practice Hub",
     },
     {
-        id: "about",
+        id: "dashboard",
         label: "Dashboard",
         icon: <PieChart size={20} strokeWidth={2} />,
         path: "/dashboard",
         description: "Analytics",
-    },
-    {
-        id: "customized-mocks",
-        label: "Customized Sectionals",
-        icon: <Sliders size={20} strokeWidth={2} />,
-        path: "/customized-mocks",
-        description: "Tailored Tests",
     },
     {
         id: "forum",
@@ -141,9 +137,9 @@ const DesktopNavItem = ({
 };
 
 // ----------------------------------------------------------------------------
-// MOBILE NAV ITEM (Icon + Text Below)
+// MOBILE TOP NAV ITEM (Icon Only for space saving)
 // ----------------------------------------------------------------------------
-const MobileNavItem = ({
+const MobileTopNavItem = ({
     item,
     isActive,
     isDark,
@@ -157,20 +153,17 @@ const MobileNavItem = ({
     <button
         onClick={onClick}
         className={`
-            flex flex-col items-center justify-center w-auto h-auto py-2 px-1 rounded-xl gap-1
-            transition-all duration-200 active:scale-95 flex-1 min-w-[60px]
+            flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full
+            transition-all duration-200 active:scale-95
             ${isActive
-                ? (isDark ? "text-white bg-white/5" : "text-black bg-black/5")
-                : (isDark ? "text-gray-400" : "text-gray-500")
+                ? (isDark ? "bg-white/10 text-white" : "bg-black/5 text-black")
+                : (isDark ? "text-gray-400 hover:text-white hover:bg-white/5" : "text-gray-500 hover:text-black hover:bg-black/5")
             }
         `}
     >
-        <div className={isActive ? "scale-110 transition-transform" : ""}>
-            {item.icon}
-        </div>
-        <span className="text-[10px] font-sm leading-none text-center">
-            {item.label}
-        </span>
+        {React.isValidElement<{ strokeWidth?: number }>(item.icon) && isActive
+            ? React.cloneElement(item.icon, { strokeWidth: 2.5 })
+            : item.icon}
     </button>
 );
 
@@ -193,8 +186,6 @@ export const FloatingNavigation: React.FC = () => {
     const isAuthenticated = user !== null;
     const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
 
-    // Mobile Menu State
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     // Logout Confirmation Modal State
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -211,13 +202,11 @@ export const FloatingNavigation: React.FC = () => {
         } else {
             navigate(path);
         }
-        setIsMobileMenuOpen(false);
     };
 
     // Show logout confirmation modal
     const promptLogout = useCallback(() => {
         setShowLogoutConfirm(true);
-        setIsMobileMenuOpen(false);
     }, []);
 
     // Perform actual logout
@@ -243,23 +232,15 @@ export const FloatingNavigation: React.FC = () => {
 
     // Determine active tab
     const getActiveId = () => {
-        // Home no longer has a dedicated nav item, but we highlight nothing or maybe Features if on home?
-        // Actually, if on root and not focused on features, maybe no highlight is correct for this list.
-        if (location.pathname === '/' && location.hash === '#features') return 'features';
-        // Logic for other paths
+        if (location.pathname.startsWith('/home')) return 'home';
         if (location.pathname.startsWith('/daily')) return 'daily';
-        if (location.pathname.startsWith('/dashboard')) return 'about';
-        if (location.pathname.startsWith('/customized-mocks')) return 'customized-mocks';
+        if (location.pathname.startsWith('/practice')) return 'practice';
+        if (location.pathname.startsWith('/dashboard')) return 'dashboard';
         if (location.pathname.startsWith('/forum')) return 'forum';
         return '';
     };
     const activeId = getActiveId();
 
-    // Mobile Logic: Filter items
-    // First 4 items (which is all of them now roughly) + Menu Button if needed
-    // We have 4 items. Let's see if we fit them all. 
-    // If screen is very small, we might need overflow. But 4 items is standard for mobile nav.
-    const mobileVisibleItems = navigationItems;
     // If we add more later, we can re-introduce the hamburger logic for overflow. 
     // For now, let's keep the Hamburger mainly for Profile/Logout if logged in, or just always show it for Profile stuff.
     // The previous code had "First 4 items + Menu Button".
@@ -277,7 +258,8 @@ export const FloatingNavigation: React.FC = () => {
                     transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                     className={`
                         pointer-events-auto
-                        flex items-center gap-2 px-3 py-2 rounded-full
+                        flex items-center justify-between lg:justify-center gap-1 lg:gap-2 px-2 lg:px-3 py-2 rounded-full
+                        w-[96%] max-w-[450px] lg:w-auto lg:max-w-none
                         backdrop-blur-2xl border shadow-2xl
                         ${isDark
                             ? "bg-gray-900/80 border-white/10 ring-1 ring-white/5 shadow-black/50"
@@ -367,24 +349,20 @@ export const FloatingNavigation: React.FC = () => {
                     <div className="lg:hidden flex items-center justify-between w-full">
                         {/* Logo on Left */}
                         <div
-                            className="p-1 cursor-pointer mr-2"
+                            className="flex items-center justify-center w-9 h-9 cursor-pointer"
                             onClick={() => navigate('/')}
                         >
-                            <div className={`
-                                w-9 h-9 flex items-center justify-center
-                            `}>
-                                <img
-                                    src={logo}
-                                    alt="Logo"
-                                    className="w-full h-full object-contain"
-                                />
-                            </div>
+                            <img
+                                src={logo}
+                                alt="Logo"
+                                className="w-full h-full object-contain"
+                            />
                         </div>
 
-                        {/* Navigation Items (Middle) */}
-                        <div className="flex items-center flex-1 justify-center">
-                            {mobileVisibleItems.map(item => (
-                                <MobileNavItem
+                        {/* Navigation Icons (Middle) */}
+                        <div className="flex items-center gap-0.5 sm:gap-1">
+                            {navigationItems.map(item => (
+                                <MobileTopNavItem
                                     key={item.id}
                                     item={item}
                                     isActive={activeId === item.id}
@@ -394,102 +372,28 @@ export const FloatingNavigation: React.FC = () => {
                             ))}
                         </div>
 
-                        {/* Profile / Menu on Right */}
-                        <MobileNavItem
-                            item={{
-                                id: 'menu',
-                                label: isAuthenticated ? 'Profile' : 'Menu',
-                                path: '#',
-                                description: 'More',
-                                icon: isAuthenticated ? <User size={20} /> : <Menu size={20} />
-                            }}
-                            isActive={isMobileMenuOpen}
-                            isDark={isDark}
-                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        />
+                        {/* Profile/CTA on Right */}
+                        <div className="flex items-center">
+                            {isAuthenticated ? (
+                                <DropdownProfile user={user!} isDark={isDark} onLogout={promptLogout} />
+                            ) : (
+                                <button
+                                    onClick={() => navigate('/auth?mode=signup')}
+                                    className={`
+                                        h-8 px-3 rounded-full font-bold text-[11px] sm:text-xs transition-all duration-300
+                                        ${isDark
+                                            ? "bg-brand-primary-dark text-black"
+                                            : "bg-brand-primary-light text-white"
+                                        }
+                                    `}
+                                >
+                                    Login
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </motion.nav>
             </div>
-
-            {/* =======================================================================
-               MOBILE OVERFLOW MENU OVERLAY
-               ======================================================================= */}
-            <AnimatePresence>
-                {isMobileMenuOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -20, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                        className={`
-                            lg:hidden fixed top-24 left-4 right-4 z-40 rounded-3xl p-6
-                            backdrop-blur-2xl border shadow-2xl ring-1
-                            ${isDark
-                                ? "bg-gray-900/90 border-white/10 ring-white/10"
-                                : "bg-white/90 border-white/40 ring-black/5"
-                            }
-                        `}
-                    >
-                        <div className="flex flex-col gap-4">
-                            {/* Header */}
-                            <div className="flex items-center justify-between pb-4 border-b border-gray-500/10">
-                                <span className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
-                                    Menu
-                                </span>
-                                <button
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                    className={`p-2 rounded-full ${isDark ? "bg-white/10 text-white" : "bg-black/5 text-black"}`}
-                                >
-                                    <X size={18} />
-                                </button>
-                            </div>
-
-                            {/* User User Info Row */}
-                            {isAuthenticated && (
-                                <div className={`p-4 rounded-2xl flex items-center gap-4 ${isDark ? "bg-white/5" : "bg-black/5"}`}>
-                                    <div className="w-10 h-10 rounded-full bg-brand-primary-light text-white flex items-center justify-center">
-                                        <User size={20} />
-                                    </div>
-                                    <div className="flex-1 overflow-hidden">
-                                        <p className={`font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
-                                            {user?.email}
-                                        </p>
-                                        <p className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                                            Free Plan
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Mobile Auth Actions */}
-                            {isAuthenticated ? (
-                                <button
-                                    onClick={promptLogout}
-                                    className={`
-                                        w-full py-3.5 rounded-xl font-medium flex items-center justify-center gap-2
-                                        ${isDark ? "bg-red-500/10 text-red-400" : "bg-red-50 text-red-600"}
-                                    `}
-                                >
-                                    <LogOut size={18} />
-                                    Sign Out
-                                </button>
-                            ) : (
-                                <div className="flex flex-col gap-3">
-                                    <button
-                                        onClick={() => navigate('/auth?mode=signup')}
-                                        className={`
-                                            w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2
-                                            ${isDark ? "bg-brand-primary-dark text-black" : "bg-brand-primary-light text-white"}
-                                        `}
-                                    >
-                                        Get Started
-                                        <ArrowRight size={18} />
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
 
             {/* Logout Confirmation Modal */}
             <AnimatePresence>
