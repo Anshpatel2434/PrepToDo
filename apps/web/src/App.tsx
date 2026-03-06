@@ -10,6 +10,8 @@ import { SafeAuthRoute } from "./ui_components/SafeAuthRoute";
 import { PageLoader } from "./ui_components/PageLoader";
 import { CustomToaster } from "./ui_components/CustomToaster";
 import { Analytics } from "@vercel/analytics/react";
+import { PostHogProvider } from "./services/PostHogProvider";
+import { ClarityProvider } from "./services/ClarityProvider";
 
 import "./App.css";
 
@@ -232,9 +234,12 @@ function AppContent() {
 
 function App() {
     return (
-        <ThemeProvider>
-            <AppContent />
-        </ThemeProvider>
+        <PostHogProvider>
+            <ThemeProvider>
+                <ClarityProvider />
+                <AppContent />
+            </ThemeProvider>
+        </PostHogProvider>
     );
 }
 
