@@ -16,7 +16,6 @@ import {
     MessageSquare,
     Home,
     Target,
-    BookOpen,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
