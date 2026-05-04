@@ -16,6 +16,7 @@ import {
     MessageSquare,
     Home,
     Target,
+    BookOpen,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -237,7 +238,7 @@ export const FloatingNavigation: React.FC = () => {
         if (location.pathname.startsWith('/practice')) return 'practice';
         if (location.pathname.startsWith('/dashboard')) return 'dashboard';
         if (location.pathname.startsWith('/forum')) return 'forum';
-        return '';
+        return 'home';
     };
     const activeId = getActiveId();
 

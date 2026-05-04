@@ -131,7 +131,7 @@ export class CostTracker {
      * Wraps in try/catch to ensure worker never fails due to logging
      */
     async persistToDb(
-        workerType: 'daily_content' | 'customized_mocks' | 'analytics' | 'teaching_concept',
+        workerType: 'daily_content' | 'customized_mocks' | 'analytics' | 'teaching_concept' | 'dictionary',
         userId?: string,
         examId?: string,
         sessionId?: string

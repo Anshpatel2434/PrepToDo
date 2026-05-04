@@ -10,6 +10,7 @@ import customizedMockReducer from "../pages/customized-mocks/redux_usecase/custo
 
 import { aiInsightsApi } from "../pages/ai-insights/redux_usecase/aiInsightsApi";
 import { forumApi } from "../pages/forum/redux_usecase/forumApi";
+import { dictionaryApi } from "../pages/dictionary/redux_usecase/dictionaryApi";
 
 export const store = configureStore({
     reducer: {
@@ -37,6 +38,9 @@ export const store = configureStore({
 
         // Forum api
         [forumApi.reducerPath]: forumApi.reducer,
+
+        // Dictionary api
+        [dictionaryApi.reducerPath]: dictionaryApi.reducer,
     },
     // Adding the api middleware enables caching, invalidation, polling,
     // and other useful features of RTK Query
@@ -48,6 +52,7 @@ export const store = configureStore({
             customizedMocksApi.middleware,
             aiInsightsApi.middleware,
             forumApi.middleware,
+            dictionaryApi.middleware,
         ),
 });
 

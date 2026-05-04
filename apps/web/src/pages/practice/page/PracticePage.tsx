@@ -3,7 +3,7 @@ import { useTheme } from "../../../context/ThemeContext";
 import { FloatingNavigation } from "../../../ui_components/FloatingNavigation";
 import { FloatingThemeToggle } from "../../../ui_components/ThemeToggle";
 import { PracticeFeatureCard } from "../components/PracticeFeatureCard";
-import { CalendarCheck, Sliders, Dna, Rocket } from "lucide-react";
+import { CalendarCheck, Sliders, Dna, Rocket, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
@@ -34,6 +34,18 @@ export const PracticePage: React.FC = () => {
             colorConfig: {
                 dark: { iconBg: "bg-purple-500/10", iconColor: "text-purple-400", shadow: "shadow-purple-500/10" },
                 light: { iconBg: "bg-purple-50", iconColor: "text-purple-600", shadow: "shadow-purple-500/20" }
+            }
+        },
+        {
+            id: "dictionary",
+            title: "Personal Dictionary",
+            description: "Review and master the vocabulary words you've discovered across your practice sessions.",
+            icon: BookOpen,
+            backgroundIcon: BookOpen,
+            path: "/dictionary",
+            colorConfig: {
+                dark: { iconBg: "bg-emerald-500/10", iconColor: "text-emerald-400", shadow: "shadow-emerald-500/10" },
+                light: { iconBg: "bg-emerald-50", iconColor: "text-emerald-600", shadow: "shadow-emerald-500/20" }
             }
         }
     ];

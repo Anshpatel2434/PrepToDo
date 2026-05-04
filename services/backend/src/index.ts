@@ -16,6 +16,7 @@ import { customizedMocksRouter } from './features/customized-mocks/customized-mo
 import { dailyContentRouter } from './features/daily-content/index.js';
 import { adminRouter } from './features/admin/index.js';
 import { aiInsightsRouter } from './features/ai-insights/ai-insights.routes.js';
+import { dictionaryRouter } from './features/dictionary/dictionary.routes.js';
 import internalRouter from './routes/internal.js';
 import { personaForumRouter } from './features/persona-forum/persona-forum.routes.js';
 import { logger, httpLogger } from './common/utils/logger.js';
@@ -102,6 +103,7 @@ app.use('/api/analytics', analyticsRouter);
 app.use('/api/daily-content', dailyContentRouter);
 app.use('/api/customized-mocks', customizedMocksRouter);
 app.use('/api/ai-insights', aiInsightsRouter);
+app.use('/api/dictionary', dictionaryRouter);
 
 // Internal Routes (Protected by Secret)
 app.use('/internal', internalRouter);

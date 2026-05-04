@@ -530,6 +530,37 @@ export const forumReactions = pgTable('forum_reactions', {
 });
 
 // =============================================================================
+// Dictionary Feature Tables
+// =============================================================================
+export const dictionaryWords = pgTable('dictionary_words', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    word: text('word').notNull().unique(),
+    pronunciation: text('pronunciation'),
+    meanings: ps.jsonb('meanings'), // [{ meaning, example }]
+    origin: text('origin'),
+    relate_with: text('relate_with'),
+    mnemonic: text('mnemonic'),
+    breakdown: text('breakdown'),
+    synonyms: text('synonyms').array(),
+    antonyms: text('antonyms').array(),
+    generation_model: text('generation_model').default('gpt-4o-mini'),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const userDictionary = pgTable('user_dictionary', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    word_id: uuid('word_id').notNull().references(() => dictionaryWords.id, { onDelete: 'cascade' }),
+    source_context: text('source_context'),
+    source_passage_id: uuid('source_passage_id').references(() => passages.id, { onDelete: 'set null' }),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => {
+    return {
+        userWordUnique: ps.unique('user_dictionary_user_word_unique').on(table.user_id, table.word_id),
+    }
+});
+
+// =============================================================================
 // Type Exports
 // =============================================================================
 export type User = typeof users.$inferSelect;
@@ -570,6 +601,10 @@ export type NewForumPost = typeof forumPosts.$inferInsert;
 export type PersonaState = typeof personaState.$inferSelect;
 export type ForumReaction = typeof forumReactions.$inferSelect;
 export type NewForumReaction = typeof forumReactions.$inferInsert;
+export type DictionaryWord = typeof dictionaryWords.$inferSelect;
+export type NewDictionaryWord = typeof dictionaryWords.$inferInsert;
+export type UserDictionaryEntry = typeof userDictionary.$inferSelect;
+export type NewUserDictionaryEntry = typeof userDictionary.$inferInsert;
 
 // Legacy alias for backwards compatibility
 export const authUsers = users;

@@ -1,5 +1,7 @@
 import React, { useRef, useCallback, useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { Info } from "lucide-react";
+import { WordPopup } from "../../components/WordPopup";
 
 interface SplitPaneLayoutProps {
     isDark: boolean;
@@ -20,22 +22,50 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
     const passageRef = useRef<HTMLDivElement>(null);
     const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
+    const [selectedWord, setSelectedWord] = useState<{
+        word: string;
+        rect: DOMRect;
+        sourceContext: string;
+    } | null>(null);
+
     useEffect(() => {
         const handleResize = () => setWindowWidth(window.innerWidth);
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Handle text selection for vocab tooltip (Solution mode only)
-    const handleTextSelection = useCallback(() => {
+    // Handle double click for dictionary lookup (Solution mode only)
+    const handleWordDoubleClick = useCallback(() => {
         if (isExamMode) return;
 
         const selection = window.getSelection();
-        if (selection && selection.toString().trim()) {
-            // Show "Add to Vocab" tooltip
-            // This is a placeholder - actual implementation would show a tooltip
+        if (!selection || selection.isCollapsed) return;
 
+        const word = selection.toString().trim();
+        
+        // Simple validation to ensure it's a single word without spaces and only alphabets/hyphens
+        if (!word || word.includes(' ') || !/^[A-Za-z-]+$/.test(word)) {
+            return;
         }
+
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        
+        // Try to get surrounding context (the sentence)
+        let sourceContext = '';
+        if (selection.anchorNode && selection.anchorNode.textContent) {
+            const fullText = selection.anchorNode.textContent;
+            // Extremely simple sentence extraction around the selected offset
+            const offset = selection.anchorOffset;
+            const start = fullText.lastIndexOf('.', offset) + 1;
+            const end = fullText.indexOf('.', offset);
+            sourceContext = fullText.slice(
+                start > 0 ? start : 0, 
+                end > -1 ? end + 1 : fullText.length
+            ).trim();
+        }
+
+        setSelectedWord({ word, rect, sourceContext });
     }, [isExamMode]);
 
     const isMobile = windowWidth < 768;
@@ -111,6 +141,19 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
                                     {isExamMode ? "Exam Mode" : "Solution Mode"}
                                 </span>
                             </div>
+                            
+                            {/* Dictionary Instruction Banner */}
+                            {!isExamMode && (
+                                <div className={`
+                                    mt-3 px-3 py-2 rounded-md flex items-start space-x-2 text-sm
+                                    ${isDark ? "bg-brand-primary-dark/10 text-brand-primary-dark" : "bg-brand-primary-light/10 text-brand-primary-light"}
+                                `}>
+                                    <Info size={16} className="mt-0.5 shrink-0" />
+                                    <p>
+                                        <strong>Dictionary Active:</strong> Double-click any word in the passage below to instantly view its meaning, synonyms, and memory tricks!
+                                    </p>
+                                </div>
+                            )}
                         </div>)}
 
                     {/* Passage Content */}
@@ -124,7 +167,7 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
                                 : "prose-slate text-text-secondary-light scrollbar-light"
                             }
                         `}
-                        onMouseUp={handleTextSelection}
+                        onDoubleClick={handleWordDoubleClick}
                         onCopy={(e) => {
                             if (isExamMode) {
                                 e.preventDefault();
@@ -170,6 +213,18 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
                         >
                             Text selection is disabled during the exam
                         </div>
+                    )}
+                    
+                    {/* Word Popup Container */}
+                    {selectedWord && (
+                        <WordPopup
+                            word={selectedWord.word}
+                            rect={selectedWord.rect}
+                            sourceContext={selectedWord.sourceContext}
+                            passageId={passage?.id}
+                            isDark={isDark}
+                            onClose={() => setSelectedWord(null)}
+                        />
                     )}
                 </div>
             </motion.div>

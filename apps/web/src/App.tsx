@@ -38,6 +38,7 @@ const AuthCallback = lazy(() => import("./pages/auth/components/AuthCallback"));
 const DailyPage = lazy(() => import("./pages/daily/page/DailyPage"));
 const DailyRCPage = lazy(() => import("./pages/daily/daily_rc/Page/DailyRCPage"));
 const DailyVAPage = lazy(() => import("./pages/daily/daily_va/Page/DailyVAPage"));
+const DictionaryPage = lazy(() => import("./pages/dictionary/page/DictionaryPage"));
 const CustomizedMocksPage = lazy(() => import("./pages/customized-mocks/page/CustomizedMocksPage"));
 const MockTestPage = lazy(() => import("./pages/customized-mocks/page/MockTestPage"));
 const PrivacyPolicy = lazy(() => import("./pages/legal/PrivacyPolicy"));
@@ -210,6 +211,16 @@ const router = createBrowserRouter([
                     <Suspense fallback={<PageLoader />}>
                         <AdminApp />
                     </Suspense>
+                ),
+            },
+            {
+                path: "/dictionary",
+                element: (
+                    <SafeAuthRoute>
+                        <Suspense fallback={<PageLoader />}>
+                            <DictionaryPage />
+                        </Suspense>
+                    </SafeAuthRoute>
                 ),
             },
             {

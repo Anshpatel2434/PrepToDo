@@ -608,3 +608,36 @@ ALTER TABLE "user_metric_proficiency" ADD CONSTRAINT "user_metric_proficiency_us
 ALTER TABLE "user_metric_proficiency" ADD CONSTRAINT "user_metric_proficiency_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
 ALTER TABLE "user_proficiency_signals" ADD CONSTRAINT "user_proficiency_signals_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
 ALTER TABLE "user_profiles" ADD CONSTRAINT "user_profiles_id_fkey" FOREIGN KEY ("id") REFERENCES "users"("id") ON DELETE CASCADE;
+
+-- Dictionary Feature Tables
+CREATE TABLE "dictionary_words" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"word" text NOT NULL,
+	"pronunciation" text,
+	"meanings" jsonb,
+	"origin" text,
+	"relate_with" text,
+	"mnemonic" text,
+	"breakdown" text,
+	"synonyms" text[],
+	"antonyms" text[],
+	"generation_model" text DEFAULT 'gpt-4o-mini',
+	"created_at" timestamp with time zone DEFAULT now(),
+	CONSTRAINT "dictionary_words_word_unique" UNIQUE("word")
+);
+--> statement-breakpoint
+CREATE TABLE "user_dictionary" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"word_id" uuid NOT NULL,
+	"source_context" text,
+	"source_passage_id" uuid,
+	"created_at" timestamp with time zone DEFAULT now(),
+	CONSTRAINT "user_dictionary_user_word_unique" UNIQUE("user_id","word_id")
+);
+--> statement-breakpoint
+ALTER TABLE "user_dictionary" ADD CONSTRAINT "user_dictionary_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+--> statement-breakpoint
+ALTER TABLE "user_dictionary" ADD CONSTRAINT "user_dictionary_word_id_dictionary_words_id_fk" FOREIGN KEY ("word_id") REFERENCES "public"."dictionary_words"("id") ON DELETE cascade ON UPDATE no action;
+--> statement-breakpoint
+ALTER TABLE "user_dictionary" ADD CONSTRAINT "user_dictionary_source_passage_id_passages_id_fk" FOREIGN KEY ("source_passage_id") REFERENCES "public"."passages"("id") ON DELETE set null ON UPDATE no action;

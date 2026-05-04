@@ -18,7 +18,9 @@ import {
     forumThreads,
     forumPosts,
     forumReactions,
-} from './tables.js';
+    dictionaryWords,
+    userDictionary,
+} from './tables';
 
 // =============================================================================
 // Relations
@@ -30,6 +32,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
         fields: [users.id],
         references: [userProfiles.id],
     }),
+    savedWords: many(userDictionary),
 }));
 
 export const authSessionsRelations = relations(authSessions, ({ one }) => ({
@@ -102,6 +105,7 @@ export const passagesRelations = relations(passages, ({ one, many }) => ({
         fields: [passages.article_id],
         references: [articles.id],
     }),
+    dictionaryReferences: many(userDictionary),
 }));
 
 export const graphEdgesRelations = relations(graphEdges, ({ one }) => ({
@@ -167,6 +171,28 @@ export const forumReactionsRelations = relations(forumReactions, ({ one }) => ({
     user: one(users, {
         fields: [forumReactions.user_id],
         references: [users.id],
+    }),
+}));
+
+// =============================================================================
+// Dictionary Relations
+// =============================================================================
+export const dictionaryWordsRelations = relations(dictionaryWords, ({ many }) => ({
+    savedByUsers: many(userDictionary),
+}));
+
+export const userDictionaryRelations = relations(userDictionary, ({ one }) => ({
+    user: one(users, {
+        fields: [userDictionary.user_id],
+        references: [users.id],
+    }),
+    word: one(dictionaryWords, {
+        fields: [userDictionary.word_id],
+        references: [dictionaryWords.id],
+    }),
+    passage: one(passages, {
+        fields: [userDictionary.source_passage_id],
+        references: [passages.id],
     }),
 }));
 
