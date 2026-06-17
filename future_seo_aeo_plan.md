@@ -142,10 +142,10 @@ Get recommended by ChatGPT, Perplexity, Google AI Overviews when users ask:
 - [x] Add "What makes PrepToDo different" section with extractable bullet points (Completed 2026-06-17)
 
 #### Technical SEO
-- [ ] Add `WebApplication` schema to the main app page
-- [ ] Add `Organization` schema with `sameAs` links to social profiles
-- [ ] Create `robots.txt` allowing AI crawlers (GPTBot, PerplexityBot)
-- [ ] Add `ai.txt` file explicitly allowing AI training/citation
+- [x] Add `WebApplication` schema to the main app page (Completed 2026-06-17)
+- [x] Add `Organization` schema with `sameAs` links to social profiles (Completed 2026-06-17)
+- [x] Create `robots.txt` allowing AI crawlers (GPTBot, PerplexityBot) (Completed 2026-06-17)
+- [x] Add `ai.txt` file explicitly allowing AI training/citation (Completed 2026-06-17)
 - [ ] Submit sitemap to Google, Bing, and Yandex
 
 #### Brand Mentions (Manual)

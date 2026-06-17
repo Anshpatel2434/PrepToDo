@@ -18,13 +18,12 @@
     <priority>0.6</priority>
   </url>
 
-  <!-- Future SEO/AEO Pages (add these as they are built) -->
+  <!-- Future SEO/AEO Pages -->
   <url>
     <loc>https://www.preptodo.in/faq</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
-  <!--
   <url>
     <loc>https://www.preptodo.in/varc-guide</loc>
     <changefreq>weekly</changefreq>
@@ -41,9 +40,23 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.preptodo.in/blog</loc>
-    <changefreq>daily</changefreq>
+    <loc>https://www.preptodo.in/cat-vs-other-exams</loc>
+    <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
-  -->
+  <url>
+    <loc>https://www.preptodo.in/ai-tutor-features</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.preptodo.in/daily-practice</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.preptodo.in/mock-test-strategy</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>

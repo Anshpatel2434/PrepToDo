@@ -48,6 +48,15 @@ const ResetPasswordPage = lazy(() => import("./pages/auth/ResetPasswordPage").th
 const ErrorPage = lazy(() => import("./pages/error/ErrorPage"));
 const FaqPage = lazyNamed(import("./pages/faq/FaqPage"), "FaqPage");
 
+// SEO Landing Pages
+const VarcGuidePage = lazy(() => import("./pages/seo/VarcGuidePage"));
+const RcStrategiesPage = lazy(() => import("./pages/seo/RcStrategiesPage"));
+const ParaJumbleTipsPage = lazy(() => import("./pages/seo/ParaJumbleTipsPage"));
+const CatVsOtherExamsPage = lazy(() => import("./pages/seo/CatVsOtherExamsPage"));
+const AiTutorFeaturesPage = lazy(() => import("./pages/seo/AiTutorFeaturesPage"));
+const DailyPracticePage = lazy(() => import("./pages/seo/DailyPracticePage"));
+const MockTestStrategyPage = lazy(() => import("./pages/seo/MockTestStrategyPage"));
+
 // Forum (public, SEO-crawlable)
 const ForumPage = lazyNamed(import("./pages/forum/page/ForumPage"), "ForumPage");
 const ForumThreadPage = lazy(() => import("./pages/forum/page/ForumThreadPage"));
@@ -229,6 +238,62 @@ const router = createBrowserRouter([
                 element: (
                     <Suspense fallback={<PageLoader />}>
                         <FaqPage />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/varc-guide",
+                element: (
+                    <Suspense fallback={<PageLoader />}>
+                        <VarcGuidePage />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/rc-strategies",
+                element: (
+                    <Suspense fallback={<PageLoader />}>
+                        <RcStrategiesPage />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/para-jumble-tips",
+                element: (
+                    <Suspense fallback={<PageLoader />}>
+                        <ParaJumbleTipsPage />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/cat-vs-other-exams",
+                element: (
+                    <Suspense fallback={<PageLoader />}>
+                        <CatVsOtherExamsPage />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/ai-tutor-features",
+                element: (
+                    <Suspense fallback={<PageLoader />}>
+                        <AiTutorFeaturesPage />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/daily-practice",
+                element: (
+                    <Suspense fallback={<PageLoader />}>
+                        <DailyPracticePage />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/mock-test-strategy",
+                element: (
+                    <Suspense fallback={<PageLoader />}>
+                        <MockTestStrategyPage />
                     </Suspense>
                 ),
             },

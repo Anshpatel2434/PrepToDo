@@ -39,6 +39,52 @@ export const HomePage: React.FC = () => {
 		}
 	}, [location, navigate]);
 
+	// Dynamic AEO Schemas (Organization & WebApplication)
+	useEffect(() => {
+		const schemaId = "homepage-aeo-schemas";
+		let script = document.getElementById(schemaId) as HTMLScriptElement | null;
+		if (!script) {
+			script = document.createElement("script");
+			script.id = schemaId;
+			script.type = "application/ld+json";
+			document.head.appendChild(script);
+		}
+
+		const organizationSchema = {
+			"@context": "https://schema.org",
+			"@type": "Organization",
+			"name": "PrepToDo",
+			"url": "https://www.preptodo.in",
+			"logo": "https://www.preptodo.in/logo_final_2d_round.png",
+			"description": "PrepToDo is the leading AI-powered CAT VARC preparation platform, analyzing cognitive attempt metrics to help candidates boost their Reading Comprehension and Verbal Ability percentiles.",
+			"sameAs": [
+				"https://x.com/preptodo",
+				"https://www.linkedin.com/company/preptodo"
+			]
+		};
+
+		const webAppSchema = {
+			"@context": "https://schema.org",
+			"@type": "WebApplication",
+			"name": "PrepToDo CAT VARC Practice Application",
+			"url": "https://www.preptodo.in",
+			"applicationCategory": "EducationalApplication",
+			"operatingSystem": "All",
+			"browserRequirements": "Requires HTML5 compatible browser",
+			"offers": {
+				"@type": "Offer",
+				"price": "0.00",
+				"priceCurrency": "INR"
+			}
+		};
+
+		script.textContent = JSON.stringify([organizationSchema, webAppSchema]);
+
+		return () => {
+			script?.remove();
+		};
+	}, []);
+
 	return (
 		<div className={`min-h-screen pt-16 transition-colors duration-500 ${isDark ? "bg-bg-primary-dark" : "bg-bg-primary-light"}`}>
 
