@@ -19,6 +19,11 @@
   </url>
 
   <!-- Future SEO/AEO Pages (add these as they are built) -->
+  <url>
+    <loc>https://www.preptodo.in/faq</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
   <!--
   <url>
     <loc>https://www.preptodo.in/varc-guide</loc>
@@ -33,11 +38,6 @@
   <url>
     <loc>https://www.preptodo.in/para-jumble-tips</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.preptodo.in/faq</loc>
-    <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>

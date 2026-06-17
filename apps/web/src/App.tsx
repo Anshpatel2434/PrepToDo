@@ -46,6 +46,7 @@ const TermsOfService = lazy(() => import("./pages/legal/TermsOfService"));
 const RefundPolicy = lazy(() => import("./pages/legal/RefundPolicy"));
 const ResetPasswordPage = lazy(() => import("./pages/auth/ResetPasswordPage").then(m => ({ default: m.ResetPasswordPage })));
 const ErrorPage = lazy(() => import("./pages/error/ErrorPage"));
+const FaqPage = lazyNamed(import("./pages/faq/FaqPage"), "FaqPage");
 
 // Forum (public, SEO-crawlable)
 const ForumPage = lazyNamed(import("./pages/forum/page/ForumPage"), "ForumPage");
@@ -221,6 +222,14 @@ const router = createBrowserRouter([
                             <DictionaryPage />
                         </Suspense>
                     </SafeAuthRoute>
+                ),
+            },
+            {
+                path: "/faq",
+                element: (
+                    <Suspense fallback={<PageLoader />}>
+                        <FaqPage />
+                    </Suspense>
                 ),
             },
             {

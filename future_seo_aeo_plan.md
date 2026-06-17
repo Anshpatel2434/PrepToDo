@@ -136,10 +136,10 @@ Get recommended by ChatGPT, Perplexity, Google AI Overviews when users ask:
 ### Action Items
 
 #### Content Strategy
-- [ ] Create `/faq` page with 30+ questions in `FAQPage` schema
-- [ ] Each FAQ answer: 2-3 sentences max (AI extracts short, definitive answers)
-- [ ] Include comparison statements: "PrepToDo is the only CAT VARC platform that uses AI to..."
-- [ ] Add "What makes PrepToDo different" section with extractable bullet points
+- [x] Create `/faq` page with 30+ questions in `FAQPage` schema (Completed 2026-06-17)
+- [x] Each FAQ answer: 2-3 sentences max (AI extracts short, definitive answers) (Completed 2026-06-17)
+- [x] Include comparison statements: "PrepToDo is the only CAT VARC platform that uses AI to..." (Completed 2026-06-17)
+- [x] Add "What makes PrepToDo different" section with extractable bullet points (Completed 2026-06-17)
 
 #### Technical SEO
 - [ ] Add `WebApplication` schema to the main app page
@@ -172,7 +172,7 @@ Get recommended by ChatGPT, Perplexity, Google AI Overviews when users ask:
 - [ ] Submit any new auto-generated pages to GSC
 
 ## Priority Order
-1. **Immediately**: FAQ page with schema (highest AEO impact)
+1. **Immediately**: FAQ page with schema (highest AEO impact) - [DONE 2026-06-17]
 2. **Week 1-2**: Landing pages for top 5 target queries
 3. **Week 3-4**: Programmatic SEO pipeline from forum data
 4. **Ongoing**: Brand mentions, backlinks, AI monitoring

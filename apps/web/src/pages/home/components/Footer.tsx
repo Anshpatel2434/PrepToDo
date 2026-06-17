@@ -11,6 +11,7 @@ export const Footer: React.FC<FooterProps> = ({ className = "" }) => {
 	const { isDark } = useTheme();
 
 	const links = [
+		{ name: "FAQ", href: "/faq" },
 		{ name: "Privacy Policy", href: "/privacy" },
 		{ name: "Terms of Service", href: "/terms" },
 		{ name: "Refund Policy", href: "/refund" },
